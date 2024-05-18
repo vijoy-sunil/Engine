@@ -21,7 +21,7 @@ FRAGSHADER_BIN  	= frag
 BINFMT				= _exe
 SHADERBINFMT		= .spv
 BINDIR     			= ./Build/Bin
-SAVEDIR				= ./Build/Save
+LOGDIR				= ./Build/Log
 
 SOURCES   			:= $(wildcard $(SRCDIR)/*.cpp)
 OBJDIR     			:= $(BINDIR)/Objs
@@ -51,7 +51,7 @@ $(OBJECTS): $(OBJDIR)/%.o : $(SRCDIR)/%.cpp
 .PHONY: clean
 clean:
 	@$(RM) $(OBJDIR)/* $(BINDIR)/*$(BINFMT) $(BINDIR)/*$(SHADERBINFMT)
-	@$(RMDIR) $(SAVEDIR)/*
+	@$(RMDIR) $(LOGDIR)/*
 	@echo "[OK] clean"
 
 run:
