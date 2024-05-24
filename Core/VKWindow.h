@@ -72,7 +72,7 @@ namespace Renderer {
                 return m_framebufferResized;
             }
 
-            void initWindow () {
+            void initWindow (void) {
                 /* First, initialize the GLFW library. Because GLFW was originally designed to create an OpenGL context, 
                  * we need to tell it to not create an OpenGL context with a subsequent call
                 */
