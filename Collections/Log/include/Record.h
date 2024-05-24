@@ -177,8 +177,13 @@ namespace Log {
                                    const char* file, 
                                    const char* function, 
                                    const size_t line) {
+                std::string instanceId = std::to_string (m_instanceId);
+                /* Pad m_instanceId string for single digit ids
+                */
+                if (m_instanceId < 10)
+                    instanceId.insert (0, 1, '0');
 
-                std::string header = "[ " + std::to_string (m_instanceId) + " ]" + " " +
+                std::string header = "[ " + instanceId + " ]" + " " +
                                      getLocalTimestamp() + " " +
                                      "[ " + levelToString (level) + " ]" + " " +
                                      file + " " +
