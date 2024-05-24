@@ -7,6 +7,7 @@
 #include "VKPipeline.h"
 #include "VKResizing.h"
 #include "../Collections/Log/include/Log.h"
+#include <vector>
 
 using namespace Collections;
 

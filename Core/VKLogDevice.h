@@ -7,6 +7,8 @@
 #include "VKQueue.h"
 #include "VKPhyDevice.h"
 #include "../Collections/Log/include/Log.h"
+#include <vector>
+#include <set>
 
 using namespace Collections;
 
@@ -122,7 +124,7 @@ namespace Renderer {
                 */
                 VkResult result = vkCreateDevice (getPhysicalDevice(), &createInfo, nullptr, &m_logicalDevice);
                 if (result != VK_SUCCESS) {
-                    LOG_ERROR (m_VKLogDeviceLog) << "Failed to create logic device" << std::endl;
+                    LOG_ERROR (m_VKLogDeviceLog) << "Failed to create logic device" << " " << result << std::endl;
                     throw std::runtime_error ("Failed to create logic device");
                 }
 

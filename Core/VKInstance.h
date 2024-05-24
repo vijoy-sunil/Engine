@@ -7,6 +7,8 @@
 #include "VKValidation.h"
 #include "VKConstants.h"
 #include "../Collections/Log/include/Log.h"
+#include <vector>
+#include <set>
 
 using namespace Collections;
 

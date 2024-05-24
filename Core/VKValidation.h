@@ -6,6 +6,7 @@
 #include <GLFW/glfw3.h>
 #include "VKInstanceHandle.h"
 #include "../Collections/Log/include/Log.h"
+#include <vector>
 #include <set>
 
 using namespace Collections;

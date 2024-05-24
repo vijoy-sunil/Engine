@@ -7,6 +7,7 @@
 #include "VKUtils.h"
 #include "VKRenderPass.h"
 #include "../Collections/Log/include/Log.h"
+#include <vector>
 
 using namespace Collections;
 
@@ -46,7 +47,7 @@ namespace Renderer {
                 VkShaderModule shaderModule;
                 VkResult result = vkCreateShaderModule (getLogicalDevice(), &createInfo, nullptr, &shaderModule);
                 if (result != VK_SUCCESS) {
-                    LOG_WARNING (m_VKPipelineLog) << "Failed to create shader module" << std::endl;
+                    LOG_WARNING (m_VKPipelineLog) << "Failed to create shader module" << " " << result << std::endl;
                     return VK_NULL_HANDLE;          
                 }
                 return shaderModule;

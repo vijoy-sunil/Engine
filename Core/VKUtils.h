@@ -2,6 +2,7 @@
 #define VK_UTILS_H
 
 #include "../Collections/Log/include/Log.h"
+#include <vector>
 
 using namespace Collections;
 

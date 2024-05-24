@@ -6,6 +6,8 @@
 #include <GLFW/glfw3.h>
 #include "VKSwapChain.h"
 #include "../Collections/Log/include/Log.h"
+#include <vector>
+#include <set>
 
 using namespace Collections;
 
