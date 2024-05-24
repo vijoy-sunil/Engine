@@ -20,22 +20,16 @@
 */
 #version 450
 
-/* Normally, the vertices are loaded from the vertex buffer by index in sequential order, but with an element buffer you 
- * can specify the indices to use yourself. This allows you to perform optimizations like reusing vertices (see pipeline)
+/* The vertex shader takes input from a vertex buffer using the in keyword. The inPosition and inColor variables are 
+ * vertex attributes. They're properties that are specified per-vertex in the vertex buffer.
+ *
+ * Note that the vertex shader inputs can specify the 'attribute index' that the particular input uses, 
+ * layout(location = attribute index) in vec3 position;
+ * Whereas, the fragment shader outputs can specify the 'buffer index' that a particular output writes to,
+ * layout(location = output index) out vec4 outColor;
 */
-vec2 positions[3] = vec2[](
-    vec2 (0.0, -0.5),
-    vec2 (0.5, 0.5),
-    vec2 (-0.5, 0.5)
-);
-
-/* Specify a distinct color for each of the three vertices
-*/
-vec3 colors[3] = vec3[](
-    vec3 (1.0, 0.0, 0.0),
-    vec3 (0.0, 1.0, 0.0),
-    vec3 (0.0, 0.0, 1.0)
-);
+layout(location = 0) in vec2 inPosition;
+layout(location = 1) in vec3 inColor;
 
 /* Add an output for color to the vertex shader
 */
@@ -50,6 +44,6 @@ void main() {
      * with the last component set to 1 using built-in variable gl_Position. That way the division to transform clip 
      * coordinates to normalized device coordinates will not change anything
     */
-    gl_Position = vec4 (positions[gl_VertexIndex], 0.0, 1.0);
-    fragColor = colors[gl_VertexIndex];
+    gl_Position = vec4 (inPosition, 0.0, 1.0);
+    fragColor = inColor;
 }

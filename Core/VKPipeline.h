@@ -5,6 +5,7 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 #include "VKUtils.h"
+#include "VKVertexData.h"
 #include "VKRenderPass.h"
 #include "../Collections/Log/include/Log.h"
 #include <vector>
@@ -13,6 +14,7 @@ using namespace Collections;
 
 namespace Renderer {
     class VKPipeline: protected VKUtils,
+                      protected VKVertexData,
                       protected virtual VKRenderPass {
         private:
             /* Handle to pipeline layout object
@@ -120,13 +122,15 @@ namespace Renderer {
                 */
                 VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
                 vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-                /* Because we're hard coding the vertex data directly in the vertex shader, we'll fill in this structure 
-                 * to specify that there is no vertex data to load for now
+                /* Specify the binding and attribute desctiprion 
                 */
-                vertexInputInfo.vertexBindingDescriptionCount = 0;
-                vertexInputInfo.pVertexBindingDescriptions = nullptr;
-                vertexInputInfo.vertexAttributeDescriptionCount = 0;
-                vertexInputInfo.pVertexAttributeDescriptions = nullptr;
+                auto bindingDescription = getBindingDescription();
+                auto attributeDescriptions = getAttributeDescriptions();
+
+                vertexInputInfo.vertexBindingDescriptionCount = 1;
+                vertexInputInfo.pVertexBindingDescriptions = &bindingDescription;
+                vertexInputInfo.vertexAttributeDescriptionCount = static_cast <uint32_t> (attributeDescriptions.size());
+                vertexInputInfo.pVertexAttributeDescriptions = attributeDescriptions.data();
 
                 /* Setup input assembler
                  * The VkPipelineInputAssemblyStateCreateInfo struct describes two things: what kind of geometry will be 
