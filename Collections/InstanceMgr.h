@@ -20,7 +20,7 @@ namespace Admin {
              * you want polymorphism to work on your destructor as well, e.g. through calling destructor on your base class
              * you want to end up calling destructor of your most derived class not JUST your base class.
             */
-            virtual ~NonTemplateBase() = 0;
+            virtual ~NonTemplateBase (void) = 0;
     };
     /* pure virtual Destructors must be defined, which is against the pure virtual behaviour. The only difference between 
      * Virtual and Pure Virtual Destructor is, that pure virtual destructor will make its Base class Abstract, hence you 
@@ -28,7 +28,7 @@ namespace Admin {
      * anything from base (UPCASTING) and then try to delete or destroy it, base's destructor will eventually be called. 
      * Since it is pure and doesn't have an implementation, will cause compilation error
     */
-    inline NonTemplateBase::~NonTemplateBase() {} 
+    inline NonTemplateBase::~NonTemplateBase (void) {} 
 
     // all managers will be derived from this class, which allows us to have multiple instances
     class InstanceMgr {

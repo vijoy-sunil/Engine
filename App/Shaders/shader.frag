@@ -11,7 +11,7 @@ layout(location = 0) out vec4 outColor;
 
 /* The main function is called for every fragment just like the vertex shader main function is called for every vertex
 */
-void main() {
+void main (void) {
     /* Colors in GLSL are 4-component vectors with the R, G, B and alpha channels within the [0, 1] range. Unlike 
      * gl_Position in the vertex shader, there is no built-in variable to output a color for the current fragment. You 
      * have to specify your own output variable for each framebuffer where the layout(location = 0) modifier specifies the 

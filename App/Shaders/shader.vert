@@ -39,7 +39,7 @@ layout(location = 0) out vec3 fragColor;
  * vertex. This is usually an index into the vertex buffer, but in our case it will be an index into a hardcoded array of 
  * vertex data
 */
-void main() {
+void main (void) {
     /* We can directly output normalized device coordinates by outputting them as clip coordinates from the vertex shader 
      * with the last component set to 1 using built-in variable gl_Position. That way the division to transform clip 
      * coordinates to normalized device coordinates will not change anything
