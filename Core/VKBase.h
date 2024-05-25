@@ -75,6 +75,9 @@ namespace Renderer {
                 */
                 createCommandPool();
                 createCommandBuffers();
+                /* Create vertex buffer
+                */
+                createVertexBuffer();
                 /* Create synchronization primitives (semaphores and fences)
                 */
                 createSyncObjects();
@@ -89,6 +92,9 @@ namespace Renderer {
                 /* Destroy synchronization primitives
                 */
                 VKDrawFrame::cleanUp();
+                /* Destroy vertex buffer
+                */
+                VKVertexBuffer::cleanUp();
                 /* Destroy command pool
                 */
                 VKCmdBuffer::cleanUp();

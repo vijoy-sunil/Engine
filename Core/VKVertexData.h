@@ -25,7 +25,7 @@ namespace Renderer {
              * vertex attributes
             */
             const std::vector <Vertex> m_vertices = {
-                {{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
+                {{0.0f, -0.5f}, {1.0f, 1.0f, 1.0f}},
                 {{0.5f, 0.5f},  {0.0f, 1.0f, 0.0f}},
                 {{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}
             };
@@ -51,6 +51,10 @@ namespace Renderer {
             }
         
         protected:
+            std::vector <Vertex> getVertices (void) {
+                return m_vertices;
+            }
+
             /* We need to tell Vulkan how to pass this data format 'm_vertices' to the vertex shader once it's been 
              * uploaded into GPU memory. There are two types of structures needed to convey this information:
              * (1) VkVertexInputBindingDescription

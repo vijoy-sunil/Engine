@@ -4,7 +4,7 @@
 */
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
-#include "VKPipeline.h"
+#include "VKVertexBuffer.h"
 #include "VKResizing.h"
 #include "../Collections/Log/include/Log.h"
 #include <vector>
@@ -12,7 +12,7 @@
 using namespace Collections;
 
 namespace Renderer {
-    class VKCmdBuffer: protected VKPipeline,
+    class VKCmdBuffer: protected VKVertexBuffer,
                        protected VKResizing {
         private:
             /* Handle to command pool
@@ -227,16 +227,26 @@ namespace Renderer {
                 scissor.extent = getSwapChainExtent();
                 vkCmdSetScissor (commandBuffer, 0, 1, &scissor);
 
-                /* (4) Draw cmd
+                /* (4) Bind vertex buffer
+                 * The vkCmdBindVertexBuffers function is used to bind vertex buffers to bindings, which is already set 
+                 * up in createGraphicsPipeline function. The first two parameters, besides the command buffer, specify 
+                 * the offset and number of bindings we're going to specify vertex buffers for. The last two parameters 
+                 * specify the array of vertex buffers to bind and the byte offsets to start reading vertex data from
+                */
+                VkBuffer vertexBuffers[] = {getVertexBuffer()};
+                VkDeviceSize offsets[] = {0};
+                vkCmdBindVertexBuffers (commandBuffer, 0, 1, vertexBuffers, offsets);
+
+                /* (5) Draw cmd
                  *
                  * The actual vkCmdDraw function is a bit anticlimactic, but it's so simple because of all the 
                  * information we specified in advance
-                 * vertexCount: Even though we don't have a vertex buffer, we technically still have 3 vertices to draw
+                 * vertexCount: Number of vertices
                  * instanceCount: Used for instanced rendering, use 1 if you're not doing that
                  * firstVertex: Used as an offset into the vertex buffer, defines the lowest value of gl_VertexIndex
                  * firstInstance: Used as an offset for instanced rendering, defines the lowest value of gl_InstanceIndex
                 */
-                vkCmdDraw (commandBuffer, 3, 1, 0, 0);
+                vkCmdDraw (commandBuffer, static_cast <uint32_t> (getVertices().size()), 1, 0, 0);
 
                 /* (5) End render pass cmd
                 */

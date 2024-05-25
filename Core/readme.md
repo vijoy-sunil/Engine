@@ -31,21 +31,21 @@
                         |---------------------------------------|
                                                                 |
                                                                 |
-                                            VKUtils (10)        VKRenderPass (3) (virtual)
-                                            |                   |
-                                            |                   |-------------------|
-                                            |                   |                   |
-                                            |-------------------|                   |
-                                                                |                   |
-                                                                VKPipeline (4)      VKImageView (20)
-                                                                |                   |
-                                                                |                   |
-                                                                |                   VKFrameBuffer (17)
-                                                                |                   |
-                                                                |                   |
-                                                                |                   VKResizing (19)
-                                                                |                   |
-                                                                |-------------------|
+                        VKUtils (10)        VKVertexData (21)   VKRenderPass (3) (virtual)
+                        |                   |                   |
+                        |                   |                   |-----------------------|
+                        |                   |                   |                       |
+                        |-------------------|-------------------|                       |
+                                                                |                       |
+                                                                VKPipeline (4)          VKImageView (20)
+                                                                |                       |
+                                                                |                       |
+                                                                VKVertexBuffer (22)     VKFrameBuffer (17)
+                                                                |                       |
+                                                                |                       |
+                                                                |                       VKResizing (19)
+                                                                |                       |
+                                                                |-----------------------|
                                                                 |
                                                                 |
                                                                 VKCmdBuffer (2)
