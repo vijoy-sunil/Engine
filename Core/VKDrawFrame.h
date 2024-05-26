@@ -4,14 +4,14 @@
 */
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
-#include "VKCmdBuffer.h"
+#include "VKGraphicsCmdBuffer.h"
 #include "../Collections/Log/include/Log.h"
 #include <vector>
 
 using namespace Collections;
 
 namespace Renderer {
-    class VKDrawFrame: protected VKCmdBuffer {
+    class VKDrawFrame: protected VKGraphicsCmdBuffer {
         private:
             /* To use the right objects (command buffers and sync objects) every frame, keep track of the current frame
             */

@@ -1,5 +1,5 @@
-#ifndef VK_CMD_BUFFER_H
-#define VK_CMD_BUFFER_H
+#ifndef VK_GRAPHICS_CMD_BUFFER_H
+#define VK_GRAPHICS_CMD_BUFFER_H
 /* GLFW will include its own definitions and automatically load the Vulkan header vulkan/vulkan.h with it
 */
 #define GLFW_INCLUDE_VULKAN
@@ -12,8 +12,8 @@
 using namespace Collections;
 
 namespace Renderer {
-    class VKCmdBuffer: protected VKVertexBuffer,
-                       protected VKResizing {
+    class VKGraphicsCmdBuffer: protected VKVertexBuffer,
+                               protected VKResizing {
         private:
             /* Handle to command pool
             */
@@ -27,22 +27,22 @@ namespace Renderer {
             std::vector <VkCommandBuffer> m_commandBuffers;
             /* Handle to the log object
             */
-            static Log::Record* m_VKCmdBufferLog;
+            static Log::Record* m_VKGraphicsCmdBufferLog;
             /* instance id for logger
             */
             const size_t m_instanceId = 2;
             
         public:
-            VKCmdBuffer (void) {
-                m_VKCmdBufferLog = LOG_INIT (m_instanceId, 
-                                             Log::VERBOSE, 
-                                             Log::TO_CONSOLE | Log::TO_FILE_IMMEDIATE, 
-                                             "./Build/Log/");
-                LOG_INFO (m_VKCmdBufferLog) << "Constructor called" << std::endl; 
+            VKGraphicsCmdBuffer (void) {
+                m_VKGraphicsCmdBufferLog = LOG_INIT (m_instanceId, 
+                                                     Log::VERBOSE, 
+                                                     Log::TO_CONSOLE | Log::TO_FILE_IMMEDIATE, 
+                                                     "./Build/Log/");
+                LOG_INFO (m_VKGraphicsCmdBufferLog) << "Constructor called" << std::endl; 
             }
 
-            ~VKCmdBuffer (void) {
-                LOG_INFO (m_VKCmdBufferLog) << "Destructor called" << std::endl; 
+            ~VKGraphicsCmdBuffer (void) {
+                LOG_INFO (m_VKGraphicsCmdBufferLog) << "Destructor called" << std::endl; 
                 LOG_CLOSE (m_instanceId);
             }
 
@@ -59,12 +59,14 @@ namespace Renderer {
             void createCommandPool (void) {
                 VkCommandPoolCreateInfo poolInfo{};
                 poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-                /* There are two possible flags for command pools
-                 * VK_COMMAND_POOL_CREATE_TRANSIENT_BIT: Hint that command buffers are rerecorded with new commands very 
-                 * often (may change memory allocation behavior)
-                 * VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT: Allow command buffers to be rerecorded individually, 
-                 * without this flag they all have to be reset together
+                /* Command pool possible flags:
+                 * (1) VK_COMMAND_POOL_CREATE_TRANSIENT_BIT specifies that command buffers allocated from the pool will 
+                 * be short-lived, meaning that they will be reset or freed in a relatively short timeframe
                  * 
+                 * (2) VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT allows any command buffer allocated from a pool 
+                 * to be individually reset to the initial state; either by calling vkResetCommandBuffer, or via the 
+                 * implicit reset when calling vkBeginCommandBuffer
+                 *
                  * We will be recording a command buffer every frame, so we want to be able to reset and rerecord over 
                  * it. Thus, we need to set the VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT flag bit for our command 
                  * pool
@@ -84,7 +86,10 @@ namespace Renderer {
                                                        nullptr, 
                                                        &m_commandPool);
                 if (result != VK_SUCCESS) {
-                    LOG_ERROR (m_VKCmdBufferLog) << "Failed to create command pool" << " " << result << std::endl;
+                    LOG_ERROR (m_VKGraphicsCmdBufferLog) << "Failed to create command pool" 
+                                                         << " " 
+                                                         << result 
+                                                         << std::endl;
                     throw std::runtime_error ("Failed to create command pool");
                 }
             }
@@ -99,7 +104,7 @@ namespace Renderer {
                 /* Specify the command pool and number of buffers to allocate
                 */
                 allocInfo.commandPool = m_commandPool;
-                allocInfo.commandBufferCount = (uint32_t) m_commandBuffers.size();
+                allocInfo.commandBufferCount = static_cast <uint32_t> (m_commandBuffers.size());
                 /* The level parameter specifies if the allocated command buffers are primary or secondary command buffers
                  * VK_COMMAND_BUFFER_LEVEL_PRIMARY: Can be submitted to a queue for execution, but cannot be called from 
                  * other command buffers
@@ -114,7 +119,10 @@ namespace Renderer {
                                                             &allocInfo, 
                                                             m_commandBuffers.data());
                 if (result != VK_SUCCESS) {
-                    LOG_ERROR (m_VKCmdBufferLog) << "Failed to create command buffers" << " " << result << std::endl;
+                    LOG_ERROR (m_VKGraphicsCmdBufferLog) << "Failed to create command buffers" 
+                                                         << " " 
+                                                         << result 
+                                                         << std::endl;
                     throw std::runtime_error ("Failed to create command buffers");
                 }           
             }
@@ -131,14 +139,17 @@ namespace Renderer {
                 VkCommandBufferBeginInfo beginInfo{};
                 beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
                 /* The flags parameter specifies how we're going to use the command buffer
-                 * VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT:
-                 * The command buffer will be rerecorded right after executing it once
+                 * (1) VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT specifies that each recording of the command buffer 
+                 * will only be submitted once, and the command buffer will be reset and recorded again between each 
+                 * submission
                  * 
-                 * VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT:
-                 * This is a secondary command buffer that will be entirely within a single render pass
+                 * (2) VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT specifies that a secondary command buffer is 
+                 * considered to be entirely inside a render pass. If this is a primary command buffer, then this bit is 
+                 * ignored
                  * 
-                 * VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT: 
-                 * The command buffer can be resubmitted while it is also already pending execution
+                 * (3) VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT specifies that a command buffer can be resubmitted 
+                 * to any queue of the same queue family while it is in the pending state, and recorded into multiple 
+                 * primary command buffers
                  * 
                  * None of these flags are applicable for us right now.
                 */
@@ -153,10 +164,10 @@ namespace Renderer {
                 */
                 VkResult result = vkBeginCommandBuffer (commandBuffer, &beginInfo);
                 if (result != VK_SUCCESS) {
-                    LOG_ERROR (m_VKCmdBufferLog) << "Failed to begin recording command buffer" 
-                                                 << " " 
-                                                 << result 
-                                                 << std::endl;
+                    LOG_ERROR (m_VKGraphicsCmdBufferLog) << "Failed to begin recording command buffer" 
+                                                         << " " 
+                                                         << result 
+                                                         << std::endl;
                     throw std::runtime_error ("Failed to begin recording command buffer");
                 }             
 
@@ -256,7 +267,10 @@ namespace Renderer {
                 */
                 result = vkEndCommandBuffer (commandBuffer);
                 if (result != VK_SUCCESS) {
-                    LOG_ERROR (m_VKCmdBufferLog) << "Failed to record command buffer" << " " << result << std::endl;
+                    LOG_ERROR (m_VKGraphicsCmdBufferLog) << "Failed to record command buffer" 
+                                                         << " " 
+                                                         << result 
+                                                         << std::endl;
                     throw std::runtime_error ("Failed to record command buffer");
                 }            
             }
@@ -277,6 +291,6 @@ namespace Renderer {
             }
     };
 
-    Log::Record* VKCmdBuffer::m_VKCmdBufferLog;
+    Log::Record* VKGraphicsCmdBuffer::m_VKGraphicsCmdBufferLog;
 }   // namespace Renderer
-#endif  // VK_CMD_BUFFER_H
+#endif  // VK_GRAPHICS_CMD_BUFFER_H

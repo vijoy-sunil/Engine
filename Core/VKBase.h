@@ -97,7 +97,7 @@ namespace Renderer {
                 VKVertexBuffer::cleanUp();
                 /* Destroy command pool
                 */
-                VKCmdBuffer::cleanUp();
+                VKGraphicsCmdBuffer::cleanUp();
                 /* Destroy pipeline and pipeline layout
                 */
                 VKPipeline::cleanUp();

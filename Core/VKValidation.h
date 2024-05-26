@@ -134,7 +134,7 @@ namespace Renderer {
                  * them off while enumerating the sequence of available layers
                 */
                 std::set <std::string> requiredLayers (m_validationLayers.begin(), m_validationLayers.end());
-                for (const auto& layer : availableLayers)
+                for (const auto& layer: availableLayers)
                     requiredLayers.erase (layer.layerName);
 
                 return requiredLayers.empty();  

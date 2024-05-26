@@ -20,6 +20,9 @@ namespace Renderer {
             /* Handle to present queue
             */
             VkQueue m_presentQueue;
+            /* Handle to transfer queue
+            */
+            VkQueue m_transferQueue;
             /* Handle to the log object
             */
             static Log::Record* m_VKQueueLog;
@@ -42,7 +45,7 @@ namespace Renderer {
             }
 
         protected:
-            /* Holds index of queues in queue families
+            /* Holds index of queue families
             */
             struct QueueFamilyIndices {
                 /* It's not really possible to use a magic value to indicate the nonexistence of a queue family, since 
@@ -55,10 +58,18 @@ namespace Renderer {
                  * commands and the ones supporting presentation do not overlap
                 */
                 std::optional <uint32_t> presentFamily;
+                /* Note that any queue family with VK_QUEUE_GRAPHICS_BIT (graphics queue) or VK_QUEUE_COMPUTE_BIT 
+                 * capabilities already implicitly support VK_QUEUE_TRANSFER_BIT (transfer queue) operations. However,
+                 * if the application needs a transfer queue that is different from the graphics queue for some reason, 
+                 * it can queury a queue family with VK_QUEUE_TRANSFER_BIT and without VK_QUEUE_GRAPHICS_BIT
+                */
+                std::optional <uint32_t> transferFamily;
                 /* Easy method to quickly check if a family index has been found
                 */
                 bool isComplete (void) {
-                    return graphicsFamily.has_value() && presentFamily.has_value();
+                    return graphicsFamily.has_value() && 
+                           presentFamily.has_value()  &&
+                           transferFamily.has_value();
                 }
             };
 
@@ -70,13 +81,21 @@ namespace Renderer {
                 return m_presentQueue;
             }
 
+            VkQueue getTransferQueue (void) {
+                return m_transferQueue;
+            }
+
             void setGraphicsQueue (VkQueue graphicsQueue) {
                 m_graphicsQueue = graphicsQueue;
             }
 
             void setPresentQueue (VkQueue presentQueue) {
                 m_presentQueue = presentQueue;
-            }            
+            }   
+
+            void setTransferQueue (VkQueue transferQueue) {
+                m_transferQueue = transferQueue;
+            }          
 
             /* Almost every operation in Vulkan, anything from drawing to uploading textures, requires commands to be 
              * submitted to a queue. There are different types of queues that originate from different queue families 
@@ -93,24 +112,31 @@ namespace Renderer {
 
                 /* keep track of queue family index
                 */
-                int i = 0;
-                for (const auto& queueFamily : queueFamilies) {
+                int queueFamilyIndex = 0;
+                for (const auto& queueFamily: queueFamilies) {
                     /* find a queue family that supports graphics commnands
                     */
                     if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT)
-                        indices.graphicsFamily = i;
+                        indices.graphicsFamily = queueFamilyIndex;
                     /* find a queue family that has the capability of presenting to our window surface
                     */
                     VkBool32 presentSupport = false;
-                    vkGetPhysicalDeviceSurfaceSupportKHR (physicalDevice, i, getSurface(), &presentSupport);
+                    vkGetPhysicalDeviceSurfaceSupportKHR (physicalDevice, 
+                                                          queueFamilyIndex, 
+                                                          getSurface(), 
+                                                          &presentSupport);
                     if (presentSupport)
-                        indices.presentFamily = i;
+                        indices.presentFamily = queueFamilyIndex;
+                    /* find a queue family that supports transfer commands
+                    */
+                    if (queueFamily.queueFlags & VK_QUEUE_TRANSFER_BIT)
+                        indices.transferFamily = queueFamilyIndex;               
                     /* loop break
                     */
                     if (indices.isComplete())
                         break;
 
-                    i++;
+                    queueFamilyIndex++;
                 }
                 return indices;
             }

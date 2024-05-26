@@ -59,7 +59,7 @@ namespace Renderer {
             VkSurfaceFormatKHR pickSwapSurfaceFormat (const std::vector <VkSurfaceFormatKHR>& availableFormats) {
                 /* Choose the format and colorSpace from available formats (we have already populated this list)
                 */
-                for (const auto& availableFormat : availableFormats) {
+                for (const auto& availableFormat: availableFormats) {
                     if (availableFormat.format == VK_FORMAT_B8G8R8A8_SRGB && 
                         availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
                         return availableFormat;
@@ -98,7 +98,7 @@ namespace Renderer {
                  * up-to-date as possible right until the vertical blank. On mobile devices, where energy usage is more 
                  * important, you will probably want to use VK_PRESENT_MODE_FIFO_KHR instead
                  */
-                for (const auto& availablePresentMode : availablePresentModes) {
+                for (const auto& availablePresentMode: availablePresentModes) {
                     if (availablePresentMode == VK_PRESENT_MODE_MAILBOX_KHR)
                         return availablePresentMode;
                 }
@@ -293,12 +293,13 @@ namespace Renderer {
                     createInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
                     createInfo.queueFamilyIndexCount = 2;
                     createInfo.pQueueFamilyIndices = queueFamilyIndices;
+                }
                 /* If the graphics queue family and presentation queue family are the same, which will be the case on most 
                  * hardware, then we should stick to exclusive mode (An image is owned by one queue family at a time and 
                  * ownership must be explicitly transferred before using it in another queue family. This option offers 
                  * the best performance.)
                 */
-                } else {
+                else {
                     createInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
                     createInfo.queueFamilyIndexCount = 0;
                     createInfo.pQueueFamilyIndices = nullptr;

@@ -92,7 +92,7 @@ namespace Renderer {
                  * tick them off while enumerating the sequence of available extensions
                 */
                 std::set <std::string> requiredExtensions (m_instanceExtensions.begin(), m_instanceExtensions.end());
-                for (const auto& extension : availableExtensions)
+                for (const auto& extension: availableExtensions)
                     requiredExtensions.erase (extension.extensionName);
 
                 return requiredExtensions.empty();

@@ -132,12 +132,14 @@ namespace Renderer {
                  * queue index and a pointer to the variable to store the queue handle in. Because we're only creating a 
                  * single queue from this family, we'll simply use index 0.
                 */
-                VkQueue graphicsQueue, presentQueue;
+                VkQueue graphicsQueue, presentQueue, transferQueue;
                 vkGetDeviceQueue (m_logicalDevice, indices.graphicsFamily.value(), 0, &graphicsQueue);
                 vkGetDeviceQueue (m_logicalDevice, indices.presentFamily.value(), 0, &presentQueue);
+                vkGetDeviceQueue (m_logicalDevice, indices.transferFamily.value(), 0, &transferQueue);
 
                 setGraphicsQueue (graphicsQueue);
                 setPresentQueue (presentQueue);
+                setTransferQueue (transferQueue);
             }
 
             void cleanUp (void) {
