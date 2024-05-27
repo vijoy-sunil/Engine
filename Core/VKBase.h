@@ -71,17 +71,18 @@ namespace Renderer {
                  * object which is created in createFrameBuffers function
                 */
                 createFrameBuffers();
+                /* Create synchronization primitives (semaphores and fences)
+                */
+                createSyncObjects();
+                /* Setup vertex and index buffer
+                */
+                createVertexBuffer();
+                createIndexBuffer();
+                copyBuffers();
                 /* Create command pool and command buffers
                 */
                 createCommandPool();
                 createCommandBuffers();
-                /* Create vertex and index buffer
-                */
-                createVertexBuffer();
-                createIndexBuffer();
-                /* Create synchronization primitives (semaphores and fences)
-                */
-                createSyncObjects();
             }
 
             void destroyVulkan (void) {
@@ -92,7 +93,7 @@ namespace Renderer {
                 VKSwapChain::cleanUp();
                 /* Destroy synchronization primitives
                 */
-                VKDrawFrame::cleanUp();
+                VKSyncObjects::cleanUp();
                 /* Destroy vertex buffer
                 */
                 VKVertexBuffer::cleanUp();

@@ -15,9 +15,6 @@ namespace Renderer {
             /* Handle to command pool
             */
             VkCommandPool m_commandPool;
-            /* Set maximum number of command buffers in transfer queue in flight
-            */
-            const uint32_t m_maxBuffersInQueue = 1;
             /* Handle to command buffers
             */
             std::vector <VkCommandBuffer> m_commandBuffers;
@@ -84,7 +81,7 @@ namespace Renderer {
             }
 
             void createCommandBuffers (void) {
-                m_commandBuffers.resize (m_maxBuffersInQueue);
+                m_commandBuffers.resize (MAX_TRANSFERS_IN_QUEUE);
 
                 VkCommandBufferAllocateInfo allocInfo{};
                 allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
@@ -123,9 +120,9 @@ namespace Renderer {
                  * to any queue of the same queue family while it is in the pending state, and recorded into multiple 
                  * primary command buffers
                  * 
-                 * We're only going to use the command buffer once and wait (vkQueueWaitIdle) with returning from the 
-                 * function until the copy operation has finished executing. It's good practice to tell the driver about 
-                 * our intent using VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT
+                 * We're only going to use the command buffer once and wait (vkQueueWaitIdle/vkWaitForFences) with 
+                 * returning from the function until the copy operation has finished executing. It's good practice to 
+                 * tell the driver about our intent using VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT
                 */
                 beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
                 beginInfo.pInheritanceInfo = nullptr;   

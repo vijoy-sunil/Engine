@@ -26,6 +26,9 @@ namespace Renderer {
  * in theory. But in practise would cause delays in execution because no image can be acquired from the swap chain yet 
 */
 #define MAX_FRAMES_IN_FLIGHT        2
+/* Specify the maximum number of command buffers that will be submitted to the transfer queue
+*/
+#define MAX_TRANSFERS_IN_QUEUE      2
 /* Path to shader files binary
 */
 #define VERTEX_SHADER_BINARY        "Build/Bin/vert.spv"

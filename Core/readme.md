@@ -40,7 +40,10 @@
                                                                 VKPipeline (4)              VKImageView (20)
                                                                 |                           |
                                                                 |                           |
-                                                                VKTransferCmdBuffer (23)     VKFrameBuffer (17)
+                                                                VKTransferCmdBuffer (23)    VKFrameBuffer (17)
+                                                                |                           |
+                                                                |                           |
+                                                                VKSyncObjects (24)          |
                                                                 |                           |
                                                                 |                           |
                                                                 VKVertexBuffer (22)         VKResizing (19)

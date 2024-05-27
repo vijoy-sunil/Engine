@@ -18,9 +18,6 @@ namespace Renderer {
             /* Handle to command pool
             */
             VkCommandPool m_commandPool;
-            /* Set maximum number of frames in flight
-            */
-            const uint32_t m_maxFramesInFlight = MAX_FRAMES_IN_FLIGHT;
             /* Handle to command buffers, each frame should have its own command buffer in order to handle multiple 
              * frames in flight
             */
@@ -97,7 +94,7 @@ namespace Renderer {
             /* Create command buffers for every frame in flight
             */
             void createCommandBuffers (void) {
-                m_commandBuffers.resize (m_maxFramesInFlight);
+                m_commandBuffers.resize (MAX_FRAMES_IN_FLIGHT);
 
                 VkCommandBufferAllocateInfo allocInfo{};
                 allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
@@ -342,10 +339,6 @@ namespace Renderer {
                                                          << std::endl;
                     throw std::runtime_error ("Failed to record command buffer");
                 }            
-            }
-
-            uint32_t getMaxFramesInFlight (void) {
-                return m_maxFramesInFlight;
             }
 
             std::vector <VkCommandBuffer>& getCommandBuffers (void) {
