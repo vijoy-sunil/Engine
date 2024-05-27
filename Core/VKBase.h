@@ -75,9 +75,10 @@ namespace Renderer {
                 */
                 createCommandPool();
                 createCommandBuffers();
-                /* Create vertex buffer
+                /* Create vertex and index buffer
                 */
                 createVertexBuffer();
+                createIndexBuffer();
                 /* Create synchronization primitives (semaphores and fences)
                 */
                 createSyncObjects();

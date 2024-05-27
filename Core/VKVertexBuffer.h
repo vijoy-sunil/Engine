@@ -12,12 +12,16 @@ using namespace Collections;
 namespace Renderer {
     class VKVertexBuffer: protected VKTransferCmdBuffer {
         private:
-            /* Handle to the vertex buffer
+            /* Handle to the vertex and index buffer. An index buffer is essentially an array of pointers into the 
+             * vertex buffer. It allows you to reorder the vertex data, reuse existing data for multiple vertices and
+             * this saving memory when loading complex models
             */
             VkBuffer m_vertexBuffer;
-            /* Handle to vertex buffer memory
+            VkBuffer m_indexBuffer;
+            /* Handle to vertex and index buffer memory
             */
             VkDeviceMemory m_vertexBufferMemory;
+            VkDeviceMemory m_indexBufferMemory;
             /* Handle to the log object
             */
             static Log::Record* m_VKVertexBufferLog;
@@ -140,6 +144,10 @@ namespace Renderer {
                  * objects at the same time is to create a custom allocator that splits up a single allocation among 
                  * many different objects by using the offset parameters that we've seen in many functions, or, use
                  * VulkanMemoryAllocator library
+                 * 
+                 * It is also recommended to store multiple buffers, like the vertex and index buffer, into a single 
+                 * VkBuffer and use offsets in commands like vkCmdBindVertexBuffers. The advantage is that your data is 
+                 * more cache friendly in that case, because it's closer together
                 */
                 result = vkAllocateMemory (getLogicalDevice(), &allocInfo, nullptr, &bufferMemory);
                 if (result != VK_SUCCESS) {
@@ -298,18 +306,58 @@ namespace Renderer {
                 */
             }
 
+            /* Creating an index buffer is almost identical to creating the vertex buffer. There are only two notable 
+             * differences. The bufferSize is now equal to the number of indices times the size of the index type. The 
+             * usage of the m_indexBuffer should be VK_BUFFER_USAGE_INDEX_BUFFER_BIT instead of 
+             * VK_BUFFER_USAGE_VERTEX_BUFFER_BIT
+            */
+            void createIndexBuffer (void) {
+                VkBuffer stagingBuffer;
+                VkDeviceMemory stagingBufferMemory;
+                VkDeviceSize bufferSize = sizeof (getIndices()[0]) * getIndices().size();
+
+                createGenericBuffer (bufferSize, 
+                                     VK_BUFFER_USAGE_TRANSFER_SRC_BIT, 
+                                     VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, 
+                                     stagingBuffer, 
+                                     stagingBufferMemory);
+
+                void* data;
+                vkMapMemory (getLogicalDevice(), stagingBufferMemory, 0, bufferSize, 0, &data);
+                memcpy (data, getIndices().data(), (size_t) bufferSize);
+                vkUnmapMemory (getLogicalDevice(), stagingBufferMemory);
+    
+                createGenericBuffer (bufferSize, 
+                                     VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, 
+                                     VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, 
+                                     m_indexBuffer, 
+                                     m_indexBufferMemory);
+
+                copyBuffer (stagingBuffer, m_indexBuffer, bufferSize);
+                vkDestroyBuffer (getLogicalDevice(), stagingBuffer, nullptr);
+                vkFreeMemory (getLogicalDevice(), stagingBufferMemory, nullptr);
+                /* Finally, we need to bind the index buffer, just like we did for the vertex buffer
+                */
+            }
+
             VkBuffer getVertexBuffer (void) {
                 return m_vertexBuffer;
+            }
+
+            VkBuffer getIndexBuffer (void) {
+                return m_indexBuffer;
             }
 
             void cleanUp (void) {
                 /* The buffer should be available for use in rendering commands until the end of the program
                 */
                 vkDestroyBuffer (getLogicalDevice(), m_vertexBuffer, nullptr);
+                vkDestroyBuffer (getLogicalDevice(), m_indexBuffer, nullptr);
                 /* Memory that is bound to a buffer object may be freed once the buffer is no longer used, so let's 
                  * free it after the buffer has been destroyed
                 */
                 vkFreeMemory (getLogicalDevice(), m_vertexBufferMemory, nullptr);
+                vkFreeMemory (getLogicalDevice(), m_indexBufferMemory, nullptr);
             }
     };
 

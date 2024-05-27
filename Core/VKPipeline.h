@@ -235,8 +235,8 @@ namespace Renderer {
                  * will almost always be (0, 0) to (width, height). Remember that the size of the swap chain and its 
                  * images may differ from the WIDTH and HEIGHT of the window. The swap chain images will be used as 
                  * framebuffers later on, so we should stick to their size
-                 * viewport.width = (float) swapChainExtent.width
-                 * viewport.height = (float) swapChainExtent.height
+                 * viewport.width = static_cast <float> (getSwapChainExtent().width);
+                 * viewport.height = static_cast <float> (getSwapChainExtent().height);
                  * 
                  * Scissor rectangle
                  * While viewports define the transformation from the image to the framebuffer, scissor rectangles define 
@@ -264,8 +264,8 @@ namespace Renderer {
                  * VkViewport viewport{};
                  * viewport.x = 0.0f;
                  * viewport.y = 0.0f;
-                 * viewport.width = (float) swapChainExtent.width;
-                 * viewport.height = (float) swapChainExtent.height;
+                 * viewport.width = static_cast <float> (getSwapChainExtent().width);
+                 * viewport.height = static_cast <float> (getSwapChainExtent().height);
                  * viewport.minDepth = 0.0f;
                  * viewport.maxDepth = 1.0f;
                  * 

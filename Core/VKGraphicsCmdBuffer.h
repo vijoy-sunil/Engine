@@ -238,7 +238,7 @@ namespace Renderer {
                 scissor.extent = getSwapChainExtent();
                 vkCmdSetScissor (commandBuffer, 0, 1, &scissor);
 
-                /* (4) Bind vertex buffer
+                /* (4) Bind vertex buffer and index buffer
                  * The vkCmdBindVertexBuffers function is used to bind vertex buffers to bindings, which is already set 
                  * up in createGraphicsPipeline function. The first two parameters, besides the command buffer, specify 
                  * the offset and number of bindings we're going to specify vertex buffers for. The last two parameters 
@@ -247,6 +247,66 @@ namespace Renderer {
                 VkBuffer vertexBuffers[] = {getVertexBuffer()};
                 VkDeviceSize offsets[] = {0};
                 vkCmdBindVertexBuffers (commandBuffer, 0, 1, vertexBuffers, offsets);
+                /* The vkCmdBindIndexBuffer binds the index buffer, just like we did for the vertex buffer. The 
+                 * difference is that you can only have a single index buffer. It's unfortunately not possible to use 
+                 * different indices for each vertex attribute, so we do still have to completely duplicate vertex data 
+                 * even if just one attribute varies. For example,
+                 * 
+                 * vertex attribute 1
+                 * {
+                 *      [x1, y1],
+                 *      [x2, y2],
+                 *      [x3, y3]
+                 * }
+                 * 
+                 * vertex attribute 2
+                 * {
+                 *      [a1, b1, c1],
+                 *      [a2, b2, c2],
+                 *      [a3, b3, c3]
+                 * }
+                 * 
+                 * index data 1
+                 * {
+                 *      0, 1, 2, 0, 1, 2
+                 * }
+                 * 
+                 * index data 2
+                 * {
+                 *      0, 1, 2, 1, 1, 1
+                 * }
+                 * 
+                 * Let us say this is the case where multiple same vertices (attribute 1) can have different normals 
+                 * (attribute 2). But this is not possible, and we will need to duplicate the data so each unique vertex 
+                 * has its own data, as stated above
+                 * 
+                 * vertex attribute 1
+                 * {
+                 *      [x1, y1],
+                 *      [x2, y2],
+                 *      [x3, y3],
+                 *      [x1, y1],
+                 *      [x2, y2],
+                 *      [x3, y3]
+                 * }
+                 * 
+                 * vertex attribute 2
+                 * {
+                 *      [a1, b1, c1],
+                 *      [a2, b2, c2],
+                 *      [a3, b3, c3],
+                 *      [a2, b2, c2],
+                 *      [a2, b2, c2],
+                 *      [a2, b2, c2],
+                 * }
+                 * 
+                 * index data
+                 * {
+                 *      0, 1, 2, 3, 4, 5  
+                 * }
+                */
+                VkBuffer indexBuffer = getIndexBuffer();
+                vkCmdBindIndexBuffer (commandBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT32);
 
                 /* (5) Draw cmd
                  *
@@ -256,8 +316,17 @@ namespace Renderer {
                  * instanceCount: Used for instanced rendering, use 1 if you're not doing that
                  * firstVertex: Used as an offset into the vertex buffer, defines the lowest value of gl_VertexIndex
                  * firstInstance: Used as an offset for instanced rendering, defines the lowest value of gl_InstanceIndex
+                 * 
+                 * vkCmdDraw (commandBuffer, static_cast <uint32_t> (getVertices().size()), 1, 0, 0);
+                 * 
+                 * Since we are using an index buffer we will remove the vkCmdDraw and replace it with vkCmdDrawIndexed
+                 * indexCount: Number of indices, this represents the number of vertices that will be passed to the 
+                 * vertex shader
+                 * firstIndex: Specifies an offset into the index buffer, using a value of 1 would cause the graphics 
+                 * card to start reading at the second index
+                 * vertexOffset: Specifies an offset to add to the indices in the index buffer
                 */
-                vkCmdDraw (commandBuffer, static_cast <uint32_t> (getVertices().size()), 1, 0, 0);
+                vkCmdDrawIndexed (commandBuffer, static_cast <uint32_t> (getIndices().size()), 1, 0, 0, 0);
 
                 /* (5) End render pass cmd
                 */
