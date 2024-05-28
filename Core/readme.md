@@ -2,20 +2,23 @@
 
 
 <pre>
-    VKInstanceHandle (16)           VKConstants (N/A)
+    VKConstants (N/A)
+    |
+    |-------------------------------|
+    |                               |
+    VKInstanceHandle (16)           |
     |                               |
     |                               |
     VKValidation (15)               |
     |                               |
-    |-------------------------------|
     |                               |
     VKInstance (9)                  VKWindow (11)
     |                               |
     |-------------------|-----------|
                         |
-                        VKSurface (12)
-                        |
-                        |
+                        VKSurface (12)      VKConstants (N/A)
+                        |                   |
+                        |                   |
                         VKQueue (5)         VKPhyDevice (18)
                         |                   |
                         |-------------------|
@@ -31,6 +34,11 @@
                         |---------------------------------------|
                                                                 |
                                                                 |
+                        VKConstants (N/A)                       |
+                        |                                       |
+                        |                                       |
+                        |-------------------|                   |
+                        |                   |                   |
                         VKUtils (10)        VKVertexData (21)   VKRenderPass (3) (virtual)
                         |                   |                   |
                         |                   |                   |---------------------------|

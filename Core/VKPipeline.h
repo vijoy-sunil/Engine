@@ -58,14 +58,12 @@ namespace Renderer {
         public:
             VKPipeline (void) {
                 m_VKPipelineLog = LOG_INIT (m_instanceId, 
-                                            Log::VERBOSE, 
+                                            static_cast <Log::e_level> (TOGGLE_CORE_LOGGING & Log::VERBOSE),
                                             Log::TO_CONSOLE | Log::TO_FILE_IMMEDIATE, 
-                                            "./Build/Log/");
-                LOG_INFO (m_VKPipelineLog) << "Constructor called" << std::endl; 
+                                            "./Build/Log/"); 
             }
 
             ~VKPipeline (void) {
-                LOG_INFO (m_VKPipelineLog) << "Destructor called" << std::endl; 
                 LOG_CLOSE (m_instanceId);
             }
 
@@ -253,7 +251,7 @@ namespace Renderer {
 
                 VkPipelineDynamicStateCreateInfo dynamicState{};
                 dynamicState.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
-                dynamicState.dynamicStateCount = static_cast<uint32_t>(dynamicStates.size());
+                dynamicState.dynamicStateCount = static_cast <uint32_t> (dynamicStates.size());
                 dynamicState.pDynamicStates = dynamicStates.data();
 
                 /* Without dynamic state, the viewport and scissor rectangle need to be set in the pipeline using the 

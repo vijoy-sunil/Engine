@@ -33,14 +33,12 @@ namespace Renderer {
         public:
             VKQueue (void) {
                 m_VKQueueLog = LOG_INIT (m_instanceId, 
-                                         Log::VERBOSE, 
+                                         static_cast <Log::e_level> (TOGGLE_CORE_LOGGING & Log::VERBOSE), 
                                          Log::TO_CONSOLE | Log::TO_FILE_IMMEDIATE, 
                                          "./Build/Log/");
-                LOG_INFO (m_VKQueueLog) << "Constructor called" << std::endl; 
             }
 
             ~VKQueue (void) {
-                LOG_INFO (m_VKQueueLog) << "Destructor called" << std::endl; 
                 LOG_CLOSE (m_instanceId);
             }
 

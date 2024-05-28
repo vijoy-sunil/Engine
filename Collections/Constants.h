@@ -3,6 +3,7 @@
 
 #include <string>
 
+namespace Collections {
 // dump formatting
 #define TAB_L1                          "\t"
 #define TAB_L2                          TAB_L1 "\t"
@@ -24,4 +25,5 @@
  *                                      instance id obtained by adding the offset to its parent instance id
 */
 #define RESERVED_0                      99
+}   // namespace Collections
 #endif  // CONSTANTS_H

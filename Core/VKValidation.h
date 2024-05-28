@@ -43,6 +43,9 @@ namespace Renderer {
                                                                  VkDebugUtilsMessageTypeFlagsEXT messageType,
                                                                  const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
                                                                  void* pUserData) {
+                /* Suppress unused parameter warning
+                */
+                (void) pUserData;
                 LOG_WARNING (m_VKValidationLog) << "Validation layer/msg: " << pCallbackData-> pMessage << std::endl;
                 LOG_WARNING (m_VKValidationLog) << "Validation layer/msg severity: " << messageSeverity << std::endl;
                 LOG_WARNING (m_VKValidationLog) << "Validation layer/msg type: " << messageType << std::endl;
@@ -86,14 +89,13 @@ namespace Renderer {
             VKValidation (void) {
                 m_enableValidationLayers = false;
                 m_VKValidationLog = LOG_INIT (m_instanceId, 
-                                              Log::WARNING | Log::ERROR,
+                                              static_cast <Log::e_level> (TOGGLE_CORE_LOGGING & 
+                                                                         (Log::WARNING | Log::ERROR)),
                                               Log::TO_CONSOLE | Log::TO_FILE_IMMEDIATE, 
                                               "./Build/Log/");
-                LOG_INFO (m_VKValidationLog) << "Constructor called" << std::endl; 
             }
 
             ~VKValidation (void) {
-                LOG_INFO (m_VKValidationLog) << "Destructor called" << std::endl;
                 LOG_CLOSE (m_instanceId);
             }
 

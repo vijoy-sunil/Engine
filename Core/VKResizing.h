@@ -22,14 +22,12 @@ namespace Renderer {
         public:
             VKResizing (void) {
                 m_VKResizingLog = LOG_INIT (m_instanceId, 
-                                            Log::VERBOSE, 
+                                            static_cast <Log::e_level> (TOGGLE_CORE_LOGGING & Log::VERBOSE), 
                                             Log::TO_CONSOLE | Log::TO_FILE_IMMEDIATE, 
                                             "./Build/Log/");
-                LOG_INFO (m_VKResizingLog) << "Constructor called" << std::endl;
             }
 
             ~VKResizing (void) {
-                LOG_INFO (m_VKResizingLog) << "Destructor called" << std::endl;
                 LOG_CLOSE (m_instanceId);
             }
 

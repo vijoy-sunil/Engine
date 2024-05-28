@@ -26,14 +26,12 @@ namespace Renderer {
         public:
             VKImageView (void) {
                 m_VKImageViewLog = LOG_INIT (m_instanceId, 
-                                             Log::VERBOSE, 
+                                             static_cast <Log::e_level> (TOGGLE_CORE_LOGGING & Log::VERBOSE), 
                                              Log::TO_CONSOLE | Log::TO_FILE_IMMEDIATE, 
                                              "./Build/Log/");
-                LOG_INFO (m_VKImageViewLog) << "Constructor called" << std::endl; 
             }
 
             ~VKImageView (void) {
-                LOG_INFO (m_VKImageViewLog) << "Destructor called" << std::endl;
                 LOG_CLOSE (m_instanceId);
             }
 

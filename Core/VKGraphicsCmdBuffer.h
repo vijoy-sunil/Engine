@@ -32,14 +32,12 @@ namespace Renderer {
         public:
             VKGraphicsCmdBuffer (void) {
                 m_VKGraphicsCmdBufferLog = LOG_INIT (m_instanceId, 
-                                                     Log::VERBOSE, 
+                                                     static_cast <Log::e_level> (TOGGLE_CORE_LOGGING & Log::VERBOSE), 
                                                      Log::TO_CONSOLE | Log::TO_FILE_IMMEDIATE, 
                                                      "./Build/Log/");
-                LOG_INFO (m_VKGraphicsCmdBufferLog) << "Constructor called" << std::endl; 
             }
 
             ~VKGraphicsCmdBuffer (void) {
-                LOG_INFO (m_VKGraphicsCmdBufferLog) << "Destructor called" << std::endl; 
                 LOG_CLOSE (m_instanceId);
             }
 

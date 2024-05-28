@@ -131,12 +131,13 @@ namespace Log {
                                                std::ios_base::app | std::ios_base::out);
 
                     if (!m_saveFile_immediate.is_open())
-                        assert (false);
+                        throw std::runtime_error ("Unable to open file for TO_FILE_IMMEDIATE sink");
                 }
 
                 if (m_sink & TO_FILE_BUFFER_CIRCULAR) {
                     // if capacity is invalid
-                    assert (bufferCapacity != 0);
+                    if (bufferCapacity == 0)
+                        throw std::runtime_error ("Buffer capacity invalid for TO_FILE_BUFFER_CIRCULAR sink");    
 
                     // buffer instance id will be offset from log instance id
                     BUFFER_INIT (RESERVED_0 + m_instanceId, 
@@ -148,7 +149,7 @@ namespace Log {
                     m_saveFile_buffered.open (m_saveFileName_buffered, 
                                               std::ios_base::out);
                     if (!m_saveFile_buffered.is_open())
-                        assert (false);
+                        throw std::runtime_error ("Unable to open file for TO_FILE_BUFFER_CIRCULAR sink");
                 }
             }
 

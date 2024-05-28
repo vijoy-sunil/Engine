@@ -2,7 +2,9 @@
 #define VK_CONSTANTS_H
 
 namespace Renderer {
-
+/* Toggle all Core file logging Y (0x0f) or N (0)
+*/
+#define TOGGLE_CORE_LOGGING         0x0f
 /* Resolution in screen coordinates
 */
 #define WINDOW_WIDTH                800

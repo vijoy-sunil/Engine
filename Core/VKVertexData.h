@@ -7,6 +7,7 @@
 /* GLM library provides us with linear algebra related types like vectors and matrices
 */
 #include <glm/glm.hpp>
+#include "VKConstants.h"
 #include "../Collections/Log/include/Log.h"
 #include <vector>
 
@@ -47,14 +48,12 @@ namespace Renderer {
         public:
             VKVertexData (void) {
                 m_VKVertexDataLog = LOG_INIT (m_instanceId, 
-                                              Log::VERBOSE, 
+                                              static_cast <Log::e_level> (TOGGLE_CORE_LOGGING & Log::VERBOSE), 
                                               Log::TO_CONSOLE | Log::TO_FILE_IMMEDIATE, 
                                               "./Build/Log/");
-                LOG_INFO (m_VKVertexDataLog) << "Constructor called" << std::endl; 
             }
 
             ~VKVertexData (void) {
-                LOG_INFO (m_VKVertexDataLog) << "Destructor called" << std::endl;
                 LOG_CLOSE (m_instanceId);
             }
         
@@ -132,12 +131,12 @@ namespace Renderer {
                  * from. The binding is loading one Vertex at a time and the position attribute (pos) is at an offset of 
                  * 0 bytes from the beginning of this struct
                 */
-                attributeDescriptions[0].offset = offsetof(Vertex, pos);
+                attributeDescriptions[0].offset = offsetof (Vertex, pos);
 
                 attributeDescriptions[1].binding = 0;
                 attributeDescriptions[1].location = 1;
                 attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
-                attributeDescriptions[1].offset = offsetof(Vertex, color);
+                attributeDescriptions[1].offset = offsetof (Vertex, color);
                 return attributeDescriptions;
             }
     };

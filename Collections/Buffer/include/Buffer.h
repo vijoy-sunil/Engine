@@ -9,7 +9,7 @@
                     dataType,                                                                                   \
                     capacity)                   Buffer::bufferMgr.initBuffer <dataType> (id, type, capacity)
 // get buffer instance (pointer to buffer object) from mgr
-#define GET_BUFFER(id, dataType)                dynamic_cast <Buffer::Buffer <dataType> *>                              \
+#define GET_BUFFER(id, dataType)                dynamic_cast <Buffer::Buffer <dataType> *>                      \
                                                 (Buffer::bufferMgr.getInstance (id)) 
 #define BUFFER_CLOSE(id)                        Buffer::bufferMgr.closeInstance (id)
 #define BUFFER_CLOSE_ALL                        Buffer::bufferMgr.closeAllInstances()

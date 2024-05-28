@@ -24,7 +24,7 @@ namespace Buffer {
                 }
                 // instance id already exists
                 else
-                    assert (false);
+                    throw std::runtime_error ("Buffer instance id already exists");
             }
     };
     BufferMgr bufferMgr;

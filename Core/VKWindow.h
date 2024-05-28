@@ -39,6 +39,10 @@ namespace Renderer {
              * boolean framebufferResized
             */
             static void framebufferResizeCallback (GLFWwindow* window, int width, int height) {
+                /* Suppress unused parameter warning
+                */
+                (void) width;
+                (void) height;
                 auto app = reinterpret_cast <VKWindow*> (glfwGetWindowUserPointer (window));
                 app->setFrameBufferResized (true);
             }
@@ -46,16 +50,13 @@ namespace Renderer {
         public:
             VKWindow (void) {
                 m_framebufferResized = false;
-
                 m_VKWindowLog = LOG_INIT (m_instanceId, 
-                                          Log::VERBOSE, 
+                                          static_cast <Log::e_level> (TOGGLE_CORE_LOGGING & Log::VERBOSE), 
                                           Log::TO_CONSOLE | Log::TO_FILE_IMMEDIATE, 
                                           "./Build/Log/");
-                LOG_INFO (m_VKWindowLog) << "Constructor called" << std::endl; 
             }
 
             ~VKWindow (void) {
-                LOG_INFO (m_VKWindowLog) << "Destructor called" << std::endl; 
                 LOG_CLOSE (m_instanceId);
             }
 

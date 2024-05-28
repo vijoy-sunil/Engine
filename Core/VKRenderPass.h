@@ -25,14 +25,12 @@ namespace Renderer {
         public:
             VKRenderPass (void) {
                 m_VKRenderPassLog = LOG_INIT (m_instanceId, 
-                                              Log::VERBOSE, 
+                                              static_cast <Log::e_level> (TOGGLE_CORE_LOGGING & Log::VERBOSE), 
                                               Log::TO_CONSOLE | Log::TO_FILE_IMMEDIATE, 
                                               "./Build/Log/");
-                LOG_INFO (m_VKRenderPassLog) << "Constructor called" << std::endl; 
             }
 
-            ~VKRenderPass (void) {
-                LOG_INFO (m_VKRenderPassLog) << "Destructor called" << std::endl; 
+            ~VKRenderPass (void) { 
                 LOG_CLOSE (m_instanceId);
             }
 

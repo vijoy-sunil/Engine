@@ -37,14 +37,12 @@ namespace Renderer {
         public:
             VKRun (void) {
                 m_VKRunLog = LOG_INIT (m_instanceId, 
-                                       Log::VERBOSE, 
+                                       static_cast <Log::e_level> (TOGGLE_CORE_LOGGING & Log::VERBOSE),
                                        Log::TO_CONSOLE | Log::TO_FILE_IMMEDIATE, 
-                                       "./Build/Log/");
-                LOG_INFO (m_VKRunLog) << "Constructor called" << std::endl; 
+                                       "./Build/Log/"); 
             }
 
             ~VKRun (void) {
-                LOG_INFO (m_VKRunLog) << "Destructor called" << std::endl;
                 LOG_CLOSE (m_instanceId);
             }
 

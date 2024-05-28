@@ -1,6 +1,7 @@
 #ifndef VK_UTILS_H
 #define VK_UTILS_H
 
+#include "VKConstants.h"
 #include "../Collections/Log/include/Log.h"
 #include <vector>
 
@@ -19,14 +20,12 @@ namespace Renderer {
         public:
             VKUtils (void) {
                 m_VKUtilsLog = LOG_INIT (m_instanceId, 
-                                         Log::VERBOSE, 
+                                         static_cast <Log::e_level> (TOGGLE_CORE_LOGGING & Log::VERBOSE), 
                                          Log::TO_CONSOLE | Log::TO_FILE_IMMEDIATE, 
                                          "./Build/Log/");
-                LOG_INFO (m_VKUtilsLog) << "Constructor called" << std::endl; 
             }
 
-            ~VKUtils (void) {
-                LOG_INFO (m_VKUtilsLog) << "Destructor called" << std::endl; 
+            ~VKUtils (void) { 
                 LOG_CLOSE (m_instanceId);
             }
 
@@ -48,10 +47,10 @@ namespace Renderer {
                 }
 
                 size_t fileSize = (size_t) file.tellg();
-                std::vector <char> buffer(fileSize);
+                std::vector <char> buffer (fileSize);
                 /* seek back to the beginning of the file and read all of the bytes at once
                 */
-                file.seekg(0);
+                file.seekg (0);
                 file.read (buffer.data(), fileSize);
 
                 file.close();

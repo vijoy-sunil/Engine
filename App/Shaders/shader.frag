@@ -1,4 +1,4 @@
-/* The triangle that is formed by the positions from the vertex shader fills an area on the screen with fragments. The 
+/* The shape that is formed by the positions from the vertex shader fills an area on the screen with fragments. The 
  * fragment shader is invoked on these fragments to produce a color and depth for the framebuffer (or framebuffers)
 */
 #version 450
@@ -18,8 +18,7 @@ void main (void) {
      * index of the framebuffer. The color red is written to this outColor variable that is linked to the first (and only) 
      * framebuffer at index 0.
      *
-     * The values for fragColor will be automatically interpolated for the fragments between the three vertices, 
-     * resulting in a smooth gradient
+     * The values for fragColor will be automatically interpolated for the fragments resulting in a smooth gradient
     */
     outColor = vec4 (fragColor, 1.0);
 }

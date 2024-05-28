@@ -84,14 +84,13 @@ namespace Renderer {
         public:
             VKPhyDeviceHelper (void) {
                 m_VKPhyDeviceHelperLog = LOG_INIT (m_instanceId, 
-                                                   Log::WARNING | Log::ERROR, 
+                                                   static_cast <Log::e_level> (TOGGLE_CORE_LOGGING & 
+                                                                              (Log::WARNING | Log::ERROR)),
                                                    Log::TO_CONSOLE | Log::TO_FILE_IMMEDIATE, 
-                                                   "./Build/Log/");
-                LOG_INFO (m_VKPhyDeviceHelperLog) << "Constructor called" << std::endl; 
+                                                   "./Build/Log/"); 
             }
 
             ~VKPhyDeviceHelper (void) {
-                LOG_INFO (m_VKPhyDeviceHelperLog) << "Destructor called" << std::endl; 
                 LOG_CLOSE (m_instanceId);
             }
 

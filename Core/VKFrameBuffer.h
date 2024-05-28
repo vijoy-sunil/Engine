@@ -26,14 +26,12 @@ namespace Renderer {
         public:
             VKFrameBuffer (void) {
                 m_VKFrameBufferLog = LOG_INIT (m_instanceId, 
-                                               Log::VERBOSE, 
+                                               static_cast <Log::e_level> (TOGGLE_CORE_LOGGING & Log::VERBOSE), 
                                                Log::TO_CONSOLE | Log::TO_FILE_IMMEDIATE, 
-                                               "./Build/Log/");
-                LOG_INFO (m_VKFrameBufferLog) << "Constructor called" << std::endl; 
+                                               "./Build/Log/"); 
             }
 
-            ~VKFrameBuffer (void) {
-                LOG_INFO (m_VKFrameBufferLog) << "Destructor called" << std::endl; 
+            ~VKFrameBuffer (void) { 
                 LOG_CLOSE (m_instanceId);
             }
 

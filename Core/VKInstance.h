@@ -5,7 +5,6 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 #include "VKValidation.h"
-#include "VKConstants.h"
 #include "../Collections/Log/include/Log.h"
 #include <vector>
 #include <set>
@@ -101,14 +100,13 @@ namespace Renderer {
         public:
             VKInstance (void) {
                 m_VKInstanceLog = LOG_INIT (m_instanceId, 
-                                            Log::WARNING | Log::ERROR, 
+                                            static_cast <Log::e_level> (TOGGLE_CORE_LOGGING & 
+                                                                       (Log::WARNING | Log::ERROR)),
                                             Log::TO_CONSOLE | Log::TO_FILE_IMMEDIATE, 
                                             "./Build/Log/");
-                LOG_INFO (m_VKInstanceLog) << "Constructor called" << std::endl; 
             }
 
-            ~VKInstance (void) {
-                LOG_INFO (m_VKInstanceLog) << "Destructor called" << std::endl; 
+            ~VKInstance (void) { 
                 LOG_CLOSE (m_instanceId);
             }
             

@@ -6,6 +6,7 @@
 #include <GLFW/glfw3.h>
 #include "VKPipeline.h"
 #include "../Collections/Log/include/Log.h"
+#include <vector>
 
 using namespace Collections;
 
@@ -28,14 +29,12 @@ namespace Renderer {
         public:
             VKTransferCmdBuffer (void) {
                 m_VKTransferCmdBufferLog = LOG_INIT (m_instanceId, 
-                                                     Log::VERBOSE, 
+                                                     static_cast <Log::e_level> (TOGGLE_CORE_LOGGING & Log::VERBOSE), 
                                                      Log::TO_CONSOLE | Log::TO_FILE_IMMEDIATE, 
                                                      "./Build/Log/");
-                LOG_INFO (m_VKTransferCmdBufferLog) << "Constructor called" << std::endl; 
             }
 
             ~VKTransferCmdBuffer (void) {
-                LOG_INFO (m_VKTransferCmdBufferLog) << "Destructor called" << std::endl; 
                 LOG_CLOSE (m_instanceId);
             }
 
@@ -54,7 +53,7 @@ namespace Renderer {
                  * to be individually reset to the initial state; either by calling vkResetCommandBuffer, or via the 
                  * implicit reset when calling vkBeginCommandBuffer
                  * 
-                 * The command buffer that we will be submitting to the transfer queue will be short lived, so we will 
+                 * The command buffers that we will be submitting to the transfer queue will be short lived, so we will 
                  * choose the VK_COMMAND_POOL_CREATE_TRANSIENT_BIT flag
                 */
                 poolInfo.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT;

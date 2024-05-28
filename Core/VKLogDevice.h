@@ -29,14 +29,12 @@ namespace Renderer {
         public:
             VKLogDevice (void) {
                 m_VKLogDeviceLog = LOG_INIT (m_instanceId, 
-                                             Log::VERBOSE, 
+                                             static_cast <Log::e_level> (TOGGLE_CORE_LOGGING & Log::VERBOSE),
                                              Log::TO_CONSOLE | Log::TO_FILE_IMMEDIATE, 
                                              "./Build/Log/");
-                LOG_INFO (m_VKLogDeviceLog) << "Constructor called" << std::endl; 
             }
 
             ~VKLogDevice (void) {
-                LOG_INFO (m_VKLogDeviceLog) << "Destructor called" << std::endl; 
                 LOG_CLOSE (m_instanceId);
             }
 
@@ -58,7 +56,8 @@ namespace Renderer {
                 */
                 std::set <uint32_t> uniqueQueueFamilies = {
                     indices.graphicsFamily.value(), 
-                    indices.presentFamily.value()
+                    indices.presentFamily.value(),
+                    indices.transferFamily.value()
                 };
                 /* Assign priorities to queues to influence the scheduling of command buffer execution using floating 
                  * point numbers between 0.0 and 1.0. This is required even if there is only a single queue

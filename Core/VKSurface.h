@@ -28,14 +28,12 @@ namespace Renderer {
         public:
             VKSurface (void) {
                 m_VKSurfaceLog = LOG_INIT (m_instanceId, 
-                                          Log::VERBOSE, 
-                                          Log::TO_CONSOLE | Log::TO_FILE_IMMEDIATE, 
-                                          "./Build/Log/");
-                LOG_INFO (m_VKSurfaceLog) << "Constructor called" << std::endl; 
+                                           static_cast <Log::e_level> (TOGGLE_CORE_LOGGING & Log::VERBOSE), 
+                                           Log::TO_CONSOLE | Log::TO_FILE_IMMEDIATE, 
+                                           "./Build/Log/"); 
             }
 
-            ~VKSurface (void) {
-                LOG_INFO (m_VKSurfaceLog) << "Destructor called" << std::endl; 
+            ~VKSurface (void) { 
                 LOG_CLOSE (m_instanceId);
             }
 

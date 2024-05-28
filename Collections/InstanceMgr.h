@@ -4,7 +4,6 @@
 #include "Constants.h"
 #include <iostream>
 #include <map>
-#include <cassert>
 
 namespace Collections {
 namespace Admin {
@@ -46,7 +45,7 @@ namespace Admin {
 
                 // invalid instance id
                 else
-                    assert (false);
+                    throw std::runtime_error ("Instance id doesn't exist");
             }
 
             void closeInstance (size_t instanceId) {

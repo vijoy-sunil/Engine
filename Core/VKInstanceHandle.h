@@ -4,6 +4,7 @@
 */
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
+#include "VKConstants.h"
 #include "../Collections/Log/include/Log.h"
 
 using namespace Collections;
@@ -24,14 +25,12 @@ namespace Renderer {
         public:
             VKInstanceHandle (void) {
                 m_VKInstanceHandleLog = LOG_INIT (m_instanceId, 
-                                                  Log::VERBOSE, 
+                                                  static_cast <Log::e_level> (TOGGLE_CORE_LOGGING & Log::VERBOSE),
                                                   Log::TO_CONSOLE | Log::TO_FILE_IMMEDIATE, 
                                                   "./Build/Log/");
-                LOG_INFO (m_VKInstanceHandleLog) << "Constructor called" << std::endl; 
             }
 
-            ~VKInstanceHandle (void) {
-                LOG_INFO (m_VKInstanceHandleLog) << "Destructor called" << std::endl; 
+            ~VKInstanceHandle (void) { 
                 LOG_CLOSE (m_instanceId);
             }
 

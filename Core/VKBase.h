@@ -19,14 +19,12 @@ namespace Renderer {
         public:
             VKBase (void) {
                 m_VKBaseLog = LOG_INIT (m_instanceId, 
-                                        Log::VERBOSE, 
+                                        static_cast <Log::e_level> (TOGGLE_CORE_LOGGING & Log::VERBOSE), 
                                         Log::TO_CONSOLE | Log::TO_FILE_IMMEDIATE, 
-                                        "./Build/Log/");
-                LOG_INFO (m_VKBaseLog) << "Constructor called" << std::endl; 
+                                        "./Build/Log/"); 
             }
 
             ~VKBase (void) {
-                LOG_INFO (m_VKBaseLog) << "Destructor called" << std::endl;
                 LOG_CLOSE (m_instanceId);
             }
 
@@ -86,35 +84,39 @@ namespace Renderer {
             }
 
             void destroyVulkan (void) {
-                /* Destroy swap chain and its dependents
-                */
-                VKFrameBuffer::cleanUp();
-                VKImageView::cleanUp();
-                VKSwapChain::cleanUp();
-                /* Destroy synchronization primitives
-                */
-                VKSyncObjects::cleanUp();
-                /* Destroy vertex buffer
-                */
-                VKVertexBuffer::cleanUp();
                 /* Destroy command pool
                 */
                 VKGraphicsCmdBuffer::cleanUp();
+                /* Destroy vertex and index buffer
+                */
+                VKVertexBuffer::cleanUp();
+                /* Destroy synchronization primitives
+                */
+                VKSyncObjects::cleanUp();
+                /* Destroy frame buffers
+                */
+                VKFrameBuffer::cleanUp();
                 /* Destroy pipeline and pipeline layout
                 */
                 VKPipeline::cleanUp();
-                /* Destroy render pas
+                /* Destroy render pass
                 */
                 VKRenderPass::cleanUp();
+                /* Destroy image views
+                */
+                VKImageView::cleanUp();
+                /* Destroy swap chain
+                */
+                VKSwapChain::cleanUp();
                 /* Destroy logical device handle
                 */
                 VKLogDevice::cleanUp();
-                /* Destroy debug messenger handle
-                */
-                VKValidation::cleanUp();
                 /* Destroy surface
                 */
                 VKSurface::cleanUp();
+                /* Destroy debug messenger handle
+                */
+                VKValidation::cleanUp();
                 /* Destroy instance
                 */
                 VKInstance::cleanUp();                

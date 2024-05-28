@@ -63,7 +63,7 @@ namespace Renderer {
                 }
 
                 LOG_ERROR (m_VKVertexBufferLog) << "Failed to find suitable memory type" << std::endl;
-                throw std::runtime_error("Failed to find suitable memory type");
+                throw std::runtime_error ("Failed to find suitable memory type");
             }
 
             void createGenericBuffer (VkDeviceSize size, 
@@ -115,8 +115,8 @@ namespace Renderer {
 
                 VkResult result = vkCreateBuffer (getLogicalDevice(), &bufferInfo, nullptr, &buffer);
                 if (result != VK_SUCCESS) {
-                    LOG_ERROR (m_VKVertexBufferLog) << "Failed to create vertex buffer" << " " << result << std::endl; 
-                    throw std::runtime_error ("Failed to create vertex buffer");
+                    LOG_ERROR (m_VKVertexBufferLog) << "Failed to create buffer" << " " << result << std::endl; 
+                    throw std::runtime_error ("Failed to create buffer");
                 }
 
                 /* The buffer has been created, but it doesn't actually have any memory assigned to it yet. The first 
@@ -157,11 +157,11 @@ namespace Renderer {
                 */
                 result = vkAllocateMemory (getLogicalDevice(), &allocInfo, nullptr, &bufferMemory);
                 if (result != VK_SUCCESS) {
-                    LOG_ERROR (m_VKVertexBufferLog) << "Failed to allocate vertex buffer memory" 
+                    LOG_ERROR (m_VKVertexBufferLog) << "Failed to allocate buffer memory" 
                                                     << " " 
                                                     << result 
                                                     << std::endl; 
-                    throw std::runtime_error ("Failed to allocate vertex buffer memory");
+                    throw std::runtime_error ("Failed to allocate buffer memory");
                 }
 
                 /* If memory allocation was successful, then we can now associate this memory with the buffer
@@ -175,14 +175,12 @@ namespace Renderer {
         public:
             VKVertexBuffer (void) {
                 m_VKVertexBufferLog = LOG_INIT (m_instanceId, 
-                                                Log::VERBOSE, 
+                                                static_cast <Log::e_level> (TOGGLE_CORE_LOGGING & Log::VERBOSE), 
                                                 Log::TO_CONSOLE | Log::TO_FILE_IMMEDIATE, 
                                                 "./Build/Log/");
-                LOG_INFO (m_VKVertexBufferLog) << "Constructor called" << std::endl; 
             }
 
             ~VKVertexBuffer (void) {
-                LOG_INFO (m_VKVertexBufferLog) << "Destructor called" << std::endl;
                 LOG_CLOSE (m_instanceId);
             }
 
@@ -359,7 +357,7 @@ namespace Renderer {
             }
 
             void cleanUp (void) {
-                /* The buffer should be available for use in rendering commands until the end of the program
+                /* The buffers should be available for use in rendering commands until the end of the program
                 */
                 vkDestroyBuffer (getLogicalDevice(), m_vertexBuffer, nullptr);
                 vkDestroyBuffer (getLogicalDevice(), m_indexBuffer, nullptr);

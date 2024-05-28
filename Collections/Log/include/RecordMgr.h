@@ -31,7 +31,7 @@ namespace Log {
 
                 // instance id already exists
                 else
-                    assert (false);
+                    throw std::runtime_error ("Record instance id already exists");
             }
 
             void closeRecord (size_t instanceId) {
