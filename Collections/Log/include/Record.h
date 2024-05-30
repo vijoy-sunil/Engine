@@ -228,7 +228,7 @@ namespace Log {
             /* templated overload operator, 
              * reference: https://stackoverflow.com/questions/17595957/operator-overloading-in-c-for-logging-purposes
             */
-            template<typename T>
+            template <typename T>
             Record& operator << (const T& data) {
                 // multiple sink support
                 if (m_sink & TO_FILE_IMMEDIATE && m_saveFile_immediate.is_open())

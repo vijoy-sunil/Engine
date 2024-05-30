@@ -11,7 +11,7 @@
 using namespace Collections;
 
 namespace Renderer {
-    class VKSwapChain: protected VKLogDevice {
+    class VKSwapChain: protected virtual VKLogDevice {
         private:
             /* Handle to the swap chain
             */
@@ -67,7 +67,7 @@ namespace Renderer {
                 }
                 /* If not it's okay to just settle with the first format that is specified
                 */
-                return availableFormats [0];
+                return availableFormats[0];
             }
 
             /* (2) Presenation mode

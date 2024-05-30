@@ -12,7 +12,7 @@
 using namespace Collections;
 
 namespace Renderer {
-    class VKPhyDeviceHelper: protected VKSwapChain {
+    class VKPhyDeviceHelper: protected virtual VKSwapChain {
         private:
             /* Handle to the log object
             */

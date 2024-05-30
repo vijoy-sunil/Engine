@@ -4,13 +4,13 @@
 */
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
-#include "VKPhyDeviceHelper.h"
+#include "VKSwapChain.h"
 #include "../Collections/Log/include/Log.h"
 
 using namespace Collections;
 
 namespace Renderer {
-    class VKRenderPass: protected VKPhyDeviceHelper {
+    class VKRenderPass: protected virtual VKSwapChain {
         private:
             /* Handle to render pass object
             */
@@ -141,7 +141,7 @@ namespace Renderer {
                  * In other words, sub passes control the state and usage of your framebuffers at the point that they 
                  * start being used by the graphics pipeline and at the point when they stop being used. They don't 
                  * affect the passing of variables between shaders and pipeline stages, that is controlled by the 
-                 * pipeline itself. They are ]really designed to allow you to efficiently pass images between graphics 
+                 * pipeline itself. They are really designed to allow you to efficiently pass images between graphics 
                  * pipelines and not within them.
                 */
 
@@ -173,8 +173,8 @@ namespace Renderer {
                 /* The index of the attachment in this array is directly referenced from the fragment shader with the 
                  * layout(location = 0) out vec4 outColor directive.
                  *
-                 * [?] Does this mean that by specifying (location = 0) in the fragment shader we effectively output the 
-                 * shading result to the first color attachment in the subpass.
+                 * Does this mean that by specifying (location = 0) in the fragment shader we effectively output the 
+                 * shading result to the first color attachment in the subpass?
                  * 
                  * The following other types of attachments can be referenced by a subpass:
                  * pInputAttachments: Attachments that are read from a shader

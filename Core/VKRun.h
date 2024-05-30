@@ -4,13 +4,15 @@
 */
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
+#include "VKDrawFrame.h"
 #include "VKBase.h"
 #include "../Collections/Log/include/Log.h"
 
 using namespace Collections;
 
 namespace Renderer {
-    class VKRun: protected VKBase {
+    class VKRun: protected VKDrawFrame,
+                 protected VKBase {
         private:
             /* Handle to the log object
             */

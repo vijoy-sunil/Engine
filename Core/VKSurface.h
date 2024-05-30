@@ -4,14 +4,14 @@
 */
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
-#include "VKInstance.h"
+#include "VKInstanceHandle.h"
 #include "VKWindow.h"
 #include "../Collections/Log/include/Log.h"
 
 using namespace Collections;
 
 namespace Renderer {
-    class VKSurface: protected VKInstance,
+    class VKSurface: protected virtual VKInstanceHandle,
                      protected VKWindow {
         private:
             /* VK_KHR_surface (instance level extension) exposes a VkSurfaceKHR object that represents an abstract type 

@@ -23,7 +23,7 @@ int main (void) {
    
     /* Run renderer
     */
-    renderer->runSequence();
+    renderer-> runSequence();
     /* Delete renderer object
     */
     delete renderer;

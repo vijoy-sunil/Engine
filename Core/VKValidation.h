@@ -12,7 +12,7 @@
 using namespace Collections;
 
 namespace Renderer {
-    class VKValidation: protected VKInstanceHandle {
+    class VKValidation: protected virtual VKInstanceHandle {
         private:
             /* You can simply enable validation layers for debug builds and completely disable them for release builds
              * if needed
@@ -45,7 +45,7 @@ namespace Renderer {
                                                                  void* pUserData) {
                 /* Suppress unused parameter warning
                 */
-                (void) pUserData;
+                static_cast <void> (pUserData);
                 LOG_WARNING (m_VKValidationLog) << "Validation layer/msg: " << pCallbackData-> pMessage << std::endl;
                 LOG_WARNING (m_VKValidationLog) << "Validation layer/msg severity: " << messageSeverity << std::endl;
                 LOG_WARNING (m_VKValidationLog) << "Validation layer/msg type: " << messageType << std::endl;
@@ -68,7 +68,7 @@ namespace Renderer {
                 auto func = (PFN_vkCreateDebugUtilsMessengerEXT) vkGetInstanceProcAddr (instance, 
                                                                  "vkCreateDebugUtilsMessengerEXT");
                 if (func != nullptr)
-                    return func(instance, pCreateInfo, pAllocator, pDebugMessenger);
+                    return func (instance, pCreateInfo, pAllocator, pDebugMessenger);
                 else
                     return VK_ERROR_EXTENSION_NOT_PRESENT;
             }
@@ -82,7 +82,7 @@ namespace Renderer {
                 auto func = (PFN_vkDestroyDebugUtilsMessengerEXT) vkGetInstanceProcAddr (instance, 
                                                                   "vkDestroyDebugUtilsMessengerEXT");
                 if (func != nullptr)
-                    func(instance, debugMessenger, pAllocator);
+                    func (instance, debugMessenger, pAllocator);
             }
 
         public:
@@ -154,8 +154,7 @@ namespace Renderer {
              * 
              * (4) pUserData
              * You can optionally pass a pointer to the pUserData field which will be passed along to the callback 
-             * function via the pUserData parameter. (You could use this to pass a pointer to the application class, for
-             * example)
+             * function via the pUserData parameter
              * 
              * NOTE: We need this as a separate function rather than being used inside the setup debug messenger function
             */

@@ -5,13 +5,15 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 #include "VKImageView.h"
+#include "VKRenderPass.h"
 #include "../Collections/Log/include/Log.h"
 #include <vector>
 
 using namespace Collections;
 
 namespace Renderer {
-    class VKFrameBuffer: protected VKImageView {
+    class VKFrameBuffer: protected VKImageView,
+                         protected virtual VKRenderPass {
         private:
             /* Handle to framebuffers
             */

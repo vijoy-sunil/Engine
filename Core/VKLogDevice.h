@@ -4,6 +4,7 @@
 */
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
+#include "VKValidation.h"
 #include "VKQueue.h"
 #include "VKPhyDevice.h"
 #include "../Collections/Log/include/Log.h"
@@ -13,7 +14,8 @@
 using namespace Collections;
 
 namespace Renderer {
-    class VKLogDevice: protected VKQueue,
+    class VKLogDevice: protected virtual VKValidation,
+                       protected VKQueue,
                        protected VKPhyDevice {
         private:
             /* Handle to the logical device
@@ -72,7 +74,7 @@ namespace Renderer {
                     queueCreateInfo.queueCount = 1;
                     queueCreateInfo.pQueuePriorities = &queuePriority;
 
-                    queueCreateInfos.push_back(queueCreateInfo);
+                    queueCreateInfos.push_back (queueCreateInfo);
                 }
                 /* The next information to specify is the set of device features that we'll be using. These are the 
                  * features that we can query for with vkGetPhysicalDeviceFeatures

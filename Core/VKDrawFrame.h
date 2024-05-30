@@ -5,13 +5,15 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 #include "VKGraphicsCmdBuffer.h"
+#include "VKResizing.h"
 #include "../Collections/Log/include/Log.h"
 #include <vector>
 
 using namespace Collections;
 
 namespace Renderer {
-    class VKDrawFrame: protected VKGraphicsCmdBuffer {
+    class VKDrawFrame: protected virtual VKGraphicsCmdBuffer,
+                       protected VKResizing {
         private:
             /* To use the right objects (command buffers and sync objects) every frame, keep track of the current frame
             */
@@ -42,8 +44,9 @@ namespace Renderer {
              * (1) Wait for the previous frame to finish
              * (2) Acquire an image from the swap chain
              * (3) Record a command buffer which draws the scene onto that image
-             * (4) Submit the recorded command buffer into the queue
-             * (5) Present the swap chain image
+             * (4) Update uniform buffer
+             * (5) Submit the recorded command buffer into the queue
+             * (6) Present the swap chain image
             */
             void drawFrame (void) {
                 /* (1)
@@ -60,7 +63,7 @@ namespace Renderer {
                  * frame's work to the command buffer until the current frame has finished executing, as we don't want to 
                  * overwrite the current contents of the command buffer while the GPU is using it
                 */
-                vkWaitForFences (getLogicalDevice(), 1, &getInFlightFences() [m_currentFrame], VK_TRUE, UINT64_MAX);
+                vkWaitForFences (getLogicalDevice(), 1, &getInFlightFences()[m_currentFrame], VK_TRUE, UINT64_MAX);
 
                 /* (2)
                  * The first two parameters of vkAcquireNextImageKHR are the logical device and the swap chain from which 
@@ -79,7 +82,7 @@ namespace Renderer {
                 VkResult result = vkAcquireNextImageKHR (getLogicalDevice(), 
                                                          getSwapChain(), 
                                                          UINT64_MAX, 
-                                                         getImageAvailableSemaphores() [m_currentFrame], 
+                                                         getImageAvailableSemaphores()[m_currentFrame], 
                                                          VK_NULL_HANDLE, 
                                                          &imageIndex);
 
@@ -113,16 +116,21 @@ namespace Renderer {
                  * with it. Thus, if we return early, the fence is still signaled and vkWaitForFences wont deadlock the 
                  * next time we use the same fence object
                 */
-                vkResetFences (getLogicalDevice(), 1, &getInFlightFences() [m_currentFrame]);
+                vkResetFences (getLogicalDevice(), 1, &getInFlightFences()[m_currentFrame]);
 
                 /* (3)
                  * First, we call vkResetCommandBuffer on the command buffer to make sure it is able to be recorded. 
                  * Then, we use the recordCommandBuffer function to record the commands we want
                 */
-                vkResetCommandBuffer (getCommandBuffers() [m_currentFrame], 0);
-                recordCommandBuffer (getCommandBuffers() [m_currentFrame], imageIndex);
+                vkResetCommandBuffer (getCommandBuffers()[m_currentFrame], 0);
+                recordCommandBuffer (getCommandBuffers()[m_currentFrame], imageIndex, m_currentFrame);
 
                 /* (4)
+                 * Update uniform buffer before submitting the current frame
+                */
+                updateUniformBuffer (m_currentFrame);
+
+                /* (5)
                  * Queue submission and synchronization is configured through parameters in the VkSubmitInfo structure
                 */
                 VkSubmitInfo submitInfo{};
@@ -135,7 +143,7 @@ namespace Renderer {
                  * 
                  * Each entry in the waitStages array corresponds to the semaphore with the same index in pWaitSemaphores
                 */
-                VkSemaphore waitSemaphores[] = {getImageAvailableSemaphores() [m_currentFrame]};
+                VkSemaphore waitSemaphores[] = {getImageAvailableSemaphores()[m_currentFrame]};
                 VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
                 submitInfo.waitSemaphoreCount = 1;
                 submitInfo.pWaitSemaphores = waitSemaphores;
@@ -143,11 +151,11 @@ namespace Renderer {
                 /* The next two parameters specify which command buffers to actually submit for execution
                 */
                 submitInfo.commandBufferCount = 1;
-                submitInfo.pCommandBuffers = &getCommandBuffers() [m_currentFrame];
+                submitInfo.pCommandBuffers = &getCommandBuffers()[m_currentFrame];
                 /* The signalSemaphoreCount and pSignalSemaphores parameters specify which semaphores to signal once the 
                  * command buffer(s) have finished execution
                 */
-                VkSemaphore signalSemaphores[] = {getRenderFinishedSemaphores() [m_currentFrame]};
+                VkSemaphore signalSemaphores[] = {getRenderFinishedSemaphores()[m_currentFrame]};
                 submitInfo.signalSemaphoreCount = 1;
                 submitInfo.pSignalSemaphores = signalSemaphores;
                 /* The last parameter references an optional fence that will be signaled when the command buffers finish 
@@ -158,13 +166,13 @@ namespace Renderer {
                 result = vkQueueSubmit (getGraphicsQueue(), 
                                         1,
                                         &submitInfo,
-                                        getInFlightFences() [m_currentFrame]);
+                                        getInFlightFences()[m_currentFrame]);
                 if (result != VK_SUCCESS) {
                     LOG_ERROR (m_VKDrawFrameLog) << "Failed to submit draw command buffer" << " " << result << std::endl; 
                     throw std::runtime_error ("Failed to submit draw command buffer");                    
                 }
 
-                /* (5)
+                /* (6)
                  * After queueing all rendering commands and transitioning the image to the correct layout, it is time to 
                  * queue an image for presentation
                 */

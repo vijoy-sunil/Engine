@@ -12,9 +12,9 @@
 using namespace Collections;
 
 namespace Renderer {
-    class VKInstance: protected VKValidation {
+    class VKInstance: protected virtual VKValidation {
         private:
-            /* List on instance level extensions
+            /* List of instance level extensions
             */
             std::vector <const char*> m_instanceExtensions;
             /* Application name
@@ -73,7 +73,7 @@ namespace Renderer {
                 */
                 uint32_t extensionCount = 0;
                 vkEnumerateInstanceExtensionProperties (nullptr, &extensionCount, nullptr);
-                std::vector <VkExtensionProperties> availableExtensions  (extensionCount);
+                std::vector <VkExtensionProperties> availableExtensions (extensionCount);
                 vkEnumerateInstanceExtensionProperties (nullptr, &extensionCount, availableExtensions.data());
 
                 LOG_INFO (m_VKInstanceLog) << "Available instance extensions" << std::endl;

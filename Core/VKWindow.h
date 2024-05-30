@@ -33,7 +33,7 @@ namespace Renderer {
             */
             const size_t m_instanceId = 11;
             /* The reason that we're creating a static function as a callback is because GLFW does not know how to 
-             * properly call a member function with the right 'this' pointer to our application class instance. However, 
+             * properly call a member function with the right 'this' pointer to our VKWindow class instance. However, 
              * we do get a reference to the GLFWwindow in the callback and glfwSetWindowUserPointer function allows you 
              * to store an arbitrary pointer inside of it. The 'this' pointer can then be used to properly set the 
              * boolean framebufferResized
@@ -41,10 +41,10 @@ namespace Renderer {
             static void framebufferResizeCallback (GLFWwindow* window, int width, int height) {
                 /* Suppress unused parameter warning
                 */
-                (void) width;
-                (void) height;
-                auto app = reinterpret_cast <VKWindow*> (glfwGetWindowUserPointer (window));
-                app->setFrameBufferResized (true);
+                static_cast <void> (width);
+                static_cast <void> (height);
+                auto thisPtr = reinterpret_cast <VKWindow*> (glfwGetWindowUserPointer (window));
+                thisPtr-> setFrameBufferResized (true);
             }
 
         public:
@@ -86,7 +86,7 @@ namespace Renderer {
                  * window on and the last parameter is only relevant to OpenGL
                 */
                 m_window = glfwCreateWindow (m_width, m_height, m_title, nullptr, nullptr);
-                /* Set user pointer of 'window', this pointer is used in the callback function
+                /* Set user pointer of 'm_window', this pointer is used in the callback function
                 */
                 glfwSetWindowUserPointer (m_window, this);
                 /* To detect window resizes we can use the glfwSetFramebufferSizeCallback function in the GLFW framework 

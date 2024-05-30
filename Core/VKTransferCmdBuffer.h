@@ -4,14 +4,14 @@
 */
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
-#include "VKPipeline.h"
+#include "VKLogDevice.h"
 #include "../Collections/Log/include/Log.h"
 #include <vector>
 
 using namespace Collections;
 
 namespace Renderer {
-    class VKTransferCmdBuffer: protected VKPipeline {
+    class VKTransferCmdBuffer: protected virtual VKLogDevice {
         private:
             /* Handle to command pool
             */

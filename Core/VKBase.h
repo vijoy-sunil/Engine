@@ -1,13 +1,17 @@
 #ifndef VK_BASE_H
 #define VK_BASE_H
 
-#include "VKDrawFrame.h"
+#include "VKInstance.h"
+#include "VKPhyDeviceHelper.h"
+#include "VKGraphicsCmdBuffer.h"
 #include "../Collections/Log/include/Log.h"
 
 using namespace Collections;
 
 namespace Renderer {
-    class VKBase: protected VKDrawFrame {
+    class VKBase: protected VKInstance,
+                  protected VKPhyDeviceHelper,
+                  protected virtual VKGraphicsCmdBuffer {
         private:
             /* Handle to the log object
             */
@@ -61,6 +65,9 @@ namespace Renderer {
                  * create a new createRenderPass function
                 */
                 createRenderPass();
+                /* Create descriptor set layout
+                */
+                createDescriptorSetLayout();
                 /* Graphics pipeline is the sequence of operations that take the vertices and textures of your meshes 
                  * all the way to the pixels in the render targets (ex: window)
                 */
@@ -77,6 +84,11 @@ namespace Renderer {
                 createVertexBuffer();
                 createIndexBuffer();
                 copyBuffers();
+                /* Setup uniform buffers, descriptor pool, descriptor sets
+                */
+                createUniformBuffers();
+                createDescriptorPool();
+                createDescriptorSets();
                 /* Create command pool and command buffers
                 */
                 createCommandPool();
@@ -87,6 +99,12 @@ namespace Renderer {
                 /* Destroy command pool
                 */
                 VKGraphicsCmdBuffer::cleanUp();
+                /* Destroy descriptor pool and layout
+                */
+                VKDescriptor::cleanUp();
+                /* Destroy uniform buffers
+                */
+                VKUniformBuffer::cleanUp();
                 /* Destroy vertex and index buffer
                 */
                 VKVertexBuffer::cleanUp();

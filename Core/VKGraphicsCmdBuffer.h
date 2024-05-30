@@ -4,16 +4,18 @@
 */
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
+#include "VKPipeline.h"
 #include "VKVertexBuffer.h"
-#include "VKResizing.h"
+#include "VKFrameBuffer.h"
 #include "../Collections/Log/include/Log.h"
 #include <vector>
 
 using namespace Collections;
 
 namespace Renderer {
-    class VKGraphicsCmdBuffer: protected VKVertexBuffer,
-                               protected VKResizing {
+    class VKGraphicsCmdBuffer: protected VKPipeline,
+                               protected VKVertexBuffer,
+                               protected virtual VKFrameBuffer {
         private:
             /* Handle to command pool
             */
@@ -126,7 +128,7 @@ namespace Renderer {
              * used will be passed in as a parameter, as well as the index of the current swapchain image we want to 
              * write to
             */
-            void recordCommandBuffer (VkCommandBuffer commandBuffer, uint32_t imageIndex) {
+            void recordCommandBuffer (VkCommandBuffer commandBuffer, uint32_t imageIndex, uint32_t currentFrame) {
                 /* We always begin recording a command buffer by calling vkBeginCommandBuffer with a small 
                  * VkCommandBufferBeginInfo structure as argument that specifies some details about the usage of this 
                  * specific command buffer
@@ -179,7 +181,7 @@ namespace Renderer {
                  * passed in, we can pick the right framebuffer for the current swapchain image
                 */
                 renderPassInfo.renderPass = getRenderPass();
-                renderPassInfo.framebuffer = getFrameBuffers() [imageIndex];
+                renderPassInfo.framebuffer = getFrameBuffers()[imageIndex];
                 /* The next two parameters define the size of the render area. The render area defines where shader loads 
                  * and stores will take place. The pixels outside this region will have undefined values. It should match 
                  * the size of the attachments for best performance
@@ -187,7 +189,7 @@ namespace Renderer {
                 renderPassInfo.renderArea.offset = {0, 0};
                 renderPassInfo.renderArea.extent = getSwapChainExtent();
                 /* The last two parameters define the clear values to use for VK_ATTACHMENT_LOAD_OP_CLEAR, which we used 
-                 * as load operation for the color attachment. I've defined the clear color to simply be black with 100% 
+                 * as load operation for the color attachment. We've defined the clear color to simply be black with 100% 
                  * opacity
                 */
                 VkClearValue clearColor = {{{0.0f, 0.0f, 0.0f, 1.0f}}};
@@ -303,7 +305,26 @@ namespace Renderer {
                 VkBuffer indexBuffer = getIndexBuffer();
                 vkCmdBindIndexBuffer (commandBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT32);
 
-                /* (5) Draw cmd
+                /* (5) Bind the descriptor set corresponding to currentFrame
+                 * Unlike vertex and index buffers, descriptor sets are not unique to graphics pipelines. Therefore we 
+                 * need to specify if we want to bind descriptor sets to the graphics or compute pipeline. The next 
+                 * parameter is the pipeline layout that the descriptors are based on.
+                 * 
+                 * The next three parameters specify the index of the first descriptor set, the number of sets to bind, 
+                 * and the array of sets to bind.
+                 * 
+                 * The last two parameters specify an array of offsets that are used for dynamic descriptors
+                */
+                vkCmdBindDescriptorSets (commandBuffer, 
+                                         VK_PIPELINE_BIND_POINT_GRAPHICS, 
+                                         getPipelineLayout(), 
+                                         0, 
+                                         1, 
+                                         &getDescriptorSets()[currentFrame], 
+                                         0, 
+                                         nullptr);
+
+                /* (6) Draw cmd
                  *
                  * The actual vkCmdDraw function is a bit anticlimactic, but it's so simple because of all the 
                  * information we specified in advance
@@ -323,7 +344,7 @@ namespace Renderer {
                 */
                 vkCmdDrawIndexed (commandBuffer, static_cast <uint32_t> (getIndices().size()), 1, 0, 0, 0);
 
-                /* (5) End render pass cmd
+                /* (7) End render pass cmd
                 */
                 vkCmdEndRenderPass (commandBuffer);
 

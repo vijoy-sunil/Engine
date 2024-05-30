@@ -7,6 +7,7 @@
 #include "VKUtils.h"
 #include "VKVertexData.h"
 #include "VKRenderPass.h"
+#include "VKDescriptor.h"
 #include "../Collections/Log/include/Log.h"
 #include <vector>
 
@@ -14,8 +15,9 @@ using namespace Collections;
 
 namespace Renderer {
     class VKPipeline: protected VKUtils,
-                      protected VKVertexData,
-                      protected virtual VKRenderPass {
+                      protected virtual VKVertexData,
+                      protected virtual VKRenderPass,
+                      protected VKDescriptor {
         private:
             /* Handle to pipeline layout object
             */
@@ -23,10 +25,6 @@ namespace Renderer {
             /* Handle to the pipeline
             */
             VkPipeline m_graphicsPipeline;
-            /* Path to shader files
-            */
-            const std::string m_vertexShaderPath   = VERTEX_SHADER_BINARY;
-            const std::string m_fragmentShaderPath = FRAGMENT_SHADER_BINARY;
             /* Handle to the log object
             */
             static Log::Record* m_VKPipelineLog;
@@ -152,8 +150,8 @@ namespace Renderer {
 
                 /* Setup vertex shader and fragment shader pipeline stages
                 */
-                auto vertShaderCode = readFile(m_vertexShaderPath);
-                auto fragShaderCode = readFile(m_fragmentShaderPath);
+                auto vertShaderCode = readFile (VERTEX_SHADER_BINARY);
+                auto fragShaderCode = readFile (FRAGMENT_SHADER_BINARY);
                 /* read file error
                 */
                 if (vertShaderCode.size() == 0 || fragShaderCode.size() == 0) {
@@ -306,7 +304,7 @@ namespace Renderer {
                 */
                 VkPipelineRasterizationStateCreateInfo rasterizer{};
                 rasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
-                /*  If depthClampEnable is set to VK_TRUE, then fragments that are beyond the near and far planes are 
+                /* If depthClampEnable is set to VK_TRUE, then fragments that are beyond the near and far planes are 
                  * clamped to them as opposed to discarding them. This is useful in some special cases like shadow maps 
                  * (technique that generates fast approximate shadows.)
                 */
@@ -329,9 +327,9 @@ namespace Renderer {
                  * to be considered front-facing and can be clockwise or counterclockwise
                 */
                 rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
-                rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE;
+                rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
                 /* The rasterizer can alter the depth values by adding a constant value or biasing them based on a 
-                 * fragment's slope. This is sometimes used for shadow mapping, but we won't be using it
+                 * fragment's slope. This is sometimes used for shadow mapping
                 */
                 rasterizer.depthBiasEnable = VK_FALSE;
                 rasterizer.depthBiasConstantFactor = 0.0f; 
@@ -442,8 +440,30 @@ namespace Renderer {
                 */
                 VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
                 pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-                pipelineLayoutInfo.setLayoutCount = 0; 
-                pipelineLayoutInfo.pSetLayouts = nullptr; 
+                /* setLayoutCount is the number of descriptor sets included in the pipeline layout and pSetLayouts is a 
+                 * pointer to an array of VkDescriptorSetLayout objects, meaning, it's possible to specify multiple 
+                 * descriptor set layouts here. For example:
+                 * 
+                 * (1) Descriptor set layout A
+                 * 'A' may contain layout info about an array of UBOs (binding 0), and, another UBO (binding 1)
+                 * 
+                 * (2) Descriptor set layout B
+                 * 'B' may contain a differnt UBO (binding 0)
+                 * 
+                 * We then allocation descriptor set A and B from the pool (could be same/different pool), and finally
+                 * bind them to the descriptors in the shader in the recordCommandBuffer function. The Shaders can then 
+                 * reference specific descriptor sets like this
+                 * 
+                 * layout (set = 0, binding = 0) uniform UniformBufferObject_A0 { ... }
+                 * layout (set = 0, binding = 1) uniform UniformBufferObject_A1 { ... }
+                 * layout (set = 1, binding = 0) uniform UniformBufferObject_B0 { ... }
+                 * 
+                 * A use case would be, to put descriptors that vary per-object and descriptors that are shared into 
+                 * separate descriptor sets. In that case you avoid rebinding most of the descriptors across draw calls
+                 * (recordCommandBuffer) which is potentially more efficient
+                */
+                pipelineLayoutInfo.setLayoutCount = 1; 
+                pipelineLayoutInfo.pSetLayouts = &getDescriptorSetLayout();
                 pipelineLayoutInfo.pushConstantRangeCount = 0; 
                 pipelineLayoutInfo.pPushConstantRanges = nullptr;
 
@@ -527,6 +547,10 @@ namespace Renderer {
 
             VkPipeline getPipeline (void) {
                 return m_graphicsPipeline;
+            }
+
+            VkPipelineLayout getPipelineLayout (void) {
+                return m_pipelineLayout;
             }
 
             void cleanUp (void) {

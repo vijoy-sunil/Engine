@@ -4,14 +4,14 @@
 */
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
-#include "VKRenderPass.h"
+#include "VKSwapChain.h"
 #include "../Collections/Log/include/Log.h"
 #include <vector>
 
 using namespace Collections;
 
 namespace Renderer {
-    class VKImageView: protected virtual VKRenderPass {
+    class VKImageView: protected virtual VKSwapChain {
         private:
             /* Vector to store imageViews for images in swap chain
             */

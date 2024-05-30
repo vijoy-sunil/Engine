@@ -4,14 +4,14 @@
 */
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
-#include "VKTransferCmdBuffer.h"
+#include "VKLogDevice.h"
 #include "../Collections/Log/include/Log.h"
 #include <vector>
 
 using namespace Collections;
 
 namespace Renderer {
-    class VKSyncObjects: protected VKTransferCmdBuffer {
+    class VKSyncObjects: protected virtual VKLogDevice {
         private:
             /* We'll need one semaphore to signal that an image has been acquired from the swapchain and is ready for 
              * rendering, another one to signal that rendering has finished and presentation can happen, and a fence to 

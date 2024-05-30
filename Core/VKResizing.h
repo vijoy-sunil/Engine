@@ -10,7 +10,7 @@
 using namespace Collections;
 
 namespace Renderer {
-    class VKResizing: protected VKFrameBuffer {
+    class VKResizing: protected virtual VKFrameBuffer {
         private:
             /* Handle to the log object
             */
