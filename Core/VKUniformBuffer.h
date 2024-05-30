@@ -200,10 +200,18 @@ namespace Renderer {
                 /* For the view transformation we've decided to look at the geometry from above at a 45 degree angle. 
                  * The glm::lookAt function takes the eye (camera) position, where you want to look at, in world space, 
                  * and up axis as parameters
+                 * 
+                 * The up vector is basically a vector defining your world's "upwards" direction. In almost all normal 
+                 * cases, this will be the vector (0, 1, 0) i.e. towards positive Y
+                 * 
+                 * Note that, we need to take care of how the vertices are being drawn, whether in counter-clockwise 
+                 * order or clockwise order, since it might cause backface culling to kick in and prevent any geometry 
+                 * from being drawn. Go to the createGraphicsPipeline function and modify the frontFace in 
+                 * VkPipelineRasterizationStateCreateInfo to correct this if needed
                 */
                 ubo.view = glm::lookAt (glm::vec3 (0.0f, -2.0f, -2.0f), 
                                         glm::vec3 (0.0f, 0.0f, 0.0f), 
-                                        glm::vec3 (0.0f, -1.0f, 0.0f));
+                                        glm::vec3 (0.0f, 1.0f, 0.0f));
                 /* We will use a perspective projection with a 45 degree vertical field-of-view. The other parameters 
                  * are the aspect ratio, near and far view planes. It is important to use the current swap chain extent 
                  * to calculate the aspect ratio to take into account the new width and height of the window after a 
@@ -228,10 +236,6 @@ namespace Renderer {
                  *            /                               /
                  *           /                               /
                  *          +Z                              -Z
-                 * Note that, we need to take care of how the vertices are being drawn, whether in counter-clockwise 
-                 * order or clockwise order, since it might cause backface culling to kick in and prevent any geometry 
-                 * from being drawn. Go to the createGraphicsPipeline function and modify the frontFace in 
-                 * VkPipelineRasterizationStateCreateInfo to correct this if needed
                 */
                 ubo.proj[1][1] *= -1;
 
