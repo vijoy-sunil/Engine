@@ -327,7 +327,7 @@ namespace Renderer {
                  * to be considered front-facing and can be clockwise or counterclockwise
                 */
                 rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
-                rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+                rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE;
                 /* The rasterizer can alter the depth values by adding a constant value or biasing them based on a 
                  * fragment's slope. This is sometimes used for shadow mapping
                 */

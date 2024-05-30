@@ -201,9 +201,9 @@ namespace Renderer {
                  * The glm::lookAt function takes the eye (camera) position, where you want to look at, in world space, 
                  * and up axis as parameters
                 */
-                ubo.view = glm::lookAt (glm::vec3 (2.0f, 2.0f, 2.0f), 
+                ubo.view = glm::lookAt (glm::vec3 (0.0f, -2.0f, -2.0f), 
                                         glm::vec3 (0.0f, 0.0f, 0.0f), 
-                                        glm::vec3 (0.0f, 0.0f, 1.0f));
+                                        glm::vec3 (0.0f, -1.0f, 0.0f));
                 /* We will use a perspective projection with a 45 degree vertical field-of-view. The other parameters 
                  * are the aspect ratio, near and far view planes. It is important to use the current swap chain extent 
                  * to calculate the aspect ratio to take into account the new width and height of the window after a 
@@ -228,10 +228,10 @@ namespace Renderer {
                  *            /                               /
                  *           /                               /
                  *          +Z                              -Z
-                 * Note that, because of the Y-flip we did in the projection matrix, the vertices are now being drawn in 
-                 * counter-clockwise order instead of clockwise order. This causes backface culling to kick in and 
-                 * prevents any geometry from being drawn. Go to the createGraphicsPipeline function and modify the 
-                 * frontFace in VkPipelineRasterizationStateCreateInfo to correct this
+                 * Note that, we need to take care of how the vertices are being drawn, whether in counter-clockwise 
+                 * order or clockwise order, since it might cause backface culling to kick in and prevent any geometry 
+                 * from being drawn. Go to the createGraphicsPipeline function and modify the frontFace in 
+                 * VkPipelineRasterizationStateCreateInfo to correct this if needed
                 */
                 ubo.proj[1][1] *= -1;
 
