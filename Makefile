@@ -1,12 +1,9 @@
-# setup paths here
-COLLECTIONS_DIR		:= ./Collections
 # VULKAN_SDK is setup in .zshrc
 GLM_INCDIR			:= /opt/homebrew/Cellar/glm/1.0.1
 GLFW_INCDIR			:= /opt/homebrew/Cellar/glfw/3.4
 
 SRCDIR     			:= ./App
-INCDIR				:= -I$(COLLECTIONS_DIR)					\
-					   -I$(VULKAN_SDK)/include				\
+INCDIR				:= -I$(VULKAN_SDK)/include				\
 				   	   -I$(GLM_INCDIR)/include				\
 				   	   -I$(GLFW_INCDIR)/include
 # shader files path
