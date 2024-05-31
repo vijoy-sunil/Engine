@@ -10,7 +10,7 @@ INCDIR				:= -I$(COLLECTIONS_DIR)					\
 				   	   -I$(GLM_INCDIR)/include				\
 				   	   -I$(GLFW_INCDIR)/include
 # shader files path
-SHADERDIR			:= $(SRCDIR)/Shaders
+SHADERDIR			:= ./Config/Shaders
 VERTSHADER			:= $(SHADERDIR)/shader.vert
 FRAGSHADER			:= $(SHADERDIR)/shader.frag
 

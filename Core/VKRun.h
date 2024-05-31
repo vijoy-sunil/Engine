@@ -48,6 +48,7 @@ namespace Renderer {
                 LOG_CLOSE (m_instanceId);
             }
 
+        protected:
             void runSequence (void) {
                 /* Enable validation layers
                 */

@@ -1,32 +1,16 @@
-#include "../Core/VKRun.h"
-#include "../Collections/Log/include/Log.h"
+#include "RDApp.h"
 
-using namespace Collections;
 using namespace Renderer;
 
 int main (void) {
-    /* Setup application logger
+    /* Create renderer object
     */
-    const size_t appInstanceId = 0;
-    auto appLog = LOG_INIT (appInstanceId, 
-                            Log::VERBOSE, 
-                            Log::TO_CONSOLE | Log::TO_FILE_IMMEDIATE, 
-                            "./Build/Log/");
-
-    LOG_INFO (appLog) << "Hello World!" << std::endl;
-    /* Create renderer object to use in application
-    */
-    VKRun* renderer = new VKRun;
-    /* Check log manager and destroy app logger
-     * LOG_MGR_DUMP;
-    */
-   
+    RDApp* rendererApp = new RDApp;   
     /* Run renderer
     */
-    renderer-> runSequence();
+    rendererApp-> runApp();
     /* Delete renderer object
     */
-    delete renderer;
-    LOG_CLOSE (appInstanceId);
+    delete rendererApp;
     return 0;
 }
