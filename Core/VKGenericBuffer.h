@@ -17,7 +17,8 @@ namespace Renderer {
             static Log::Record* m_VKGenericBufferLog;
             /* instance id for logger
             */
-            const size_t m_instanceId = 25;
+            const size_t m_instanceId = g_collectionsId++;
+            
             /* Graphics cards can offer different types of memory to allocate from. Each type of memory varies in terms 
              * of allowed operations and performance characteristics. We need to combine the requirements of the buffer 
              * (VkMemoryRequirements) and our own application requirements to find the right type of memory to use
@@ -25,16 +26,25 @@ namespace Renderer {
             uint32_t findMemoryType (uint32_t typeFilter, VkMemoryPropertyFlags properties) {
                 /* First we need to query info about the available types of memory
                  *
-                 * The VkPhysicalDeviceMemoryProperties structure has two arrays memoryTypes and memoryHeaps. Memory 
-                 * heaps are distinct memory resources like dedicated VRAM and swap space in RAM for when VRAM runs out. 
-                 * The different types of memory exist within these heaps. Right now we'll only concern ourselves with 
-                 * the type of memory and not the heap it comes from, but you can imagine that this can affect 
-                 * performance
+                 * The VkPhysicalDeviceMemoryProperties structure has two arrays memoryTypes and memoryHeaps. 
+                 * (1) memoryTypes is an array of VkMemoryType structures describing the memory types that can be used to 
+                 * access memory allocated from the heaps specified by memoryHeaps
+                 * (VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT etc.)
+                 * 
+                 * (2) memoryHeaps is an array of VkMemoryHeap structures describing the memory heaps from which memory 
+                 * can be allocated. Memory heaps are distinct memory resources like dedicated VRAM and swap space in 
+                 * RAM for when VRAM runs out. 
+                 * (VK_MEMORY_HEAP_DEVICE_LOCAL_BIT, VK_MEMORY_HEAP_MULTI_INSTANCE_BIT etc.)
+                 * 
+                 * Right now we'll only concern ourselves with the type of memory and not the heap it comes from, but you 
+                 * can imagine that this can affect performance
                 */
                 VkPhysicalDeviceMemoryProperties memProperties;
                 vkGetPhysicalDeviceMemoryProperties (getPhysicalDevice(), &memProperties);
-                /* If there is a memory type suitable for the buffer that also has all of the properties we need, then 
-                 * we return its index, otherwise we throw an exception 
+                /* We may have more than one desirable property, so we should check if the result of the bitwise AND is 
+                 * not just non-zero, but equal to the desired properties bit field. If there is a memory type suitable 
+                 * for the buffer that also has all of the properties we need, then we return its index, otherwise we 
+                 * throw an exception 
                  *
                  * The memoryTypes array consists of VkMemoryType structs that specify the heap and properties of each 
                  * type of memory. The properties define special features of the memory, like being able to map it so we 
@@ -80,10 +90,9 @@ namespace Renderer {
                 /* Just like the images in the swap chain, buffers can also be owned by a specific queue family or be 
                  * shared between multiple at the same time.
                 */
-                QueueFamilyIndices indices = checkQueueFamilySupport (getPhysicalDevice());
                 uint32_t queueFamilyIndices[] = { 
-                    indices.graphicsFamily.value(), 
-                    indices.transferFamily.value()
+                    getGraphicsFamilyIndex(), 
+                    getTransferFamilyIndex()
                 };
 
                 /* If the queue families differ, then we'll be using the concurrent mode (buffers can be used across 
@@ -91,7 +100,7 @@ namespace Renderer {
                  * in advance between which queue families ownership will be shared using the queueFamilyIndexCount and 
                  * pQueueFamilyIndices parameters
                 */
-                if (indices.graphicsFamily != indices.transferFamily) {
+                if (getGraphicsFamilyIndex() != getTransferFamilyIndex()) {
                     bufferInfo.sharingMode = VK_SHARING_MODE_CONCURRENT;
                     bufferInfo.queueFamilyIndexCount = 2;
                     bufferInfo.pQueueFamilyIndices = queueFamilyIndices;
@@ -112,7 +121,10 @@ namespace Renderer {
 
                 VkResult result = vkCreateBuffer (getLogicalDevice(), &bufferInfo, nullptr, &buffer);
                 if (result != VK_SUCCESS) {
-                    LOG_ERROR (m_VKGenericBufferLog) << "Failed to create buffer" << " " << result << std::endl; 
+                    LOG_ERROR (m_VKGenericBufferLog) << "Failed to create buffer" 
+                                                     << " " 
+                                                     << result 
+                                                     << std::endl; 
                     throw std::runtime_error ("Failed to create buffer");
                 }
 
@@ -123,7 +135,9 @@ namespace Renderer {
                  * (1) size: The size of the required amount of memory in bytes, may differ from bufferInfo.size
                  * (2) alignment: The offset in bytes where the buffer begins in the allocated region of memory, depends 
                  * on bufferInfo.usage and bufferInfo.flags
-                 * (3) memoryTypeBits: Bit field of the memory types that are suitable for the buffer
+                 * (3) memoryTypeBits: A bitmask which contains one bit set for every supported memory type for the 
+                 * resource. Bit i is set if and only if the memory type i in the VkPhysicalDeviceMemoryProperties 
+                 * structure for the physical device is supported for the resource
                 */
                 VkMemoryRequirements memRequirements;
                 vkGetBufferMemoryRequirements (getLogicalDevice(), buffer, &memRequirements);

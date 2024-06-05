@@ -40,7 +40,7 @@ namespace Renderer {
             static Log::Record* m_VKUniformBufferLog;
             /* instance id for logger
             */
-            const size_t m_instanceId = 26;
+            const size_t m_instanceId = g_collectionsId++;
 
         public:
             VKUniformBuffer (void) {

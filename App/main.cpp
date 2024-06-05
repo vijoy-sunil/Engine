@@ -3,14 +3,9 @@
 using namespace Renderer;
 
 int main (void) {
-    /* Create renderer object
+    /* Create and run renderer object
     */
-    RDApp* rendererApp = new RDApp;   
-    /* Run renderer
-    */
-    rendererApp-> runApp();
-    /* Delete renderer object
-    */
-    delete rendererApp;
+    RDApp rendererApp;  
+    rendererApp.runApp();
     return 0;
 }

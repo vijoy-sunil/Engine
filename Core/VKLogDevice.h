@@ -26,7 +26,7 @@ namespace Renderer {
             static Log::Record* m_VKLogDeviceLog;
             /* instance id for logger
             */
-            const size_t m_instanceId = 8;
+            const size_t m_instanceId = g_collectionsId++;
 
         public:
             VKLogDevice (void) {
@@ -46,7 +46,6 @@ namespace Renderer {
             }
 
             void createLogicalDevice (void) {
-                QueueFamilyIndices indices = checkQueueFamilySupport (getPhysicalDevice());
                 /* The creation of a logical device involves specifying a bunch of details in structs again, of which 
                  * the first one will be VkDeviceQueueCreateInfo. This structure describes the number of queues we want 
                  * for a single queue family. We need to have multiple VkDeviceQueueCreateInfo structs to create a queue 
@@ -57,9 +56,9 @@ namespace Renderer {
                  * if they were separate queues for a uniform approach
                 */
                 std::set <uint32_t> uniqueQueueFamilies = {
-                    indices.graphicsFamily.value(), 
-                    indices.presentFamily.value(),
-                    indices.transferFamily.value()
+                    getGraphicsFamilyIndex(),
+                    getPresentFamilyIndex(),
+                    getTransferFamilyIndex()
                 };
                 /* Assign priorities to queues to influence the scheduling of command buffer execution using floating 
                  * point numbers between 0.0 and 1.0. This is required even if there is only a single queue
@@ -105,7 +104,7 @@ namespace Renderer {
                  * fields of VkDeviceCreateInfo are ignored by up-to-date implementations. However, it is still a good 
                  * idea to set them anyway to be compatible with older implementations
                 */
-                if (isValidationLayersEnabled() && !checkValidationLayerSupport()) {
+                if (isValidationLayersEnabled() && !isValidationLayersSupported()) {
                     LOG_WARNING (m_VKLogDeviceLog) << "Required validation layers not available" << std::endl;
                     createInfo.enabledLayerCount = 0;
                 }
@@ -125,7 +124,10 @@ namespace Renderer {
                 */
                 VkResult result = vkCreateDevice (getPhysicalDevice(), &createInfo, nullptr, &m_logicalDevice);
                 if (result != VK_SUCCESS) {
-                    LOG_ERROR (m_VKLogDeviceLog) << "Failed to create logic device" << " " << result << std::endl;
+                    LOG_ERROR (m_VKLogDeviceLog) << "Failed to create logic device" 
+                                                 << " " 
+                                                 << result 
+                                                 << std::endl;
                     throw std::runtime_error ("Failed to create logic device");
                 }
 
@@ -134,9 +136,9 @@ namespace Renderer {
                  * single queue from this family, we'll simply use index 0.
                 */
                 VkQueue graphicsQueue, presentQueue, transferQueue;
-                vkGetDeviceQueue (m_logicalDevice, indices.graphicsFamily.value(), 0, &graphicsQueue);
-                vkGetDeviceQueue (m_logicalDevice, indices.presentFamily.value(), 0, &presentQueue);
-                vkGetDeviceQueue (m_logicalDevice, indices.transferFamily.value(), 0, &transferQueue);
+                vkGetDeviceQueue (m_logicalDevice, getGraphicsFamilyIndex(), 0, &graphicsQueue);
+                vkGetDeviceQueue (m_logicalDevice, getPresentFamilyIndex(), 0, &presentQueue);
+                vkGetDeviceQueue (m_logicalDevice, getTransferFamilyIndex(), 0, &transferQueue);
 
                 setGraphicsQueue (graphicsQueue);
                 setPresentQueue (presentQueue);

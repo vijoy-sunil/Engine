@@ -23,7 +23,7 @@ namespace Renderer {
             static Log::Record* m_VKSurfaceLog;
             /* instance id for logger
             */
-            const size_t m_instanceId = 12;
+            const size_t m_instanceId = g_collectionsId++;
 
         public:
             VKSurface (void) {
@@ -45,7 +45,10 @@ namespace Renderer {
             void createSurface (void) {
                 VkResult result = glfwCreateWindowSurface (getInstance(), getWindow(), nullptr, &m_surface);
                 if (result != VK_SUCCESS) {
-                    LOG_ERROR (m_VKSurfaceLog) << "Failed to create surface" << " " << result << std::endl;
+                    LOG_ERROR (m_VKSurfaceLog) << "Failed to create surface" 
+                                               << " " 
+                                               << result 
+                                               << std::endl;
                     throw std::runtime_error ("Failed to create surface");
                 }
             }

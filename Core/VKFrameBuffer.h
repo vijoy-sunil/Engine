@@ -23,7 +23,7 @@ namespace Renderer {
             static Log::Record* m_VKFrameBufferLog;
             /* instance id for logger
             */
-            const size_t m_instanceId = 17;
+            const size_t m_instanceId = g_collectionsId++;
             
         public:
             VKFrameBuffer (void) {
@@ -38,11 +38,13 @@ namespace Renderer {
             }
 
         protected:
-            /* A framebuffer object references all of the VkImageView objects that represent the attachments (example: 
-             * the color attachment). However, the image that we have to use for the attachment depends on which image 
-             * the swap chain returns when we retrieve one for presentation. That means that we have to create a 
-             * framebuffer for all of the images in the swap chain and use the one that corresponds to the retrieved 
-             * image at drawing time
+            /* Render passes operate in conjunction with framebuffers. Framebuffers represent a collection of specific 
+             * memory attachments that a render pass instance uses. In other words, a frame buffer binds a VkImageView 
+             * with an attachment, and the frame buffer together with the render pass defines the render target. 
+             * 
+             * However, the image that we have to use for the attachment depends on which image the swap chain returns 
+             * when we retrieve one for presentation. That means that we have to create a framebuffer for all of the 
+             * images in the swap chain and use the one that corresponds to the retrieved image at drawing time
             */
             void createFrameBuffers (void) {
                 /* Resize the container to hold all of the framebuffers
@@ -79,7 +81,10 @@ namespace Renderer {
                                                            nullptr, 
                                                            &m_framebuffers[i]);
                     if (result != VK_SUCCESS) {
-                        LOG_ERROR (m_VKFrameBufferLog) << "Failed to create framebuffers" << " " << result << std::endl;
+                        LOG_ERROR (m_VKFrameBufferLog) << "Failed to create framebuffers" 
+                                                       << " " 
+                                                       << result 
+                                                       << std::endl;
                         throw std::runtime_error ("Failed to create framebuffers");
                     }
                 }

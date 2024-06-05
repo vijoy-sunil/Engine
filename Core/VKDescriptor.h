@@ -39,7 +39,7 @@ namespace Renderer {
             static Log::Record* m_VKDescriptorLog;
             /* instance id for logger
             */
-            const size_t m_instanceId = 27; 
+            const size_t m_instanceId = g_collectionsId++; 
 
         public:
             VKDescriptor (void) {

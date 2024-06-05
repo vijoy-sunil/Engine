@@ -4,7 +4,6 @@
 */
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
-#include "VKUtils.h"
 #include "VKVertexData.h"
 #include "VKRenderPass.h"
 #include "VKDescriptor.h"
@@ -14,8 +13,7 @@
 using namespace Collections;
 
 namespace Renderer {
-    class VKPipeline: protected VKUtils,
-                      protected virtual VKVertexData,
+    class VKPipeline: protected virtual VKVertexData,
                       protected virtual VKRenderPass,
                       protected VKDescriptor {
         private:
@@ -30,7 +28,38 @@ namespace Renderer {
             static Log::Record* m_VKPipelineLog;
             /* instance id for logger
             */
-            const size_t m_instanceId = 4;
+            const size_t m_instanceId = g_collectionsId++;
+            
+            /* Read all of the bytes from the specified file and return them in a byte array managed by std::vector. This 
+             * function is used to read shader binary files
+            */
+            std::vector <char> readFile (const char* filename) {
+                /* ate: Start reading at the end of the file
+                 * binary: Read the file as binary file (avoid text transformations)
+                 *
+                 * The advantage of starting to read at the end of the file is that we can use the read position to 
+                 * determine the size of the file and allocate a buffer
+                */
+                std::ifstream file (filename, std::ios::ate | std::ios::binary);
+                if (!file.is_open()) {
+                    LOG_WARNING (m_VKPipelineLog) << "Failed to open file" 
+                                                  << " " 
+                                                  << filename 
+                                                  << std::endl;
+                    return {};
+                }
+
+                size_t fileSize = (size_t) file.tellg();
+                std::vector <char> buffer (fileSize);
+                /* seek back to the beginning of the file and read all of the bytes at once
+                */
+                file.seekg (0);
+                file.read (buffer.data(), fileSize);
+
+                file.close();
+                return buffer;
+            }
+
             /* Before we can pass the shader code to the pipeline, we have to wrap it in a VkShaderModule object. Shader 
              * modules are just a thin wrapper around the shader bytecode that we've previously loaded from a file and 
              * the functions defined in it
@@ -47,7 +76,10 @@ namespace Renderer {
                 VkShaderModule shaderModule;
                 VkResult result = vkCreateShaderModule (getLogicalDevice(), &createInfo, nullptr, &shaderModule);
                 if (result != VK_SUCCESS) {
-                    LOG_WARNING (m_VKPipelineLog) << "Failed to create shader module" << " " << result << std::endl;
+                    LOG_WARNING (m_VKPipelineLog) << "Failed to create shader module" 
+                                                  << " " 
+                                                  << result 
+                                                  << std::endl;
                     return VK_NULL_HANDLE;          
                 }
                 return shaderModule;
@@ -150,8 +182,8 @@ namespace Renderer {
 
                 /* Setup vertex shader and fragment shader pipeline stages
                 */
-                auto vertShaderCode = readFile (VERTEX_SHADER_BINARY);
-                auto fragShaderCode = readFile (FRAGMENT_SHADER_BINARY);
+                auto vertShaderCode = readFile (g_pathSettings.vertexShaderBinary);
+                auto fragShaderCode = readFile (g_pathSettings.fragmentShaderBinary);
                 /* read file error
                 */
                 if (vertShaderCode.size() == 0 || fragShaderCode.size() == 0) {
@@ -472,7 +504,10 @@ namespace Renderer {
                                                            nullptr, 
                                                            &m_pipelineLayout);
                 if (result != VK_SUCCESS) {
-                    LOG_ERROR (m_VKPipelineLog) << "Failed to create pipeline layout" << " " << result << std::endl;
+                    LOG_ERROR (m_VKPipelineLog) << "Failed to create pipeline layout" 
+                                                << " " 
+                                                << result 
+                                                << std::endl;
                     throw std::runtime_error ("Failed to create pipeline layout");
                 }
 
@@ -505,8 +540,28 @@ namespace Renderer {
                 pipelineInfo.pColorBlendState = &colorBlending;
                 pipelineInfo.layout = m_pipelineLayout;
 
+                /* Pipeline vs Render pass
+                 * VkPipeline is a GPU context. Think of the GPU as a FPGA (which it isn't, but bear with me). Doing 
+                 * vkCmdBindPipeline would set the GPU to a given gate configuration. But since the GPU is not a FPGA, it 
+                 * sets the GPU to a state where it can execute the shader programs and fixed-function pipeline stages 
+                 * defined by the VkPipeline.
+                 * 
+                 * VkRenderPass is a data oriented thing. It is necessitated by tiled architecture GPUs. Conceptually, 
+                 * they divide the framebuffer up into tiles that are processed independently. Tiled-architecture GPUs 
+                 * need to "load" images\buffers from general-purpose RAM to "on-chip memory". When they are done they 
+                 * "store" their results back to RAM. This loading of attachments is done by smaller "tiles", so the 
+                 * on-chip memory (and therefore shaders) never sees the whole memory at the same time.
+                 * 
+                 * Loading and storing these tiles is rather slow and a good optimization strategy is to combine as many 
+                 * operations as possible into one cycle over the whole framebuffer. It's trivial to see that operations 
+                 * can be combined safely as long as they don't depend on intermediate results from other tiles. Subpasses
+                 * and subpass dependencies tell the GPU drivers where these kinds of dependencies exist (or don't), so 
+                 * that they can group the actual render calls more effectively under the hood
+                 * 
+                 * Note that, you can have multiple pipeline in a single render pass
+                */
                 pipelineInfo.renderPass = getRenderPass();
-                /* index of the sub pass in the render pass
+                /* index of the sub pass in the render pass where this pipeline will be used
                 */
                 pipelineInfo.subpass = 0;
                 /* Vulkan allows you to create a new graphics pipeline by deriving from an existing pipeline. The idea of 
@@ -535,7 +590,10 @@ namespace Renderer {
                                                     nullptr, 
                                                     &m_graphicsPipeline);
                 if (result != VK_SUCCESS) {
-                    LOG_ERROR (m_VKPipelineLog) << "Failed to create graphics pipeline" << " " << result << std::endl;
+                    LOG_ERROR (m_VKPipelineLog) << "Failed to create graphics pipeline" 
+                                                << " " 
+                                                << result 
+                                                << std::endl;
                     throw std::runtime_error ("Failed to create graphics pipeline");                
                 }
 

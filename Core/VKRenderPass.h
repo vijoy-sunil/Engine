@@ -20,7 +20,7 @@ namespace Renderer {
             static Log::Record* m_VKRenderPassLog;
             /* instance id for logger
             */
-            const size_t m_instanceId = 3;
+            const size_t m_instanceId = g_collectionsId++;
             
         public:
             VKRenderPass (void) {
@@ -194,22 +194,24 @@ namespace Renderer {
                  * There are two built-in dependencies that take care of the transition at the start of the render pass 
                  * and at the end of the render pass, but the former does not occur at the right time. It assumes that 
                  * the transition occurs at the start of the pipeline, but we haven't acquired the image yet at that 
-                 * point (see drawFrame)
+                 * point (see graphicsOps)
                  * 
                  * Solution: (We choose option #2)
                  * (1) We could change the waitStages for the imageAvailableSemaphore to 
                  * VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT to ensure that the render passes don't begin until the image is 
                  * available, OR
                  * 
-                 * (2) We can make the render pass wait for the VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT stage (note 
-                 * that this wait is not the same wait as in the draw frame function)
+                 * (2) We can make the render pass wait for the VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT stage (this
+                 * stage specifies the stage of the pipeline after blending where the final color values are output from 
+                 * the pipeline)
                  * 
                  * Image layout transition
                  * Before the render pass the layout of the image will be transitioned to the layout you specify 
                  * (VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL). However, by default this happens at the beginning of the 
                  * pipeline at which point we haven't acquired the image yet (we acquire it in the 
-                 * VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT stage per drawFrame). That means that we need to change 
-                 * the behaviour of the render pass to also only change the layout once we've come to that stage
+                 * VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT stage per the fence in graphicsOps). That means that we 
+                 * need to change the behaviour of the render pass to also only change the layout once we've come to that 
+                 * stage
                  * 
                  * The stage masks in the subpass dependency allow the subpass to already begin before the image is 
                  * available up until the point where it needs to write to it
@@ -254,7 +256,10 @@ namespace Renderer {
                                                       nullptr, 
                                                       &m_renderPass);
                 if (result != VK_SUCCESS) {
-                    LOG_ERROR (m_VKRenderPassLog) << "Failed to create render pass" << " " << result << std::endl;
+                    LOG_ERROR (m_VKRenderPassLog) << "Failed to create render pass" 
+                                                  << " " 
+                                                  << result 
+                                                  << std::endl;
                     throw std::runtime_error ("Failed to create render pass");
                 }
             }

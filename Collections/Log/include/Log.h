@@ -3,8 +3,22 @@
 
 #include "RecordMgr.h"
 
+// macro overloading
+#define GET_MACRO(_1, _2, _3, _4, _5, NAME, ...)            NAME
+#define LOG_INIT(...)                                       GET_MACRO(__VA_ARGS__, LOG_INIT_A, LOG_INIT_B)(__VA_ARGS__)
 // mgr methods
-#define LOG_INIT                                Log::recordMgr.initRecord
+#define LOG_INIT_A(id, level, sink, saveDir, bufferCap)      Log::recordMgr.initRecord (id,                             \
+                                                                                        LOG_GET_FILE,                   \
+                                                                                        level,                          \
+                                                                                        sink,                           \
+                                                                                        saveDir,                        \
+                                                                                        bufferCap);
+#define LOG_INIT_B(id, level, sink, saveDir)                 Log::recordMgr.initRecord (id,                             \
+                                                                                        LOG_GET_FILE,                   \
+                                                                                        level,                          \
+                                                                                        sink,                           \
+                                                                                        saveDir);
+
 #define GET_LOG(id)                             static_cast <Log::Record*>                                              \
                                                 (Log::recordMgr.getInstance (id))
 // override close methods from instance mgr

@@ -1,10 +1,12 @@
-#ifndef VK_DRAW_FRAME_H
-#define VK_DRAW_FRAME_H
+#ifndef VK_GRAPHICS_H
+#define VK_GRAPHICS_H
 /* GLFW will include its own definitions and automatically load the Vulkan header vulkan/vulkan.h with it
 */
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
-#include "VKGraphicsCmdBuffer.h"
+#include "VKSyncObjects.h"
+#include "VKCmdBuffer.h"
+#include "VKRecord.h"
 #include "VKResizing.h"
 #include "../Collections/Log/include/Log.h"
 #include <vector>
@@ -12,34 +14,57 @@
 using namespace Collections;
 
 namespace Renderer {
-    class VKDrawFrame: protected virtual VKGraphicsCmdBuffer,
-                       protected VKResizing {
+    class VKGraphics: protected virtual VKSyncObjects,
+                      protected virtual VKCmdBuffer,
+                      protected virtual VKRecord,
+                      protected VKResizing {
         private:
+            /* Handle to command pool
+            */
+            VkCommandPool m_commandPool;
+            /* Handle to command buffers
+            */
+            std::vector <VkCommandBuffer> m_commandBuffers;
             /* To use the right objects (command buffers and sync objects) every frame, keep track of the current frame
             */
             uint32_t m_currentFrame;
             /* Handle to the log object
             */
-            static Log::Record* m_VKDrawFrameLog;
+            static Log::Record* m_VKGraphicsLog;
             /* instance id for logger
             */
-            const size_t m_instanceId = 6;
+            const size_t m_instanceId = g_collectionsId++;
 
         public:
-            VKDrawFrame (void) {
+            VKGraphics (void) {
                 m_currentFrame = 0;
 
-                m_VKDrawFrameLog = LOG_INIT (m_instanceId, 
-                                             static_cast <Log::e_level> (TOGGLE_CORE_LOGGING & Log::VERBOSE),
-                                             Log::TO_CONSOLE | Log::TO_FILE_IMMEDIATE, 
-                                             "./Build/Log/"); 
+                m_VKGraphicsLog = LOG_INIT (m_instanceId, 
+                                            static_cast <Log::e_level> (TOGGLE_CORE_LOGGING & Log::VERBOSE),
+                                            Log::TO_CONSOLE | Log::TO_FILE_IMMEDIATE, 
+                                            "./Build/Log/"); 
             }
 
-            ~VKDrawFrame (void) {
+            ~VKGraphics (void) {
                 LOG_CLOSE (m_instanceId);
             }
             
         protected:
+            /* Create command pool and command buffers
+            */
+            void readyCommandBuffers (void) {
+                /* We will be recording a command buffer every frame, so we want to be able to reset and rerecord over 
+                 * it. Thus, we need to set the VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT flag bit for our command 
+                 * pool. And, we're going to record commands for drawing, which is why we've chosen the graphics queue 
+                 * family
+                */
+                createCommandPool (VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT, 
+                                   getGraphicsFamilyIndex(),
+                                   m_commandPool);
+
+                createCommandBuffers (m_commandPool, MAX_FRAMES_IN_FLIGHT, m_commandBuffers);
+            }
+
             /* At a high level, rendering a frame in Vulkan consists of a common set of steps:
              * (1) Wait for the previous frame to finish
              * (2) Acquire an image from the swap chain
@@ -48,7 +73,7 @@ namespace Renderer {
              * (5) Submit the recorded command buffer into the queue
              * (6) Present the swap chain image
             */
-            void drawFrame (void) {
+            void graphicsOps (void) {
                 /* (1)
                  * At the start of the frame, we want to wait until the previous frame has finished, so that the command 
                  * buffer and semaphores are available to use. The vkWaitForFences function takes an array of fences and 
@@ -88,10 +113,13 @@ namespace Renderer {
 
                 /* If the swap chain turns out to be out of date when attempting to acquire an image, then it is no longer 
                  * possible to present to it. Therefore we should immediately recreate the swap chain and try again in 
-                 * the next drawFrame call
+                 * the next graphicsOps call
                 */
                 if (result == VK_ERROR_OUT_OF_DATE_KHR) {
-                    LOG_WARNING (m_VKDrawFrameLog) << "Failed to acquire swap chain image" << " " << result << std::endl; 
+                    LOG_WARNING (m_VKGraphicsLog) << "Failed to acquire swap chain image" 
+                                                  << " " 
+                                                  << result 
+                                                  << std::endl; 
                     recreateSwapChain();
                     return;
                 }
@@ -100,7 +128,10 @@ namespace Renderer {
                  * VK_SUBOPTIMAL_KHR are considered "success" return codes here
                 */
                 else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
-                    LOG_ERROR (m_VKDrawFrameLog) << "Failed to acquire swap chain image" << " " << result << std::endl; 
+                    LOG_ERROR (m_VKGraphicsLog) << "Failed to acquire swap chain image" 
+                                                << " " 
+                                                << result 
+                                                << std::endl; 
                     throw std::runtime_error ("Failed to acquire swap chain image");
                 }
 
@@ -108,8 +139,8 @@ namespace Renderer {
                  * But we delay it to upto this point to avoid deadlock on inFlightFence
                  *
                  * When vkAcquireNextImageKHR returns VK_ERROR_OUT_OF_DATE_KHR, we recreate the swapchain and then return 
-                 * from drawFrame. But before that happens, the current frame's fence was waited upon and reset. Since we 
-                 * return immediately, no work is submitted for execution and the fence will never be signaled, causing 
+                 * from graphicsOps. But before that happens, the current frame's fence was waited upon and reset. Since 
+                 * we return immediately, no work is submitted for execution and the fence will never be signaled, causing
                  * vkWaitForFences to halt forever.
                  * 
                  * To overcome this, delay resetting the fence until after we know for sure we will be submitting work 
@@ -122,8 +153,8 @@ namespace Renderer {
                  * First, we call vkResetCommandBuffer on the command buffer to make sure it is able to be recorded. 
                  * Then, we use the recordCommandBuffer function to record the commands we want
                 */
-                vkResetCommandBuffer (getCommandBuffers()[m_currentFrame], 0);
-                recordCommandBuffer (getCommandBuffers()[m_currentFrame], imageIndex, m_currentFrame);
+                vkResetCommandBuffer (m_commandBuffers[m_currentFrame], 0);
+                recordCommandBuffer (m_commandBuffers[m_currentFrame], imageIndex, m_currentFrame);
 
                 /* (4)
                  * Update uniform buffer before submitting the current frame
@@ -151,7 +182,7 @@ namespace Renderer {
                 /* The next two parameters specify which command buffers to actually submit for execution
                 */
                 submitInfo.commandBufferCount = 1;
-                submitInfo.pCommandBuffers = &getCommandBuffers()[m_currentFrame];
+                submitInfo.pCommandBuffers = &m_commandBuffers[m_currentFrame];
                 /* The signalSemaphoreCount and pSignalSemaphores parameters specify which semaphores to signal once the 
                  * command buffer(s) have finished execution
                 */
@@ -168,7 +199,10 @@ namespace Renderer {
                                         &submitInfo,
                                         getInFlightFences()[m_currentFrame]);
                 if (result != VK_SUCCESS) {
-                    LOG_ERROR (m_VKDrawFrameLog) << "Failed to submit draw command buffer" << " " << result << std::endl; 
+                    LOG_ERROR (m_VKGraphicsLog) << "Failed to submit draw command buffer" 
+                                                << " " 
+                                                << result 
+                                                << std::endl; 
                     throw std::runtime_error ("Failed to submit draw command buffer");                    
                 }
 
@@ -212,12 +246,18 @@ namespace Renderer {
                  * but have nothing waiting on it
                 */
                 if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || isFrameBufferResized()) {
-                    LOG_WARNING (m_VKDrawFrameLog) << "Failed to present swap chain image" << " " << result << std::endl; 
+                    LOG_WARNING (m_VKGraphicsLog) << "Failed to present swap chain image" 
+                                                  << " " 
+                                                  << result 
+                                                  << std::endl; 
                     setFrameBufferResized (false);
                     recreateSwapChain();
                 }
                 else if (result != VK_SUCCESS) {
-                    LOG_ERROR (m_VKDrawFrameLog) << "Failed to present swap chain image" << " " << result << std::endl;
+                    LOG_ERROR (m_VKGraphicsLog) << "Failed to present swap chain image" 
+                                                << " " 
+                                                << result 
+                                                << std::endl;
                     throw std::runtime_error ("Failed to present swap chain image");
                 }
 
@@ -225,8 +265,15 @@ namespace Renderer {
                 */
                 m_currentFrame = (m_currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
             }
+
+            void cleanUp (void) {
+                /* Destroy command pool, note that command buffers will be automatically freed when their command pool 
+                 * is destroyed, so we don't need explicit cleanup
+                */
+                vkDestroyCommandPool (getLogicalDevice(), m_commandPool, nullptr);
+            }
     };
 
-    Log::Record* VKDrawFrame::m_VKDrawFrameLog;
+    Log::Record* VKGraphics::m_VKGraphicsLog;
 }   // namespace Renderer
-#endif  // VK_DRAW_FRAME_H
+#endif  // VK_GRAPHICS_H

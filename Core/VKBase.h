@@ -3,7 +3,8 @@
 
 #include "VKInstance.h"
 #include "VKPhyDeviceHelper.h"
-#include "VKGraphicsCmdBuffer.h"
+#include "VKTransfer.h"
+#include "VKGraphics.h"
 #include "../Collections/Log/include/Log.h"
 
 using namespace Collections;
@@ -11,14 +12,15 @@ using namespace Collections;
 namespace Renderer {
     class VKBase: protected VKInstance,
                   protected VKPhyDeviceHelper,
-                  protected virtual VKGraphicsCmdBuffer {
+                  protected VKTransfer,
+                  protected VKGraphics {
         private:
             /* Handle to the log object
             */
             static Log::Record* m_VKBaseLog;
             /* instance id for logger
             */
-            const size_t m_instanceId = 13;
+            const size_t m_instanceId = g_collectionsId++;
 
         public:
             VKBase (void) {
@@ -83,22 +85,23 @@ namespace Renderer {
                 */
                 createVertexBuffer();
                 createIndexBuffer();
-                copyBuffers();
+                VKTransfer::readyCommandBuffers();
+                transferOps();
+                VKTransfer::cleanUp();
                 /* Setup uniform buffers, descriptor pool, descriptor sets
                 */
                 createUniformBuffers();
                 createDescriptorPool();
                 createDescriptorSets();
-                /* Create command pool and command buffers
+                /* Create command pool and command buffers to be submitted to graphics queue
                 */
-                createCommandPool();
-                createCommandBuffers();
+                VKGraphics::readyCommandBuffers();
             }
 
             void destroyVulkan (void) {
                 /* Destroy command pool
                 */
-                VKGraphicsCmdBuffer::cleanUp();
+                VKGraphics::cleanUp();
                 /* Destroy descriptor pool and layout
                 */
                 VKDescriptor::cleanUp();
@@ -107,6 +110,7 @@ namespace Renderer {
                 VKUniformBuffer::cleanUp();
                 /* Destroy vertex and index buffer
                 */
+                VKIndexBuffer::cleanUp();
                 VKVertexBuffer::cleanUp();
                 /* Destroy synchronization primitives
                 */

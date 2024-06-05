@@ -21,7 +21,7 @@ namespace Renderer {
             static Log::Record* m_VKImageViewLog;
             /* instance id for logger
             */
-            const size_t m_instanceId = 20; 
+            const size_t m_instanceId = g_collectionsId++; 
 
         public:
             VKImageView (void) {
@@ -78,7 +78,10 @@ namespace Renderer {
                                                          nullptr,
                                                          &m_imageViews[i]);
                     if (result != VK_SUCCESS) {
-                        LOG_ERROR (m_VKImageViewLog) << "Failed to create image views" << " " << result << std::endl;
+                        LOG_ERROR (m_VKImageViewLog) << "Failed to create image views" 
+                                                     << " " 
+                                                     << result 
+                                                     << std::endl;
                         throw std::runtime_error ("Failed to create image views");
                     }
                 }

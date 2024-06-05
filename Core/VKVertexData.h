@@ -7,7 +7,7 @@
 /* GLM library provides us with linear algebra related types like vectors and matrices
 */
 #include <glm/glm.hpp>
-#include "VKConstants.h"
+#include "VKConfig.h"
 #include "../Collections/Log/include/Log.h"
 #include <vector>
 
@@ -31,19 +31,12 @@ namespace Renderer {
                 {   {0.5f, 0.5f},   {0.0f, 0.0f, 1.0f}  },
                 {   {-0.5f, 0.5f},  {1.0f, 1.0f, 1.0f}  }
             };
-            /* Contents of index buffer
-             * Note that it is possible to use either uint16_t or uint32_t for your index buffer depending on the number 
-             * of entries in vertices, you also have to specify the correct type when binding the index buffer
-            */
-            const std::vector <uint32_t> m_indices = {
-                0, 1, 2, 2, 3, 0
-            };
             /* Handle to the log object
             */
             static Log::Record* m_VKVertexDataLog;
             /* instance id for logger
             */
-            const size_t m_instanceId = 21;          
+            const size_t m_instanceId = g_collectionsId++;          
 
         public:
             VKVertexData (void) {
@@ -60,10 +53,6 @@ namespace Renderer {
         protected:
             std::vector <Vertex> getVertices (void) {
                 return m_vertices;
-            }
-
-            std::vector <uint32_t> getIndices (void) {
-                return m_indices;
             }
 
             /* We need to tell Vulkan how to pass this data format 'm_vertices' to the vertex shader once it's been 

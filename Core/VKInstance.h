@@ -17,15 +17,12 @@ namespace Renderer {
             /* List of instance level extensions
             */
             std::vector <const char*> m_instanceExtensions;
-            /* Application name
-            */
-            const char* m_applicationName = APPLICATION_NAME;
             /* Handle to the log object
             */
             static Log::Record* m_VKInstanceLog;
             /* instance id for logger
             */
-            const size_t m_instanceId = 9;
+            const size_t m_instanceId = g_collectionsId++;
 
             void getInstanceExtensions (void) {
                 /* Since Vulkan is a platform agnostic API, it can not interface directly with the window system on its 
@@ -124,11 +121,11 @@ namespace Renderer {
                 /* Many structures in Vulkan require you to explicitly specify the type of structure in the sType member
                 */
                 appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-                appInfo.pApplicationName = m_applicationName;
-                appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
-                appInfo.pEngineName = "No Engine";
-                appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
-                appInfo.apiVersion = VK_API_VERSION_1_0;
+                appInfo.pApplicationName    = "VULKAN APPLICATION";
+                appInfo.applicationVersion  = VK_MAKE_VERSION(1, 0, 0);
+                appInfo.pEngineName         = "NO ENGINE";
+                appInfo.engineVersion       = VK_MAKE_VERSION(1, 0, 0);
+                appInfo.apiVersion          = VK_API_VERSION_1_0;
 
                 /* This next struct is not optional and tells the Vulkan driver which global extensions and validation 
                  * layers we want to use
@@ -154,7 +151,7 @@ namespace Renderer {
                  * thing is that you can enable them during development and then completely disable them when releasing 
                  * your application for zero overhead.
                 */
-                if (isValidationLayersEnabled() && !checkValidationLayerSupport()) {
+                if (isValidationLayersEnabled() && !isValidationLayersSupported()) {
                     LOG_WARNING (m_VKInstanceLog) << "Required validation layers not available" << std::endl;
                     createInfo.enabledLayerCount = 0;
                     createInfo.pNext = nullptr;
@@ -190,7 +187,10 @@ namespace Renderer {
                 VkInstance instance;
                 VkResult result = vkCreateInstance (&createInfo, nullptr, &instance);
                 if (result != VK_SUCCESS) {
-                    LOG_ERROR (m_VKInstanceLog) << "Failed to create instance" << " " << result << std::endl;
+                    LOG_ERROR (m_VKInstanceLog) << "Failed to create instance" 
+                                                << " " 
+                                                << result 
+                                                << std::endl;
                     throw std::runtime_error ("Failed to create instance");
                 }
                 setInstance (instance);

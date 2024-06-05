@@ -1,15 +1,30 @@
-#ifndef VK_CONSTANTS_H
-#define VK_CONSTANTS_H
+#ifndef VK_CONFIG_H
+#define VK_CONFIG_H
 
 namespace Renderer {
 /* Toggle all Core file logging Y (0x0f) or N (0)
 */
 #define TOGGLE_CORE_LOGGING         0x0f
-/* Resolution in screen coordinates
+/* Keep track of instance ids for Collections. Note that, we are not taking into account of reserved ids used by
+ * Collections which may result in collision
 */
-#define WINDOW_WIDTH                800
-#define WINDOW_HEIGHT               600
-#define WINDOW_TITLE                "VULKAN WINDOW"
+size_t g_collectionsId = 0;
+
+/* Window settings (resolution is in screen coordinates)
+*/
+struct windowSettings {
+    const int width   = 800;
+    const int height  = 600;
+    const char* title = "VULKAN WINDOW";
+} g_windowSettings;
+
+/* File/directory path settings
+*/
+struct pathSettings {
+    const char* vertexShaderBinary   = "Build/Bin/vert.spv";
+    const char* fragmentShaderBinary = "Build/Bin/frag.spv"; 
+} g_pathSettings;
+
 /* Frames in flight
  * As of now, we are required to wait on the previous frame to finish before we can start rendering the next which 
  * results in unnecessary idling of the host. The way to fix this is to allow multiple frames to be in-flight at once, 
@@ -31,12 +46,5 @@ namespace Renderer {
 /* Specify the maximum number of command buffers that will be submitted to the transfer queue
 */
 #define MAX_TRANSFERS_IN_QUEUE      2
-/* Path to shader files binary
-*/
-#define VERTEX_SHADER_BINARY        "Build/Bin/vert.spv"
-#define FRAGMENT_SHADER_BINARY      "Build/Bin/frag.spv"
-
-#define APPLICATION_NAME            "VULKAN APPLICATION"
-
 }   // namespace Renderer
-#endif  // VK_CONSTANTS_H
+#endif  // VK_CONFIG_H

@@ -4,7 +4,7 @@
 */
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
-#include "VKConstants.h"
+#include "VKConfig.h"
 #include "../Collections/Log/include/Log.h"
 #include <vector>
 
@@ -34,7 +34,7 @@ namespace Renderer {
             static Log::Record* m_VKPhyDeviceLog;
             /* instance id for logger
             */
-            const size_t m_instanceId = 18;
+            const size_t m_instanceId = g_collectionsId++;
 
         public:
             VKPhyDevice (void) {

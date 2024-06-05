@@ -1,134 +1,50 @@
-#ifndef VK_GRAPHICS_CMD_BUFFER_H
-#define VK_GRAPHICS_CMD_BUFFER_H
+#ifndef VK_RECORD_H
+#define VK_RECORD_H
 /* GLFW will include its own definitions and automatically load the Vulkan header vulkan/vulkan.h with it
 */
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
-#include "VKPipeline.h"
 #include "VKVertexBuffer.h"
+#include "VKIndexBuffer.h"
+#include "VKPipeline.h"
 #include "VKFrameBuffer.h"
 #include "../Collections/Log/include/Log.h"
-#include <vector>
 
 using namespace Collections;
 
 namespace Renderer {
-    class VKGraphicsCmdBuffer: protected VKPipeline,
-                               protected VKVertexBuffer,
-                               protected virtual VKFrameBuffer {
+    class VKRecord: protected VKVertexBuffer,
+                    protected VKIndexBuffer,
+                    protected VKPipeline,
+                    protected virtual VKFrameBuffer {
         private:
-            /* Handle to command pool
-            */
-            VkCommandPool m_commandPool;
-            /* Handle to command buffers, each frame should have its own command buffer in order to handle multiple 
-             * frames in flight
-            */
-            std::vector <VkCommandBuffer> m_commandBuffers;
             /* Handle to the log object
             */
-            static Log::Record* m_VKGraphicsCmdBufferLog;
+            static Log::Record* m_VKRecordLog;
             /* instance id for logger
             */
-            const size_t m_instanceId = 2;
-            
+            const size_t m_instanceId = g_collectionsId++;
+
         public:
-            VKGraphicsCmdBuffer (void) {
-                m_VKGraphicsCmdBufferLog = LOG_INIT (m_instanceId, 
-                                                     static_cast <Log::e_level> (TOGGLE_CORE_LOGGING & Log::VERBOSE), 
-                                                     Log::TO_CONSOLE | Log::TO_FILE_IMMEDIATE, 
-                                                     "./Build/Log/");
+            VKRecord (void) {
+                m_VKRecordLog = LOG_INIT (m_instanceId, 
+                                          static_cast <Log::e_level> (TOGGLE_CORE_LOGGING & Log::VERBOSE), 
+                                          Log::TO_CONSOLE | Log::TO_FILE_IMMEDIATE, 
+                                          "./Build/Log/");
             }
 
-            ~VKGraphicsCmdBuffer (void) {
+            ~VKRecord (void) {
                 LOG_CLOSE (m_instanceId);
             }
 
         protected:
-            /* Commands in Vulkan, like drawing operations and memory transfers, are not executed directly using function 
-             * calls. You have to record all of the operations you want to perform in command buffer objects. The 
-             * advantage of this is that when we are ready to tell the Vulkan what we want to do, all of the commands are 
-             * submitted together and Vulkan can more efficiently process the commands since all of them are available 
-             * together
-             * 
-             * We have to create a command pool before we can create command buffers. Command pools manage the memory 
-             * that is used to store the buffers and command buffers are allocated from them
+            /* Command buffer recording writes the commands we want to execute into a command buffer
             */
-            void createCommandPool (void) {
-                VkCommandPoolCreateInfo poolInfo{};
-                poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-                /* Command pool possible flags:
-                 * (1) VK_COMMAND_POOL_CREATE_TRANSIENT_BIT specifies that command buffers allocated from the pool will 
-                 * be short-lived, meaning that they will be reset or freed in a relatively short timeframe
-                 * 
-                 * (2) VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT allows any command buffer allocated from a pool 
-                 * to be individually reset to the initial state; either by calling vkResetCommandBuffer, or via the 
-                 * implicit reset when calling vkBeginCommandBuffer
-                 *
-                 * We will be recording a command buffer every frame, so we want to be able to reset and rerecord over 
-                 * it. Thus, we need to set the VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT flag bit for our command 
-                 * pool
-                */
-                poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-                /* Command buffers are executed by submitting them on one of the device queues, like the graphics and 
-                 * presentation queues we retrieved. Each command pool can only allocate command buffers that are 
-                 * submitted on a single type of queue
-                 * 
-                 * We're going to record commands for drawing, which is why we've chosen the graphics queue family
-                */
-                QueueFamilyIndices queueFamilyIndices = checkQueueFamilySupport (getPhysicalDevice());
-                poolInfo.queueFamilyIndex = queueFamilyIndices.graphicsFamily.value();
-
-                VkResult result = vkCreateCommandPool (getLogicalDevice(), 
-                                                       &poolInfo, 
-                                                       nullptr, 
-                                                       &m_commandPool);
-                if (result != VK_SUCCESS) {
-                    LOG_ERROR (m_VKGraphicsCmdBufferLog) << "Failed to create command pool" 
-                                                         << " " 
-                                                         << result 
-                                                         << std::endl;
-                    throw std::runtime_error ("Failed to create command pool");
-                }
-            }
-
-            /* Create command buffers for every frame in flight
-            */
-            void createCommandBuffers (void) {
-                m_commandBuffers.resize (MAX_FRAMES_IN_FLIGHT);
-
-                VkCommandBufferAllocateInfo allocInfo{};
-                allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-                /* Specify the command pool and number of buffers to allocate
-                */
-                allocInfo.commandPool = m_commandPool;
-                allocInfo.commandBufferCount = static_cast <uint32_t> (m_commandBuffers.size());
-                /* The level parameter specifies if the allocated command buffers are primary or secondary command buffers
-                 * VK_COMMAND_BUFFER_LEVEL_PRIMARY: Can be submitted to a queue for execution, but cannot be called from 
-                 * other command buffers
-                 * VK_COMMAND_BUFFER_LEVEL_SECONDARY: Cannot be submitted directly, but can be called from primary command 
-                 * buffers
-                 * We won't make use of the secondary command buffer functionality here, but you can imagine that it's 
-                 * helpful to reuse common operations from primary command buffers
-                */
-                allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-                
-                VkResult result = vkAllocateCommandBuffers (getLogicalDevice(), 
-                                                            &allocInfo, 
-                                                            m_commandBuffers.data());
-                if (result != VK_SUCCESS) {
-                    LOG_ERROR (m_VKGraphicsCmdBufferLog) << "Failed to create command buffers" 
-                                                         << " " 
-                                                         << result 
-                                                         << std::endl;
-                    throw std::runtime_error ("Failed to create command buffers");
-                }           
-            }
-
-            /* Command buffer recording writes the commands we want to execute into a command buffer. The VkCommandBuffer 
-             * used will be passed in as a parameter, as well as the index of the current swapchain image we want to 
-             * write to
-            */
-            void recordCommandBuffer (VkCommandBuffer commandBuffer, uint32_t imageIndex, uint32_t currentFrame) {
+            void recordCommandBuffer (VkCommandBuffer commandBuffer,
+                                      VkCommandBufferUsageFlags flags,
+                                      VkBuffer srcBuffer, 
+                                      VkBuffer dstBuffer, 
+                                      VkDeviceSize size) {
                 /* We always begin recording a command buffer by calling vkBeginCommandBuffer with a small 
                  * VkCommandBufferBeginInfo structure as argument that specifies some details about the usage of this 
                  * specific command buffer
@@ -147,10 +63,8 @@ namespace Renderer {
                  * (3) VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT specifies that a command buffer can be resubmitted 
                  * to any queue of the same queue family while it is in the pending state, and recorded into multiple 
                  * primary command buffers
-                 * 
-                 * None of these flags are applicable for us right now.
                 */
-                beginInfo.flags = 0;
+                beginInfo.flags = flags;
                 /* The pInheritanceInfo parameter is only relevant for secondary command buffers. It specifies which 
                  * state to inherit from the calling primary command buffers
                 */
@@ -161,10 +75,54 @@ namespace Renderer {
                 */
                 VkResult result = vkBeginCommandBuffer (commandBuffer, &beginInfo);
                 if (result != VK_SUCCESS) {
-                    LOG_ERROR (m_VKGraphicsCmdBufferLog) << "Failed to begin recording command buffer" 
-                                                         << " " 
-                                                         << result 
-                                                         << std::endl;
+                    LOG_ERROR (m_VKRecordLog) << "Failed to begin recording command buffer" 
+                                              << " "
+                                              << result
+                                              << std::endl;
+                    throw std::runtime_error ("Failed to begin recording command buffer");
+                }             
+
+                /* (1) Copy cmd
+                 *
+                 * Contents of buffers are transferred using the vkCmdCopyBuffer command. It takes the source and 
+                 * destination buffers as arguments, and an array of regions to copy. The regions are defined in 
+                 * VkBufferCopy structs and consist of a source buffer offset, destination buffer offset and size
+                */
+                VkBufferCopy copyRegion{};
+                copyRegion.srcOffset = 0; 
+                copyRegion.dstOffset = 0;
+                copyRegion.size = size;
+                vkCmdCopyBuffer (commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
+
+                /* Finish recording command
+                */
+                result = vkEndCommandBuffer (commandBuffer);
+                if (result != VK_SUCCESS) {
+                    LOG_ERROR (m_VKRecordLog) << "Failed to record command buffer" 
+                                              << " " 
+                                              << result 
+                                              << std::endl;
+                    throw std::runtime_error ("Failed to record command buffer");
+                } 
+            }
+
+            /* The VkCommandBuffer used will be passed in as a parameter, as well as the index of the current swapchain 
+             * image we want to write to
+            */
+            void recordCommandBuffer (VkCommandBuffer commandBuffer, 
+                                      uint32_t imageIndex, 
+                                      uint32_t currentFrame) {
+                VkCommandBufferBeginInfo beginInfo{};
+                beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+                beginInfo.flags = 0;
+                beginInfo.pInheritanceInfo = nullptr;   
+
+                VkResult result = vkBeginCommandBuffer (commandBuffer, &beginInfo);
+                if (result != VK_SUCCESS) {
+                    LOG_ERROR (m_VKRecordLog) << "Failed to begin recording command buffer" 
+                                              << " " 
+                                              << result 
+                                              << std::endl;
                     throw std::runtime_error ("Failed to begin recording command buffer");
                 }             
 
@@ -352,26 +310,15 @@ namespace Renderer {
                 */
                 result = vkEndCommandBuffer (commandBuffer);
                 if (result != VK_SUCCESS) {
-                    LOG_ERROR (m_VKGraphicsCmdBufferLog) << "Failed to record command buffer" 
-                                                         << " " 
-                                                         << result 
-                                                         << std::endl;
+                    LOG_ERROR (m_VKRecordLog) << "Failed to record command buffer" 
+                                              << " " 
+                                              << result 
+                                              << std::endl;
                     throw std::runtime_error ("Failed to record command buffer");
-                }            
-            }
-
-            std::vector <VkCommandBuffer>& getCommandBuffers (void) {
-                return m_commandBuffers;
-            }
-
-            void cleanUp (void) {
-                /* Destroy command pool, note that command buffers will be automatically freed when their command pool 
-                 * is destroyed, so we don't need explicit cleanup
-                */
-                vkDestroyCommandPool (getLogicalDevice(), m_commandPool, nullptr);
+                }   
             }
     };
 
-    Log::Record* VKGraphicsCmdBuffer::m_VKGraphicsCmdBufferLog;
+    Log::Record* VKRecord::m_VKRecordLog;
 }   // namespace Renderer
-#endif  // VK_GRAPHICS_CMD_BUFFER_H
+#endif  // VK_RECORD_H

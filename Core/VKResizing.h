@@ -17,7 +17,7 @@ namespace Renderer {
             static Log::Record* m_VKResizingLog;
             /* instance id for logger
             */
-            const size_t m_instanceId = 19;
+            const size_t m_instanceId = g_collectionsId++;
              
         public:
             VKResizing (void) {

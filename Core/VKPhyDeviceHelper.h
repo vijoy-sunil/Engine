@@ -19,7 +19,7 @@ namespace Renderer {
             static Log::Record* m_VKPhyDeviceHelperLog;
             /* instance id for logger
             */
-            const size_t m_instanceId = 7;
+            const size_t m_instanceId = g_collectionsId++;
             
             bool checkDeviceExtensionSupport (VkPhysicalDevice physicalDevice) {
                 /* Query all available extensions
@@ -62,7 +62,7 @@ namespace Renderer {
                 /* list of gpu devices have already been queried and is passed into this function one by one, which is 
                  * then checked for support
                 */
-                QueueFamilyIndices indices = checkQueueFamilySupport (physicalDevice);
+                populateQueueFamilyIndices (physicalDevice);
                 /* check device extension support
                 */
                 bool extensionsSupported = checkDeviceExtensionSupport (physicalDevice);
@@ -78,7 +78,7 @@ namespace Renderer {
                     */
                     swapChainAdequate = !swapChainSupport.formats.empty() && !swapChainSupport.presentModes.empty();
                 }
-                return indices.isComplete() && extensionsSupported && swapChainAdequate;
+                return isQueueFamilyIndicesComplete() && extensionsSupported && swapChainAdequate;
             }
 
         public:

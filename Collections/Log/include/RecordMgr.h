@@ -8,6 +8,7 @@ namespace Log {
     class RecordMgr: public Admin::InstanceMgr {
         public:
             Record* initRecord (size_t instanceId, 
+                                std::string file,
                                 e_level level, 
                                 e_sink sink,
                                 std::string saveDir = "",
@@ -17,6 +18,7 @@ namespace Log {
                 // add record object to pool
                 if (m_instancePool.find (instanceId) == m_instancePool.end()) {
                     Record* c_record = new Record (instanceId, 
+                                                   file,
                                                    level, 
                                                    sink, 
                                                    saveDir,

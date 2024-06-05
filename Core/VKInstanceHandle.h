@@ -4,7 +4,7 @@
 */
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
-#include "VKConstants.h"
+#include "VKConfig.h"
 #include "../Collections/Log/include/Log.h"
 
 using namespace Collections;
@@ -20,7 +20,7 @@ namespace Renderer {
             static Log::Record* m_VKInstanceHandleLog;
             /* instance id for logger
             */
-            const size_t m_instanceId = 16;
+            const size_t m_instanceId = g_collectionsId++;
             
         public:
             VKInstanceHandle (void) {

@@ -102,6 +102,7 @@ namespace Log {
 
         public:
             Record (size_t instanceId, 
+                    std::string file,
                     e_level level, 
                     e_sink sink, 
                     std::string saveDir,
@@ -117,12 +118,20 @@ namespace Log {
                 if ((m_sink & TO_FILE_IMMEDIATE) || (m_sink & TO_FILE_BUFFER_CIRCULAR)) {
                     std::string dirHierarchy = saveDir;
                     std::filesystem::create_directories (dirHierarchy);
+                    // strip file path and file extension to get just its name
+                    size_t strip_start = file.find_last_of ("\\/") + 1;
+                    size_t strip_end   = file.find_last_of ('.') - 1;
+                    file = file.substr (strip_start, strip_end);
 
-                    m_saveFileName_immediate = dirHierarchy + "immediate_log_" + 
-                                               std::to_string (m_instanceId) + format;
+                    m_saveFileName_immediate = dirHierarchy + "i_" + 
+                                               std::to_string (m_instanceId) + "_" +
+                                               file + 
+                                               format;
 
-                    m_saveFileName_buffered  = dirHierarchy + "buffered_log_" + 
-                                               std::to_string (m_instanceId) + format;
+                    m_saveFileName_buffered  = dirHierarchy + "b_" + 
+                                               std::to_string (m_instanceId) + "_" +
+                                               file +
+                                               format;
                 }
 
                 // open file, note that for this sink we are in append mode

@@ -18,6 +18,9 @@ namespace Renderer {
              * if needed
             */
             bool m_enableValidationLayers;
+            /* This boolean indicates that the required list of validation layers are supported
+            */
+            bool m_validationLayersSupported;
             /* Handle to the debug callback
             */
             VkDebugUtilsMessengerEXT m_debugMessenger;
@@ -34,7 +37,40 @@ namespace Renderer {
             static Log::Record* m_VKValidationLog;
             /* instance id for logger
             */
-            const size_t m_instanceId = 15;
+            const size_t m_instanceId = g_collectionsId++;
+            /* Logging to a circular buffer requires us to specify the buffer capacity. A multiple of 3 will allow us to
+             * save the validation message as a whole (msg, severity and type)
+            */
+            const size_t m_logBufferCapacity = 3;
+
+            /* Check if required validation layers are supported
+            */
+            bool checkValidationLayerSupport (void) {
+                /* Query all available layers
+                */
+                uint32_t layerCount = 0;
+                vkEnumerateInstanceLayerProperties (&layerCount, nullptr);
+                std::vector <VkLayerProperties> availableLayers (layerCount);
+                vkEnumerateInstanceLayerProperties (&layerCount, availableLayers.data());
+
+                LOG_INFO (m_VKValidationLog) << "Available validation layers" << std::endl;
+                for (const auto& layer: availableLayers)
+                    LOG_INFO (m_VKValidationLog) << layer.layerName << "," << layer.specVersion << std::endl;
+                
+                LOG_INFO (m_VKValidationLog) << "Required validation layers" << std::endl;
+                for (const auto& layer: m_validationLayers)
+                    LOG_INFO (m_VKValidationLog) << layer << std::endl;
+
+                /* Use a set of strings here to represent the unconfirmed required layers. That way we can easily tick
+                 * them off while enumerating the sequence of available layers
+                */
+                std::set <std::string> requiredLayers (m_validationLayers.begin(), m_validationLayers.end());
+                for (const auto& layer: availableLayers)
+                    requiredLayers.erase (layer.layerName);
+
+                return requiredLayers.empty();  
+            }
+            
             /* Setup the debug callback function (for validation layer functionality), the VKAPI_ATTR and VKAPI_CALL 
              * ensure that the function has the right signature for Vulkan to call it. The pCallbackData parameter refers 
              * to a VkDebugUtilsMessengerCallbackDataEXT struct containing the details of the message itself
@@ -88,11 +124,13 @@ namespace Renderer {
         public:
             VKValidation (void) {
                 m_enableValidationLayers = false;
+                m_validationLayersSupported = false;
                 m_VKValidationLog = LOG_INIT (m_instanceId, 
                                               static_cast <Log::e_level> (TOGGLE_CORE_LOGGING & 
                                                                          (Log::WARNING | Log::ERROR)),
-                                              Log::TO_CONSOLE | Log::TO_FILE_IMMEDIATE, 
-                                              "./Build/Log/");
+                                              Log::TO_CONSOLE | Log::TO_FILE_IMMEDIATE | Log::TO_FILE_BUFFER_CIRCULAR, 
+                                              "./Build/Log/",
+                                              m_logBufferCapacity);
             }
 
             ~VKValidation (void) {
@@ -102,44 +140,21 @@ namespace Renderer {
         protected:
             void enableValidationLayers (void) {
                 m_enableValidationLayers = true;
-            }
 
-            void disableValidationLayers (void) {
-                m_enableValidationLayers = false;
+                if (checkValidationLayerSupport())
+                    m_validationLayersSupported = true;
             }
 
             bool isValidationLayersEnabled (void) {
                 return m_enableValidationLayers;
             }
 
-            const std::vector <const char*>& getValidationLayers (void) {
-                return m_validationLayers;
+            bool isValidationLayersSupported (void) {
+                return m_validationLayersSupported;
             }
 
-            bool checkValidationLayerSupport (void) {
-                /* Query all available layers
-                */
-                uint32_t layerCount = 0;
-                vkEnumerateInstanceLayerProperties (&layerCount, nullptr);
-                std::vector <VkLayerProperties> availableLayers (layerCount);
-                vkEnumerateInstanceLayerProperties (&layerCount, availableLayers.data());
-
-                LOG_INFO (m_VKValidationLog) << "Available validation layers" << std::endl;
-                for (const auto& layer: availableLayers)
-                    LOG_INFO (m_VKValidationLog) << layer.layerName << "," << layer.specVersion << std::endl;
-                
-                LOG_INFO (m_VKValidationLog) << "Required validation layers" << std::endl;
-                for (const auto& layer: m_validationLayers)
-                    LOG_INFO (m_VKValidationLog) << layer << std::endl;
-
-                /* Use a set of strings here to represent the unconfirmed required layers. That way we can easily tick
-                 * them off while enumerating the sequence of available layers
-                */
-                std::set <std::string> requiredLayers (m_validationLayers.begin(), m_validationLayers.end());
-                for (const auto& layer: availableLayers)
-                    requiredLayers.erase (layer.layerName);
-
-                return requiredLayers.empty();  
+            const std::vector <const char*>& getValidationLayers (void) {
+                return m_validationLayers;
             }
             
             /* Fill up the struct that will be used to provide details about the debug messenger and its callback:

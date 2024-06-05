@@ -29,7 +29,8 @@ namespace Renderer {
             static Log::Record* m_VKSyncObjectsLog;
             /* instance id for logger
             */
-            const size_t m_instanceId = 24;
+            const size_t m_instanceId = g_collectionsId++;
+            
             /* A core design philosophy in Vulkan is that synchronization of execution on the GPU is explicit. The order 
              * of operations is up to us to define using various synchronization primitives which tell the driver the 
              * order we want things to run in. This means that many Vulkan API calls which start executing work on the 
@@ -69,7 +70,7 @@ namespace Renderer {
                 */
                 VkFenceCreateInfo fenceInfo{};
                 fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-                /* On the first frame we call drawFrame(), which immediately waits on inFlightFence to be signaled. 
+                /* On the first frame we call graphicsOps(), which immediately waits on inFlightFence to be signaled. 
                  * inFlightFence is only signaled after a frame has finished rendering, yet since this is the first frame, 
                  * there are no previous frames in which to signal the fence! Thus vkWaitForFences() blocks indefinitely, 
                  * waiting on something which will never happen. To combat this, create the fence in the signaled state, 

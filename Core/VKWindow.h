@@ -4,7 +4,7 @@
 */
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
-#include "VKConstants.h"
+#include "VKConfig.h"
 #include "../Collections/Log/include/Log.h"
 
 using namespace Collections;
@@ -15,13 +15,6 @@ namespace Renderer {
             /* Reference to the window
             */
             GLFWwindow* m_window;
-            /* Window dimensions
-            */
-            const uint32_t m_width  = WINDOW_WIDTH;
-            const uint32_t m_height = WINDOW_HEIGHT;
-            /* Window title
-            */
-            const char* m_title = WINDOW_TITLE;
             /* Although many drivers and platforms trigger VK_ERROR_OUT_OF_DATE_KHR automatically after a window resize, 
              * it is not guaranteed to happen. That's why we'll add some extra code to also handle resizes explicitly
             */
@@ -31,12 +24,13 @@ namespace Renderer {
             static Log::Record* m_VKWindowLog;
             /* instance id for logger
             */
-            const size_t m_instanceId = 11;
+            const size_t m_instanceId = g_collectionsId++;
+            
             /* The reason that we're creating a static function as a callback is because GLFW does not know how to 
              * properly call a member function with the right 'this' pointer to our VKWindow class instance. However, 
              * we do get a reference to the GLFWwindow in the callback and glfwSetWindowUserPointer function allows you 
              * to store an arbitrary pointer inside of it. The 'this' pointer can then be used to properly set the 
-             * boolean framebufferResized
+             * boolean m_framebufferResized
             */
             static void framebufferResizeCallback (GLFWwindow* window, int width, int height) {
                 /* Suppress unused parameter warning
@@ -85,7 +79,11 @@ namespace Renderer {
                 /* Create window, note that the fourth parameter allows you to optionally specify a monitor to open the 
                  * window on and the last parameter is only relevant to OpenGL
                 */
-                m_window = glfwCreateWindow (m_width, m_height, m_title, nullptr, nullptr);
+                m_window = glfwCreateWindow (g_windowSettings.width, 
+                                             g_windowSettings.height, 
+                                             g_windowSettings.title, 
+                                             nullptr, 
+                                             nullptr);
                 /* Set user pointer of 'm_window', this pointer is used in the callback function
                 */
                 glfwSetWindowUserPointer (m_window, this);

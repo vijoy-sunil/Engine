@@ -13,36 +13,6 @@ using namespace Collections;
 namespace Renderer {
     class VKQueue: protected VKSurface {
         private:
-            /* Handle to graphics queue, device queues are implicitly cleaned up when the device is destroyed, so we 
-             * don't need to do anything in the cleanup function
-            */
-            VkQueue m_graphicsQueue;
-            /* Handle to present queue
-            */
-            VkQueue m_presentQueue;
-            /* Handle to transfer queue
-            */
-            VkQueue m_transferQueue;
-            /* Handle to the log object
-            */
-            static Log::Record* m_VKQueueLog;
-            /* instance id for logger
-            */
-            const size_t m_instanceId = 5;
-            
-        public:
-            VKQueue (void) {
-                m_VKQueueLog = LOG_INIT (m_instanceId, 
-                                         static_cast <Log::e_level> (TOGGLE_CORE_LOGGING & Log::VERBOSE), 
-                                         Log::TO_CONSOLE | Log::TO_FILE_IMMEDIATE, 
-                                         "./Build/Log/");
-            }
-
-            ~VKQueue (void) {
-                LOG_CLOSE (m_instanceId);
-            }
-
-        protected:
             /* Holds index of queue families
             */
             struct QueueFamilyIndices {
@@ -62,15 +32,45 @@ namespace Renderer {
                  * it can queury a queue family with VK_QUEUE_TRANSFER_BIT and without VK_QUEUE_GRAPHICS_BIT
                 */
                 std::optional <uint32_t> transferFamily;
-                /* Easy method to quickly check if a family index has been found
-                */
-                bool isComplete (void) {
-                    return graphicsFamily.has_value() && 
-                           presentFamily.has_value()  &&
-                           transferFamily.has_value();
-                }
-            };
+            } m_indices;
+            /* Handle to graphics queue, device queues are implicitly cleaned up when the device is destroyed, so we 
+             * don't need to do anything in the cleanup function
+            */
+            VkQueue m_graphicsQueue;
+            /* Handle to present queue
+            */
+            VkQueue m_presentQueue;
+            /* Handle to transfer queue
+            */
+            VkQueue m_transferQueue;
+            /* Handle to the log object
+            */
+            static Log::Record* m_VKQueueLog;
+            /* instance id for logger
+            */
+            const size_t m_instanceId = g_collectionsId++;
+            
+            /* reset std::optional
+            */
+            void resetIndices (void) {
+                m_indices.graphicsFamily.reset();
+                m_indices.presentFamily.reset();
+                m_indices.transferFamily.reset();
+            }
+            
+        public:
+            VKQueue (void) {
+                m_VKQueueLog = LOG_INIT (m_instanceId, 
+                                         static_cast <Log::e_level> (TOGGLE_CORE_LOGGING & Log::VERBOSE), 
+                                         Log::TO_CONSOLE | Log::TO_FILE_IMMEDIATE, 
+                                         "./Build/Log/");
+            }
 
+            ~VKQueue (void) {
+                LOG_CLOSE (m_instanceId);
+            }
+
+        protected:
             VkQueue getGraphicsQueue (void) {
                 return m_graphicsQueue;
             }
@@ -95,12 +95,34 @@ namespace Renderer {
                 m_transferQueue = transferQueue;
             }          
 
+            /* Check if all required queue family indices have been found
+            */
+            bool isQueueFamilyIndicesComplete (void) {
+                return m_indices.graphicsFamily.has_value() && 
+                       m_indices.presentFamily.has_value()  &&
+                       m_indices.transferFamily.has_value();
+            }
+
+            uint32_t getGraphicsFamilyIndex (void) {
+                return m_indices.graphicsFamily.value();
+            }
+
+            uint32_t getPresentFamilyIndex (void) {
+                return m_indices.presentFamily.value();
+            }
+
+            uint32_t getTransferFamilyIndex (void) {
+                return m_indices.transferFamily.value();
+            }
+
             /* Almost every operation in Vulkan, anything from drawing to uploading textures, requires commands to be 
              * submitted to a queue. There are different types of queues that originate from different queue families 
              * and each family of queues allows only a subset of commands
             */
-            QueueFamilyIndices checkQueueFamilySupport (VkPhysicalDevice physicalDevice) {
-                QueueFamilyIndices indices;
+            void populateQueueFamilyIndices (VkPhysicalDevice physicalDevice) {
+                /* Reset indices first before populating them
+                */
+                resetIndices();
                 /* Query list of available queue families
                 */
                 uint32_t queueFamilyCount = 0;
@@ -115,7 +137,7 @@ namespace Renderer {
                     /* find a queue family that supports graphics commnands
                     */
                     if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT)
-                        indices.graphicsFamily = queueFamilyIndex;
+                        m_indices.graphicsFamily = queueFamilyIndex;
                     /* find a queue family that has the capability of presenting to our window surface
                     */
                     VkBool32 presentSupport = false;
@@ -124,19 +146,18 @@ namespace Renderer {
                                                           getSurface(), 
                                                           &presentSupport);
                     if (presentSupport)
-                        indices.presentFamily = queueFamilyIndex;
+                        m_indices.presentFamily = queueFamilyIndex;
                     /* find a queue family that supports transfer commands
                     */
                     if (queueFamily.queueFlags & VK_QUEUE_TRANSFER_BIT)
-                        indices.transferFamily = queueFamilyIndex;               
+                        m_indices.transferFamily = queueFamilyIndex;               
                     /* loop break
                     */
-                    if (indices.isComplete())
+                    if (isQueueFamilyIndicesComplete())
                         break;
 
                     queueFamilyIndex++;
                 }
-                return indices;
             }
     };
 

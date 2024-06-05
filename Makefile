@@ -7,7 +7,7 @@ INCDIR				:= -I$(VULKAN_SDK)/include				\
 				   	   -I$(GLM_INCDIR)/include				\
 				   	   -I$(GLFW_INCDIR)/include
 # shader files path
-SHADERDIR			:= ./Config/Shaders
+SHADERDIR			:= $(SRCDIR)/Shaders
 VERTSHADER			:= $(SHADERDIR)/shader.vert
 FRAGSHADER			:= $(SHADERDIR)/shader.frag
 
@@ -47,7 +47,7 @@ $(OBJECTS): $(OBJDIR)/%.o : $(SRCDIR)/%.cpp
 
 .PHONY: clean
 clean:
-	@$(RM) $(OBJDIR)/* $(BINDIR)/*$(BINFMT) $(BINDIR)/*$(SHADERBINFMT)
+	@$(RM) $(OBJDIR)/* $(BINDIR)/*$(BINFMT)
 	@$(RMDIR) $(LOGDIR)/*
 	@echo "[OK] clean"
 
@@ -56,6 +56,8 @@ run:
 
 .PHONY: shaders
 shaders:
+	@$(RM) $(BINDIR)/*$(SHADERBINFMT)
+	@echo "[OK] shader clean"
 	$(GLSLC) $(VERTSHADER) -o $(BINDIR)/$(addsuffix $(SHADERBINFMT),$(VERTSHADER_BIN))
 	$(GLSLC) $(FRAGSHADER) -o $(BINDIR)/$(addsuffix $(SHADERBINFMT),$(FRAGSHADER_BIN))
 	@echo "[OK] shader compile"

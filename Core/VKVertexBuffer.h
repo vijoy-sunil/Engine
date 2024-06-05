@@ -6,40 +6,30 @@
 #include <GLFW/glfw3.h>
 #include "VKGenericBuffer.h"
 #include "VKVertexData.h"
-#include "VKTransferCmdBuffer.h"
-#include "VKSyncObjects.h"
 #include "../Collections/Log/include/Log.h"
 
 using namespace Collections;
 
 namespace Renderer {
     class VKVertexBuffer: protected virtual VKGenericBuffer,
-                          protected virtual VKVertexData,
-                          protected VKTransferCmdBuffer,
-                          protected VKSyncObjects {
+                          protected virtual VKVertexData {
         private:
-            /* Handle to the vertex and index buffer. An index buffer is essentially an array of pointers into the 
-             * vertex buffer. It allows you to reorder the vertex data, reuse existing data for multiple vertices and
-             * this saving memory when loading complex models
+            /* Handle to the vertex buffer
             */
             VkBuffer m_vertexBuffer;
-            VkBuffer m_indexBuffer;
-            /* Handle to vertex and index buffer memory
+            /* Handle to vertex buffer memory
             */
             VkDeviceMemory m_vertexBufferMemory;
-            VkDeviceMemory m_indexBufferMemory;
-            /* Handle to staging buffer and memory for vertex and index buffers
+            /* Handle to staging buffer and staging memory
             */
             VkBuffer m_vertexStagingBuffer;
-            VkBuffer m_indexStagingBuffer;
             VkDeviceMemory m_vertexStagingBufferMemory;
-            VkDeviceMemory m_indexStagingBufferMemory;
             /* Handle to the log object
             */
             static Log::Record* m_VKVertexBufferLog;
             /* instance id for logger
             */
-            const size_t m_instanceId = 22; 
+            const size_t m_instanceId = g_collectionsId++; 
 
         public:
             VKVertexBuffer (void) {
@@ -127,114 +117,27 @@ namespace Renderer {
                                      m_vertexBufferMemory);
             }
 
-            /* Creating an index buffer is almost identical to creating the vertex buffer. There are only two notable 
-             * differences. The bufferSize is now equal to the number of indices times the size of the index type. The 
-             * usage of the m_indexBuffer should be VK_BUFFER_USAGE_INDEX_BUFFER_BIT instead of 
-             * VK_BUFFER_USAGE_VERTEX_BUFFER_BIT
-            */
-            void createIndexBuffer (void) {
-                VkDeviceSize bufferSize = sizeof (getIndices()[0]) * getIndices().size();
-
-                createGenericBuffer (bufferSize, 
-                                     VK_BUFFER_USAGE_TRANSFER_SRC_BIT, 
-                                     VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, 
-                                     m_indexStagingBuffer, 
-                                     m_indexStagingBufferMemory);
-
-                void* data;
-                vkMapMemory (getLogicalDevice(), m_indexStagingBufferMemory, 0, bufferSize, 0, &data);
-                memcpy (data, getIndices().data(), (size_t) bufferSize);
-                vkUnmapMemory (getLogicalDevice(), m_indexStagingBufferMemory);
-    
-                createGenericBuffer (bufferSize, 
-                                     VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, 
-                                     VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, 
-                                     m_indexBuffer, 
-                                     m_indexBufferMemory);
-            }
-
-            /* After setting up the buffers, we can now move the vertex and index data to the device local buffers
-            */
-            void copyBuffers (void) {
-                /* (1) Create command pool and command buffers
-                */
-                createCommandPool();
-                createCommandBuffers();
-                /* (2) Record command buffer (index 0)
-                */
-                VkDeviceSize vertexBufferSize = sizeof (getVertices()[0]) * getVertices().size();
-                recordCommandBuffer (getCommandBuffers()[0], 
-                                     m_vertexStagingBuffer, 
-                                     m_vertexBuffer, 
-                                     vertexBufferSize);
-
-                /* (3) Record command buffer (index 1)
-                */
-                VkDeviceSize indexBufferSize = sizeof (getIndices()[0]) * getIndices().size();
-                recordCommandBuffer (getCommandBuffers()[1], 
-                                     m_indexStagingBuffer, 
-                                     m_indexBuffer, 
-                                     indexBufferSize);
-                
-                /* (4) Submit command buffer to transfer queue
-                */
-                VkSubmitInfo submitInfo{};
-                submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-                submitInfo.commandBufferCount = static_cast <uint32_t> (getCommandBuffers().size());
-                submitInfo.pCommandBuffers = getCommandBuffers().data();
-                vkQueueSubmit (getTransferQueue(), 1, &submitInfo, getTransferCompleteFence());
-
-                /* (5) Wait for fence 
-                 * Unlike the draw commands, there are no events we need to wait on this time. We just want to execute 
-                 * the transfer on the buffers immediately. There are again two possible ways to wait on this transfer 
-                 * to complete. 
-                 * 
-                 * (1) We could use a fence and wait with vkWaitForFences, or 
-                 * (2) Simply wait for the transfer queue to become idle via vkQueueWaitIdle (getTransferQueue());
-                 * 
-                 * A fence would allow you to schedule multiple transfers simultaneously and wait for all of them 
-                 * complete, instead of executing one at a time. That may give the driver more opportunities to optimize.
-                */
-                LOG_INFO (m_VKVertexBufferLog) << "Waiting for getTransferCompleteFence" << std::endl;
-                vkWaitForFences (getLogicalDevice(), 1, &getTransferCompleteFence(), VK_TRUE, UINT64_MAX);
-                vkResetFences (getLogicalDevice(), 1, &getTransferCompleteFence());
-                LOG_INFO (m_VKVertexBufferLog) << "Reset getTransferCompleteFence" << std::endl;
-
-                /* (6)
-                 * The vertex and index data are now being loaded from high performance memory, next we should clean up 
-                 * the staging buffer handles
-                */
-                vkDestroyBuffer (getLogicalDevice(), m_vertexStagingBuffer, nullptr);
-                vkDestroyBuffer (getLogicalDevice(), m_indexStagingBuffer, nullptr);
-                vkFreeMemory (getLogicalDevice(), m_vertexStagingBufferMemory, nullptr);
-                vkFreeMemory (getLogicalDevice(), m_indexStagingBufferMemory, nullptr);
-
-                /* (7) Destroy command pool
-                */
-                VKTransferCmdBuffer::cleanUp();
-                /* All that remains is binding the vertex and index buffer to the graphics command buffer, which is done 
-                 * in the recordCommandBuffer function for the graphics queue
-                */
-            }
-
             VkBuffer getVertexBuffer (void) {
                 return m_vertexBuffer;
             }
 
-            VkBuffer getIndexBuffer (void) {
-                return m_indexBuffer;
+            VkBuffer getStagingBuffer (void) {
+                return m_vertexStagingBuffer;
+            }
+
+            void cleanUpStaging (void) {
+                vkDestroyBuffer (getLogicalDevice(), m_vertexStagingBuffer, nullptr);
+                vkFreeMemory (getLogicalDevice(), m_vertexStagingBufferMemory, nullptr);
             }
 
             void cleanUp (void) {
                 /* The buffers should be available for use in rendering commands until the end of the program
                 */
                 vkDestroyBuffer (getLogicalDevice(), m_vertexBuffer, nullptr);
-                vkDestroyBuffer (getLogicalDevice(), m_indexBuffer, nullptr);
                 /* Memory that is bound to a buffer object may be freed once the buffer is no longer used, so let's 
                  * free it after the buffer has been destroyed
                 */
                 vkFreeMemory (getLogicalDevice(), m_vertexBufferMemory, nullptr);
-                vkFreeMemory (getLogicalDevice(), m_indexBufferMemory, nullptr);
             }
     };
 

@@ -1,22 +1,20 @@
 #ifndef RD_APP_H
 #define RD_APP_H
 
-#include "../Config/VKConfig.h"
 #include "../Core/VKRun.h"
 #include "../Collections/Log/include/Log.h"
 
 using namespace Collections;
 
 namespace Renderer {
-    class RDApp: protected VKConfig,
-                 protected VKRun {
+    class RDApp: protected VKRun {
         private:
             /* Handle to the log object
             */
             static Log::Record* m_RDAppLog;
             /* instance id for logger
             */
-            const size_t m_instanceId = 0; 
+            const size_t m_instanceId = g_collectionsId++; 
 
         public:
             RDApp (void) {

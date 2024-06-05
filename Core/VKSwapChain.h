@@ -28,7 +28,8 @@ namespace Renderer {
             static Log::Record* m_VKSwapChainLog;
             /* instance id for logger
             */
-            const size_t m_instanceId = 1; 
+            const size_t m_instanceId = g_collectionsId++; 
+            
             /* If the swapChainAdequate conditions were met (see checkPhysicalDeviceSupport) then the support is 
              * definitely sufficient, but there may still be many different modes of varying optimality. We'll need to 
              * find the right settings when creating the best possible swap chain. There are three types of settings to 
@@ -48,8 +49,7 @@ namespace Renderer {
              * means that we store the B, G, R and alpha channels in that order with an 8 bit unsigned integer for a 
              * total of 32 bits per pixel. 
              * 
-             * colorSpace: The colorSpace member indicates if the SRGB color space is supported or not using the 
-             * VK_COLOR_SPACE_SRGB_NONLINEAR_KHR flag. 
+             * colorSpace: The colorSpace member indicates possible values of supported color spaces
              * 
              * For the color space we'll use SRGB if it is available, because it results in more accurate perceived 
              * colors. It is also pretty much the standard color space for images, like the textures we'll use later on. 
@@ -276,10 +276,9 @@ namespace Renderer {
                  * presentation queue. We'll be drawing on the images in the swap chain from the graphics queue and then 
                  * submitting them on the presentation queue
                 */
-                QueueFamilyIndices indices = checkQueueFamilySupport (getPhysicalDevice());
                 uint32_t queueFamilyIndices[] = { 
-                    indices.graphicsFamily.value(), 
-                    indices.presentFamily.value()
+                    getGraphicsFamilyIndex(), 
+                    getPresentFamilyIndex()
                 };
 
                 /* If the queue families differ, then we'll be using the concurrent mode (Images can be used across 
@@ -287,7 +286,7 @@ namespace Renderer {
                  * in advance between which queue families ownership will be shared using the queueFamilyIndexCount and 
                  * pQueueFamilyIndices parameters
                 */
-                if (indices.graphicsFamily != indices.presentFamily) {
+                if (getGraphicsFamilyIndex() != getPresentFamilyIndex()) {
                     createInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
                     createInfo.queueFamilyIndexCount = 2;
                     createInfo.pQueueFamilyIndices = queueFamilyIndices;
@@ -329,7 +328,10 @@ namespace Renderer {
 
                 VkResult result = vkCreateSwapchainKHR (getLogicalDevice(), &createInfo, nullptr, &m_swapChain);
                 if (result != VK_SUCCESS) {
-                    LOG_ERROR (m_VKSwapChainLog) << "Failed to create swap chain" << " " << result << std::endl;
+                    LOG_ERROR (m_VKSwapChainLog) << "Failed to create swap chain" 
+                                                 << " " 
+                                                 << result 
+                                                 << std::endl;
                     throw std::runtime_error ("Failed to create swap chain");
                 }
 
