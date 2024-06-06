@@ -7,6 +7,7 @@
 #include "VKInstanceHandle.h"
 #include "VKWindow.h"
 #include "../Collections/Log/include/Log.h"
+#include <vulkan/vk_enum_string_helper.h>
 
 using namespace Collections;
 
@@ -45,9 +46,8 @@ namespace Renderer {
             void createSurface (void) {
                 VkResult result = glfwCreateWindowSurface (getInstance(), getWindow(), nullptr, &m_surface);
                 if (result != VK_SUCCESS) {
-                    LOG_ERROR (m_VKSurfaceLog) << "Failed to create surface" 
-                                               << " " 
-                                               << result 
+                    LOG_ERROR (m_VKSurfaceLog) << "Failed to create surface " 
+                                               << "[" << string_VkResult (result) << "]" 
                                                << std::endl;
                     throw std::runtime_error ("Failed to create surface");
                 }

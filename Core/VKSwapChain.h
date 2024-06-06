@@ -6,6 +6,7 @@
 #include <GLFW/glfw3.h>
 #include "VKLogDevice.h"
 #include "../Collections/Log/include/Log.h"
+#include <vulkan/vk_enum_string_helper.h>
 #include <vector>
 
 using namespace Collections;
@@ -258,7 +259,14 @@ namespace Renderer {
                 createInfo.imageColorSpace = surfaceFormat.colorSpace;
                 createInfo.presentMode = presentMode;
                 createInfo.imageExtent = extent;
+                LOG_INFO (m_VKSwapChainLog) << "Image extent "
+                                            << "[" << extent.width <<", " << extent.height << "]"
+                                            << std::endl; 
+
                 createInfo.minImageCount = imageCount;
+                LOG_INFO (m_VKSwapChainLog) << "Minimum image count requested "
+                                            << "[" << imageCount << "]"
+                                            << std::endl;                 
                 /* imageArrayLayers specifies the amount of layers each image consists of. This is always 1 unless you are 
                  * developing a stereoscopic 3D application
                 */
@@ -328,9 +336,8 @@ namespace Renderer {
 
                 VkResult result = vkCreateSwapchainKHR (getLogicalDevice(), &createInfo, nullptr, &m_swapChain);
                 if (result != VK_SUCCESS) {
-                    LOG_ERROR (m_VKSwapChainLog) << "Failed to create swap chain" 
-                                                 << " " 
-                                                 << result 
+                    LOG_ERROR (m_VKSwapChainLog) << "Failed to create swap chain " 
+                                                 << "[" << string_VkResult (result) << "]" 
                                                  << std::endl;
                     throw std::runtime_error ("Failed to create swap chain");
                 }
@@ -340,6 +347,10 @@ namespace Renderer {
                  * why we'll first query the final number of images with vkGetSwapchainImagesKHR
                 */
                 vkGetSwapchainImagesKHR (getLogicalDevice(), m_swapChain, &imageCount, nullptr);
+                LOG_INFO (m_VKSwapChainLog) << "Query actual image count "
+                                            << "[" << imageCount << "]"
+                                            << std::endl; 
+
                 m_swapChainImages.resize (imageCount);
                 vkGetSwapchainImagesKHR (getLogicalDevice(), m_swapChain, &imageCount, m_swapChainImages.data());
 

@@ -9,6 +9,7 @@
 #include "VKPipeline.h"
 #include "VKFrameBuffer.h"
 #include "../Collections/Log/include/Log.h"
+#include <vulkan/vk_enum_string_helper.h>
 
 using namespace Collections;
 
@@ -75,9 +76,8 @@ namespace Renderer {
                 */
                 VkResult result = vkBeginCommandBuffer (commandBuffer, &beginInfo);
                 if (result != VK_SUCCESS) {
-                    LOG_ERROR (m_VKRecordLog) << "Failed to begin recording command buffer" 
-                                              << " "
-                                              << result
+                    LOG_ERROR (m_VKRecordLog) << "Failed to begin recording command buffer " 
+                                              << "[" << string_VkResult (result) << "]"
                                               << std::endl;
                     throw std::runtime_error ("Failed to begin recording command buffer");
                 }             
@@ -98,9 +98,8 @@ namespace Renderer {
                 */
                 result = vkEndCommandBuffer (commandBuffer);
                 if (result != VK_SUCCESS) {
-                    LOG_ERROR (m_VKRecordLog) << "Failed to record command buffer" 
-                                              << " " 
-                                              << result 
+                    LOG_ERROR (m_VKRecordLog) << "Failed to record command buffer " 
+                                              << "[" << string_VkResult (result) << "]" 
                                               << std::endl;
                     throw std::runtime_error ("Failed to record command buffer");
                 } 
@@ -119,9 +118,8 @@ namespace Renderer {
 
                 VkResult result = vkBeginCommandBuffer (commandBuffer, &beginInfo);
                 if (result != VK_SUCCESS) {
-                    LOG_ERROR (m_VKRecordLog) << "Failed to begin recording command buffer" 
-                                              << " " 
-                                              << result 
+                    LOG_ERROR (m_VKRecordLog) << "Failed to begin recording command buffer " 
+                                              << "[" << string_VkResult (result) << "]" 
                                               << std::endl;
                     throw std::runtime_error ("Failed to begin recording command buffer");
                 }             
@@ -310,9 +308,8 @@ namespace Renderer {
                 */
                 result = vkEndCommandBuffer (commandBuffer);
                 if (result != VK_SUCCESS) {
-                    LOG_ERROR (m_VKRecordLog) << "Failed to record command buffer" 
-                                              << " " 
-                                              << result 
+                    LOG_ERROR (m_VKRecordLog) << "Failed to record command buffer " 
+                                              << "[" << string_VkResult (result) << "]" 
                                               << std::endl;
                     throw std::runtime_error ("Failed to record command buffer");
                 }   

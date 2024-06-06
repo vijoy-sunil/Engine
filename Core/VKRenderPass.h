@@ -6,6 +6,7 @@
 #include <GLFW/glfw3.h>
 #include "VKSwapChain.h"
 #include "../Collections/Log/include/Log.h"
+#include <vulkan/vk_enum_string_helper.h>
 
 using namespace Collections;
 
@@ -256,9 +257,8 @@ namespace Renderer {
                                                       nullptr, 
                                                       &m_renderPass);
                 if (result != VK_SUCCESS) {
-                    LOG_ERROR (m_VKRenderPassLog) << "Failed to create render pass" 
-                                                  << " " 
-                                                  << result 
+                    LOG_ERROR (m_VKRenderPassLog) << "Failed to create render pass " 
+                                                  << "[" << string_VkResult (result) << "]"
                                                   << std::endl;
                     throw std::runtime_error ("Failed to create render pass");
                 }

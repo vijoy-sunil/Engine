@@ -38,19 +38,21 @@
                                                 )
 
 // logging methods
-#define LOG_INFO(c_record)                      LOG (c_record, Log::INFO)
-#define LOG_WARNING(c_record)                   LOG (c_record, Log::WARNING)
-#define LOG_ERROR(c_record)                     LOG (c_record, Log::ERROR)
+#define LOG_INFO(c_record)                      LOG(c_record, Log::INFO, true)
+#define LOG_WARNING(c_record)                   LOG(c_record, Log::WARNING, true)
+#define LOG_ERROR(c_record)                     LOG(c_record, Log::ERROR, true)
+// lightweight logging method with header disabled
+#define LOG_LITE(c_record)                      LOG(c_record, Log::INFO, false)
 
 // under the hood   
 #define LOG_GET_FILE                            __FILE__
 #define LOG_GET_FUNCTION                        __FUNCTION__
 #define LOG_GET_LINE                            __LINE__
-#define LOG(c_record, level)                    if (! (c_record-> filterLevel (level))) { ; }                           \
+#define LOG(c_record, level, header)            if (! (c_record-> filterLevel (level))) { ; }                           \
                                                 else                                                                    \
                                                     c_record-> getReference() <<                                        \
                                                     c_record-> getHeader (level,                                        \
-                                                                          LOG_GET_FILE,                                 \
                                                                           LOG_GET_FUNCTION,                             \
-                                                                          LOG_GET_LINE) 
+                                                                          LOG_GET_LINE,                                 \
+                                                                          header)
 #endif  // LOG_H

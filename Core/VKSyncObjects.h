@@ -6,6 +6,7 @@
 #include <GLFW/glfw3.h>
 #include "VKLogDevice.h"
 #include "../Collections/Log/include/Log.h"
+#include <vulkan/vk_enum_string_helper.h>
 #include <vector>
 
 using namespace Collections;
@@ -90,9 +91,8 @@ namespace Renderer {
                                                            nullptr, 
                                                            &m_imageAvailableSemaphores[i]);
                     if (result_0 != VK_SUCCESS) {
-                        LOG_ERROR (m_VKSyncObjectsLog) << "Failed to create image availbale semaphore" 
-                                                       << " " 
-                                                       << result_0 
+                        LOG_ERROR (m_VKSyncObjectsLog) << "Failed to create image availbale semaphore " 
+                                                       << "[" << string_VkResult (result_0) << "]"
                                                        << std::endl;
                         throw std::runtime_error ("Failed to create image availbale semaphore");
                     }
@@ -102,9 +102,8 @@ namespace Renderer {
                                                            nullptr, 
                                                            &m_renderFinishedSemaphores[i]);
                     if (result_1 != VK_SUCCESS) {
-                        LOG_ERROR (m_VKSyncObjectsLog) << "Failed to create render finished semaphore" 
-                                                       << " " 
-                                                       << result_1 
+                        LOG_ERROR (m_VKSyncObjectsLog) << "Failed to create render finished semaphore " 
+                                                       << "[" << string_VkResult (result_1) << "]"
                                                        << std::endl;
                         throw std::runtime_error ("Failed to create render finished semaphore");
                     }
@@ -114,9 +113,8 @@ namespace Renderer {
                                                        nullptr, 
                                                        &m_inFlightFences[i]);
                     if (result_2 != VK_SUCCESS) {
-                        LOG_ERROR (m_VKSyncObjectsLog) << "Failed to create in flight fence" 
-                                                       << " " 
-                                                       << result_2 
+                        LOG_ERROR (m_VKSyncObjectsLog) << "Failed to create in flight fence " 
+                                                       << "[" << string_VkResult (result_2) << "]" 
                                                        << std::endl;
                         throw std::runtime_error ("Failed to create in flight fence");
                     }
@@ -131,9 +129,8 @@ namespace Renderer {
                                                  nullptr,
                                                  &m_transferCompleteFence);
                 if (result != VK_SUCCESS) {
-                    LOG_ERROR (m_VKSyncObjectsLog) << "Failed to create transfer complete fence" 
-                                                   << " "
-                                                   << result
+                    LOG_ERROR (m_VKSyncObjectsLog) << "Failed to create transfer complete fence " 
+                                                   << "[" << string_VkResult (result) << "]"
                                                    << std::endl;
                     throw std::runtime_error ("Failed to create transfer complete fence");
                 }

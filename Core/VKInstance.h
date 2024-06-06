@@ -6,6 +6,7 @@
 #include <GLFW/glfw3.h>
 #include "VKValidation.h"
 #include "../Collections/Log/include/Log.h"
+#include <vulkan/vk_enum_string_helper.h>
 #include <vector>
 #include <set>
 
@@ -187,9 +188,8 @@ namespace Renderer {
                 VkInstance instance;
                 VkResult result = vkCreateInstance (&createInfo, nullptr, &instance);
                 if (result != VK_SUCCESS) {
-                    LOG_ERROR (m_VKInstanceLog) << "Failed to create instance" 
-                                                << " " 
-                                                << result 
+                    LOG_ERROR (m_VKInstanceLog) << "Failed to create instance " 
+                                                << "[" << string_VkResult (result) << "]"
                                                 << std::endl;
                     throw std::runtime_error ("Failed to create instance");
                 }

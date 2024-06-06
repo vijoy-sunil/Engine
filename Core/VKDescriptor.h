@@ -6,6 +6,7 @@
 #include <GLFW/glfw3.h>
 #include "VKUniformBuffer.h"
 #include "../Collections/Log/include/Log.h"
+#include <vulkan/vk_enum_string_helper.h>
 #include <vector>
 
 using namespace Collections;
@@ -94,9 +95,8 @@ namespace Renderer {
                                                                nullptr, 
                                                                &m_descriptorSetLayout);
                 if (result != VK_SUCCESS) {
-                    LOG_ERROR (m_VKDescriptorLog) << "Failed to create descriptor set layout"
-                                                  << " "
-                                                  << result
+                    LOG_ERROR (m_VKDescriptorLog) << "Failed to create descriptor set layout "
+                                                  << "[" << string_VkResult (result) << "]"
                                                   << std::endl;
                     throw std::runtime_error ("Failed to create descriptor set layout");
                 }
@@ -138,9 +138,8 @@ namespace Renderer {
                                                           nullptr, 
                                                           &m_descriptorPool);
                 if (result != VK_SUCCESS) {
-                    LOG_ERROR (m_VKDescriptorLog) << "Failed to create descriptor pool"
-                                                  << " "
-                                                  << result
+                    LOG_ERROR (m_VKDescriptorLog) << "Failed to create descriptor pool "
+                                                  << "[" << string_VkResult (result) << "]"
                                                   << std::endl;
                     throw std::runtime_error ("Failed to create descriptor pool");
                 }
@@ -176,9 +175,8 @@ namespace Renderer {
                                                             &allocInfo, 
                                                             m_descriptorSets.data());
                 if (result != VK_SUCCESS) {
-                    LOG_ERROR (m_VKDescriptorLog) << "Failed to allocate descriptor sets"
-                                                  << " "
-                                                  << result
+                    LOG_ERROR (m_VKDescriptorLog) << "Failed to allocate descriptor sets "
+                                                  << "[" << string_VkResult (result) << "]"
                                                   << std::endl;
                     throw std::runtime_error ("Failed to allocate descriptor sets");
                 }   

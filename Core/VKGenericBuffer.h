@@ -6,6 +6,7 @@
 #include <GLFW/glfw3.h>
 #include "VKLogDevice.h"
 #include "../Collections/Log/include/Log.h"
+#include <vulkan/vk_enum_string_helper.h>
 
 using namespace Collections;
 
@@ -41,6 +42,32 @@ namespace Renderer {
                 */
                 VkPhysicalDeviceMemoryProperties memProperties;
                 vkGetPhysicalDeviceMemoryProperties (getPhysicalDevice(), &memProperties);
+
+                LOG_INFO (m_VKGenericBufferLog) << "Physical device memory types" << std::endl;               
+                for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++) {
+                    LOG_INFO (m_VKGenericBufferLog) << "[" << i << "]" << std::endl;
+
+                    LOG_INFO (m_VKGenericBufferLog) << "Heap index "
+                                                    << "[" << memProperties.memoryTypes[i].heapIndex << "]"
+                                                    << std::endl;
+                    auto flags = Utils::splitString (string_VkMemoryPropertyFlags 
+                                                    (memProperties.memoryTypes[i].propertyFlags), "|");
+                    for (const auto& flag: flags)
+                        LOG_INFO (m_VKGenericBufferLog) << flag << std::endl; 
+                }
+
+                LOG_INFO (m_VKGenericBufferLog) << "Physical device memory heaps" << std::endl;  
+                for (uint32_t i = 0; i < memProperties.memoryHeapCount; i++) {
+                    LOG_INFO (m_VKGenericBufferLog) << "[" << i << "]" << std::endl;
+
+                    LOG_INFO (m_VKGenericBufferLog) << "Heap size (bytes) "
+                                                    << "[" << memProperties.memoryHeaps[i].size << "]"
+                                                    << std::endl;
+                    auto flags = Utils::splitString (string_VkMemoryHeapFlags 
+                                                    (memProperties.memoryHeaps[i].flags), "|");
+                    for (const auto& flag: flags)
+                        LOG_INFO (m_VKGenericBufferLog) << flag << std::endl;                                                     
+                }                                                                                              
                 /* We may have more than one desirable property, so we should check if the result of the bitwise AND is 
                  * not just non-zero, but equal to the desired properties bit field. If there is a memory type suitable 
                  * for the buffer that also has all of the properties we need, then we return its index, otherwise we 
@@ -50,10 +77,19 @@ namespace Renderer {
                  * type of memory. The properties define special features of the memory, like being able to map it so we 
                  * can write to it from the CPU (indicated with VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT)
                 */
+                LOG_INFO (m_VKGenericBufferLog) << "Desired memory properties" << std::endl;  
+                auto flags = Utils::splitString (string_VkMemoryPropertyFlags (properties), "|");
+                for (const auto& flag: flags)
+                    LOG_INFO (m_VKGenericBufferLog) << flag << std::endl;                                                     
+
                 for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++) {
                     if ((typeFilter & (1 << i)) && 
-                        (memProperties.memoryTypes[i].propertyFlags & properties) == properties)
+                        (memProperties.memoryTypes[i].propertyFlags & properties) == properties) {
+                        LOG_INFO (m_VKGenericBufferLog) << "Memory type index " 
+                                                        << "[" << i << "]" 
+                                                        << std::endl; 
                         return i;
+                        }
                 }
 
                 LOG_ERROR (m_VKGenericBufferLog) << "Failed to find suitable memory type" << std::endl;
@@ -83,6 +119,9 @@ namespace Renderer {
                 /* Specify the size of the buffer in bytes
                 */
                 bufferInfo.size = size;
+                LOG_INFO (m_VKGenericBufferLog) << "Size (bytes) of buffer to be created "
+                                                << "[" << size << "]"
+                                                << std::endl;                
                 /* The usage field indicates for which purposes the data in the buffer is going to be used. It is 
                  * possible to specify multiple purposes using a bitwise or
                 */
@@ -121,9 +160,8 @@ namespace Renderer {
 
                 VkResult result = vkCreateBuffer (getLogicalDevice(), &bufferInfo, nullptr, &buffer);
                 if (result != VK_SUCCESS) {
-                    LOG_ERROR (m_VKGenericBufferLog) << "Failed to create buffer" 
-                                                     << " " 
-                                                     << result 
+                    LOG_ERROR (m_VKGenericBufferLog) << "Failed to create buffer " 
+                                                     << "[" << string_VkResult (result) << "]" 
                                                      << std::endl; 
                     throw std::runtime_error ("Failed to create buffer");
                 }
@@ -150,6 +188,12 @@ namespace Renderer {
                  * the memory requirements of the buffer and the desired property
                 */
                 allocInfo.allocationSize = memRequirements.size;
+                LOG_INFO (m_VKGenericBufferLog) << "Size (bytes) of memory allocation required for the resource "
+                                                << "[" << memRequirements.size << "]"
+                                                << std::endl; 
+                LOG_INFO (m_VKGenericBufferLog) << "Memory requirement of the buffer "
+                                                << "[" << memRequirements.memoryTypeBits << "]"
+                                                << std::endl;                                                                                              
                 /* Find suitable memory type
                 */
                 allocInfo.memoryTypeIndex = findMemoryType (memRequirements.memoryTypeBits, properties);
@@ -168,9 +212,8 @@ namespace Renderer {
                 */
                 result = vkAllocateMemory (getLogicalDevice(), &allocInfo, nullptr, &bufferMemory);
                 if (result != VK_SUCCESS) {
-                    LOG_ERROR (m_VKGenericBufferLog) << "Failed to allocate buffer memory" 
-                                                     << " " 
-                                                     << result 
+                    LOG_ERROR (m_VKGenericBufferLog) << "Failed to allocate buffer memory " 
+                                                     << "[" << string_VkResult (result) << "]"
                                                      << std::endl; 
                     throw std::runtime_error ("Failed to allocate buffer memory");
                 }

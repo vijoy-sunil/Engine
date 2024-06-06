@@ -8,6 +8,7 @@
 #include "VKQueue.h"
 #include "VKPhyDevice.h"
 #include "../Collections/Log/include/Log.h"
+#include <vulkan/vk_enum_string_helper.h>
 #include <vector>
 #include <set>
 
@@ -124,9 +125,8 @@ namespace Renderer {
                 */
                 VkResult result = vkCreateDevice (getPhysicalDevice(), &createInfo, nullptr, &m_logicalDevice);
                 if (result != VK_SUCCESS) {
-                    LOG_ERROR (m_VKLogDeviceLog) << "Failed to create logic device" 
-                                                 << " " 
-                                                 << result 
+                    LOG_ERROR (m_VKLogDeviceLog) << "Failed to create logic device " 
+                                                 << "[" << string_VkResult (result) << "]" 
                                                  << std::endl;
                     throw std::runtime_error ("Failed to create logic device");
                 }

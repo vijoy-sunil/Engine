@@ -6,6 +6,7 @@
 #include <GLFW/glfw3.h>
 #include "VKSwapChain.h"
 #include "../Collections/Log/include/Log.h"
+#include <vulkan/vk_enum_string_helper.h>
 #include <vector>
 
 using namespace Collections;
@@ -78,9 +79,8 @@ namespace Renderer {
                                                          nullptr,
                                                          &m_imageViews[i]);
                     if (result != VK_SUCCESS) {
-                        LOG_ERROR (m_VKImageViewLog) << "Failed to create image views" 
-                                                     << " " 
-                                                     << result 
+                        LOG_ERROR (m_VKImageViewLog) << "Failed to create image views " 
+                                                     << "[" << string_VkResult (result) << "]"
                                                      << std::endl;
                         throw std::runtime_error ("Failed to create image views");
                     }

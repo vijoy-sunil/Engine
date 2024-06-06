@@ -6,6 +6,7 @@
 #include <GLFW/glfw3.h>
 #include "VKLogDevice.h"
 #include "../Collections/Log/include/Log.h"
+#include <vulkan/vk_enum_string_helper.h>
 #include <vector>
 
 using namespace Collections;
@@ -68,9 +69,8 @@ namespace Renderer {
                                                        &commandPool);
                 
                 if (result != VK_SUCCESS) {
-                    LOG_ERROR (m_VKCmdBufferLog) << "Failed to create command pool" 
-                                                 << " " 
-                                                 << result 
+                    LOG_ERROR (m_VKCmdBufferLog) << "Failed to create command pool " 
+                                                 << "[" << string_VkResult (result) << "]" 
                                                  << std::endl;
                     throw std::runtime_error ("Failed to create command pool");
                 }
@@ -101,9 +101,8 @@ namespace Renderer {
                                                             &allocInfo, 
                                                             commandBuffers.data());
                 if (result != VK_SUCCESS) {
-                    LOG_ERROR (m_VKCmdBufferLog) << "Failed to create command buffers" 
-                                                 << " " 
-                                                 << result 
+                    LOG_ERROR (m_VKCmdBufferLog) << "Failed to create command buffers " 
+                                                 << "[" << string_VkResult (result) << "]" 
                                                  << std::endl;
                     throw std::runtime_error ("Failed to create command buffers");
                 } 

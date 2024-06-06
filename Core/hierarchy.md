@@ -1,4 +1,4 @@
-# CLASS HIERARCHY
+# CLASS/FILE HIERARCHY
 <i>Classes within {} are virtual inheritance</i>
 
 <pre>
@@ -10,12 +10,13 @@
     |                               |
     |------------------>|<----------|
     |                   |
-    |                   VKSurface           VKConfig
-    |                   |                   |
-    |                   |                   |
-    {VKValidation}      VKQueue             VKPhyDevice
-    |                   |                   |
-    |------------------>|<------------------|
+    |                   VKSurface           LogHelper           VKConfig
+    |                   |                   |                   |
+    |                   |<------------------|                   |
+    |                   |                                       |
+    {VKValidation}      VKQueue                                 VKPhyDevice
+    |                   |                                       |
+    |------------------>|<--------------------------------------|
     |                   |
     VKInstance          {VKLogDevice}
                         |

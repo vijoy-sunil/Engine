@@ -184,9 +184,13 @@ namespace Log {
             }
 
             std::string getHeader (e_level level,
-                                   const char* file, 
                                    const char* function, 
-                                   const size_t line) {
+                                   const size_t line,
+                                   bool enHeader) {
+                // Skip header for lightweight logging
+                if (enHeader == false)
+                    return "";
+
                 std::string instanceId = std::to_string (m_instanceId);
                 /* Pad m_instanceId string for single digit ids
                 */
@@ -196,7 +200,6 @@ namespace Log {
                 std::string header = "[ " + instanceId + " ]" + " " +
                                      getLocalTimestamp() + " " +
                                      "[ " + levelToString (level) + " ]" + " " +
-                                     file + " " +
                                      function + " " +
                                      std::to_string (line) +  " ";
 

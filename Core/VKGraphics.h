@@ -9,6 +9,7 @@
 #include "VKRecord.h"
 #include "VKResizing.h"
 #include "../Collections/Log/include/Log.h"
+#include <vulkan/vk_enum_string_helper.h>
 #include <vector>
 
 using namespace Collections;
@@ -116,9 +117,8 @@ namespace Renderer {
                  * the next graphicsOps call
                 */
                 if (result == VK_ERROR_OUT_OF_DATE_KHR) {
-                    LOG_WARNING (m_VKGraphicsLog) << "Failed to acquire swap chain image" 
-                                                  << " " 
-                                                  << result 
+                    LOG_WARNING (m_VKGraphicsLog) << "Failed to acquire swap chain image " 
+                                                  << "[" << string_VkResult (result) << "]"
                                                   << std::endl; 
                     recreateSwapChain();
                     return;
@@ -128,9 +128,8 @@ namespace Renderer {
                  * VK_SUBOPTIMAL_KHR are considered "success" return codes here
                 */
                 else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
-                    LOG_ERROR (m_VKGraphicsLog) << "Failed to acquire swap chain image" 
-                                                << " " 
-                                                << result 
+                    LOG_ERROR (m_VKGraphicsLog) << "Failed to acquire swap chain image " 
+                                                << "[" << string_VkResult (result) << "]"
                                                 << std::endl; 
                     throw std::runtime_error ("Failed to acquire swap chain image");
                 }
@@ -199,9 +198,8 @@ namespace Renderer {
                                         &submitInfo,
                                         getInFlightFences()[m_currentFrame]);
                 if (result != VK_SUCCESS) {
-                    LOG_ERROR (m_VKGraphicsLog) << "Failed to submit draw command buffer" 
-                                                << " " 
-                                                << result 
+                    LOG_ERROR (m_VKGraphicsLog) << "Failed to submit draw command buffer " 
+                                                << "[" << string_VkResult (result) << "]"
                                                 << std::endl; 
                     throw std::runtime_error ("Failed to submit draw command buffer");                    
                 }
@@ -246,17 +244,15 @@ namespace Renderer {
                  * but have nothing waiting on it
                 */
                 if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || isFrameBufferResized()) {
-                    LOG_WARNING (m_VKGraphicsLog) << "Failed to present swap chain image" 
-                                                  << " " 
-                                                  << result 
+                    LOG_WARNING (m_VKGraphicsLog) << "Failed to present swap chain image " 
+                                                  << "[" << string_VkResult (result) << "]" 
                                                   << std::endl; 
                     setFrameBufferResized (false);
                     recreateSwapChain();
                 }
                 else if (result != VK_SUCCESS) {
-                    LOG_ERROR (m_VKGraphicsLog) << "Failed to present swap chain image" 
-                                                << " " 
-                                                << result 
+                    LOG_ERROR (m_VKGraphicsLog) << "Failed to present swap chain image " 
+                                                << "[" << string_VkResult (result) << "]" 
                                                 << std::endl;
                     throw std::runtime_error ("Failed to present swap chain image");
                 }

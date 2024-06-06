@@ -5,7 +5,9 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 #include "VKSurface.h"
+#include "../Utils/LogHelper.h"
 #include "../Collections/Log/include/Log.h"
+#include <vulkan/vk_enum_string_helper.h>
 #include <vector>
 
 using namespace Collections;
@@ -49,14 +51,6 @@ namespace Renderer {
             /* instance id for logger
             */
             const size_t m_instanceId = g_collectionsId++;
-            
-            /* reset std::optional
-            */
-            void resetIndices (void) {
-                m_indices.graphicsFamily.reset();
-                m_indices.presentFamily.reset();
-                m_indices.transferFamily.reset();
-            }
             
         public:
             VKQueue (void) {
@@ -120,9 +114,6 @@ namespace Renderer {
              * and each family of queues allows only a subset of commands
             */
             void populateQueueFamilyIndices (VkPhysicalDevice physicalDevice) {
-                /* Reset indices first before populating them
-                */
-                resetIndices();
                 /* Query list of available queue families
                 */
                 uint32_t queueFamilyCount = 0;
@@ -150,12 +141,27 @@ namespace Renderer {
                     /* find a queue family that supports transfer commands
                     */
                     if (queueFamily.queueFlags & VK_QUEUE_TRANSFER_BIT)
-                        m_indices.transferFamily = queueFamilyIndex;               
+                        m_indices.transferFamily = queueFamilyIndex;
+
+                    LOG_INFO (m_VKQueueLog) << "Queue family count " << "[" << queueFamilyCount << "]" << std::endl;
+                    LOG_INFO (m_VKQueueLog) << "Queue family index " << "[" << queueFamilyIndex << "]" << std::endl; 
+                    LOG_INFO (m_VKQueueLog) << "Queue family supported flags" << std::endl;  
+                    auto flags = Utils::splitString (string_VkQueueFlags (queueFamily.queueFlags), "|");
+                    for (const auto& flag: flags)
+                        LOG_INFO (m_VKQueueLog) << flag << std::endl;
+                              
                     /* loop break
                     */
-                    if (isQueueFamilyIndicesComplete())
+                    if (isQueueFamilyIndicesComplete()) {
+                        LOG_INFO (m_VKQueueLog) << "Queue family indices found "
+                                                << "[G: " << *(m_indices.graphicsFamily) << "]" 
+                                                << " "
+                                                << "[P: " << *(m_indices.presentFamily)  << "]"
+                                                << " "
+                                                << "[T: " << *(m_indices.transferFamily) << "]"                                                
+                                                << std::endl;                       
                         break;
-
+                    }
                     queueFamilyIndex++;
                 }
             }

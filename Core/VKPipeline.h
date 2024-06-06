@@ -8,6 +8,7 @@
 #include "VKRenderPass.h"
 #include "VKDescriptor.h"
 #include "../Collections/Log/include/Log.h"
+#include <vulkan/vk_enum_string_helper.h>
 #include <vector>
 
 using namespace Collections;
@@ -42,9 +43,8 @@ namespace Renderer {
                 */
                 std::ifstream file (filename, std::ios::ate | std::ios::binary);
                 if (!file.is_open()) {
-                    LOG_WARNING (m_VKPipelineLog) << "Failed to open file" 
-                                                  << " " 
-                                                  << filename 
+                    LOG_WARNING (m_VKPipelineLog) << "Failed to open file " 
+                                                  << "[" << filename << "]" 
                                                   << std::endl;
                     return {};
                 }
@@ -76,9 +76,8 @@ namespace Renderer {
                 VkShaderModule shaderModule;
                 VkResult result = vkCreateShaderModule (getLogicalDevice(), &createInfo, nullptr, &shaderModule);
                 if (result != VK_SUCCESS) {
-                    LOG_WARNING (m_VKPipelineLog) << "Failed to create shader module" 
-                                                  << " " 
-                                                  << result 
+                    LOG_WARNING (m_VKPipelineLog) << "Failed to create shader module " 
+                                                  << "[" << string_VkResult (result) << "]"
                                                   << std::endl;
                     return VK_NULL_HANDLE;          
                 }
@@ -504,9 +503,8 @@ namespace Renderer {
                                                            nullptr, 
                                                            &m_pipelineLayout);
                 if (result != VK_SUCCESS) {
-                    LOG_ERROR (m_VKPipelineLog) << "Failed to create pipeline layout" 
-                                                << " " 
-                                                << result 
+                    LOG_ERROR (m_VKPipelineLog) << "Failed to create pipeline layout " 
+                                                << "[" << string_VkResult (result) << "]" 
                                                 << std::endl;
                     throw std::runtime_error ("Failed to create pipeline layout");
                 }
@@ -590,9 +588,8 @@ namespace Renderer {
                                                     nullptr, 
                                                     &m_graphicsPipeline);
                 if (result != VK_SUCCESS) {
-                    LOG_ERROR (m_VKPipelineLog) << "Failed to create graphics pipeline" 
-                                                << " " 
-                                                << result 
+                    LOG_ERROR (m_VKPipelineLog) << "Failed to create graphics pipeline " 
+                                                << "[" << string_VkResult (result) << "]" 
                                                 << std::endl;
                     throw std::runtime_error ("Failed to create graphics pipeline");                
                 }

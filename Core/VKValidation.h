@@ -6,6 +6,7 @@
 #include <GLFW/glfw3.h>
 #include "VKInstanceHandle.h"
 #include "../Collections/Log/include/Log.h"
+#include <vulkan/vk_enum_string_helper.h>
 #include <vector>
 #include <set>
 
@@ -82,9 +83,15 @@ namespace Renderer {
                 /* Suppress unused parameter warning
                 */
                 static_cast <void> (pUserData);
-                LOG_WARNING (m_VKValidationLog) << "Validation layer/msg: " << pCallbackData-> pMessage << std::endl;
-                LOG_WARNING (m_VKValidationLog) << "Validation layer/msg severity: " << messageSeverity << std::endl;
-                LOG_WARNING (m_VKValidationLog) << "Validation layer/msg type: " << messageType << std::endl;
+                LOG_WARNING (m_VKValidationLog) 
+                    << "Message " 
+                    << "[" << pCallbackData-> pMessage << "]" << std::endl;
+                LOG_WARNING (m_VKValidationLog) 
+                    << "Message severity " 
+                    << "[" << string_VkDebugUtilsMessageSeverityFlagBitsEXT (messageSeverity) << "]" << std::endl;
+                LOG_WARNING (m_VKValidationLog) 
+                    << "Message type " 
+                    << "[" << string_VkDebugUtilsMessageTypeFlagsEXT (messageType) << "]" << std::endl;
 
                 /* The callback returns a boolean that indicates if the Vulkan call that triggered the validation layer 
                  * message should be aborted. If the callback returns true, then the call is aborted with the 

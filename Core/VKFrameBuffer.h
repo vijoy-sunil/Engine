@@ -7,6 +7,7 @@
 #include "VKImageView.h"
 #include "VKRenderPass.h"
 #include "../Collections/Log/include/Log.h"
+#include <vulkan/vk_enum_string_helper.h>
 #include <vector>
 
 using namespace Collections;
@@ -81,9 +82,8 @@ namespace Renderer {
                                                            nullptr, 
                                                            &m_framebuffers[i]);
                     if (result != VK_SUCCESS) {
-                        LOG_ERROR (m_VKFrameBufferLog) << "Failed to create framebuffers" 
-                                                       << " " 
-                                                       << result 
+                        LOG_ERROR (m_VKFrameBufferLog) << "Failed to create framebuffers " 
+                                                       << "[" << string_VkResult (result) << "]"
                                                        << std::endl;
                         throw std::runtime_error ("Failed to create framebuffers");
                     }
