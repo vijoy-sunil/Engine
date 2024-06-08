@@ -44,9 +44,6 @@ namespace Renderer {
                  * attachment -- a buffer to hold the per-pixel color information of the rendered picture. Maybe you stop 
                  * there, or maybe you also add a depth attachment. If you are rendering 3D geometry, and you want it to 
                  * look correct, you'll likely have to add this depth attachment
-                 * 
-                 * In our case we'll have just a single color buffer attachment with the same format as the swap chain 
-                 * images
                 */
                 VkAttachmentDescription colorAttachment{};
                 /* The format of the color attachment should match the format of the swap chain images, and we're not 

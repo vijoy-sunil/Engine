@@ -1,4 +1,4 @@
-# CLASS/FILE HIERARCHY
+# Class/file hierarchy
 <i>Classes within {} are virtual inheritance</i>
 
 <pre>

@@ -228,6 +228,11 @@ namespace Renderer {
                     /* The updates are applied using vkUpdateDescriptorSets. It accepts two kinds of arrays as parameters, 
                      * an array of VkWriteDescriptorSet and an array of VkCopyDescriptorSet. The latter can be used to 
                      * copy descriptors to each other, as its name implies
+                     * 
+                     * Note that vkUpdateDescriptorSets doesn't copy a buffer into the descriptor set, but rather gives 
+                     * the descriptor set a pointer to the buffer described by VkDescriptorBufferInfo. So then 
+                     * vkUpdateDescriptorSets doesn't need to be called more than once for a descriptor set, since 
+                     * modifying the buffer that a descriptor set points to will update what the descriptor set sees
                     */
                     vkUpdateDescriptorSets (getLogicalDevice(), 1, &descriptorWrite, 0, nullptr); 
 

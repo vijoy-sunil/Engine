@@ -257,7 +257,18 @@ namespace Renderer {
                 createInfo.surface = getSurface();
                 createInfo.imageFormat = surfaceFormat.format;
                 createInfo.imageColorSpace = surfaceFormat.colorSpace;
+                LOG_INFO (m_VKSwapChainLog) << "Image format "
+                                            << "[" << string_VkFormat (surfaceFormat.format) << "]"
+                                            << std::endl; 
+                LOG_INFO (m_VKSwapChainLog) << "Image color space "
+                                            << "[" << string_VkColorSpaceKHR (surfaceFormat.colorSpace) << "]"
+                                            << std::endl;
+
                 createInfo.presentMode = presentMode;
+                LOG_INFO (m_VKSwapChainLog) << "Present mode "
+                                            << "[" << string_VkPresentModeKHR (presentMode) << "]"
+                                            << std::endl;
+                
                 createInfo.imageExtent = extent;
                 LOG_INFO (m_VKSwapChainLog) << "Image extent "
                                             << "[" << extent.width <<", " << extent.height << "]"

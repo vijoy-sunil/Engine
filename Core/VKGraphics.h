@@ -235,6 +235,16 @@ namespace Renderer {
                 /* The vkQueuePresentKHR function returns the same values with the same meaning as vkAcquireNextImageKHR. 
                  * In this case we will also recreate the swap chain if it is suboptimal, because we want the best 
                  * possible result
+                 * 
+                 * Note that, the presentation engine isn't guaranteed to act in concert with the queue it’s on, even if 
+                 * it’s on a graphics queue. vkAcquireNextImageKHR returns when the presentation engine knows which index 
+                 * will be used next, but provides no guarantee that it’s actually synchronized with the display and 
+                 * finished with the resources from the last VkQueuePresentKHR with that index
+                 * 
+                 * You should use both the semaphore and the fence to ensure that it is safe to reuse resources, by 
+                 * waiting on the fence before re-recording any command buffers or updating any buffers or descriptors 
+                 * associated with that index, and waiting on the semaphore when submitting any stage that depends on 
+                 * the associated swapchain image
                 */
                 result = vkQueuePresentKHR (getPresentQueue(), &presentInfo);
                 /* Why didn't we check 'framebufferResized' boolean after vkAcquireNextImageKHR?

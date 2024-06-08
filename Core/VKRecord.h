@@ -124,6 +124,10 @@ namespace Renderer {
                     throw std::runtime_error ("Failed to begin recording command buffer");
                 }             
 
+                /* -------------------------------------------------
+                 *                  BEGIN RENDER PASS 0
+                 * -------------------------------------------------
+                */
                 /* (1) Begin render pass cmd
                  * 
                  * Drawing starts by beginning the render pass with vkCmdBeginRenderPass. The render pass is configured 
@@ -165,6 +169,10 @@ namespace Renderer {
                 */
                 vkCmdBeginRenderPass (commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
+                /* -------------------------------------------------
+                 *                  BEGIN SUB PASS 0
+                 * -------------------------------------------------
+                */
                 /* (2) Bind graphics pipeline cmd
                  * 
                  * The second parameter specifies if the pipeline object is a graphics or compute pipeline
@@ -299,10 +307,18 @@ namespace Renderer {
                  * vertexOffset: Specifies an offset to add to the indices in the index buffer
                 */
                 vkCmdDrawIndexed (commandBuffer, static_cast <uint32_t> (getIndices().size()), 1, 0, 0, 0);
+                /* -------------------------------------------------
+                 *                  END SUB PASS 0
+                 * -------------------------------------------------
+                */
 
                 /* (7) End render pass cmd
                 */
                 vkCmdEndRenderPass (commandBuffer);
+                /* -------------------------------------------------
+                 *                  END RENDER PASS 0
+                 * -------------------------------------------------
+                */
 
                 /* Finish recording command
                 */
