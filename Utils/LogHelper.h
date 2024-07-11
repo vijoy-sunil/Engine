@@ -2,6 +2,7 @@
 #define LOG_HELPER_H
 
 #include <vector>
+#include "../Core/VKEnum.h"
 
 namespace Renderer {
 namespace Utils {
@@ -21,6 +22,60 @@ namespace Utils {
         }
         outputStrings.push_back (inputString);
         return outputStrings;
+    }
+
+    const char* string_bufferType (e_bufferType type) {
+        switch (type)
+        {
+            case VOID_BUFFER:
+                return "VOID_BUFFER";
+            case STAGING_BUFFER:
+                return "STAGING_BUFFER";
+            case VERTEX_BUFFER:
+                return "VERTEX_BUFFER";
+            case INDEX_BUFFER:
+                return "INDEX_BUFFER";
+            case UNIFORM_BUFFER:
+                return "UNIFORM_BUFFER";
+            default:
+                return "Unhandled e_bufferType";
+        }
+    }
+
+    const char* string_imageType (e_imageType type) {
+        switch (type)
+        {
+            case VOID_IMAGE:
+                return "VOID_IMAGE";
+            case SWAPCHAIN_IMAGE:
+                return "SWAPCHAIN_IMAGE";
+            case TEXTURE_IMAGE:
+                return "TEXTURE_IMAGE";
+            case DEPTH_IMAGE:
+                return "DEPTH_IMAGE";
+            case MULTISAMPLE_IMAGE:
+                return "MULTISAMPLE_IMAGE";
+            default:
+                return "Unhandled e_imageType";
+        }
+    }
+
+    const char* string_syncType (e_syncType type) {
+        switch (type)
+        {
+            case SEM_RENDER_DONE:
+                return "SEM_RENDER_DONE";
+            case SEM_IMAGE_AVAILABLE:
+                return "SEM_IMAGE_AVAILABLE";
+            case FEN_IN_FLIGHT:
+                return "FEN_IN_FLIGHT";
+            case FEN_TRANSFER_DONE:
+                return "FEN_TRANSFER_DONE";
+            case FEN_BLIT_DONE:
+                return "FEN_BLIT_DONE";
+            default:
+                return "Unhandled e_syncType";
+        }
     }
 }   // namespace Utils
 }   // namespace Renderer

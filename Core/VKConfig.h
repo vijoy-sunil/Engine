@@ -1,30 +1,31 @@
 #ifndef VK_CONFIG_H
 #define VK_CONFIG_H
 
+#include <stdlib.h>
+
 namespace Renderer {
-/* Toggle all Core file logging Y (0x0f) or N (0)
+/* Disable validation layers and logging
 */
-#define TOGGLE_CORE_LOGGING         0x0f
-/* Keep track of instance ids for Collections. Note that, we are not taking into account of reserved ids used by
- * Collections which may result in collision
-*/
-size_t g_collectionsId = 0;
+#define DEBUG_DISABLE   false
 
 /* Window settings (resolution is in screen coordinates)
 */
 struct windowSettings {
     const int width   = 800;
     const int height  = 600;
-    const char* title = "VULKAN WINDOW";
+    const char* title = "WINDOW_";
 } g_windowSettings;
 
 /* File/directory path settings
 */
 struct pathSettings {
+    const char* logSaveDir           = "Build/Log/";
     const char* vertexShaderBinary   = "Build/Bin/vert.spv";
     const char* fragmentShaderBinary = "Build/Bin/frag.spv"; 
+    const char* model                = "SandBox/Models/model_1.obj";
+    const char* textureImage         = "SandBox/Textures/tex_512x512_rb.png";
 } g_pathSettings;
-
+ 
 /* Frames in flight
  * As of now, we are required to wait on the previous frame to finish before we can start rendering the next which 
  * results in unnecessary idling of the host. The way to fix this is to allow multiple frames to be in-flight at once, 
@@ -42,9 +43,14 @@ struct pathSettings {
  * tied to Image 1, and Frame 4 could also be tied to Image 1. While Frame 1 is presenting, Frame 4 could begin drawing 
  * in theory. But in practise would cause delays in execution because no image can be acquired from the swap chain yet 
 */
-#define MAX_FRAMES_IN_FLIGHT        2
-/* Specify the maximum number of command buffers that will be submitted to the transfer queue
+const size_t g_maxFramesInFlight = 2;
+/* Statically allocate max number of unique device resources in device mgr ahead of time. The actual number of unique 
+ * device resources used will be set by user
 */
-#define MAX_TRANSFERS_IN_QUEUE      2
+const size_t g_maxDeviceResourcesCount = 1;
+/* Keep track of instance ids for Collections. Note that, we are not taking into account of reserved ids used by
+ * Collections which may result in collision
+*/
+size_t g_collectionsId = 0;
 }   // namespace Renderer
 #endif  // VK_CONFIG_H

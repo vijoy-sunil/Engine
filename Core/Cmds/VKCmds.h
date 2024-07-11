@@ -1,0 +1,556 @@
+#ifndef VK_CMDS_H
+#define VK_CMDS_H
+
+#include "../Buffer/VKBufferMgr.h"
+#include "../Image/VKImageMgr.h"
+#include "../Pipeline/VKPipelineMgr.h"
+
+using namespace Collections;
+
+namespace Renderer {
+    class VKCmds: protected virtual VKBufferMgr,
+                  protected virtual VKImageMgr,
+                  protected virtual VKPipelineMgr {
+        private:
+            static Log::Record* m_VKCmdsLog;
+            const size_t m_instanceId = g_collectionsId++;
+
+        public:
+            VKCmds (void) {
+                m_VKCmdsLog = LOG_INIT (m_instanceId, g_pathSettings.logSaveDir);
+            }
+
+            ~VKCmds (void) {
+                LOG_CLOSE (m_instanceId);
+            }
+
+        protected:
+            void setViewPorts (VkCommandBuffer commandBuffer,
+                               uint32_t resourceId,
+                               uint32_t firstViewPort,
+                               std::vector <VkViewport>& viewPorts) {
+                
+                auto deviceInfo = getDeviceInfo();
+                /* Up until now, we've told Vulkan which operations to execute in the graphics pipeline and which 
+                 * attachment to use in the fragment shader. Also, we did specify viewport and scissor state for this 
+                 * pipeline to be dynamic. So we need to set them in the command buffer before issuing our draw command
+                */
+                VkViewport defaultViewPort{};
+                defaultViewPort.x        = 0.0f;
+                defaultViewPort.y        = 0.0f;
+                defaultViewPort.width    = static_cast <float> (deviceInfo->unique[resourceId].swapChain.extent.width);
+                defaultViewPort.height   = static_cast <float> (deviceInfo->unique[resourceId].swapChain.extent.height);
+                defaultViewPort.minDepth = 0.0f;
+                defaultViewPort.maxDepth = 1.0f;
+                /* Add default view port to list of custom view ports (if any)
+                */
+                viewPorts.push_back (defaultViewPort);
+
+                vkCmdSetViewport (commandBuffer, 
+                                  firstViewPort, 
+                                  static_cast <uint32_t> (viewPorts.size() + 1), 
+                                  viewPorts.data());
+            }
+
+            void setScissors (VkCommandBuffer commandBuffer,
+                              uint32_t resourceId,
+                              uint32_t firstScissor,
+                              std::vector <VkRect2D>& scissors) {
+
+                auto deviceInfo = getDeviceInfo();
+
+                VkRect2D defaultScissor{};
+                defaultScissor.offset = {0, 0};
+                defaultScissor.extent = deviceInfo->unique[resourceId].swapChain.extent;
+
+                scissors.push_back (defaultScissor);
+                vkCmdSetScissor (commandBuffer, 
+                                 firstScissor, 
+                                 static_cast <uint32_t> (scissors.size() + 1), 
+                                 scissors.data());
+            }
+
+            void copyBufferToBuffer (VkCommandBuffer commandBuffer,
+                                     uint32_t srcBufferInfoId, e_bufferType srcBufferType, VkDeviceSize srcOffset,
+                                     uint32_t dstBufferInfoId, e_bufferType dstBufferType, VkDeviceSize dstOffset) {
+
+                auto srcBufferInfo = getBufferInfo (srcBufferInfoId, srcBufferType);
+                auto dstBufferInfo = getBufferInfo (dstBufferInfoId, dstBufferType);
+                /* Contents of buffers are transferred using the vkCmdCopyBuffer command. It takes the source and 
+                 * destination buffers as arguments, and an array of regions to copy. The regions are defined in 
+                 * VkBufferCopy structs and consist of a source buffer offset, destination buffer offset and size
+                */
+                VkBufferCopy copyRegion{};
+                copyRegion.srcOffset = srcOffset; 
+                copyRegion.dstOffset = dstOffset;
+                copyRegion.size      = srcBufferInfo->meta.size;
+                vkCmdCopyBuffer (commandBuffer, 
+                                 srcBufferInfo->resource.buffer, 
+                                 dstBufferInfo->resource.buffer, 
+                                 1, 
+                                 &copyRegion);
+            }
+
+            void copyBufferToImage (VkCommandBuffer commandBuffer,
+                                    uint32_t srcBufferInfoId, e_bufferType srcBufferType, VkDeviceSize srcOffset,
+                                    uint32_t dstImageInfoId,  e_imageType  dstImageType, VkImageLayout dstImageLayout) {
+
+                auto srcBufferInfo = getBufferInfo (srcBufferInfoId, srcBufferType);
+                auto dstImageInfo  = getImageInfo  (dstImageInfoId,  dstImageType);
+
+                VkImageMemoryBarrier barrier{};
+                VkPipelineStageFlags sourceStage, destinationStage;
+                transitionImageLayout (dstImageInfo->resource.image,
+                                       dstImageInfo->params.initialLayout,
+                                       dstImageLayout,
+                                       0,
+                                       dstImageInfo->meta.mipLevels,
+                                       dstImageInfo->params.aspect,
+                                       barrier,
+                                       sourceStage,
+                                       destinationStage);
+                /* All types of pipeline barriers are submitted using the same function. The first parameter after the 
+                 * command buffer specifies in which pipeline stage the operations occur that should happen before the 
+                 * barrier. The second parameter specifies the pipeline stage in which operations will wait on the 
+                 * barrier
+                 * 
+                 * Note that, the pipeline stages that you are allowed to specify before and after the barrier depend on 
+                 * how you use the resource before and after the barrier. For example, if you're going to read from a 
+                 * uniform after the barrier, you would specify a destination stage of VK_ACCESS_UNIFORM_READ_BIT and 
+                 * the earliest shader that will read from the uniform as pipeline stage, for example 
+                 * VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT as the destination access mask
+                 * 
+                 * The third parameter is either 0 or VK_DEPENDENCY_BY_REGION_BIT. The latter turns the barrier into a 
+                 * per-region condition. That means that the implementation is allowed to already begin reading from the 
+                 * parts of a resource that were written so far, for example
+                 * 
+                 * The last three pairs of parameters reference arrays of pipeline barriers of the three available types,
+                 * memory barriers, buffer memory barriers, and image memory barriers
+                */
+                vkCmdPipelineBarrier (commandBuffer,
+                                      sourceStage,
+                                      destinationStage,
+                                      0,
+                                      0, nullptr,
+                                      0, nullptr,
+                                      1, &barrier);
+                /* Copy buffer containing pixel data to image, just like with buffer copies, you need to specify 
+                 * which part of the buffer is going to be copied to which part of the image. This happens through 
+                 * VkBufferImageCopy structs
+                 * 
+                 * The bufferOffset specifies the byte offset in the buffer at which the pixel values start. The 
+                 * bufferRowLength and bufferImageHeight fields specify how the pixels are laid out in memory. For 
+                 * example, you could have some padding bytes between rows of the image. Specifying 0 for both indicates 
+                 * that the pixels are simply tightly packed. The imageSubresource, imageOffset and imageExtent fields 
+                 * indicate to which part of the image we want to copy the pixels
+                */
+                VkBufferImageCopy copyRegion{};
+                copyRegion.bufferOffset      = srcOffset;
+                copyRegion.bufferRowLength   = 0;
+                copyRegion.bufferImageHeight = 0;
+
+                copyRegion.imageSubresource.aspectMask     = dstImageInfo->params.aspect;
+                copyRegion.imageSubresource.mipLevel       = 0;
+                copyRegion.imageSubresource.baseArrayLayer = 0;
+                copyRegion.imageSubresource.layerCount     = 1;
+
+                copyRegion.imageOffset = {0, 0, 0};
+                copyRegion.imageExtent = {
+                                            dstImageInfo->meta.width,
+                                            dstImageInfo->meta.height,
+                                            1
+                                         };
+                /* Buffer to image copy operations are enqueued using the vkCmdCopyBufferToImage function, the fourth 
+                 * parameter indicates which layout the image is currently using. I'm assuming here that the image has 
+                 * already been transitioned to the layout that is optimal for copying pixels to
+                 * 
+                 * We're only copying one chunk of pixels to the whole image, but it's possible to specify an array of 
+                 * VkBufferImageCopy to perform many different copies from this buffer to the image in one operation
+                */
+                vkCmdCopyBufferToImage (commandBuffer,
+                                        srcBufferInfo->resource.buffer,
+                                        dstImageInfo->resource.image,
+                                        dstImageLayout,
+                                        1,
+                                        &copyRegion);                
+            }
+
+            /* Note that, if you are using a dedicated transfer queue, vkCmdBlitImage must be submitted to a queue with 
+             * graphics capability
+            */
+            void blitImageToMipMaps (VkCommandBuffer commandBuffer,
+                                     uint32_t imageInfoId, e_imageType imageType) {
+
+                auto imageInfo = getImageInfo (imageInfoId, imageType);
+                /* Generating mip maps
+                 * The input texture image is generated with multiple mip levels, but the staging buffer can only be used 
+                 * to fill mip level 0. The other levels are still undefined. To fill these levels we need to generate the 
+                 * data from the single level that we have. We will use the vkCmdBlitImage command to perform copying, 
+                 * scaling, and filtering operations. We will call this multiple times to blit data to each level of our 
+                 * texture image. Note that, vkCmdBlitImage is considered a transfer operation, so we must inform Vulkan 
+                 * that we intend to use the texture image as both the source and destination of a transfer by specifying
+                 * in usage flags when creating the texture image
+                 * 
+                 * vkCmdBlitImage depends on the layout of the image it operates on. We could transition the entire image 
+                 * to VK_IMAGE_LAYOUT_GENERAL, but this will most likely be slow. For optimal performance, the source 
+                 * image should be in VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL and the destination image should be in 
+                 * VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL
+                 * 
+                 * Vulkan allows us to transition each mip level of an image independently. Each blit will only deal with 
+                 * two mip levels at a time, so we can transition each level into the optimal layout between blits commands
+                 * 
+                 * Mip level 0
+                 * Transition layout VK_IMAGE_LAYOUT_UNDEFINED -> VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL
+                 * Copy buffer to image
+                 * 
+                 * Mip level 1 to m_mipLevels - 1
+                 * Transition layout VK_IMAGE_LAYOUT_UNDEFINED -> VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL
+                 * 
+                 * Loop {
+                 *          Mip level: 0
+                 *          Transition layout 
+                 *          VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL -> VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL
+                 *          Blit: mip level 1
+                 *          Transition layout 
+                 *          VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL -> VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+                 * 
+                 *          Mip level: 1
+                 *          Transition layout 
+                 *          VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL -> VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL
+                 *          Blit: mip level 2
+                 *          Transition layout 
+                 *          VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL -> VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+                 *          .
+                 *          .
+                 *          .
+                 * }
+                */
+                VkImageMemoryBarrier barrier{};
+                VkPipelineStageFlags sourceStage, destinationStage;
+
+                int32_t mipWidth  = static_cast <int32_t> (imageInfo->meta.width);
+                int32_t mipHeight = static_cast <int32_t> (imageInfo->meta.height);
+                for (uint32_t i = 1; i < imageInfo->meta.mipLevels; i++) {
+                    uint32_t srcMipLevel = i - 1;
+                    uint32_t dstMipLevel = i;
+                    /* First, we transition level i - 1 to VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL. This transition will wait 
+                     * for level i - 1 to be filled, either from the previous blit command, or from vkCmdCopyBufferToImage.
+                     * The current blit command will wait on this transition
+                    */
+                    transitionImageLayout (imageInfo->resource.image,
+                                           VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                                           VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+                                           srcMipLevel,
+                                           1,
+                                           imageInfo->params.aspect,
+                                           barrier,
+                                           sourceStage,
+                                           destinationStage);
+
+                    vkCmdPipelineBarrier (commandBuffer,
+                                          sourceStage,
+                                          destinationStage,
+                                          0,
+                                          0, nullptr,
+                                          0, nullptr,
+                                          1, &barrier);  
+
+                    /* Next, we specify the regions that will be used in the blit operation. The source mip level is i - 1 
+                     * and the destination mip level is i. The two elements of the srcOffsets array determine the 3D region 
+                     * that data will be blitted from. dstOffsets determines the region that data will be blitted to. The 
+                     * X and Y dimensions of the dstOffsets[1] are divided by two since each mip level is half the size of 
+                     * the previous level. The Z dimension of srcOffsets[1] and dstOffsets[1] must be 1, since a 2D image 
+                     * has a depth of 1
+                    */
+                    VkImageBlit blit{};
+                    blit.srcOffsets[0] = {0, 0, 0};
+                    blit.srcOffsets[1] = {
+                                            mipWidth, 
+                                            mipHeight, 
+                                            1
+                                         };
+
+                    blit.srcSubresource.aspectMask     = imageInfo->params.aspect;
+                    blit.srcSubresource.mipLevel       = srcMipLevel;
+                    blit.srcSubresource.baseArrayLayer = 0;
+                    blit.srcSubresource.layerCount     = 1;
+
+                    blit.dstOffsets[0] = {0, 0, 0};
+                    blit.dstOffsets[1] = {
+                                            mipWidth  > 1 ? mipWidth  / 2 : 1, 
+                                            mipHeight > 1 ? mipHeight / 2 : 1, 
+                                            1 
+                                         };
+
+                    blit.dstSubresource.aspectMask     = imageInfo->params.aspect;
+                    blit.dstSubresource.mipLevel       = dstMipLevel;
+                    blit.dstSubresource.baseArrayLayer = 0;
+                    blit.dstSubresource.layerCount     = 1;
+
+                    /* Note that, the source image is used for both the srcImage and dstImage parameter. This is because 
+                     * we're blitting between different levels of the same image. The source mip level was just 
+                     * transitioned to VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL and the destination level is still in 
+                     * VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL
+                     * 
+                     * The last parameter allows us to specify a VkFilter to use in the blit. We use the VK_FILTER_LINEAR 
+                     * to enable interpolation
+                    */
+                    vkCmdBlitImage (commandBuffer, 
+                                    imageInfo->resource.image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+                                    imageInfo->resource.image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                                    1, &blit,
+                                    VK_FILTER_LINEAR);
+
+                    /* To be able to start sampling from the texture image in the shader, we need one last transition to
+                     * prepare it for shader access. Note that, this transition waits on the current blit command to 
+                     * finish
+                    */
+                    transitionImageLayout (imageInfo->resource.image,
+                                           VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+                                           VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+                                           srcMipLevel,
+                                           1,
+                                           imageInfo->params.aspect,
+                                           barrier,
+                                           sourceStage,
+                                           destinationStage);
+
+                    vkCmdPipelineBarrier (commandBuffer,
+                                          sourceStage,
+                                          destinationStage,
+                                          0,
+                                          0, nullptr,
+                                          0, nullptr,
+                                          1, &barrier);   
+
+                    /* At the end of the loop, we divide the current mip dimensions by two. We check each dimension before
+                     * the division to ensure that dimension never becomes 0. This handles cases where the image is not 
+                     * square, since one of the mip dimensions would reach 1 before the other dimension. When this happens,
+                     * that dimension should remain 1 for all remaining levels
+                    */
+                    if (mipWidth > 1)  mipWidth  /= 2;
+                    if (mipHeight > 1) mipHeight /= 2;                                                    
+                }
+                /* Transition the last mip level, since the last level was never blitted from
+                */
+                transitionImageLayout (imageInfo->resource.image,
+                                       VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                                       VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+                                       imageInfo->meta.mipLevels - 1,
+                                       1,
+                                       imageInfo->params.aspect,
+                                       barrier,
+                                       sourceStage,
+                                       destinationStage);
+
+                vkCmdPipelineBarrier (commandBuffer,
+                                      sourceStage,
+                                      destinationStage,
+                                      0,
+                                      0, nullptr,
+                                      0, nullptr,
+                                      1, &barrier);                 
+            }
+
+            void beginRenderPass (VkCommandBuffer commandBuffer,
+                                  uint32_t resourceId,
+                                  uint32_t renderPassInfoId,
+                                  uint32_t swapChainImageIndex,
+                                  const std::vector <VkClearValue>& clearValues) {
+                
+                auto deviceInfo     = getDeviceInfo();
+                auto renderPassInfo = getRenderPassInfo (renderPassInfoId);
+                /* Drawing starts by beginning the render pass with vkCmdBeginRenderPass. The render pass is configured 
+                 * using some parameters in a VkRenderPassBeginInfo struct
+                */
+                VkRenderPassBeginInfo beginInfo{};
+                beginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+                /* The first parameters are the render pass itself and the attachments to bind. We created a framebuffer 
+                 * for each swap chain image where it is specified as a color attachment. Thus we need to bind the 
+                 * framebuffer for the swapchain image we want to draw to. Using the imageIndex parameter which was 
+                 * passed in, we can pick the right framebuffer for the current swapchain image
+                */
+                beginInfo.renderPass  = renderPassInfo->resource.renderPass;
+                beginInfo.framebuffer = renderPassInfo->resource.framebuffers[swapChainImageIndex];
+                /* The next two parameters define the size of the render area. The render area defines where shader loads 
+                 * and stores will take place. The pixels outside this region will have undefined values. It should match 
+                 * the size of the attachments for best performance
+                */
+                beginInfo.renderArea.offset = {0, 0};
+                beginInfo.renderArea.extent = deviceInfo->unique[resourceId].swapChain.extent;
+                beginInfo.clearValueCount   = static_cast <uint32_t> (clearValues.size());
+                beginInfo.pClearValues      = clearValues.data();
+
+                /* The render pass can now begin. All of the functions that record commands can be recognized by their 
+                 * vkCmd prefix. They all return void, so there will be no error handling until we've finished recording
+                 * 
+                 * The final parameter controls how the drawing commands within the render pass will be provided
+                 * VK_SUBPASS_CONTENTS_INLINE
+                 * The render pass commands will be embedded in the primary command buffer itself and no secondary command
+                 * buffers will be executed
+                 * 
+                 * VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS
+                 * The render pass commands will be executed from secondary command buffers
+                */
+                vkCmdBeginRenderPass (commandBuffer, &beginInfo, VK_SUBPASS_CONTENTS_INLINE);
+            }
+
+            void endRenderPass (VkCommandBuffer commandBuffer) {
+                vkCmdEndRenderPass (commandBuffer);
+            }
+
+            void bindPipeline (VkCommandBuffer commandBuffer,
+                               uint32_t pipelineInfoId,
+                               VkPipelineBindPoint bindPoint) {
+                
+                auto pipelineInfo = getPipelineInfo (pipelineInfoId);
+                vkCmdBindPipeline (commandBuffer, 
+                                   bindPoint, 
+                                   pipelineInfo->resource.pipeline);
+            }
+
+            void bindVertexBuffers (VkCommandBuffer commandBuffer,
+                                    const std::vector <uint32_t>& bufferInfoIds,
+                                    uint32_t firstBinding,
+                                    const std::vector <VkDeviceSize>& offsets) {
+                
+                std::vector <VkBuffer> vertexBuffers;
+                /* The vkCmdBindVertexBuffers function is used to bind vertex buffers to bindings, which is already set 
+                 * up in createGraphicsPipeline function. The first two parameters, besides the command buffer, specify 
+                 * the offset and number of bindings we're going to specify vertex buffers for. The last two parameters 
+                 * specify the array of vertex buffers to bind and the byte offsets to start reading vertex data from
+                */
+                for (auto const& bufferInfoId: bufferInfoIds) {
+                    auto bufferInfo = getBufferInfo (bufferInfoId, VERTEX_BUFFER);
+                    vertexBuffers.push_back (bufferInfo->resource.buffer);
+                }
+
+                vkCmdBindVertexBuffers (commandBuffer, 
+                                        firstBinding, 
+                                        static_cast <uint32_t> (vertexBuffers.size()), 
+                                        vertexBuffers.data(), 
+                                        offsets.data());
+            }
+
+            void bindIndexBuffer (VkCommandBuffer commandBuffer,
+                                  uint32_t bufferInfoId,
+                                  VkDeviceSize offset,
+                                  VkIndexType indexType) {
+                
+                auto bufferInfo = getBufferInfo (bufferInfoId, INDEX_BUFFER);
+                /* The vkCmdBindIndexBuffer binds the index buffer, just like we did for the vertex buffer. The 
+                 * difference is that you can only have a single index buffer. It's unfortunately not possible to use 
+                 * different indices for each vertex attribute, so we do still have to completely duplicate vertex data 
+                 * even if just one attribute varies. For example,
+                 * 
+                 * vertex attribute 1
+                 * {
+                 *      [x1, y1],
+                 *      [x2, y2],
+                 *      [x3, y3]
+                 * }
+                 * 
+                 * vertex attribute 2
+                 * {
+                 *      [a1, b1, c1],
+                 *      [a2, b2, c2],
+                 *      [a3, b3, c3]
+                 * }
+                 * 
+                 * index data 1
+                 * {
+                 *      0, 1, 2, 0, 1, 2
+                 * }
+                 * 
+                 * index data 2
+                 * {
+                 *      0, 1, 2, 1, 1, 1
+                 * }
+                 * 
+                 * Let us say this is the case where multiple same vertices (attribute 1) can have different normals 
+                 * (attribute 2). But this is not possible, and we will need to duplicate the data so each unique vertex 
+                 * has its own data, as stated above
+                 * 
+                 * vertex attribute 1
+                 * {
+                 *      [x1, y1],
+                 *      [x2, y2],
+                 *      [x3, y3],
+                 *      [x1, y1],
+                 *      [x2, y2],
+                 *      [x3, y3]
+                 * }
+                 * 
+                 * vertex attribute 2
+                 * {
+                 *      [a1, b1, c1],
+                 *      [a2, b2, c2],
+                 *      [a3, b3, c3],
+                 *      [a2, b2, c2],
+                 *      [a2, b2, c2],
+                 *      [a2, b2, c2],
+                 * }
+                 * 
+                 * index data
+                 * {
+                 *      0, 1, 2, 3, 4, 5  
+                 * }
+                */
+                vkCmdBindIndexBuffer (commandBuffer, 
+                                      bufferInfo->resource.buffer, 
+                                      offset, 
+                                      indexType);
+            }
+
+            void bindDescriptorSets (VkCommandBuffer commandBuffer,
+                                     uint32_t firstSet,
+                                     const std::vector <VkDescriptorSet>& descriptorSets,
+                                     uint32_t pipelineInfoId,
+                                     VkPipelineBindPoint bindPoint) {
+                
+                auto pipelineInfo = getPipelineInfo (pipelineInfoId);
+                /* Unlike vertex and index buffers, descriptor sets are not unique to graphics pipelines. Therefore we 
+                 * need to specify if we want to bind descriptor sets to the graphics or compute pipeline. The next 
+                 * parameter is the pipeline layout that the descriptors are based on.
+                 * 
+                 * The next three parameters specify the index of the first descriptor set, the number of sets to bind, 
+                 * and the array of sets to bind.
+                 * 
+                 * The last two parameters specify an array of offsets that are used for dynamic descriptors
+                */
+                vkCmdBindDescriptorSets (commandBuffer, 
+                                         bindPoint, 
+                                         pipelineInfo->resource.layout, 
+                                         firstSet, 
+                                         static_cast <uint32_t> (descriptorSets.size()), 
+                                         descriptorSets.data(), 
+                                         0, 
+                                         nullptr);
+            }
+
+            void drawIndexed (VkCommandBuffer commandBuffer,
+                              uint32_t bufferInfoId,
+                              uint32_t instanceCount, 
+                              uint32_t firstIndex, 
+                              int32_t vertexOffset, 
+                              uint32_t firstInstance) {
+                
+                auto bufferInfo = getBufferInfo (bufferInfoId, INDEX_BUFFER);
+                /* InstanceCount: Used for instanced rendering, use 1 if you're not doing that
+                 * firstIndex:    Specifies an offset into the index buffer, using a value of 1 would cause the graphics 
+                 *                card to start reading at the second index
+                 * vertexOffset:  Specifies an offset to add to the indices in the index buffer
+                 * firstInstance: Used as an offset for instanced rendering, defines the lowest value of gl_InstanceIndex
+                */
+                vkCmdDrawIndexed (commandBuffer, 
+                                  static_cast <uint32_t> (bufferInfo->meta.size), 
+                                  instanceCount, 
+                                  firstIndex, 
+                                  vertexOffset, 
+                                  firstInstance);
+            }
+    };
+
+    Log::Record* VKCmds::m_VKCmdsLog;
+}   // namespace Renderer
+#endif  // VK_CMDS_H

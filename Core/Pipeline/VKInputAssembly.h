@@ -1,0 +1,60 @@
+#ifndef VK_INPUT_ASSEMBLY_H
+#define VK_INPUT_ASSEMBLY_H
+
+#include "VKPipelineMgr.h"
+
+using namespace Collections;
+
+namespace Renderer {
+    class VKInputAssembly: protected virtual VKPipelineMgr {
+        private:
+            static Log::Record* m_VKInputAssemblyLog;
+            const size_t m_instanceId = g_collectionsId++;
+            
+        public:
+            VKInputAssembly (void) {
+                m_VKInputAssemblyLog = LOG_INIT (m_instanceId, g_pathSettings.logSaveDir);
+            }
+
+            ~VKInputAssembly (void) { 
+                LOG_CLOSE (m_instanceId);
+            }
+
+        protected:
+            void createInputAssemblyState (uint32_t pipelineInfoId, 
+                                           VkPrimitiveTopology topology,
+                                           VkBool32 restartEnable) {
+                
+                auto pipelineInfo = getPipelineInfo (pipelineInfoId);
+                /* The VkPipelineInputAssemblyStateCreateInfo struct describes two things: what kind of geometry will be 
+                 * drawn from the vertices and if primitive restart should be enabled
+                 * 
+                 * VK_PRIMITIVE_TOPOLOGY_POINT_LIST
+                 * points from vertices
+                 * 
+                 * VK_PRIMITIVE_TOPOLOGY_LINE_LIST
+                 * line from every 2 vertices without reuse
+                 * 
+                 * VK_PRIMITIVE_TOPOLOGY_LINE_STRIP
+                 * the end vertex of every line is used as start vertex for the next line
+                 * 
+                 * VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST
+                 * triangle from every 3 vertices without reuse
+                 * 
+                 * VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP
+                 * the second and third vertex of every triangle are used as first two vertices of the next triangle
+                */
+                VkPipelineInputAssemblyStateCreateInfo createInfo{};
+                createInfo.sType    = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
+                createInfo.topology = topology;
+                /* If you set the primitiveRestartEnable member to VK_TRUE, then it's possible to break up lines and 
+                 * triangles in the _STRIP topology modes
+                */
+                createInfo.primitiveRestartEnable = restartEnable;
+                pipelineInfo->state.inputAssembly = createInfo;
+            } 
+    };
+
+    Log::Record* VKInputAssembly::m_VKInputAssemblyLog;
+}   // namespace Renderer
+#endif  // VK_INPUT_ASSEMBLY_H
