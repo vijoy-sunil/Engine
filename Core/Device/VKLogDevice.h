@@ -45,7 +45,7 @@ namespace Renderer {
                 float queuePriority = 1.0f;
                 /* Populate the structs
                 */
-                for (uint32_t queueFamily : uniqueQueueFamilies) {
+                for (auto const& queueFamily: uniqueQueueFamilies) {
                     VkDeviceQueueCreateInfo createInfo{};
                     createInfo.sType            = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
                     createInfo.queueFamilyIndex = queueFamily;

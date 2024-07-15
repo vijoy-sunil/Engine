@@ -10,6 +10,10 @@
 #include "../RenderPass/VKFrameBuffer.h"
 #include "../Model/VKTextureSampler.h"
 #include "../Model/VKDescriptor.h"
+#include "../Cmds/VKCmdBuffer.h"
+#include "VKCameraMgr.h"
+#include "VKSyncObjects.h"
+#include "VKDrawSequence.h"
 
 using namespace Collections;
 
@@ -22,7 +26,11 @@ namespace Renderer {
                             protected virtual VKBufferMgr,
                             protected virtual VKFrameBuffer,
                             protected virtual VKTextureSampler,
-                            protected virtual VKDescriptor {
+                            protected virtual VKDescriptor,
+                            protected virtual VKCmdBuffer,
+                            protected virtual VKCameraMgr,
+                            protected virtual VKSyncObjects,
+                            protected virtual VKDrawSequence {
         private:
             static Log::Record* m_VKDeleteSequenceLog;
             const size_t m_instanceId = g_collectionsId++;
@@ -41,10 +49,44 @@ namespace Renderer {
             void runSequence (uint32_t modelInfoId, 
                               uint32_t renderPassInfoId, 
                               uint32_t pipelineInfoId,
-                              uint32_t resourceId) {
+                              uint32_t cameraInfoId,
+                              uint32_t resourceId,
+                              uint32_t handOffInfoId) {
 
                 auto modelInfo  = getModelInfo (modelInfoId);
                 auto deviceInfo = getDeviceInfo();
+                /* |------------------------------------------------------------------------------------------------|
+                 * | DESTROY DRAW OPS - FENCE AND SEMAPHORES                                                        |
+                 * |------------------------------------------------------------------------------------------------|
+                */
+                auto handOffInfo = getHandOffInfo (handOffInfoId);
+                for (auto const& infoId: handOffInfo->id.renderDoneSemaphoreInfos) {
+                    cleanUpSemaphore (infoId, SEM_RENDER_DONE);
+                    LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Draw ops semaphore " 
+                                                     << "[" << infoId << "]"
+                                                     << std::endl;
+                }
+
+                for (auto const& infoId: handOffInfo->id.imageAvailableSemaphoreInfos) {
+                    cleanUpSemaphore (infoId, SEM_IMAGE_AVAILABLE);
+                    LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Draw ops semaphore " 
+                                                     << "[" << infoId << "]"
+                                                     << std::endl;
+                }
+
+                for (auto const& infoId: handOffInfo->id.inFlightFenceInfos) {
+                    cleanUpFence (infoId, FEN_IN_FLIGHT);
+                    LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Draw ops fence " 
+                                                     << "[" << infoId << "]"
+                                                     << std::endl;
+                }
+                /* |------------------------------------------------------------------------------------------------|
+                 * | DESTROY DRAW OPS - COMMAND POOL                                                                |
+                 * |------------------------------------------------------------------------------------------------|
+                */
+                VKCmdBuffer::cleanUp (handOffInfo->resource.commandPool);
+                LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Draw ops command pool"
+                                                 << std::endl; 
                 /* |------------------------------------------------------------------------------------------------|
                  * | DESTROY DESCRIPTOR POOL                                                                        |
                  * |------------------------------------------------------------------------------------------------|
@@ -90,7 +132,7 @@ namespace Renderer {
                  * |------------------------------------------------------------------------------------------------|
                 */
                 for (size_t i = 0; i < g_maxFramesInFlight; i++) {
-                    uint32_t uniformBufferInfoId = modelInfo->id.uniformBufferInfo + i;
+                    uint32_t uniformBufferInfoId = modelInfo->id.uniformBufferInfos[i];
                     VKBufferMgr::cleanUp (uniformBufferInfoId, UNIFORM_BUFFER);
                     LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Uniform buffer " 
                                                      << "[" << uniformBufferInfoId << "]"
@@ -141,7 +183,7 @@ namespace Renderer {
                  * |------------------------------------------------------------------------------------------------|
                 */
                 for (uint32_t i = 0; i < deviceInfo->unique[resourceId].swapChain.size; i++) {
-                    uint32_t swapChainImageInfoId = modelInfo->id.swapChainImageInfo + i;
+                    uint32_t swapChainImageInfoId = modelInfo->id.swapChainImageInfoBase + i;
                     VKImageMgr::cleanUp (swapChainImageInfoId, SWAPCHAIN_IMAGE);
                     LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Swap chain resources " 
                                                      << "[" << swapChainImageInfoId << "]"
@@ -199,13 +241,36 @@ namespace Renderer {
                 VKModelMgr::cleanUp (modelInfoId);
                 LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Model info " 
                                                  << "[" << modelInfoId << "]"
-                                                 << std::endl;  
-
+                                                 << std::endl; 
+                /* |------------------------------------------------------------------------------------------------|
+                 * | DESTROY CAMERA INFO                                                                            |
+                 * |------------------------------------------------------------------------------------------------|
+                */
+                VKCameraMgr::cleanUp (cameraInfoId);
+                LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Camera info " 
+                                                 << "[" << cameraInfoId << "]"
+                                                 << std::endl; 
+                /* |------------------------------------------------------------------------------------------------|
+                 * | DESTROY HAND OFF INFO                                                                          |
+                 * |------------------------------------------------------------------------------------------------|
+                */
+                VKDrawSequence::cleanUp (handOffInfoId);
+                LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Hand off info " 
+                                                 << "[" << handOffInfoId << "]"
+                                                 << std::endl;
+                /* |------------------------------------------------------------------------------------------------|
+                 * | DUMP METHODS                                                                                   |
+                 * |------------------------------------------------------------------------------------------------|
+                */
                 dumpModelInfoPool();
                 dumpImageInfoPool();
                 dumpBufferInfoPool();   
                 dumpRenderPassInfoPool();  
-                dumpPipelineInfoPool();            
+                dumpPipelineInfoPool();
+                dumpCameraInfoPool();
+                dumpFenceInfoPool();
+                dumpSemaphoreInfoPool();
+                dumpHandOffInfoPool();
             }
     };
 

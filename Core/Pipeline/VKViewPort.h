@@ -31,8 +31,8 @@ namespace Renderer {
                  * VkViewport viewport{};
                  * viewport.x        = 0.0f;
                  * viewport.y        = 0.0f;
-                 * viewport.width    = static_cast <float> (getSwapChainExtent().width);
-                 * viewport.height   = static_cast <float> (getSwapChainExtent().height);
+                 * viewport.width    = static_cast <float> (swapChainExtent.width);
+                 * viewport.height   = static_cast <float> (swapChainExtent.height);
                  * viewport.minDepth = 0.0f;
                  * viewport.maxDepth = 1.0f;
                  * 

@@ -45,8 +45,8 @@ namespace Renderer {
                  * A viewport basically describes the region of the framebuffer that the output will be rendered to. This 
                  * will almost always be (0, 0) to (width, height). Remember that the size of the swap chain and its 
                  * images may differ from the width and height of the window
-                 * viewport.width  = static_cast <float> (getSwapChainExtent().width);
-                 * viewport.height = static_cast <float> (getSwapChainExtent().height);
+                 * viewport.width  = static_cast <float> (swapChainExtent.width);
+                 * viewport.height = static_cast <float> (swapChainExtent.height);
                  * 
                  * Scissor rectangle
                  * While viewports define the transformation from the image to the framebuffer, scissor rectangles define 

@@ -147,6 +147,14 @@ namespace Renderer {
                     throw std::runtime_error ("Failed to end recording command buffer");
                 } 
             }
+
+            void cleanUp (VkCommandPool commandPool) {
+                auto deviceInfo = getDeviceInfo();
+                /* Destroy command pool, note that command buffers will be automatically freed when their command pool 
+                 * is destroyed, so we don't need explicit cleanup
+                */
+                vkDestroyCommandPool (deviceInfo->shared.logDevice, commandPool, nullptr);
+            }
     };
 
     Log::Record* VKCmdBuffer::m_VKCmdBufferLog;

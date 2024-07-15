@@ -6,8 +6,10 @@
 namespace Renderer {
 /* Disable validation layers and logging
 */
-#define DEBUG_DISABLE   false
-
+#define DEBUG_DISABLE               (false)
+/* Manually inject vertex attributes and indices instead of populating them from imported model, usefult for testing
+*/
+#define OVERRIDE_MODEL_IMPORT       (true)
 /* Window settings (resolution is in screen coordinates)
 */
 struct windowSettings {
@@ -23,7 +25,7 @@ struct pathSettings {
     const char* vertexShaderBinary   = "Build/Bin/vert.spv";
     const char* fragmentShaderBinary = "Build/Bin/frag.spv"; 
     const char* model                = "SandBox/Models/model_1.obj";
-    const char* textureImage         = "SandBox/Textures/tex_512x512_rb.png";
+    const char* textureImage         = "SandBox/Textures/tex_512x512_rg.png";
 } g_pathSettings;
  
 /* Frames in flight

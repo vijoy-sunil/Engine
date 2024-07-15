@@ -48,7 +48,7 @@ namespace Renderer {
 
                 vkCmdSetViewport (commandBuffer, 
                                   firstViewPort, 
-                                  static_cast <uint32_t> (viewPorts.size() + 1), 
+                                  static_cast <uint32_t> (viewPorts.size()), 
                                   viewPorts.data());
             }
 
@@ -66,7 +66,7 @@ namespace Renderer {
                 scissors.push_back (defaultScissor);
                 vkCmdSetScissor (commandBuffer, 
                                  firstScissor, 
-                                 static_cast <uint32_t> (scissors.size() + 1), 
+                                 static_cast <uint32_t> (scissors.size()), 
                                  scissors.data());
             }
 
@@ -175,7 +175,12 @@ namespace Renderer {
                                         &copyRegion);                
             }
 
-            /* Note that, if you are using a dedicated transfer queue, vkCmdBlitImage must be submitted to a queue with 
+            /* Mipmaps are precalculated, downscaled versions of an image. Each new image is half the width and height of 
+             * the previous one. Mipmaps are used as a form of Level of Detail or LOD. Objects that are far away from the 
+             * camera will sample their textures from the smaller mip images. Using smaller images increases the rendering
+             * speed and avoids artifacts such as Moiré patterns
+             * 
+             * Note that, if you are using a dedicated transfer queue, vkCmdBlitImage must be submitted to a queue with 
              * graphics capability
             */
             void blitImageToMipMaps (VkCommandBuffer commandBuffer,
@@ -353,13 +358,13 @@ namespace Renderer {
             }
 
             void beginRenderPass (VkCommandBuffer commandBuffer,
-                                  uint32_t resourceId,
                                   uint32_t renderPassInfoId,
-                                  uint32_t swapChainImageIndex,
+                                  uint32_t resourceId,
+                                  uint32_t swapChainImageId,
                                   const std::vector <VkClearValue>& clearValues) {
                 
-                auto deviceInfo     = getDeviceInfo();
                 auto renderPassInfo = getRenderPassInfo (renderPassInfoId);
+                auto deviceInfo     = getDeviceInfo();
                 /* Drawing starts by beginning the render pass with vkCmdBeginRenderPass. The render pass is configured 
                  * using some parameters in a VkRenderPassBeginInfo struct
                 */
@@ -371,7 +376,7 @@ namespace Renderer {
                  * passed in, we can pick the right framebuffer for the current swapchain image
                 */
                 beginInfo.renderPass  = renderPassInfo->resource.renderPass;
-                beginInfo.framebuffer = renderPassInfo->resource.framebuffers[swapChainImageIndex];
+                beginInfo.framebuffer = renderPassInfo->resource.framebuffers[swapChainImageId];
                 /* The next two parameters define the size of the render area. The render area defines where shader loads 
                  * and stores will take place. The pixels outside this region will have undefined values. It should match 
                  * the size of the attachments for best performance
@@ -420,8 +425,8 @@ namespace Renderer {
                  * the offset and number of bindings we're going to specify vertex buffers for. The last two parameters 
                  * specify the array of vertex buffers to bind and the byte offsets to start reading vertex data from
                 */
-                for (auto const& bufferInfoId: bufferInfoIds) {
-                    auto bufferInfo = getBufferInfo (bufferInfoId, VERTEX_BUFFER);
+                for (auto const& infoId: bufferInfoIds) {
+                    auto bufferInfo = getBufferInfo (infoId, VERTEX_BUFFER);
                     vertexBuffers.push_back (bufferInfo->resource.buffer);
                 }
 
@@ -511,7 +516,7 @@ namespace Renderer {
                 auto pipelineInfo = getPipelineInfo (pipelineInfoId);
                 /* Unlike vertex and index buffers, descriptor sets are not unique to graphics pipelines. Therefore we 
                  * need to specify if we want to bind descriptor sets to the graphics or compute pipeline. The next 
-                 * parameter is the pipeline layout that the descriptors are based on.
+                 * parameter is the pipeline layout that the descriptors are based on
                  * 
                  * The next three parameters specify the index of the first descriptor set, the number of sets to bind, 
                  * and the array of sets to bind.
@@ -529,13 +534,12 @@ namespace Renderer {
             }
 
             void drawIndexed (VkCommandBuffer commandBuffer,
-                              uint32_t bufferInfoId,
+                              uint32_t indicesCount,
                               uint32_t instanceCount, 
                               uint32_t firstIndex, 
                               int32_t vertexOffset, 
                               uint32_t firstInstance) {
                 
-                auto bufferInfo = getBufferInfo (bufferInfoId, INDEX_BUFFER);
                 /* InstanceCount: Used for instanced rendering, use 1 if you're not doing that
                  * firstIndex:    Specifies an offset into the index buffer, using a value of 1 would cause the graphics 
                  *                card to start reading at the second index
@@ -543,7 +547,7 @@ namespace Renderer {
                  * firstInstance: Used as an offset for instanced rendering, defines the lowest value of gl_InstanceIndex
                 */
                 vkCmdDrawIndexed (commandBuffer, 
-                                  static_cast <uint32_t> (bufferInfo->meta.size), 
+                                  indicesCount, 
                                   instanceCount, 
                                   firstIndex, 
                                   vertexOffset, 

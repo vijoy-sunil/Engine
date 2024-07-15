@@ -25,8 +25,8 @@ namespace Renderer {
                 struct Id {
                     uint32_t vertexBufferInfo;
                     uint32_t indexBufferInfo;
-                    uint32_t uniformBufferInfo;
-                    uint32_t swapChainImageInfo;
+                    std::vector <uint32_t> uniformBufferInfos;
+                    uint32_t swapChainImageInfoBase;
                     uint32_t textureImageInfo;
                     uint32_t depthImageInfo;
                     uint32_t multiSampleImageInfo;
@@ -81,7 +81,8 @@ namespace Renderer {
                                  const char* textureImagePath,
                                  const char* vertexShaderBinaryPath,
                                  const char* fragmentShaderBinaryPath,
-                                 const std::vector <uint32_t>& infoIds) {
+                                 const std::vector <uint32_t>& infoIds, 
+                                 const std::vector <std::vector <uint32_t>>& infoIdGroups) {
                 
                 if (m_modelInfoPool.find (modelInfoId) != m_modelInfoPool.end()) {
                     LOG_ERROR (m_VKModelMgrLog) << "Model info id already exists "
@@ -97,13 +98,31 @@ namespace Renderer {
                 info.meta.fragmentShaderBinaryPath = fragmentShaderBinaryPath;
                 info.id.vertexBufferInfo           = infoIds[0];
                 info.id.indexBufferInfo            = infoIds[1];
-                info.id.uniformBufferInfo          = infoIds[2];
-                info.id.swapChainImageInfo         = infoIds[3];
-                info.id.textureImageInfo           = infoIds[4];
-                info.id.depthImageInfo             = infoIds[5];
-                info.id.multiSampleImageInfo       = infoIds[6];
+                info.id.swapChainImageInfoBase     = infoIds[2];
+                info.id.textureImageInfo           = infoIds[3];
+                info.id.depthImageInfo             = infoIds[4];
+                info.id.multiSampleImageInfo       = infoIds[5];
 
+                info.id.uniformBufferInfos         = infoIdGroups[0];
                 m_modelInfoPool[modelInfoId]       = info;
+            }
+
+            void createVertices (uint32_t modelInfoId, 
+                                 const std::vector <Vertex>& vertices) {
+
+                auto modelInfo = getModelInfo (modelInfoId);
+
+                modelInfo->meta.uniqueVerticesCount = static_cast <uint32_t> (vertices.size());
+                modelInfo->resource.vertices        = vertices;
+            }
+
+            void createIndices (uint32_t modelInfoId,
+                                const std::vector <uint32_t>& indices) {
+
+                auto modelInfo = getModelInfo (modelInfoId);
+
+                modelInfo->meta.indicesCount = static_cast <uint32_t> (indices.size());
+                modelInfo->resource.indices  = indices;
             }
 
             /* OBJ file format
@@ -201,6 +220,8 @@ namespace Renderer {
                  * implement this by overloading operator==() for your key type
                 */
                 std::unordered_map <Vertex, uint32_t> uniqueVertices{};
+                std::vector <Vertex>   vertices;
+                std::vector <uint32_t> indices;
                 /* Iterate overall all faces (may belong to different objects in a scene) and populate the vertex and 
                  * index vectors
                 */
@@ -233,11 +254,15 @@ namespace Renderer {
                          * 0 means the top of the image. Solve this by flipping the vertical component of the texture 
                          * coordinates
                          * 
-                         * (0, 0)-----------(0, 1)  top ^
+                         * (0, 0)-----------(1, 0)  top ^
                          * |                |
                          * |     (u, v)     |
                          * |                |
-                         * (1, 0)-----------(1, 1)  bottom v
+                         * (0, 1)-----------(1, 1)  bottom v
+                         * 
+                         * In Vulkan, 
+                         * the u coordinate goes from 0.0 to 1.0, left to right
+                         * the v coordinate goes from 0.0 to 1.0, top to bottom
                         */
                         vertex.texCoord = {
                                                    attrib.texcoords[2 * index.texcoord_index + 0],
@@ -245,9 +270,9 @@ namespace Renderer {
                                           };
 
                         vertex.normal   = {
-                                            attrib.normals[3 * index.vertex_index + 0],
-                                            attrib.normals[3 * index.vertex_index + 1],
-                                            attrib.normals[3 * index.vertex_index + 2]
+                                            attrib.normals[3 * index.normal_index + 0],
+                                            attrib.normals[3 * index.normal_index + 1],
+                                            attrib.normals[3 * index.normal_index + 2]
                                           }; 
                         
                         /* To take advantage of the index buffer, we should keep only the unique vertices and use the 
@@ -260,14 +285,14 @@ namespace Renderer {
                          * store that index in m_indices
                         */
                         if (uniqueVertices.count (vertex) == 0) {
-                            uniqueVertices[vertex] = static_cast <uint32_t> (modelInfo->resource.vertices.size());
-                            modelInfo->resource.vertices.push_back (vertex);
+                            uniqueVertices[vertex] = static_cast <uint32_t> (vertices.size());
+                            vertices.push_back (vertex);
                         }
-                        modelInfo->resource.indices.push_back (uniqueVertices[vertex]);
+                        indices.push_back (uniqueVertices[vertex]);
                     }
                 }
-                modelInfo->meta.uniqueVerticesCount = static_cast <uint32_t> (modelInfo->resource.vertices.size());
-                modelInfo->meta.indicesCount        = static_cast <uint32_t> (modelInfo->resource.indices.size());
+                createVertices (modelInfoId, vertices);
+                createIndices  (modelInfoId, indices);
             }
 
             ModelInfo* getModelInfo (uint32_t modelInfoId) {
@@ -335,12 +360,14 @@ namespace Renderer {
                                                << "[" << val.id.indexBufferInfo << "]"
                                                << std::endl;
 
-                    LOG_INFO (m_VKModelMgrLog) << "Uniform buffer info id " 
-                                               << "[" << val.id.uniformBufferInfo << "]"
+                    LOG_INFO (m_VKModelMgrLog) << "Uniform buffer info ids" 
                                                << std::endl;
+                    for (auto const& infoId: val.id.uniformBufferInfos)
+                    LOG_INFO (m_VKModelMgrLog) << "[" << infoId << "]"
+                                               << std::endl;                    
 
                     LOG_INFO (m_VKModelMgrLog) << "Swap chain image info id base " 
-                                               << "[" << val.id.swapChainImageInfo << "]"
+                                               << "[" << val.id.swapChainImageInfoBase << "]"
                                                << std::endl;
 
                     LOG_INFO (m_VKModelMgrLog) << "Texture image info id " 

@@ -148,7 +148,7 @@ namespace Renderer {
                     LOG_INFO (m_VKDeviceMgrLog) << "[" << extension << "]"
                                                 << std::endl;
 
-                for (size_t i = 0; i < deviceInfo->meta.deviceResourcesCount; i++) {
+                for (uint32_t i = 0; i < deviceInfo->meta.deviceResourcesCount; i++) {
                     LOG_INFO (m_VKDeviceMgrLog) << "Resource id "
                                                 << "[" << i << "]"
                                                 << std::endl;

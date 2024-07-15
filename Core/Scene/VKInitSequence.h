@@ -28,6 +28,14 @@
 #include "../Pipeline/VKPipelineLayout.h"
 #include "../Model/VKTextureSampler.h"
 #include "../Model/VKDescriptor.h"
+#include "../Cmds/VKCmdBuffer.h"
+#include "../Cmds/VKCmds.h"
+#include "../Model/VKModelMatrix.h"
+#include "VKUniforms.h"
+#include "VKTransform.h"
+#include "VKCameraMgr.h"
+#include "VKSyncObjects.h"
+#include "VKDrawSequence.h"
 
 using namespace Collections;
 
@@ -36,10 +44,10 @@ namespace Renderer {
                           protected virtual VKInstance,
                           protected virtual VKSurface,
                           protected virtual VKLogDevice,
-                          protected VKSwapChainImage,
+                          protected virtual VKSwapChainImage,
                           protected VKTextureImage,
-                          protected VKDepthImage,
-                          protected VKMultiSampleImage,                   
+                          protected virtual VKDepthImage,
+                          protected virtual VKMultiSampleImage,                   
                           protected VKVertexBuffer,
                           protected VKIndexBuffer,
                           protected virtual VKUniformBuffer,
@@ -58,7 +66,13 @@ namespace Renderer {
                           protected VKDescriptorSetLayout,
                           protected VKPipelineLayout,
                           protected virtual VKTextureSampler,
-                          protected virtual VKDescriptor {
+                          protected virtual VKDescriptor,
+                          protected virtual VKCmdBuffer,
+                          protected virtual VKCmds,
+                          protected virtual VKModelMatrix,
+                          protected virtual VKCameraMgr,
+                          protected virtual VKSyncObjects,
+                          protected virtual VKDrawSequence {
         private:
             /* Set upper bound lod for the texture sampler It is recommended that to sample from the entire mipmap chain, 
              * set minLod to 0.0, and set maxLod to a level of detail high enough that the computed level of detail will 
@@ -83,8 +97,11 @@ namespace Renderer {
         protected:
             void runSequence (uint32_t modelInfoId, 
                               uint32_t renderPassInfoId,
-                              uint32_t pipelineInfoId, 
-                              uint32_t resourceId) {
+                              uint32_t pipelineInfoId,
+                              uint32_t cameraInfoId, 
+                              uint32_t resourceId,
+                              uint32_t handOffInfoId,
+                              const TransformInfo& transformInfo) {
 
                 auto modelInfo  = getModelInfo (modelInfoId);
                 auto deviceInfo = getDeviceInfo();
@@ -146,9 +163,9 @@ namespace Renderer {
                  * | CONFIG SWAP CHAIN RESOURCES                                                                    |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                createSwapChainResources (modelInfo->id.swapChainImageInfo, resourceId);
+                createSwapChainResources (modelInfo->id.swapChainImageInfoBase, resourceId);
                 LOG_INFO (m_VKInitSequenceLog) << "[OK] Swap chain resources " 
-                                               << "[" << modelInfo->id.swapChainImageInfo << "]"
+                                               << "[" << modelInfo->id.swapChainImageInfoBase << "]"
                                                << " "
                                                << "[" << resourceId << "]"
                                                << std::endl;   
@@ -188,7 +205,25 @@ namespace Renderer {
                  * | IMPORT MODEL                                                                                   |
                  * |------------------------------------------------------------------------------------------------|
                 */
+#if OVERRIDE_MODEL_IMPORT
+                const std::vector <Vertex> vertices = {
+                    /* pos, color, textCoord, normal
+                    */
+                    {{-0.5f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}, {0.0f, 0.0f, 1.0f}},
+                    {{ 0.5f, -0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f}, {0.0f, 0.0f, 1.0f}},
+                    {{ 0.5f,  0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f}, {0.0f, 0.0f, 1.0f}},
+                    {{-0.5f,  0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f}, {0.0f, 0.0f, 1.0f}}
+                };
+                
+                const std::vector <uint32_t> indices = {
+                    0, 1, 2, 2, 3, 0
+                };
+
+                createVertices (modelInfoId, vertices);
+                createIndices  (modelInfoId, indices);
+#else
                 importOBJModel (modelInfoId);
+#endif
                 LOG_INFO (m_VKInitSequenceLog) << "[OK] Import model " 
                                                << "[" << modelInfoId << "]"
                                                << std::endl; 
@@ -222,100 +257,13 @@ namespace Renderer {
                  * | CONFIG UNIFORM BUFFERS                                                                         |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                /* Define the data we want the vertex shader to have in a C struct like below. This data will be copied 
-                 * to a VkBuffer and accessible through a uniform buffer object descriptor from the vertex shader. We can 
-                 * exactly match the definition in the shader using data types in GLM. The data in the matrices is binary 
-                 * compatible with the way the shader expects it, so we can later just memcpy a UniformBufferObject to a 
-                 * VkBuffer
-                 * 
-                 * Alignment requirements specifies how exactly the data in the C++ structure should match with the 
-                 * uniform definition in the shader. Vulkan expects the data in your structure to be aligned in memory in 
-                 * a specific way, for example:
-                 * 
-                 * (1) Scalars have to be aligned by N (= 4 bytes given 32 bit floats)
-                 * (2) A vec2 must be aligned by 2N (= 8 bytes)
-                 * (3) A vec3 or vec4 must be aligned by 4N (= 16 bytes)
-                 * (4) A nested structure must be aligned by the base alignment of its members rounded up to a multiple 
-                 * of 16
-                 * (5) A mat4 matrix must have the same alignment as a vec4
-                 * 
-                 * An example to show where alignment requirement are met and not met:
-                 * 
-                 * A shader with just three mat4 fields already meets the alignment requirements 
-                 * struct UniformBufferObject {
-                 *      glm::mat4 model;
-                 *      glm::mat4 view;
-                 *      glm::mat4 proj;
-                 * };
-                 * 
-                 * As each mat4 is 4 x 4 x 4 = 64 bytes in size, model has an offset of 0, view has an offset of 64 and 
-                 * proj has an offset of 128. All of these are multiples of 16 and that's why it will work fine. Whereas 
-                 * the below struct fails alignment requirements,
-                 * struct UniformBufferObject {
-                 *      glm::vec2 foo;
-                 *      glm::mat4 model;
-                 *      glm::mat4 view;
-                 *      glm::mat4 proj;
-                 * };
-                 * 
-                 * The new structure starts with a vec2 which is only 8 bytes in size and therefore throws off all of the 
-                 * offsets. Now model has an offset of 8, view an offset of 72 and proj an offset of 136, none of which 
-                 * are multiples of 16
-                 * 
-                 * To fix this problem we can use the alignas specifier introduced in C++11:
-                 * struct UniformBufferObject {
-                 *      glm::vec2 foo;
-                 *      alignas (16) glm::mat4 model;
-                 *      glm::mat4 view;
-                 *      glm::mat4 proj;
-                 * };
-                 * 
-                 * Luckily there is a way to not have to think about these alignment requirements most of the time. We 
-                 * can define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES right before including GLM. This will force GLM to use a 
-                 * version of vec2 and mat4 that has the alignment requirements already specified for us. If you add this
-                 * definition then you can remove the alignas specifier. Unfortunately this method can break down if you 
-                 * start using nested structures. Consider the following definition in the C++ code:
-                 * struct Foo {
-                 *      glm::vec2 v;
-                 * };
-                 *  
-                 * struct UniformBufferObject {
-                 *      Foo f1;
-                 *      Foo f2;
-                 * };
-                 * 
-                 * And the following shader definition:
-                 * struct Foo {
-                 *      vec2 v;
-                 * };
-                 *  
-                 * layout (binding = 0) uniform UniformBufferObject {
-                 *      Foo f1;
-                 *      Foo f2;
-                 * } ubo;
-                 * 
-                 * In this case f2 will have an offset of 8 whereas it should have an offset of 16 since it is a nested 
-                 * structure. In this case you must specify the alignment yourself
-                 * struct UniformBufferObject {
-                 *      Foo f1;
-                 *      alignas (16) Foo f2;
-                 * };
-                 * 
-                 * These gotchas are a good reason to always be explicit about alignment. That way you won't be caught 
-                 * offguard by the strange symptoms of alignment error
-                */
-                struct MVPMatrixUBO {
-                    alignas (16) glm::mat4 model;
-                    alignas (16) glm::mat4 view;
-                    alignas (16) glm::mat4 proj;
-                };
                 /* We should have multiple uniform buffers, because multiple frames may be in flight at the same time and
                  * we don't want to update the buffer in preparation of the next frame while a previous one is still 
                  * reading from it. Thus, we need to have as many uniform buffers as we have frames in flight, and write 
                  * to a uniform buffer that is not currently being read by the GPU
                 */
                 for (size_t i = 0; i < g_maxFramesInFlight; i++) { 
-                    uint32_t uniformBufferInfoId = modelInfo->id.uniformBufferInfo + i;     
+                    uint32_t uniformBufferInfoId = modelInfo->id.uniformBufferInfos[i];    
                     createUniformBuffer (uniformBufferInfoId,
                                          resourceId,
                                          sizeof (MVPMatrixUBO));
@@ -334,7 +282,7 @@ namespace Renderer {
 
                 createMultiSampleAttachment  (renderPassInfoId, modelInfo->id.multiSampleImageInfo);
                 createDepthStencilAttachment (renderPassInfoId, modelInfo->id.depthImageInfo);
-                createResolveAttachment      (renderPassInfoId, modelInfo->id.swapChainImageInfo);
+                createResolveAttachment      (renderPassInfoId, modelInfo->id.swapChainImageInfoBase);
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG SUB PASS                                                                                |
                  * |------------------------------------------------------------------------------------------------|
@@ -384,7 +332,7 @@ namespace Renderer {
                  * retrieved image at drawing time
                 */
                 for (uint32_t i = 0; i < deviceInfo->unique[resourceId].swapChain.size; i++) {
-                    uint32_t swapChainImageInfoId = modelInfo->id.swapChainImageInfo + i;
+                    uint32_t swapChainImageInfoId = modelInfo->id.swapChainImageInfoBase + i;
                     auto swapChainImageInfo       = getImageInfo (swapChainImageInfoId, SWAPCHAIN_IMAGE);
 
                     auto attachments = std::vector {
@@ -462,7 +410,7 @@ namespace Renderer {
                                           VK_POLYGON_MODE_FILL,
                                           1.0f,
                                           VK_CULL_MODE_BACK_BIT,
-                                          VK_FRONT_FACE_COUNTER_CLOCKWISE);
+                                          VK_FRONT_FACE_CLOCKWISE);
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG PIPELINE STATE - MULTI SAMPLE                                                           |
                  * |------------------------------------------------------------------------------------------------|
@@ -591,7 +539,7 @@ namespace Renderer {
                  * |------------------------------------------------------------------------------------------------|
                 */
                 for (size_t i = 0; i < g_maxFramesInFlight; i++) {
-                    uint32_t uniformBufferInfoId = modelInfo->id.uniformBufferInfo + i;
+                    uint32_t uniformBufferInfoId = modelInfo->id.uniformBufferInfos[i];
                     auto bufferInfo              = getBufferInfo (uniformBufferInfoId, UNIFORM_BUFFER);
                     auto descriptorBufferInfo    = getDescriptorBufferInfo (bufferInfo->resource.buffer,
                                                                             0,
@@ -625,13 +573,331 @@ namespace Renderer {
                                                << " "
                                                << "[" << pipelineInfoId << "]"
                                                << std::endl;
+                /* |------------------------------------------------------------------------------------------------|
+                 * | CONFIG MODEL MATRIX                                                                            |
+                 * |------------------------------------------------------------------------------------------------|
+                */                                              
+                createModelMatrix (modelInfoId, 
+                                   transformInfo.model.translate,
+                                   transformInfo.model.rotateAxis, transformInfo.model.rotateAngleDeg,
+                                   transformInfo.model.scale);
+                /* |------------------------------------------------------------------------------------------------|
+                 * | CONFIG CAMERA                                                                                  |
+                 * |------------------------------------------------------------------------------------------------|
+                */
+                readyCameraInfo    (cameraInfoId);
+                createCameraMatrix (cameraInfoId, 
+                                    resourceId,
+                                    transformInfo.camera.position,
+                                    transformInfo.camera.center,
+                                    transformInfo.camera.upVector,
+                                    transformInfo.camera.fovDeg, 
+                                    transformInfo.camera.nearPlane, 
+                                    transformInfo.camera.farPlane);
+                LOG_INFO (m_VKInitSequenceLog) << "[OK] Camera " 
+                                               << "[" << cameraInfoId << "]"
+                                               << std::endl;
+                /* |------------------------------------------------------------------------------------------------|
+                 * | CONFIG TRANSFER OPS - COMMAND POOL AND BUFFER                                                  |
+                 * |------------------------------------------------------------------------------------------------|
+                */
+                /* Note that the command buffers that we will be submitting to the transfer queue will be short lived, so 
+                 * we will choose the VK_COMMAND_POOL_CREATE_TRANSIENT_BIT flag. And, this buffer copy command requires a 
+                 * queue family that supports transfer operations, which is indicated using VK_QUEUE_TRANSFER_BIT
+                */
+                VkCommandPool transferOpsCommandPool = getCommandPool (VK_COMMAND_POOL_CREATE_TRANSIENT_BIT,
+                                                       deviceInfo->unique[resourceId].indices.transferFamily.value());
+                LOG_INFO (m_VKInitSequenceLog) << "[OK] Transfer ops command pool " 
+                                               << "[" << resourceId << "]"
+                                               << std::endl;
+                /* Note that we are only requesting one command buffer from the pool, since it is recommended to combine 
+                 * all the transfer operations in a single command buffer and execute them asynchronously for higher 
+                 * throughput
+                */                                            
+                auto transferOpsCommandBuffers = std::vector {
+                    getCommandBuffers (transferOpsCommandPool, 1, VK_COMMAND_BUFFER_LEVEL_PRIMARY)
+                };
+                /* |------------------------------------------------------------------------------------------------|
+                 * | CONFIG TRANSFER OPS - FENCE                                                                    |
+                 * |------------------------------------------------------------------------------------------------|
+                */
+                uint32_t transferOpsFenceInfoId = 0;
+                createFence (transferOpsFenceInfoId, FEN_TRANSFER_DONE, 0);
+                LOG_INFO (m_VKInitSequenceLog) << "[OK] Transfer ops fence " 
+                                               << "[" << transferOpsFenceInfoId << "]"
+                                               << std::endl;
+                /* |------------------------------------------------------------------------------------------------|
+                 * | CONFIG TRANSFER OPS - RECORD AND SUBMIT                                                        |
+                 * |------------------------------------------------------------------------------------------------|
+                */
+                /* We're only going to use the command buffer once and wait (vkQueueWaitIdle/vkWaitForFences) until the
+                 * copy operation has finished executing. It's good practice to tell the driver about our intent using 
+                 * VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT
+                */ 
+                beginRecording     (transferOpsCommandBuffers[0],
+                                    VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
+                                    nullptr);
 
+                copyBufferToImage  (transferOpsCommandBuffers[0],
+                                    modelInfo->id.textureImageInfo, STAGING_BUFFER, 0,
+                                    modelInfo->id.textureImageInfo, TEXTURE_IMAGE,  VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+
+                copyBufferToBuffer (transferOpsCommandBuffers[0],
+                                    modelInfo->id.vertexBufferInfo, STAGING_BUFFER, 0,
+                                    modelInfo->id.vertexBufferInfo, VERTEX_BUFFER,  0);
+
+                copyBufferToBuffer (transferOpsCommandBuffers[0],
+                                    modelInfo->id.indexBufferInfo, STAGING_BUFFER, 0,
+                                    modelInfo->id.indexBufferInfo, INDEX_BUFFER,   0);
+
+                endRecording       (transferOpsCommandBuffers[0]);
+
+                VkSubmitInfo transferOpsSubmitInfo{};
+                transferOpsSubmitInfo.sType              = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+                transferOpsSubmitInfo.commandBufferCount = static_cast <uint32_t> (transferOpsCommandBuffers.size());
+                transferOpsSubmitInfo.pCommandBuffers    = transferOpsCommandBuffers.data();
+                VkResult result = vkQueueSubmit (deviceInfo->unique[resourceId].transferQueue, 
+                                                 1, 
+                                                 &transferOpsSubmitInfo, 
+                                                 getFenceInfo (transferOpsFenceInfoId, FEN_TRANSFER_DONE)->resource.fence);
+                if (result != VK_SUCCESS) {
+                    LOG_ERROR (m_VKInitSequenceLog) << "Failed to submit transfer ops command buffer " 
+                                                    << "[" << string_VkResult (result) << "]"
+                                                    << std::endl; 
+                    throw std::runtime_error ("Failed to submit transfer ops command buffer");                    
+                } 
+                /* |------------------------------------------------------------------------------------------------|
+                 * | CONFIG TRANSFER OPS - WAIT                                                                     |
+                 * |------------------------------------------------------------------------------------------------|
+                */
+                /* Wait for fence 
+                 * Unlike the draw commands, there are no events we need to wait on. We just want to execute the transfer
+                 * on the buffers immediately. There are again two possible ways to wait on this transfer to complete
+                 * 
+                 * (1) We could use a fence and wait with vkWaitForFences, or 
+                 * (2) Simply wait for the transfer queue to become idle via vkQueueWaitIdle (getTransferQueue());
+                 * 
+                 * A fence would allow you to schedule multiple transfers simultaneously and wait for all of them 
+                 * complete, instead of executing one at a time. That may give the driver more opportunities to optimize
+                */ 
+                LOG_INFO (m_VKInitSequenceLog) << "[WAITING] Transfer ops fence " 
+                                               << "[" << transferOpsFenceInfoId << "]"
+                                               << std::endl;
+                vkWaitForFences (deviceInfo->shared.logDevice, 
+                                 1, 
+                                 &getFenceInfo (transferOpsFenceInfoId, FEN_TRANSFER_DONE)->resource.fence, 
+                                 VK_TRUE, 
+                                 UINT64_MAX);
+
+                vkResetFences   (deviceInfo->shared.logDevice, 
+                                 1, 
+                                 &getFenceInfo (transferOpsFenceInfoId, FEN_TRANSFER_DONE)->resource.fence);
+                LOG_INFO (m_VKInitSequenceLog) << "[OK] Transfer ops fence reset "
+                                               << "[" << transferOpsFenceInfoId << "]"
+                                               << std::endl;    
+                /* |------------------------------------------------------------------------------------------------|
+                 * | DESTROY STAGING BUFFERS                                                                        |
+                 * |------------------------------------------------------------------------------------------------|
+                */
+                VKBufferMgr::cleanUp (modelInfo->id.indexBufferInfo, STAGING_BUFFER);
+                LOG_INFO (m_VKInitSequenceLog) << "[DELETE] Staging buffer " 
+                                               << "[" << modelInfo->id.indexBufferInfo << "]"
+                                               << std::endl;  
+
+                VKBufferMgr::cleanUp (modelInfo->id.vertexBufferInfo, STAGING_BUFFER);
+                LOG_INFO (m_VKInitSequenceLog) << "[DELETE] Staging buffer " 
+                                               << "[" << modelInfo->id.vertexBufferInfo << "]"
+                                               << std::endl; 
+
+                VKBufferMgr::cleanUp (modelInfo->id.textureImageInfo, STAGING_BUFFER);
+                LOG_INFO (m_VKInitSequenceLog) << "[DELETE] Staging buffer " 
+                                               << "[" << modelInfo->id.textureImageInfo << "]"
+                                               << std::endl;              
+                /* |------------------------------------------------------------------------------------------------|
+                 * | DESTROY TRANSFER OPS - FENCE                                                                   |
+                 * |------------------------------------------------------------------------------------------------|
+                */
+                cleanUpFence (transferOpsFenceInfoId, FEN_TRANSFER_DONE);
+                LOG_INFO (m_VKInitSequenceLog) << "[DELETE] Transfer ops fence " 
+                                               << "[" << transferOpsFenceInfoId << "]"
+                                               << std::endl;
+                /* |------------------------------------------------------------------------------------------------|
+                 * | DESTROY TRANSFER OPS - COMMAND POOL                                                            |
+                 * |------------------------------------------------------------------------------------------------|
+                */
+                VKCmdBuffer::cleanUp (transferOpsCommandPool);
+                LOG_INFO (m_VKInitSequenceLog) << "[DELETE] Transfer ops command pool"
+                                               << std::endl;
+                /* |------------------------------------------------------------------------------------------------|
+                 * | CONFIG BLIT OPS - COMMAND POOL AND BUFFER                                                      |
+                 * |------------------------------------------------------------------------------------------------|
+                */
+                VkCommandPool blitOpsCommandPool = getCommandPool (VK_COMMAND_POOL_CREATE_TRANSIENT_BIT,
+                                                   deviceInfo->unique[resourceId].indices.graphicsFamily.value());
+                LOG_INFO (m_VKInitSequenceLog) << "[OK] Blit ops command pool " 
+                                               << "[" << resourceId << "]"
+                                               << std::endl;
+                                            
+                auto blitOpsCommandBuffers = std::vector {
+                    getCommandBuffers (blitOpsCommandPool, 1, VK_COMMAND_BUFFER_LEVEL_PRIMARY)
+                };
+                /* |------------------------------------------------------------------------------------------------|
+                 * | CONFIG BLIT OPS - FENCE                                                                        |
+                 * |------------------------------------------------------------------------------------------------|
+                */
+                uint32_t blitOpsFenceInfoId = 0;
+                createFence (blitOpsFenceInfoId, FEN_BLIT_DONE, 0);
+                LOG_INFO (m_VKInitSequenceLog) << "[OK] Blit ops fence " 
+                                               << "[" << blitOpsFenceInfoId << "]"
+                                               << std::endl;    
+                /* |------------------------------------------------------------------------------------------------|
+                 * | CONFIG BLIT OPS - RECORD AND SUBMIT                                                            |
+                 * |------------------------------------------------------------------------------------------------|
+                */
+                beginRecording     (blitOpsCommandBuffers[0],
+                                    VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
+                                    nullptr);
+
+                blitImageToMipMaps (blitOpsCommandBuffers[0],
+                                    modelInfo->id.textureImageInfo, TEXTURE_IMAGE);
+
+                endRecording       (blitOpsCommandBuffers[0]);
+
+                VkSubmitInfo blitOpsSubmitInfo{};
+                blitOpsSubmitInfo.sType              = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+                blitOpsSubmitInfo.commandBufferCount = static_cast <uint32_t> (blitOpsCommandBuffers.size());
+                blitOpsSubmitInfo.pCommandBuffers    = blitOpsCommandBuffers.data();
+                result = vkQueueSubmit (deviceInfo->unique[resourceId].graphicsQueue, 
+                                        1, 
+                                        &blitOpsSubmitInfo, 
+                                        getFenceInfo (blitOpsFenceInfoId, FEN_BLIT_DONE)->resource.fence);
+                if (result != VK_SUCCESS) {
+                    LOG_ERROR (m_VKInitSequenceLog) << "Failed to submit blit ops command buffer " 
+                                                    << "[" << string_VkResult (result) << "]"
+                                                    << std::endl; 
+                    throw std::runtime_error ("Failed to submit blit ops command buffer");                    
+                }
+                /* |------------------------------------------------------------------------------------------------|
+                 * | CONFIG BLIT OPS - WAIT                                                                         |
+                 * |------------------------------------------------------------------------------------------------|
+                */
+                LOG_INFO (m_VKInitSequenceLog) << "[WAITING] Blit ops fence " 
+                                               << "[" << blitOpsFenceInfoId << "]"
+                                               << std::endl;
+                vkWaitForFences (deviceInfo->shared.logDevice, 
+                                 1, 
+                                 &getFenceInfo (blitOpsFenceInfoId, FEN_BLIT_DONE)->resource.fence, 
+                                 VK_TRUE, 
+                                 UINT64_MAX);
+
+                vkResetFences   (deviceInfo->shared.logDevice, 
+                                 1, 
+                                 &getFenceInfo (blitOpsFenceInfoId, FEN_BLIT_DONE)->resource.fence);
+                LOG_INFO (m_VKInitSequenceLog) << "[OK] Blit ops fence reset "
+                                               << "[" << blitOpsFenceInfoId << "]"
+                                               << std::endl;  
+                /* |------------------------------------------------------------------------------------------------|
+                 * | DESTROY BLIT OPS - FENCE                                                                       |
+                 * |------------------------------------------------------------------------------------------------|
+                */
+                cleanUpFence (blitOpsFenceInfoId, FEN_BLIT_DONE);
+                LOG_INFO (m_VKInitSequenceLog) << "[DELETE] Blit ops fence " 
+                                               << "[" << blitOpsFenceInfoId << "]"
+                                               << std::endl;
+                /* |------------------------------------------------------------------------------------------------|
+                 * | DESTROY BLIT OPS - COMMAND POOL                                                                |
+                 * |------------------------------------------------------------------------------------------------|
+                */
+                VKCmdBuffer::cleanUp (blitOpsCommandPool);
+                LOG_INFO (m_VKInitSequenceLog) << "[DELETE] Blit ops command pool"
+                                               << std::endl;           
+                /* |------------------------------------------------------------------------------------------------|
+                 * | CONFIG DRAW OPS - COMMAND POOL AND BUFFERS                                                     |
+                 * |------------------------------------------------------------------------------------------------|
+                */
+                /* We will be recording a command buffer every frame, so we want to be able to reset and rerecord over 
+                 * it. Thus, we need to set the VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT flag bit for our command 
+                 * pool. And, we're going to record commands for drawing, which is why we've chosen the graphics queue 
+                 * family
+                */
+                VkCommandPool drawOpsCommandPool = getCommandPool (VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT,
+                                                   deviceInfo->unique[resourceId].indices.graphicsFamily.value());
+                LOG_INFO (m_VKInitSequenceLog) << "[OK] Draw ops command pool " 
+                                               << "[" << resourceId << "]"
+                                               << std::endl;
+                                            
+                auto drawOpsCommandBuffers = std::vector {
+                    getCommandBuffers (drawOpsCommandPool, 
+                                       static_cast <uint32_t> (g_maxFramesInFlight), 
+                                       VK_COMMAND_BUFFER_LEVEL_PRIMARY)
+                };
+                /* |------------------------------------------------------------------------------------------------|
+                 * | CONFIG DRAW OPS - FENCE AND SEMAPHORES                                                         |
+                 * |------------------------------------------------------------------------------------------------|
+                */
+                /* We'll need one fence to make sure only one frame is rendering at a time, one semaphore to signal that 
+                 * an image has been acquired from the swapchain and is ready for rendering, another one to signal that 
+                 * rendering has finished and presentation can happen, but since we can handle multiple frames in flight, 
+                 * each frame should have its own set of semaphores and fence
+                */
+                for (size_t i = 0; i < g_maxFramesInFlight; i++) {
+                    /* On the very first frame, we immediately wait on in flight fence to be signaled. This fence is only 
+                     * signaled after a frame has finished rendering, yet since this is the first frame, there are no 
+                     * previous frames in which to signal the fence! Thus vkWaitForFences() blocks indefinitely, waiting 
+                     * on something which will never happen. To combat this, create the fence in the signaled state, so 
+                     * that the first call to vkWaitForFences() returns immediately since the fence is already signaled
+                    */
+                    uint32_t drawOpsInFlightFenceInfoId = static_cast <uint32_t> (i);
+                    createFence (drawOpsInFlightFenceInfoId, FEN_IN_FLIGHT, VK_FENCE_CREATE_SIGNALED_BIT);
+                    LOG_INFO (m_VKInitSequenceLog) << "[OK] Draw ops fence " 
+                                                   << "[" << drawOpsInFlightFenceInfoId << "]"
+                                                   << std::endl;
+
+                    uint32_t drawOpsImageAvailableSemaphoreInfoId = static_cast <uint32_t> (i);
+                    createSemaphore (drawOpsImageAvailableSemaphoreInfoId, SEM_IMAGE_AVAILABLE);
+                    LOG_INFO (m_VKInitSequenceLog) << "[OK] Draw ops semaphore " 
+                                                   << "[" << drawOpsImageAvailableSemaphoreInfoId << "]"
+                                                   << std::endl;
+
+                    uint32_t drawOpsRenderDoneSemaphoreInfoId = static_cast <uint32_t> (i);
+                    createSemaphore (drawOpsRenderDoneSemaphoreInfoId, SEM_RENDER_DONE);
+                    LOG_INFO (m_VKInitSequenceLog) << "[OK] Draw ops semaphore " 
+                                                   << "[" << drawOpsRenderDoneSemaphoreInfoId << "]"
+                                                   << std::endl;
+                }
+                /* |------------------------------------------------------------------------------------------------|
+                 * | CONFIG DRAW OPS - HAND OFF                                                                     |
+                 * |------------------------------------------------------------------------------------------------|
+                */
+                readyHandOffInfo (handOffInfoId);
+
+                auto handOffInfo = getHandOffInfo (handOffInfoId);
+
+                for (size_t i = 0; i < g_maxFramesInFlight; i++) {
+                    uint32_t syncObjectId = static_cast <uint32_t> (i);
+
+                    handOffInfo->id.inFlightFenceInfos.push_back (syncObjectId);
+                    handOffInfo->id.imageAvailableSemaphoreInfos.push_back (syncObjectId);
+                    handOffInfo->id.renderDoneSemaphoreInfos.push_back (syncObjectId);
+                }
+                
+                handOffInfo->resource.commandPool    = drawOpsCommandPool;
+                handOffInfo->resource.commandBuffers = drawOpsCommandBuffers;
+                handOffInfo->resource.transformInfo  = transformInfo;
+                /* |------------------------------------------------------------------------------------------------|
+                 * | DUMP METHODS                                                                                   |
+                 * |------------------------------------------------------------------------------------------------|
+                */
                 dumpModelInfoPool();
                 dumpDeviceInfoPool();
                 dumpImageInfoPool();
                 dumpBufferInfoPool(); 
                 dumpRenderPassInfoPool();  
-                dumpPipelineInfoPool();   
+                dumpPipelineInfoPool();  
+                dumpCameraInfoPool(); 
+                dumpFenceInfoPool();
+                dumpSemaphoreInfoPool();
+                dumpHandOffInfoPool();
             }
     };
 

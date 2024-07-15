@@ -238,6 +238,7 @@ namespace Renderer {
 
                 for (auto const& descriptorSetLayout: pipelineInfo->resource.descriptorSetLayouts)
                     vkDestroyDescriptorSetLayout (deviceInfo->shared.logDevice, descriptorSetLayout, nullptr);
+                pipelineInfo->resource.descriptorSetLayouts.clear();
 
                 deletePipelineInfo (pipelineInfoId);
             }

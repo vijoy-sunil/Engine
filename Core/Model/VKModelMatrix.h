@@ -1,9 +1,9 @@
 #ifndef VK_MODEL_MATRIX_H
 #define VK_MODEL_MATRIX_H
-/* The GLM_FORCE_RADIANS definition is necessary to make sure that functions like glm::rotate use radians as arguments, 
- * to avoid any possible confusion
-*/
+
 #define GLM_FORCE_RADIANS
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 #include "VKModelMgr.h"
 
 using namespace Collections;

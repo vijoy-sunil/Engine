@@ -74,7 +74,8 @@ namespace Renderer {
                 /* Destroy the framebuffers before the image views and render pass that they are based on
                 */
                 for (auto const& framebuffer: renderPassInfo->resource.framebuffers)
-                    vkDestroyFramebuffer (deviceInfo->shared.logDevice, framebuffer, nullptr);                
+                    vkDestroyFramebuffer (deviceInfo->shared.logDevice, framebuffer, nullptr);           
+                renderPassInfo->resource.framebuffers.clear();               
             }
     };
 

@@ -53,8 +53,7 @@ namespace Renderer {
                 LOG_ERROR (m_VKBufferMgrLog) << "Failed to delete buffer info "
                                              << "[" << bufferInfo->meta.id << "]"
                                              << " "
-                                             << "[" << Utils::string_bufferType (type) << "]"
-                                             << " "             
+                                             << "[" << Utils::string_bufferType (type) << "]"             
                                              << std::endl;
                 throw std::runtime_error ("Failed to delete buffer info");              
             }
@@ -215,8 +214,7 @@ namespace Renderer {
                 LOG_ERROR (m_VKBufferMgrLog) << "Failed to find buffer info "
                                              << "[" << bufferInfoId << "]"
                                              << " "
-                                             << "[" << Utils::string_bufferType (type) << "]"
-                                             << " "             
+                                             << "[" << Utils::string_bufferType (type) << "]"           
                                              << std::endl;
                 throw std::runtime_error ("Failed to find buffer info");
             }

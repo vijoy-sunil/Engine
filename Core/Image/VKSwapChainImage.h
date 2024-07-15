@@ -301,6 +301,9 @@ namespace Renderer {
                 deviceInfo->unique[resourceId].swapChain.extent      = createInfo.imageExtent;
                 deviceInfo->unique[resourceId].swapChain.swapChain   = swapChain;
                 deviceInfo->unique[resourceId].swapChain.size        = swapChainSize;
+                /* Restore id of void image since we will need it for subsequent calls to create swap chain resources
+                */
+                imageInfo->meta.id = 0;
             }
     };
 

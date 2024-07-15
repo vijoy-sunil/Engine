@@ -124,8 +124,7 @@
     |---------------------->|VKModelMatrix
 
 
-    |{VKDeviceMgr}
-    |
+    |<----------------------|{VKDeviceMgr}
     |
     |Cmds/VKCmdBuffer
 
@@ -138,6 +137,34 @@
     |
     |
     |Cmds/VKCmds
+
+
+    |<----------------------|{VKDeviceMgr}
+    |
+    |
+    |Scene/VKCameraMgr
+
+
+    |<----------------------|{VKDeviceMgr}
+    |
+    |<......................|LogHelper
+    |
+    |
+    |Scene/VKSyncObjects
+
+
+    |<----------------------|{VKModelMgr}
+    |
+    |<----------------------|{VKSwapChainImage}
+    |
+    |<----------------------|{VKDepthImage}
+    |
+    |<----------------------|{VKMultiSampleImage}
+    |
+    |<----------------------|{VKFrameBuffer}
+    |
+    |
+    |Scene/VKResizing
 
 
     |<----------------------|{VKWindow}
@@ -194,8 +221,48 @@
     |
     |<----------------------|{VKDescriptor}
     |
+    |<----------------------|{VKCmdBuffer}
+    |
+    |<----------------------|{VKCmds}
+    |
+    |<----------------------|{VKModelMatrix}
+    |
+    |<......................|VKUniforms
+    |
+    |<......................|VKTransform
+    |
+    |<----------------------|{VKCameraMgr}
+    |
+    |<----------------------|{VKSyncObjects}
+    |
+    |<----------------------|{VKDrawSequence}
+    |
     |
     |Scene/VKInitSequence
+
+
+    |<----------------------|{VKWindow}
+    |
+    |<----------------------|{VKUniformBuffer}
+    |
+    |<----------------------|{VKCmdBuffer}
+    |
+    |<----------------------|{VKCmds}
+    |
+    |<----------------------|{VKModelMatrix}
+    |
+    |<......................|VKUniforms
+    |
+    |<......................|VKTransform
+    |
+    |<----------------------|{VKCameraMgr}
+    |
+    |<----------------------|{VKSyncObjects}
+    |
+    |<----------------------|VKResizing
+    |
+    |
+    |Scene/VKDrawSequence
 
 
     |<----------------------|{VKWindow}
@@ -216,11 +283,21 @@
     |
     |<----------------------|{VKDescriptor}
     |
+    |<----------------------|{VKCmdBuffer}
+    |
+    |<----------------------|{VKCameraMgr}
+    |
+    |<----------------------|{VKSyncObjects}
+    |
+    |<----------------------|{VKDrawSequence}
+    |
     |
     |Scene/VKDeleteSequence
 
 
     |<----------------------|VKInitSequence
+    |
+    |<----------------------|{VKDrawSequence}
     |
     |<----------------------|VKDeleteSequence
     |

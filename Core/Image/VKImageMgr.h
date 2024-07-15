@@ -70,8 +70,7 @@ namespace Renderer {
                 LOG_ERROR (m_VKImageMgrLog) << "Failed to delete image info "
                                             << "[" << imageInfo->meta.id << "]"
                                             << " "
-                                            << "[" << Utils::string_imageType (type) << "]"
-                                            << " "             
+                                            << "[" << Utils::string_imageType (type) << "]"           
                                             << std::endl;
                 throw std::runtime_error ("Failed to delete image info");              
             }
@@ -446,8 +445,7 @@ namespace Renderer {
                 LOG_ERROR (m_VKImageMgrLog) << "Failed to find image info "
                                             << "[" << imageInfoId << "]"
                                             << " "
-                                            << "[" << Utils::string_imageType (type) << "]"
-                                            << " "                                          
+                                            << "[" << Utils::string_imageType (type) << "]"                                         
                                             << std::endl;
                 throw std::runtime_error ("Failed to find iamge info");
             }
