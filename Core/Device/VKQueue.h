@@ -42,7 +42,7 @@ namespace Renderer {
                 uint32_t queueFamilyCount = 0;
                 vkGetPhysicalDeviceQueueFamilyProperties (phyDevice, 
                                                           &queueFamilyCount, 
-                                                          nullptr);
+                                                          VK_NULL_HANDLE);
                 LOG_INFO (m_VKQueueLog) << "Queue family count "
                                         << "[" << queueFamilyCount << "]" 
                                         << std::endl;

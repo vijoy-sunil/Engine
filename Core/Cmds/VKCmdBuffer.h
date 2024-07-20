@@ -54,7 +54,7 @@ namespace Renderer {
                 VkCommandPool commandPool;
                 VkResult result = vkCreateCommandPool (deviceInfo->shared.logDevice, 
                                                        &createInfo, 
-                                                       nullptr, 
+                                                       VK_NULL_HANDLE, 
                                                        &commandPool);
                 
                 if (result != VK_SUCCESS) {
@@ -153,7 +153,7 @@ namespace Renderer {
                 /* Destroy command pool, note that command buffers will be automatically freed when their command pool 
                  * is destroyed, so we don't need explicit cleanup
                 */
-                vkDestroyCommandPool (deviceInfo->shared.logDevice, commandPool, nullptr);
+                vkDestroyCommandPool (deviceInfo->shared.logDevice, commandPool, VK_NULL_HANDLE);
             }
     };
 

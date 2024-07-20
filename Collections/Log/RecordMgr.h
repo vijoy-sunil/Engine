@@ -11,7 +11,7 @@ namespace Log {
                                 std::string callingFile,
                                 std::string saveDir = "",
                                 size_t bufferCapacity = 0,
-                                std::string format = ".txt") {
+                                const char* format = ".txt") {
             
                 /* Add record object to pool
                 */

@@ -68,8 +68,8 @@ namespace Renderer {
                 deviceInfo->unique[resourceId].window = glfwCreateWindow (width, 
                                                                           height, 
                                                                           windowTitle.c_str(), 
-                                                                          nullptr, 
-                                                                          nullptr);
+                                                                          VK_NULL_HANDLE, 
+                                                                          VK_NULL_HANDLE);
                 /* Set user pointer of window, this pointer is used in the callback function
                 */
                 glfwSetWindowUserPointer (deviceInfo->unique[resourceId].window, this);

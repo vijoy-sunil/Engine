@@ -53,7 +53,7 @@ namespace Renderer {
                 VkPipelineLayout layout;
                 VkResult result =  vkCreatePipelineLayout (deviceInfo->shared.logDevice, 
                                                            &createInfo, 
-                                                           nullptr, 
+                                                           VK_NULL_HANDLE, 
                                                            &layout);
                 if (result != VK_SUCCESS) {
                     LOG_ERROR (m_VKPipelineLayoutLog) << "Failed to create pipeline layout " 

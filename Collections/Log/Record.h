@@ -36,7 +36,7 @@ namespace Log {
             std::string m_callingFile;
             std::string m_saveDir;
             size_t m_bufferCapacity;
-            std::string m_format;
+            const char* m_format;
             std::map <e_level, e_sink> m_levelConfig;
             std::fstream m_saveFileImmediate;
             std::fstream m_saveFileBuffered; 
@@ -56,26 +56,17 @@ namespace Log {
             bool m_fileImmediateReady;
             bool m_fileBufferedReady;
 
-            std::string levelToString (e_level level) {
-                std::string result;
+            const char* levelToString (e_level level) {
                 switch (level) {
                     case INFO:
-                        result = "INFO";
-                        break;
-
+                        return "INFO";
                     case WARNING:
-                        result = "WARN";
-                        break;
-
+                        return "WARN";
                     case ERROR:
-                        result = "ERRO";
-                        break;
-
+                        return "ERRO";
                     default:
-                        result = "UNDF";
-                        break;
+                        return "UNDF";
                 }
-                return result;
             }
 
             std::string getLocalTimestamp (void) {
@@ -104,11 +95,11 @@ namespace Log {
                 return std::to_string (r); 
             }
 
-            void deleteEmptyFile (std::fstream& file, std::string filePath) {
+            void deleteEmptyFile (std::fstream& file, const char* filePath) {
                 /* Check if file is empty
                 */
                 if (file.peek() == std::ifstream::traits_type::eof()) {
-                    if (remove (filePath.c_str()) != 0)
+                    if (remove (filePath) != 0)
                         throw std::runtime_error ("Unable to delete file");
                 }
             }
@@ -118,7 +109,7 @@ namespace Log {
                     std::string callingFile,
                     std::string saveDir,
                     size_t bufferCapacity,
-                    std::string format) {
+                    const char* format) {
 
                 m_instanceId     = instanceId;
                 m_callingFile    = callingFile;
@@ -201,13 +192,13 @@ namespace Log {
                     /* Open the file in read mode and delete if empty
                     */
                     m_saveFileBuffered.open (m_saveFilePathBuffered, std::ios_base::in);
-                    deleteEmptyFile (m_saveFileBuffered, m_saveFilePathBuffered);
+                    deleteEmptyFile (m_saveFileBuffered, m_saveFilePathBuffered.c_str());
                 }
 
                 if (allSinks & TO_FILE_IMMEDIATE) {
                     m_saveFileImmediate.close();
                     m_saveFileImmediate.open (m_saveFilePathImmediate, std::ios_base::in);
-                    deleteEmptyFile (m_saveFileImmediate, m_saveFilePathImmediate);
+                    deleteEmptyFile (m_saveFileImmediate, m_saveFilePathImmediate.c_str());
                 }
 
                 m_levelConfig[INFO]    = TO_NONE;
@@ -241,7 +232,7 @@ namespace Log {
             }
 
             std::string getHeader (e_level level,
-                                   const char* function, 
+                                   const char* callingFunction, 
                                    const size_t line,
                                    bool enHeader) {
                 /* Skip header for lightweight logging
@@ -261,7 +252,7 @@ namespace Log {
                                      " " +
                                      "[ " + levelToString (level) + " ]" 
                                      + " " +
-                                     function + 
+                                     callingFunction + 
                                      " " +
                                      std::to_string (line) +  
                                      " ";

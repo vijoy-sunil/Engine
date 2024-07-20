@@ -131,8 +131,8 @@ namespace Renderer {
                                       sourceStage,
                                       destinationStage,
                                       0,
-                                      0, nullptr,
-                                      0, nullptr,
+                                      0, VK_NULL_HANDLE,
+                                      0, VK_NULL_HANDLE,
                                       1, &barrier);
                 /* Copy buffer containing pixel data to image, just like with buffer copies, you need to specify 
                  * which part of the buffer is going to be copied to which part of the image. This happens through 
@@ -256,8 +256,8 @@ namespace Renderer {
                                           sourceStage,
                                           destinationStage,
                                           0,
-                                          0, nullptr,
-                                          0, nullptr,
+                                          0, VK_NULL_HANDLE,
+                                          0, VK_NULL_HANDLE,
                                           1, &barrier);  
 
                     /* Next, we specify the regions that will be used in the blit operation. The source mip level is i - 1 
@@ -324,8 +324,8 @@ namespace Renderer {
                                           sourceStage,
                                           destinationStage,
                                           0,
-                                          0, nullptr,
-                                          0, nullptr,
+                                          0, VK_NULL_HANDLE,
+                                          0, VK_NULL_HANDLE,
                                           1, &barrier);   
 
                     /* At the end of the loop, we divide the current mip dimensions by two. We check each dimension before
@@ -352,8 +352,8 @@ namespace Renderer {
                                       sourceStage,
                                       destinationStage,
                                       0,
-                                      0, nullptr,
-                                      0, nullptr,
+                                      0, VK_NULL_HANDLE,
+                                      0, VK_NULL_HANDLE,
                                       1, &barrier);                 
             }
 
@@ -530,7 +530,7 @@ namespace Renderer {
                                          static_cast <uint32_t> (descriptorSets.size()), 
                                          descriptorSets.data(), 
                                          0, 
-                                         nullptr);
+                                         VK_NULL_HANDLE);
             }
 
             void drawIndexed (VkCommandBuffer commandBuffer,

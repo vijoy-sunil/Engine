@@ -168,7 +168,7 @@ namespace Renderer {
                 VkSampler textureSampler;
                 VkResult result = vkCreateSampler (deviceInfo->shared.logDevice, 
                                                    &createInfo, 
-                                                   nullptr, 
+                                                   VK_NULL_HANDLE, 
                                                    &textureSampler);
                 if (result != VK_SUCCESS) {
                     LOG_ERROR (m_VKTextureSamplerLog) << "Failed to create texture sampler "
@@ -187,7 +187,7 @@ namespace Renderer {
 
                 vkDestroySampler (deviceInfo->shared.logDevice, 
                                   modelInfo->resource.textureSampler, 
-                                  nullptr);
+                                  VK_NULL_HANDLE);
             }
     };
 

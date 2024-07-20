@@ -46,8 +46,8 @@ namespace Renderer {
                  * type descriptor, then pImmutableSamplers can be used to initialize a set of immutable samplers. 
                  * Immutable samplers are permanently bound into the set layout and must not be changed
                  * 
-                 * If pImmutableSamplers is not NULL, then it is a pointer to an array of sampler handles that will be 
-                 * copied into the set layout and used for the corresponding binding. If pImmutableSamplers is NULL, then
+                 * If pImmutableSamplers is not null, then it is a pointer to an array of sampler handles that will be 
+                 * copied into the set layout and used for the corresponding binding. If pImmutableSamplers is null, then
                  * the sampler slots are dynamic and sampler handles must be bound into descriptor sets using this layout
                 */
                 layoutBinding.pImmutableSamplers = immutableSamplers;
@@ -60,20 +60,31 @@ namespace Renderer {
              * vertex attribute and its location index, through a VkDescriptorSetLayoutBinding struct
             */
             void createDescriptorSetLayout (uint32_t pipelineInfoId,
-                                            const std::vector <VkDescriptorSetLayoutBinding>& layoutBindings) {
+                                            const std::vector <VkDescriptorSetLayoutBinding>& layoutBindings,
+                                            const std::vector <VkDescriptorBindingFlags>& bindingFlags,
+                                            VkDescriptorSetLayoutCreateFlags layoutCreateFlags) {
 
                 auto pipelineInfo = getPipelineInfo (pipelineInfoId);
                 auto deviceInfo   = getDeviceInfo();
+                /* Specify descriptor set layout binding properties
+                */
+                VkDescriptorSetLayoutBindingFlagsCreateInfo bindingFlagsCreateInfo{};
+                bindingFlagsCreateInfo.sType         = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_BINDING_FLAGS_CREATE_INFO;
+                bindingFlagsCreateInfo.pNext         = VK_NULL_HANDLE;
+                bindingFlagsCreateInfo.pBindingFlags = bindingFlags.data();
+                bindingFlagsCreateInfo.bindingCount  = static_cast <uint32_t> (bindingFlags.size());
 
                 VkDescriptorSetLayoutCreateInfo createInfo{};
                 createInfo.sType        = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
                 createInfo.bindingCount = static_cast <uint32_t> (layoutBindings.size());
                 createInfo.pBindings    = layoutBindings.data();
+                createInfo.flags        = layoutCreateFlags;
+                createInfo.pNext        = &bindingFlagsCreateInfo;
 
                 VkDescriptorSetLayout descriptorSetLayout;
                 VkResult result = vkCreateDescriptorSetLayout (deviceInfo->shared.logDevice, 
                                                                &createInfo, 
-                                                               nullptr, 
+                                                               VK_NULL_HANDLE, 
                                                                &descriptorSetLayout);
                 if (result != VK_SUCCESS) {
                     LOG_ERROR (m_VKDescriptorSetLayoutLog) << "Failed to create descriptor set layout "

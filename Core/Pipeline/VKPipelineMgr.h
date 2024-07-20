@@ -187,7 +187,7 @@ namespace Renderer {
                                                              VK_NULL_HANDLE,
                                                              1,
                                                              &createInfo,
-                                                             nullptr, 
+                                                             VK_NULL_HANDLE, 
                                                              &pipeline);
                 if (result != VK_SUCCESS) {
                     LOG_ERROR (m_VKPipelineMgrLog) << "Failed to create graphics pipeline " 
@@ -233,11 +233,11 @@ namespace Renderer {
                 auto pipelineInfo = getPipelineInfo (pipelineInfoId);
                 auto deviceInfo   = getDeviceInfo();
 
-                vkDestroyPipeline            (deviceInfo->shared.logDevice, pipelineInfo->resource.pipeline, nullptr);
-                vkDestroyPipelineLayout      (deviceInfo->shared.logDevice, pipelineInfo->resource.layout,   nullptr);
+                vkDestroyPipeline       (deviceInfo->shared.logDevice, pipelineInfo->resource.pipeline, VK_NULL_HANDLE);
+                vkDestroyPipelineLayout (deviceInfo->shared.logDevice, pipelineInfo->resource.layout,   VK_NULL_HANDLE);
 
                 for (auto const& descriptorSetLayout: pipelineInfo->resource.descriptorSetLayouts)
-                    vkDestroyDescriptorSetLayout (deviceInfo->shared.logDevice, descriptorSetLayout, nullptr);
+                    vkDestroyDescriptorSetLayout (deviceInfo->shared.logDevice, descriptorSetLayout, VK_NULL_HANDLE);
                 pipelineInfo->resource.descriptorSetLayouts.clear();
 
                 deletePipelineInfo (pipelineInfoId);

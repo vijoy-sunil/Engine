@@ -28,7 +28,7 @@ namespace Renderer {
                 VkSurfaceKHR surface;
                 VkResult result = glfwCreateWindowSurface (deviceInfo->shared.instance, 
                                                            deviceInfo->unique[resourceId].window, 
-                                                           nullptr, 
+                                                           VK_NULL_HANDLE, 
                                                            &surface);
                 if (result != VK_SUCCESS) {
                     LOG_ERROR (m_VKSurfaceLog) << "Failed to create surface "
@@ -46,7 +46,7 @@ namespace Renderer {
                 auto deviceInfo = getDeviceInfo();
                 vkDestroySurfaceKHR (deviceInfo->shared.instance, 
                                      deviceInfo->unique[resourceId].surface, 
-                                     nullptr);               
+                                     VK_NULL_HANDLE);               
             }
     };
     

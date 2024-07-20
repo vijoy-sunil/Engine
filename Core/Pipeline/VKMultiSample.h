@@ -49,7 +49,7 @@ namespace Renderer {
                 */
                 createInfo.minSampleShading      = minSampleShading;
                 createInfo.rasterizationSamples  = imageInfo->params.sampleCount;
-                createInfo.pSampleMask           = nullptr; 
+                createInfo.pSampleMask           = VK_NULL_HANDLE; 
                 createInfo.alphaToCoverageEnable = VK_FALSE; 
                 createInfo.alphaToOneEnable      = VK_FALSE; 
 

@@ -16,18 +16,22 @@ namespace Renderer {
                     uint32_t uniqueVerticesCount;
                     uint32_t indicesCount;
                     glm::mat4 modelMatrix;
-                    const char* modelPath;
-                    const char* textureImagePath; 
-                    const char* vertexShaderBinaryPath;
-                    const char* fragmentShaderBinaryPath;
                 } meta;
+
+                struct Path {
+                    const char* model;
+                    const char* mtlFileDir; 
+                    std::vector <std::string> diffuseTextureImages; 
+                    const char* vertexShaderBinary;
+                    const char* fragmentShaderBinary;
+                } path;
 
                 struct Id {
                     uint32_t vertexBufferInfo;
                     uint32_t indexBufferInfo;
-                    std::vector <uint32_t> uniformBufferInfos;
+                    uint32_t uniformBufferInfoBase;
                     uint32_t swapChainImageInfoBase;
-                    uint32_t textureImageInfo;
+                    uint32_t diffuseTextureImageInfoBase;
                     uint32_t depthImageInfo;
                     uint32_t multiSampleImageInfo;
                 } id;
@@ -42,8 +46,8 @@ namespace Renderer {
                      * buffer
                     */
                     std::vector <uint32_t> indices;
-                    VkDescriptorPool descriptorPool;
                     VkSampler textureSampler;
+                    VkDescriptorPool descriptorPool;
                     std::vector <VkDescriptorSet> descriptorSets;
                 } resource;
             };
@@ -68,6 +72,7 @@ namespace Renderer {
             VKModelMgr (void) {
                 m_VKModelMgrLog = LOG_INIT (m_instanceId, g_pathSettings.logSaveDir);
                 LOG_ADD_CONFIG (m_instanceId, Log::INFO,    Log::TO_FILE_IMMEDIATE);
+                LOG_ADD_CONFIG (m_instanceId, Log::WARNING, Log::TO_FILE_IMMEDIATE | Log::TO_CONSOLE);
                 LOG_ADD_CONFIG (m_instanceId, Log::ERROR,   Log::TO_FILE_IMMEDIATE | Log::TO_CONSOLE);
             }
 
@@ -78,11 +83,10 @@ namespace Renderer {
         protected:
             void readyModelInfo (uint32_t modelInfoId,
                                  const char* modelPath,
-                                 const char* textureImagePath,
+                                 const char* mtlFileDirPath,
                                  const char* vertexShaderBinaryPath,
                                  const char* fragmentShaderBinaryPath,
-                                 const std::vector <uint32_t>& infoIds, 
-                                 const std::vector <std::vector <uint32_t>>& infoIdGroups) {
+                                 const std::vector <uint32_t>& infoIds) {
                 
                 if (m_modelInfoPool.find (modelInfoId) != m_modelInfoPool.end()) {
                     LOG_ERROR (m_VKModelMgrLog) << "Model info id already exists "
@@ -92,19 +96,20 @@ namespace Renderer {
                 }
 
                 ModelInfo info{};
-                info.meta.modelPath                = modelPath;
-                info.meta.textureImagePath         = textureImagePath;
-                info.meta.vertexShaderBinaryPath   = vertexShaderBinaryPath;
-                info.meta.fragmentShaderBinaryPath = fragmentShaderBinaryPath;
-                info.id.vertexBufferInfo           = infoIds[0];
-                info.id.indexBufferInfo            = infoIds[1];
-                info.id.swapChainImageInfoBase     = infoIds[2];
-                info.id.textureImageInfo           = infoIds[3];
-                info.id.depthImageInfo             = infoIds[4];
-                info.id.multiSampleImageInfo       = infoIds[5];
+                info.path.model                     = modelPath;
+                info.path.mtlFileDir                = mtlFileDirPath;
+                info.path.vertexShaderBinary        = vertexShaderBinaryPath;
+                info.path.fragmentShaderBinary      = fragmentShaderBinaryPath;
 
-                info.id.uniformBufferInfos         = infoIdGroups[0];
-                m_modelInfoPool[modelInfoId]       = info;
+                info.id.vertexBufferInfo            = infoIds[0];
+                info.id.indexBufferInfo             = infoIds[1];
+                info.id.uniformBufferInfoBase       = infoIds[2];
+                info.id.swapChainImageInfoBase      = infoIds[3];
+                info.id.diffuseTextureImageInfoBase = infoIds[4];
+                info.id.depthImageInfo              = infoIds[5];
+                info.id.multiSampleImageInfo        = infoIds[6];
+
+                m_modelInfoPool[modelInfoId]        = info;
             }
 
             void createVertices (uint32_t modelInfoId, 
@@ -197,7 +202,11 @@ namespace Renderer {
                 */
                 std::string warn, err;
 
-                if (!tinyobj::LoadObj (&attrib, &shapes, &materials, &warn, &err, modelInfo->meta.modelPath)) {
+                if (!tinyobj::LoadObj (&attrib, &shapes, &materials, 
+                                       &warn, &err, 
+                                       modelInfo->path.model, 
+                                       modelInfo->path.mtlFileDir)) {
+                
                     LOG_ERROR (m_VKModelMgrLog) << "Failed to import model "
                                                 << "[" << modelInfoId << "]"
                                                 << " "
@@ -207,7 +216,22 @@ namespace Renderer {
                                                 << std::endl;
                     throw std::runtime_error ("Failed to import model");
                 }
-
+                /* Add default diffuse texture as the fist entry in the group of textures. This way, faces with no 
+                 * texture (material_ids = -1) can sample from this default texture
+                */
+                modelInfo->path.diffuseTextureImages.push_back (g_pathSettings.defaultDiffuseTexture);
+                /* Extract texture image paths from .mtl file
+                 * [O] Diffuse texure
+                 * [X] Other textures like specular, emission etc.
+                */
+                for (auto const& material: materials) {
+                    modelInfo->path.diffuseTextureImages.push_back (material.diffuse_texname);
+                }
+                if (materials.size() == 0) {
+                    LOG_WARNING (m_VKModelMgrLog) << "Failed to find any material info "
+                                                  << "[" << modelInfo->path.mtlFileDir << "]"
+                                                  << std::endl;
+                }             
                 /* Map to take advantage of indices vector (index buffer). Note that, to be able to use std::unordered_map
                  * with a user-defined key-type, you need to define two thing:
                  * (1) A hash function; this must be a class that overrides operator() and calculates the hash value given
@@ -229,6 +253,9 @@ namespace Renderer {
                     /* Note that, the triangulation feature has already made sure that there are three vertices per face, 
                      * so we can now directly iterate over the vertices and dump them straight into our vertices vector
                     */
+                    const uint32_t verticesPerFace = 3;
+                    uint32_t faceIndex             = 0;
+                    uint32_t indexProcessedCount   = 0;
                     for (auto const& index: shape.mesh.indices) {
                         Vertex vertex{};
                         /* The index variable is of type tinyobj::index_t, which contains the vertex_index, normal_index 
@@ -238,17 +265,11 @@ namespace Renderer {
                          * there are two texture coordinate components per entry. The offsets of 0, 1 and 2 are used to 
                          * access the X, Y and Z components, or the U and V components in the case of texture coordinates
                         */
-                        vertex.pos   = {
-                                            attrib.vertices[3 * index.vertex_index + 0],
-                                            attrib.vertices[3 * index.vertex_index + 1],
-                                            attrib.vertices[3 * index.vertex_index + 2]
-                                       };
-
-                        vertex.color = {
-                                            attrib.colors[3 * index.vertex_index + 0],
-                                            attrib.colors[3 * index.vertex_index + 1],
-                                            attrib.colors[3 * index.vertex_index + 2]
-                                       }; 
+                        vertex.pos = {
+                                        attrib.vertices[3 * index.vertex_index + 0],
+                                        attrib.vertices[3 * index.vertex_index + 1],
+                                        attrib.vertices[3 * index.vertex_index + 2]
+                                     };
                         /* The OBJ format assumes a coordinate system where a vertical coordinate of 0 means the bottom 
                          * of the image, however we've uploaded our image into Vulkan in a top to bottom orientation where
                          * 0 means the top of the image. Solve this by flipping the vertical component of the texture 
@@ -274,7 +295,10 @@ namespace Renderer {
                                             attrib.normals[3 * index.normal_index + 1],
                                             attrib.normals[3 * index.normal_index + 2]
                                           }; 
-                        
+                        /* We will handle missing texture faces (material_ids = -1) by adding +1 to all material_id, this
+                         * will allow us to use the default texture whose texture id is 0
+                        */
+                        vertex.texId = shape.mesh.material_ids[faceIndex] + 1;
                         /* To take advantage of the index buffer, we should keep only the unique vertices and use the 
                          * index buffer to reuse them whenever they come up. Every time we read a vertex from the OBJ 
                          * file, we check if we've already seen a vertex with the exact same position and texture 
@@ -289,6 +313,13 @@ namespace Renderer {
                             vertices.push_back (vertex);
                         }
                         indices.push_back (uniqueVertices[vertex]);
+                        /* Increment face index after we process a face (3 vertices make up a face)
+                        */
+                        indexProcessedCount++;
+                        if (indexProcessedCount == verticesPerFace) {
+                            faceIndex++;
+                            indexProcessedCount = 0;
+                        }
                     }
                 }
                 createVertices (modelInfoId, vertices);
@@ -337,19 +368,25 @@ namespace Renderer {
                     }
 
                     LOG_INFO (m_VKModelMgrLog) << "Model path " 
-                                               << "[" << val.meta.modelPath << "]"
+                                               << "[" << val.path.model << "]"
                                                << std::endl;
 
-                    LOG_INFO (m_VKModelMgrLog) << "Texture image path " 
-                                               << "[" << val.meta.textureImagePath << "]"
+                    LOG_INFO (m_VKModelMgrLog) << "Material file directory path " 
+                                               << "[" << val.path.mtlFileDir << "]"
                                                << std::endl;
+
+                    LOG_INFO (m_VKModelMgrLog) << "Diffuse texture image paths" 
+                                               << std::endl;
+                    for (auto const& path: val.path.diffuseTextureImages)
+                    LOG_INFO (m_VKModelMgrLog) << "[" << path << "]"
+                                               << std::endl;                    
 
                     LOG_INFO (m_VKModelMgrLog) << "Vertex shader binary path " 
-                                               << "[" << val.meta.vertexShaderBinaryPath << "]"
+                                               << "[" << val.path.vertexShaderBinary << "]"
                                                << std::endl;
 
                     LOG_INFO (m_VKModelMgrLog) << "Fragment shader binary path " 
-                                               << "[" << val.meta.fragmentShaderBinaryPath << "]"
+                                               << "[" << val.path.fragmentShaderBinary << "]"
                                                << std::endl;
 
                     LOG_INFO (m_VKModelMgrLog) << "Vettex buffer info id " 
@@ -360,18 +397,16 @@ namespace Renderer {
                                                << "[" << val.id.indexBufferInfo << "]"
                                                << std::endl;
 
-                    LOG_INFO (m_VKModelMgrLog) << "Uniform buffer info ids" 
-                                               << std::endl;
-                    for (auto const& infoId: val.id.uniformBufferInfos)
-                    LOG_INFO (m_VKModelMgrLog) << "[" << infoId << "]"
+                    LOG_INFO (m_VKModelMgrLog) << "Uniform buffer info id base "
+                                               << "[" << val.id.uniformBufferInfoBase << "]"
                                                << std::endl;                    
 
                     LOG_INFO (m_VKModelMgrLog) << "Swap chain image info id base " 
                                                << "[" << val.id.swapChainImageInfoBase << "]"
                                                << std::endl;
 
-                    LOG_INFO (m_VKModelMgrLog) << "Texture image info id " 
-                                               << "[" << val.id.textureImageInfo << "]"
+                    LOG_INFO (m_VKModelMgrLog) << "Diffuse texture image info id base "
+                                               << "[" << val.id.diffuseTextureImageInfoBase << "]"
                                                << std::endl;
 
                     LOG_INFO (m_VKModelMgrLog) << "Depth image info id " 

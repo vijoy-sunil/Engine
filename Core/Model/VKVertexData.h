@@ -19,15 +19,15 @@ namespace Renderer {
         /* Define the attributes
         */
         glm::vec3 pos;
-        glm::vec3 color;
         glm::vec2 texCoord;
         glm::vec3 normal;
+        uint32_t  texId;
 
         bool operator == (const Vertex& other) const {
             return pos      == other.pos      && 
-                   color    == other.color    && 
                    texCoord == other.texCoord &&
-                   normal   == other.normal;
+                   normal   == other.normal   &&
+                   texId    == other.texId;
         }
     };     
 }
@@ -45,9 +45,9 @@ namespace std {
              * for different objects too often
             */
             size_t h1 = hash <glm::vec3>() (vertex.pos);
-            size_t h2 = hash <glm::vec3>() (vertex.color);
-            size_t h3 = hash <glm::vec2>() (vertex.texCoord);
-            size_t h4 = hash <glm::vec3>() (vertex.normal);
+            size_t h2 = hash <glm::vec2>() (vertex.texCoord);
+            size_t h3 = hash <glm::vec3>() (vertex.normal);
+            size_t h4 = hash <uint32_t>()  (vertex.texId);
             /* https://stackoverflow.com/questions/1646807/quick-and-simple-hash-code-combinations/1646913#1646913
             */
             size_t hash = 17;

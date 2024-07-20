@@ -83,18 +83,19 @@
  * They're properties that are specified per-vertex in the vertex buffer
  *
  * Note that the vertex shader inputs can specify the 'attribute index' that the particular input uses, 
- * layout (location = attribute index) in vec3 position;
+ * layout (location = attribute index) in vec3 inAttribute;
+ *
  * Whereas, the fragment shader outputs can specify the 'buffer index' that a particular output writes to,
  * layout (location = output index) out vec4 outColor;
 */
 layout (location = 0) in vec3 inPosition;
-layout (location = 1) in vec3 inColor;
-layout (location = 2) in vec2 inTexCoord;
-layout (location = 3) in vec3 inNormal;
+layout (location = 1) in vec2 inTexCoord;
+layout (location = 2) in vec3 inNormal;
+layout (location = 3) in uint inTexId;
 /* Add outputs from the vertex shader
 */
-layout (location = 0) out vec3 fragColor;
-layout (location = 1) out vec2 fragTexCoord;
+layout (location = 0) out vec2 fragTexCoord;
+layout (location = 1) out uint fragTexId;
 /* Note that the order of the uniform, in and out declarations doesn't matter. The binding directive is similar to the 
  * location directive for attributes. We're going to reference this binding in the descriptor layout
 */
@@ -110,14 +111,11 @@ layout (binding = 0) uniform MVPMatrixUBO {
 void main (void) {
     /* We can directly output normalized device coordinates by outputting them as clip coordinates from the vertex shader 
      * with the last component set to 1 using built-in variable gl_Position. That way the division to transform clip 
-     * coordinates to normalized device coordinates will not change anything
-     * 
-     * However, the last component of the clip coordinates may not be 1 after model transform calculations, which will 
-     * result in a division when converted to the final normalized device coordinates on the screen. This is used in 
-     * perspective projection as the perspective division and is essential for making closer objects look larger than 
-     * objects that are further away
+     * coordinates to normalized device coordinates will not change anything. However, the last component of the clip 
+     * coordinates may not be 1 after model transform calculations, which will result in a division when converted to 
+     * the final normalized device coordinates on the screen
     */
     gl_Position  = mvpMatrix.projection * mvpMatrix.view * mvpMatrix.model * vec4 (inPosition, 1.0);
-    fragColor    = inColor;
     fragTexCoord = inTexCoord;
+    fragTexId    = inTexId;
 }

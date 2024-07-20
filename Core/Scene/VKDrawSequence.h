@@ -3,9 +3,9 @@
 
 #include "../Device/VKWindow.h"
 #include "../Buffer/VKUniformBuffer.h"
+#include "../Model/VKModelMatrix.h"
 #include "../Cmds/VKCmdBuffer.h"
 #include "../Cmds/VKCmds.h"
-#include "../Model/VKModelMatrix.h"
 #include "VKUniforms.h"
 #include "VKTransform.h"
 #include "VKCameraMgr.h"
@@ -17,9 +17,9 @@ using namespace Collections;
 namespace Renderer {
     class VKDrawSequence: protected virtual VKWindow,
                           protected virtual VKUniformBuffer,
+                          protected virtual VKModelMatrix,
                           protected virtual VKCmdBuffer,
                           protected virtual VKCmds,
-                          protected virtual VKModelMatrix,
                           protected virtual VKCameraMgr,
                           protected virtual VKSyncObjects,
                           protected VKResizing {
@@ -200,7 +200,7 @@ namespace Renderer {
                 mvpMatrix.view       = cameraInfo->meta.viewMatrix;
                 mvpMatrix.projection = cameraInfo->meta.projectionMatrix;
 
-                updateUniformBuffer (modelInfo->id.uniformBufferInfos[m_currentFrame],
+                updateUniformBuffer (modelInfo->id.uniformBufferInfoBase + m_currentFrame,
                                      sizeof (MVPMatrixUBO),
                                      &mvpMatrix);
                 /* |------------------------------------------------------------------------------------------------|
@@ -210,7 +210,7 @@ namespace Renderer {
                 /* First, we call vkResetCommandBuffer on the command buffer to make sure it is able to be recorded
                 */
                 vkResetCommandBuffer (handOffInfo->resource.commandBuffers[m_currentFrame], 0);
-                beginRecording       (handOffInfo->resource.commandBuffers[m_currentFrame], 0, nullptr);
+                beginRecording       (handOffInfo->resource.commandBuffers[m_currentFrame], 0, VK_NULL_HANDLE);
                 /* Define the clear values to use for VK_ATTACHMENT_LOAD_OP_CLEAR, which we used as load operation for 
                  * the attachments. Note that, the order of clearValues should be identical to the order of your 
                  * attachments
@@ -358,14 +358,14 @@ namespace Renderer {
                 presentInfo.swapchainCount = static_cast <uint32_t> (swapChains.size());
                 presentInfo.pSwapchains    = swapChains.data();
                 presentInfo.pImageIndices  = &swapChainImageId;
-                /* Applications that do not need per-swapchain results can use NULL for pResults. If non-NULL, each 
+                /* Applications that do not need per-swapchain results can use null for pResults. If non-null, each 
                  * entry in pResults will be set to the VkResult for presenting the swapchain corresponding to the same 
                  * index in pSwapchains
                  * 
                  * It's not necessary if you're only using a single swap chain, because you can simply use the return 
                  * value of the present function
                 */
-                presentInfo.pResults = nullptr;
+                presentInfo.pResults = VK_NULL_HANDLE;
 
                 /* The vkQueuePresentKHR function returns the same values with the same meaning as vkAcquireNextImageKHR. 
                  * In this case we will also recreate the swap chain and its dependents if it is suboptimal, because we 

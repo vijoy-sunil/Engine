@@ -28,9 +28,9 @@
 #include "../Pipeline/VKPipelineLayout.h"
 #include "../Model/VKTextureSampler.h"
 #include "../Model/VKDescriptor.h"
+#include "../Model/VKModelMatrix.h"
 #include "../Cmds/VKCmdBuffer.h"
 #include "../Cmds/VKCmds.h"
-#include "../Model/VKModelMatrix.h"
 #include "VKUniforms.h"
 #include "VKTransform.h"
 #include "VKCameraMgr.h"
@@ -67,9 +67,9 @@ namespace Renderer {
                           protected VKPipelineLayout,
                           protected virtual VKTextureSampler,
                           protected virtual VKDescriptor,
+                          protected virtual VKModelMatrix,
                           protected virtual VKCmdBuffer,
                           protected virtual VKCmds,
-                          protected virtual VKModelMatrix,
                           protected virtual VKCameraMgr,
                           protected virtual VKSyncObjects,
                           protected virtual VKDrawSequence {
@@ -147,7 +147,7 @@ namespace Renderer {
                  * | CONFIG PHY DEVICE                                                                              |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                pickPhysicalDevice (resourceId);
+                pickPhyDevice (resourceId);
                 LOG_INFO (m_VKInitSequenceLog) << "[OK] Phy device " 
                                                << "[" << resourceId << "]"
                                                << std::endl;
@@ -155,10 +155,39 @@ namespace Renderer {
                  * | CONFIG LOG DEVICE                                                                              |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                createLogicalDevice (resourceId);
+                createLogDevice (resourceId);
                 LOG_INFO (m_VKInitSequenceLog) << "[OK] Log device " 
                                                << "[" << resourceId << "]"
                                                << std::endl;
+                /* |------------------------------------------------------------------------------------------------|
+                 * | IMPORT MODEL                                                                                   |
+                 * |------------------------------------------------------------------------------------------------|
+                */
+#if OVERRIDE_MODEL_IMPORT
+                uint32_t texId = 0;
+                modelInfo->path.diffuseTextureImages.push_back (g_pathSettings.defaultDiffuseTexture);
+
+                const std::vector <Vertex> vertices = {
+                    /* pos, textCoord, normal, texId
+                    */
+                    {{-0.5f, -0.5f, 0.0f}, {0.0f, 0.0f}, {1.0f, 0.0f, 0.0f}, texId},
+                    {{ 0.5f, -0.5f, 0.0f}, {1.0f, 0.0f}, {0.0f, 1.0f, 0.0f}, texId},
+                    {{ 0.5f,  0.5f, 0.0f}, {1.0f, 1.0f}, {0.0f, 0.0f, 1.0f}, texId},
+                    {{-0.5f,  0.5f, 0.0f}, {0.0f, 1.0f}, {1.0f, 1.0f, 1.0f}, texId}
+                };
+                
+                const std::vector <uint32_t> indices = {
+                    0, 1, 2, 2, 3, 0
+                };
+
+                createVertices (modelInfoId, vertices);
+                createIndices  (modelInfoId, indices);
+#else
+                importOBJModel (modelInfoId);
+#endif
+                LOG_INFO (m_VKInitSequenceLog) << "[OK] Import model " 
+                                               << "[" << modelInfoId << "]"
+                                               << std::endl; 
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG SWAP CHAIN RESOURCES                                                                    |
                  * |------------------------------------------------------------------------------------------------|
@@ -170,17 +199,20 @@ namespace Renderer {
                                                << "[" << resourceId << "]"
                                                << std::endl;   
                 /* |------------------------------------------------------------------------------------------------|
-                 * | CONFIG TEXTURE RESOURCES                                                                       |
+                 * | CONFIG TEXTURE RESOURCES - DIFFUSE TEXTURE                                                     |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                createTextureResources (modelInfo->id.textureImageInfo, 
-                                        resourceId, 
-                                        modelInfo->meta.textureImagePath);
-                LOG_INFO (m_VKInitSequenceLog) << "[OK] Texture resources " 
-                                               << "[" << modelInfo->id.textureImageInfo << "]"
-                                               << " "
-                                               << "[" << resourceId << "]"
-                                               << std::endl; 
+                for (size_t i = 0; i < modelInfo->path.diffuseTextureImages.size(); i++) {
+                    uint32_t textureImageInfoId = modelInfo->id.diffuseTextureImageInfoBase + static_cast <uint32_t> (i);
+                    createTextureResources (textureImageInfoId, 
+                                            resourceId, 
+                                            modelInfo->path.diffuseTextureImages[i].c_str());
+                    LOG_INFO (m_VKInitSequenceLog) << "[OK] Texture resources " 
+                                                   << "[" << textureImageInfoId << "]"
+                                                   << " "
+                                                   << "[" << resourceId << "]"
+                                                   << std::endl; 
+                }
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG DEPTH RESOURCES                                                                         |
                  * |------------------------------------------------------------------------------------------------|
@@ -201,32 +233,6 @@ namespace Renderer {
                                                << " "
                                                << "[" << resourceId << "]"
                                                << std::endl;    
-                /* |------------------------------------------------------------------------------------------------|
-                 * | IMPORT MODEL                                                                                   |
-                 * |------------------------------------------------------------------------------------------------|
-                */
-#if OVERRIDE_MODEL_IMPORT
-                const std::vector <Vertex> vertices = {
-                    /* pos, color, textCoord, normal
-                    */
-                    {{-0.5f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}, {0.0f, 0.0f, 1.0f}},
-                    {{ 0.5f, -0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f}, {0.0f, 0.0f, 1.0f}},
-                    {{ 0.5f,  0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f}, {0.0f, 0.0f, 1.0f}},
-                    {{-0.5f,  0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f}, {0.0f, 0.0f, 1.0f}}
-                };
-                
-                const std::vector <uint32_t> indices = {
-                    0, 1, 2, 2, 3, 0
-                };
-
-                createVertices (modelInfoId, vertices);
-                createIndices  (modelInfoId, indices);
-#else
-                importOBJModel (modelInfoId);
-#endif
-                LOG_INFO (m_VKInitSequenceLog) << "[OK] Import model " 
-                                               << "[" << modelInfoId << "]"
-                                               << std::endl; 
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG VERTEX BUFFER                                                                           |
                  * |------------------------------------------------------------------------------------------------|
@@ -263,7 +269,7 @@ namespace Renderer {
                  * to a uniform buffer that is not currently being read by the GPU
                 */
                 for (size_t i = 0; i < g_maxFramesInFlight; i++) { 
-                    uint32_t uniformBufferInfoId = modelInfo->id.uniformBufferInfos[i];    
+                    uint32_t uniformBufferInfoId = modelInfo->id.uniformBufferInfoBase + static_cast <uint32_t> (i);    
                     createUniformBuffer (uniformBufferInfoId,
                                          resourceId,
                                          sizeof (MVPMatrixUBO));
@@ -363,16 +369,16 @@ namespace Renderer {
                                              VK_FORMAT_R32G32B32_SFLOAT),
                     getAttributeDescription (0,
                                              1,
-                                             offsetof(Vertex, color),
-                                             VK_FORMAT_R32G32B32_SFLOAT),
-                    getAttributeDescription (0,
-                                             2,
                                              offsetof(Vertex, texCoord),
                                              VK_FORMAT_R32G32_SFLOAT),
                     getAttributeDescription (0,
-                                             3,
+                                             2,
                                              offsetof(Vertex, normal),
-                                             VK_FORMAT_R32G32B32_SFLOAT)
+                                             VK_FORMAT_R32G32B32_SFLOAT),
+                    getAttributeDescription (0,
+                                             3,
+                                             offsetof(Vertex, texId),
+                                             VK_FORMAT_R32_UINT)
                 };
                 createVertexInputState   (pipelineInfoId, bindingDescriptions, attributeDescriptions);
                 /* |------------------------------------------------------------------------------------------------|
@@ -387,14 +393,14 @@ namespace Renderer {
                 VkShaderModule vertexShaderModule;
                 createShaderStage        (pipelineInfoId, 
                                           VK_SHADER_STAGE_VERTEX_BIT, 
-                                          modelInfo->meta.vertexShaderBinaryPath,
+                                          modelInfo->path.vertexShaderBinary,
                                           "main",
                                           vertexShaderModule);
 
                 VkShaderModule fragmentShaderModule;
                 createShaderStage        (pipelineInfoId, 
                                           VK_SHADER_STAGE_FRAGMENT_BIT, 
-                                          modelInfo->meta.fragmentShaderBinaryPath,
+                                          modelInfo->path.fragmentShaderBinary,
                                           "main",
                                           fragmentShaderModule);
                 /* |------------------------------------------------------------------------------------------------|
@@ -409,7 +415,7 @@ namespace Renderer {
                 createRasterizationState (pipelineInfoId, 
                                           VK_POLYGON_MODE_FILL,
                                           1.0f,
-                                          VK_CULL_MODE_BACK_BIT,
+                                          VK_CULL_MODE_NONE,
                                           VK_FRONT_FACE_CLOCKWISE);
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG PIPELINE STATE - MULTI SAMPLE                                                           |
@@ -460,21 +466,54 @@ namespace Renderer {
                                       1,
                                       VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
                                       VK_SHADER_STAGE_VERTEX_BIT,
-                                      nullptr),
-                    /* Another type of descriptor is the combined image sampler. This descriptor makes it possible for
-                     * shaders to access an image resource through a sampler object 
-                     *
-                     * Note that, we intend to use the combined image sampler descriptor in the fragment shader. That's 
-                     * where the color of the fragment is going to be determined. It is possible to use texture sampling
-                     * in the vertex shader, for example to dynamically deform a grid of vertices by a heightmap
+                                      VK_NULL_HANDLE),
+
+                    /* Another commonly used type of descriptor is the combined image sampler, which is a single 
+                     * descriptor type associated with both a sampler and an image resource, combining both a sampler 
+                     * and sampled image descriptor into a single descriptor. Note that, it is possible to use texture 
+                     * sampling in the vertex shader, for example to dynamically deform a grid of vertices by a 
+                     * heightmap
                     */
-                    getLayoutBinding (1, 
-                                      1,
+                    getLayoutBinding (1,
+                                      static_cast <uint32_t> (modelInfo->path.diffuseTextureImages.size()),
                                       VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
                                       VK_SHADER_STAGE_FRAGMENT_BIT,
-                                      nullptr)
+                                      VK_NULL_HANDLE)
                 };
-                createDescriptorSetLayout (pipelineInfoId, layoutBindings);
+                /* Info on some of the available binding flags
+                 * (1) VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT
+                 * This flag indicates that if descriptors in this binding are updated between when the descriptor set is 
+                 * bound in a command buffer and when that command buffer is submitted to a queue, then the submission 
+                 * will use the most recently set descriptors for this binding and the updates do not invalidate the 
+                 * command buffer
+                 * 
+                 * After enabling the desired feature support for updating after bind, an application needs to setup the 
+                 * following in order to use a descriptor that can update after bind
+                 * (a) The VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT_EXT flag for any 
+                 * VkDescriptorSetLayout the descriptor is from
+                 * (b) The VK_DESCRIPTOR_POOL_CREATE_UPDATE_AFTER_BIND_BIT_EXT flag for any VkDescriptorPool the 
+                 * descriptor is allocated from
+                 * (c) The VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT_EXT for each binding in the VkDescriptorSetLayout 
+                 * that the descriptor will use
+                 * 
+                 * More info:
+                 * https://docs.vulkan.org/guide/latest/extensions/VK_EXT_descriptor_indexing.html#:~:text=The%20key%20
+                 * word%20here%20is,dynamic%20uniform%20indexing%20in%20GLSL
+                 * 
+                 * (2) VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT
+                 * With the partially bound feature an application developer isn’t required to update all the descriptors
+                 * at time of use. An example would be if an application’s GLSL has
+                 * 
+                 * layout (set = 0, binding = 0) uniform sampler2D textureSampler[64];
+                 * 
+                 * but only binds the first 32 slots in the array. This also relies on the the application knowing that 
+                 * it will not index into the unbound slots in the array
+                */
+                auto bindingFlags = std::vector <VkDescriptorBindingFlags> {
+                    0,
+                    0
+                };
+                createDescriptorSetLayout (pipelineInfoId, layoutBindings, bindingFlags, 0);
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG PIPELINE LAYOUT                                                                         |
                  * |------------------------------------------------------------------------------------------------|
@@ -495,9 +534,9 @@ namespace Renderer {
                  * happen until the graphics pipeline is created. That means that we're allowed to destroy the shader 
                  * modules as soon as pipeline creation is finished
                 */
-                vkDestroyShaderModule (deviceInfo->shared.logDevice, vertexShaderModule,   nullptr);
-                vkDestroyShaderModule (deviceInfo->shared.logDevice, fragmentShaderModule, nullptr);
-                LOG_INFO (m_VKInitSequenceLog) << "[DELETE] Shader modules " 
+                vkDestroyShaderModule (deviceInfo->shared.logDevice, vertexShaderModule,   VK_NULL_HANDLE);
+                vkDestroyShaderModule (deviceInfo->shared.logDevice, fragmentShaderModule, VK_NULL_HANDLE);
+                LOG_INFO (m_VKInitSequenceLog) << "[DELETE] Shader modules" 
                                                << std::endl;  
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG TEXTURE SAMPLER                                                                         |
@@ -517,12 +556,17 @@ namespace Renderer {
                  * |------------------------------------------------------------------------------------------------|
                 */
                 auto poolSizes = std::vector {
-                    getPoolSize (VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,         static_cast <uint32_t> (g_maxFramesInFlight)),
-                    getPoolSize (VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, static_cast <uint32_t> (g_maxFramesInFlight))
+                    getPoolSize (VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 
+                                 static_cast <uint32_t> (g_maxFramesInFlight)),
+
+                    getPoolSize (VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,  
+                                 static_cast <uint32_t> (modelInfo->path.diffuseTextureImages.size() * 
+                                                         g_maxFramesInFlight))
                 };
                 createDescriptorPool (modelInfoId, 
                                       poolSizes, 
-                                      static_cast <uint32_t> (g_maxFramesInFlight));
+                                      static_cast <uint32_t> (g_maxFramesInFlight), 
+                                      0);
                 LOG_INFO (m_VKInitSequenceLog) << "[OK] Descriptor pool " 
                                                << "[" << modelInfoId << "]"
                                                << std::endl;  
@@ -539,17 +583,25 @@ namespace Renderer {
                  * |------------------------------------------------------------------------------------------------|
                 */
                 for (size_t i = 0; i < g_maxFramesInFlight; i++) {
-                    uint32_t uniformBufferInfoId = modelInfo->id.uniformBufferInfos[i];
+                    uint32_t uniformBufferInfoId = modelInfo->id.uniformBufferInfoBase + static_cast <uint32_t> (i); 
                     auto bufferInfo              = getBufferInfo (uniformBufferInfoId, UNIFORM_BUFFER);
-                    auto descriptorBufferInfo    = getDescriptorBufferInfo (bufferInfo->resource.buffer,
-                                                                            0,
-                                                                            bufferInfo->meta.size);
+                    auto descriptorBufferInfos   = std::vector {
+                        getDescriptorBufferInfo (bufferInfo->resource.buffer,
+                                                 0,
+                                                 bufferInfo->meta.size)
+                    };
 
-                    uint32_t textureImageInfoId  = modelInfo->id.textureImageInfo;
-                    auto imageInfo               = getImageInfo (textureImageInfoId, TEXTURE_IMAGE);
-                    auto descriptorImageInfo     = getDescriptorImageInfo  (modelInfo->resource.textureSampler,
-                                                                            imageInfo->resource.imageView,
-                                                                            VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+                    uint32_t textureCount = static_cast <uint32_t> (modelInfo->path.diffuseTextureImages.size());
+                    std::vector <VkDescriptorImageInfo> descriptorImageInfos (textureCount);
+
+                    for (uint32_t i = 0; i < textureCount; i++) {
+                        uint32_t textureImageInfoId = modelInfo->id.diffuseTextureImageInfoBase + i;
+                        auto imageInfo              = getImageInfo (textureImageInfoId, TEXTURE_IMAGE);
+
+                        descriptorImageInfos[i]     = getDescriptorImageInfo (modelInfo->resource.textureSampler,
+                                                                              imageInfo->resource.imageView,
+                                                                              VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+                    }
 
                     /* The configuration of descriptors is updated using the vkUpdateDescriptorSets function, which takes 
                      * an array of VkWriteDescriptorSet structs as parameter
@@ -557,13 +609,13 @@ namespace Renderer {
                     auto descriptorWrites = std::vector {
                         getWriteBufferDescriptorSetInfo (VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
                                                          modelInfo->resource.descriptorSets[i],
-                                                         descriptorBufferInfo,
+                                                         descriptorBufferInfos,
                                                          0, 0, 1),
 
                         getWriteImageDescriptorSetInfo  (VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
                                                          modelInfo->resource.descriptorSets[i],
-                                                         descriptorImageInfo,
-                                                         1, 0, 1)
+                                                         descriptorImageInfos,
+                                                         1, 0, textureCount)
                     };
 
                     updateDescriptorSets (descriptorWrites);
@@ -581,6 +633,9 @@ namespace Renderer {
                                    transformInfo.model.translate,
                                    transformInfo.model.rotateAxis, transformInfo.model.rotateAngleDeg,
                                    transformInfo.model.scale);
+                LOG_INFO (m_VKInitSequenceLog) << "[OK] Model matrix " 
+                                               << "[" << modelInfoId << "]"
+                                               << std::endl;
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG CAMERA                                                                                  |
                  * |------------------------------------------------------------------------------------------------|
@@ -636,11 +691,14 @@ namespace Renderer {
                 */ 
                 beginRecording     (transferOpsCommandBuffers[0],
                                     VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
-                                    nullptr);
+                                    VK_NULL_HANDLE);
 
-                copyBufferToImage  (transferOpsCommandBuffers[0],
-                                    modelInfo->id.textureImageInfo, STAGING_BUFFER, 0,
-                                    modelInfo->id.textureImageInfo, TEXTURE_IMAGE,  VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+                for (size_t i = 0; i < modelInfo->path.diffuseTextureImages.size(); i++) {
+                    uint32_t textureImageInfoId = modelInfo->id.diffuseTextureImageInfoBase + static_cast <uint32_t> (i);
+                    copyBufferToImage  (transferOpsCommandBuffers[0],
+                                        textureImageInfoId, STAGING_BUFFER, 0,
+                                        textureImageInfoId, TEXTURE_IMAGE,  VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+                }
 
                 copyBufferToBuffer (transferOpsCommandBuffers[0],
                                     modelInfo->id.vertexBufferInfo, STAGING_BUFFER, 0,
@@ -709,10 +767,13 @@ namespace Renderer {
                                                << "[" << modelInfo->id.vertexBufferInfo << "]"
                                                << std::endl; 
 
-                VKBufferMgr::cleanUp (modelInfo->id.textureImageInfo, STAGING_BUFFER);
-                LOG_INFO (m_VKInitSequenceLog) << "[DELETE] Staging buffer " 
-                                               << "[" << modelInfo->id.textureImageInfo << "]"
-                                               << std::endl;              
+                for (size_t i = 0; i < modelInfo->path.diffuseTextureImages.size(); i++) {
+                    uint32_t textureImageInfoId = modelInfo->id.diffuseTextureImageInfoBase + static_cast <uint32_t> (i);
+                    VKBufferMgr::cleanUp (textureImageInfoId, STAGING_BUFFER);
+                    LOG_INFO (m_VKInitSequenceLog) << "[DELETE] Staging buffer " 
+                                                   << "[" << textureImageInfoId << "]"
+                                                   << std::endl;
+                }              
                 /* |------------------------------------------------------------------------------------------------|
                  * | DESTROY TRANSFER OPS - FENCE                                                                   |
                  * |------------------------------------------------------------------------------------------------|
@@ -754,14 +815,17 @@ namespace Renderer {
                  * | CONFIG BLIT OPS - RECORD AND SUBMIT                                                            |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                beginRecording     (blitOpsCommandBuffers[0],
-                                    VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
-                                    nullptr);
+                beginRecording (blitOpsCommandBuffers[0],
+                                VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
+                                VK_NULL_HANDLE);
 
-                blitImageToMipMaps (blitOpsCommandBuffers[0],
-                                    modelInfo->id.textureImageInfo, TEXTURE_IMAGE);
+                for (size_t i = 0; i < modelInfo->path.diffuseTextureImages.size(); i++) {
+                    uint32_t textureImageInfoId = modelInfo->id.diffuseTextureImageInfoBase + static_cast <uint32_t> (i);
+                    blitImageToMipMaps (blitOpsCommandBuffers[0],
+                                        textureImageInfoId, TEXTURE_IMAGE);
+                }
 
-                endRecording       (blitOpsCommandBuffers[0]);
+                endRecording (blitOpsCommandBuffers[0]);
 
                 VkSubmitInfo blitOpsSubmitInfo{};
                 blitOpsSubmitInfo.sType              = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -888,12 +952,12 @@ namespace Renderer {
                  * | DUMP METHODS                                                                                   |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                dumpModelInfoPool();
                 dumpDeviceInfoPool();
                 dumpImageInfoPool();
                 dumpBufferInfoPool(); 
                 dumpRenderPassInfoPool();  
                 dumpPipelineInfoPool();  
+                dumpModelInfoPool();
                 dumpCameraInfoPool(); 
                 dumpFenceInfoPool();
                 dumpSemaphoreInfoPool();

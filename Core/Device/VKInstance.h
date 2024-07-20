@@ -59,9 +59,9 @@ namespace Renderer {
                  * empty
                 */
                 uint32_t extensionCount = 0;
-                vkEnumerateInstanceExtensionProperties (nullptr, &extensionCount, nullptr);
+                vkEnumerateInstanceExtensionProperties (VK_NULL_HANDLE, &extensionCount, VK_NULL_HANDLE);
                 std::vector <VkExtensionProperties> availableExtensions (extensionCount);
-                vkEnumerateInstanceExtensionProperties (nullptr, &extensionCount, availableExtensions.data());
+                vkEnumerateInstanceExtensionProperties (VK_NULL_HANDLE, &extensionCount, availableExtensions.data());
 
                 LOG_INFO (m_VKInstanceLog) << "Available instance extensions" << std::endl;
                 for (auto const& extension: availableExtensions)
@@ -142,7 +142,7 @@ namespace Renderer {
                 if (isValidationLayersEnabled() && !isValidationLayersSupported()) {
                     LOG_WARNING (m_VKInstanceLog) << "Required validation layers not available" << std::endl;
                     createInfo.enabledLayerCount = 0;
-                    createInfo.pNext             = nullptr;
+                    createInfo.pNext             = VK_NULL_HANDLE;
                 }
                 else if (isValidationLayersEnabled()) {
                     createInfo.enabledLayerCount   = static_cast <uint32_t> (getValidationLayers().size());
@@ -173,7 +173,7 @@ namespace Renderer {
                  * is either VK_SUCCESS or an error code
                 */
                 VkInstance instance;
-                VkResult result = vkCreateInstance (&createInfo, nullptr, &instance);
+                VkResult result = vkCreateInstance (&createInfo, VK_NULL_HANDLE, &instance);
                 if (result != VK_SUCCESS) {
                     LOG_ERROR (m_VKInstanceLog) << "Failed to create instance " 
                                                 << "[" << string_VkResult (result) << "]"
@@ -189,7 +189,7 @@ namespace Renderer {
                 /* The VkInstance should be only destroyed right before the program exits, all of the other Vulkan 
                  * resources that we create should be cleaned up before the instance is destroyed
                 */
-                vkDestroyInstance (deviceInfo->shared.instance, nullptr);
+                vkDestroyInstance (deviceInfo->shared.instance, VK_NULL_HANDLE);
             }
     };
 

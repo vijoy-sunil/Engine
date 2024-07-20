@@ -54,7 +54,8 @@ namespace Renderer {
             */
             void createDescriptorPool (uint32_t modelInfoId,
                                        const std::vector <VkDescriptorPoolSize>& poolSizes,
-                                       uint32_t maxDescriptorSets) {
+                                       uint32_t maxDescriptorSets,
+                                       VkDescriptorPoolCreateFlags poolCreateFlags) {
 
                 auto modelInfo  = getModelInfo (modelInfoId);
                 auto deviceInfo = getDeviceInfo();
@@ -67,12 +68,7 @@ namespace Renderer {
                  * the maximum number of descriptor sets that may be allocated from the pool
                 */
                 createInfo.maxSets = maxDescriptorSets;
-                /* The structure has an optional flag similar to command pools that determines if individual descriptor 
-                 * sets can be freed or not: VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT. We're not going to touch 
-                 * the descriptor set after creating it, so we don't need this flag. You can leave flags to its default 
-                 * value of 0
-                */
-                createInfo.flags = 0;
+                createInfo.flags   = poolCreateFlags;
 
                 /* Inadequate descriptor pools are a good example of a problem that the validation layers will not catch.
                  * As of Vulkan 1.1, vkAllocateDescriptorSets may fail with the error code VK_ERROR_POOL_OUT_OF_MEMORY if 
@@ -90,7 +86,7 @@ namespace Renderer {
                 VkDescriptorPool descriptorPool;
                 VkResult result = vkCreateDescriptorPool (deviceInfo->shared.logDevice, 
                                                           &createInfo, 
-                                                          nullptr, 
+                                                          VK_NULL_HANDLE, 
                                                           &descriptorPool);
                 if (result != VK_SUCCESS) {
                     LOG_ERROR (m_VKDescriptorLog) << "Failed to create descriptor pool "
@@ -196,7 +192,8 @@ namespace Renderer {
 
             VkWriteDescriptorSet getWriteBufferDescriptorSetInfo (VkDescriptorType descriptorType,
                                                                   VkDescriptorSet descriptorSet,
-                                                                  const VkDescriptorBufferInfo& descriptorInfo,
+                                                                  const std::vector <VkDescriptorBufferInfo>& 
+                                                                                    descriptorInfos,
                                                                   uint32_t bindingNumber,
                                                                   uint32_t arrayElement,
                                                                   uint32_t descriptorCount) {
@@ -224,13 +221,14 @@ namespace Renderer {
                  * descriptors that refer to image data, and pTexelBufferView is used for descriptors that refer to buffer
                  * views
                 */
-                writeDescriptorSet.pBufferInfo = &descriptorInfo;
+                writeDescriptorSet.pBufferInfo = descriptorInfos.data();
                 return writeDescriptorSet;
             }
 
             VkWriteDescriptorSet getWriteImageDescriptorSetInfo (VkDescriptorType descriptorType,
                                                                  VkDescriptorSet descriptorSet,
-                                                                 const VkDescriptorImageInfo& descriptorInfo,
+                                                                 const std::vector <VkDescriptorImageInfo>& 
+                                                                                   descriptorInfos,
                                                                  uint32_t bindingNumber,
                                                                  uint32_t arrayElement,
                                                                  uint32_t descriptorCount) {
@@ -241,7 +239,7 @@ namespace Renderer {
                 writeDescriptorSet.dstArrayElement = arrayElement;
                 writeDescriptorSet.descriptorType  = descriptorType;
                 writeDescriptorSet.descriptorCount = descriptorCount;  
-                writeDescriptorSet.pImageInfo      = &descriptorInfo;
+                writeDescriptorSet.pImageInfo      = descriptorInfos.data();
                 return writeDescriptorSet;
             }
 
@@ -263,7 +261,7 @@ namespace Renderer {
                                         static_cast <uint32_t> (writeDescriptorSets.size()),
                                         writeDescriptorSets.data(), 
                                         0, 
-                                        nullptr);                
+                                        VK_NULL_HANDLE);                
             }
 
             void cleanUp (uint32_t modelInfoId) {
@@ -274,7 +272,7 @@ namespace Renderer {
                 */
                 vkDestroyDescriptorPool (deviceInfo->shared.logDevice, 
                                          modelInfo->resource.descriptorPool, 
-                                         nullptr);
+                                         VK_NULL_HANDLE);
             }
     };   
 

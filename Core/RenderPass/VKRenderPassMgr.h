@@ -77,7 +77,7 @@ namespace Renderer {
                 VkRenderPass renderPass;
                 VkResult result = vkCreateRenderPass (deviceInfo->shared.logDevice, 
                                                       &createInfo, 
-                                                      nullptr, 
+                                                      VK_NULL_HANDLE, 
                                                       &renderPass);
                 if (result != VK_SUCCESS) {
                     LOG_ERROR (m_VKRenderPassMgrLog) << "Failed to create render pass "
@@ -132,7 +132,7 @@ namespace Renderer {
                 auto renderPassInfo = getRenderPassInfo (renderPassInfoId);
                 auto deviceInfo     = getDeviceInfo();
 
-                vkDestroyRenderPass  (deviceInfo->shared.logDevice, renderPassInfo->resource.renderPass, nullptr);
+                vkDestroyRenderPass  (deviceInfo->shared.logDevice, renderPassInfo->resource.renderPass, VK_NULL_HANDLE);
                 deleteRenderPassInfo (renderPassInfoId);
             }
     };

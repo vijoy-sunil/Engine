@@ -17,12 +17,12 @@ namespace Renderer {
                 */
                 uint32_t extensionCount;
                 vkEnumerateDeviceExtensionProperties (phyDevice, 
-                                                      nullptr, 
+                                                      VK_NULL_HANDLE, 
                                                       &extensionCount, 
-                                                      nullptr);
+                                                      VK_NULL_HANDLE);
                 std::vector <VkExtensionProperties> availableExtensions (extensionCount);
                 vkEnumerateDeviceExtensionProperties (phyDevice, 
-                                                      nullptr, 
+                                                      VK_NULL_HANDLE, 
                                                       &extensionCount, 
                                                       availableExtensions.data());
 
@@ -44,7 +44,7 @@ namespace Renderer {
                 return requiredExtensions.empty();
             }
 
-            bool checkPhysicalDeviceSupport (uint32_t resourceId, VkPhysicalDevice phyDevice) {
+            bool checkPhyDeviceSupport (uint32_t resourceId, VkPhysicalDevice phyDevice) {
                 /* list of gpu devices have already been queried and is passed into this function one by one, which is 
                  * then checked for support
                 */
@@ -64,16 +64,23 @@ namespace Renderer {
                     */
                     swapChainAdequate = !swapChainSupport.formats.empty() && !swapChainSupport.presentModes.empty();
                 }
-                /* The vkGetPhysicalDeviceFeatures repurposes the VkPhysicalDeviceFeatures struct to indicate which 
-                 * features are supported rather than requested by setting the boolean values
-                */
-                VkPhysicalDeviceFeatures supportedFeatures;
+
+                VkPhysicalDeviceFeatures supportedFeatures{};
                 vkGetPhysicalDeviceFeatures (phyDevice, &supportedFeatures);
+
+                VkPhysicalDeviceDescriptorIndexingFeatures descriptorIndexingFeatures{};
+                descriptorIndexingFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES;
+                descriptorIndexingFeatures.pNext = VK_NULL_HANDLE;
+                getPhyDeviceFeatures2 (phyDevice, supportedFeatures, &descriptorIndexingFeatures);
 
                 return isQueueFamilyIndicesComplete (resourceId) && 
                        extensionsSupported && 
-                       swapChainAdequate &&
-                       supportedFeatures.samplerAnisotropy;
+                       swapChainAdequate   &&
+                       supportedFeatures.samplerAnisotropy &&
+                       /* This indicates whether the implementation supports the SPIR-V run time descriptor array 
+                        * capability. If this feature is not enabled, descriptors must not be declared in runtime arrays
+                       */
+                       descriptorIndexingFeatures.runtimeDescriptorArray;
             }
 
             /* The exact maximum number of sample points for MSAA can be extracted from VkPhysicalDeviceProperties 
@@ -140,7 +147,7 @@ namespace Renderer {
                 vkGetPhysicalDeviceSurfaceFormatsKHR (phyDevice, 
                                                       deviceInfo->unique[resourceId].surface, 
                                                       &formatCount, 
-                                                      nullptr);
+                                                      VK_NULL_HANDLE);
                 if (formatCount != 0) {
                     details.formats.resize (formatCount);
                     vkGetPhysicalDeviceSurfaceFormatsKHR (phyDevice, 
@@ -154,7 +161,7 @@ namespace Renderer {
                 vkGetPhysicalDeviceSurfacePresentModesKHR (phyDevice, 
                                                            deviceInfo->unique[resourceId].surface, 
                                                            &presentModeCount, 
-                                                           nullptr);
+                                                           VK_NULL_HANDLE);
                 if (presentModeCount != 0) {
                     details.presentModes.resize (presentModeCount);
                     vkGetPhysicalDeviceSurfacePresentModesKHR (phyDevice, 
@@ -243,12 +250,30 @@ namespace Renderer {
                 throw std::runtime_error ("Failed to find suitable memory type");
             }
 
-            void pickPhysicalDevice (uint32_t resourceId) {
+            VkPhysicalDeviceFeatures2 getPhyDeviceFeatures2 (VkPhysicalDevice phyDevice, 
+                                                             const VkPhysicalDeviceFeatures& features,
+                                                             void* pNext,
+                                                             bool querySupport = true) {
+                VkPhysicalDeviceFeatures2 supportedFeatures2{};
+                supportedFeatures2.sType    = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
+                supportedFeatures2.features = features;
+                /* If the VkPhysicalDevice[ExtensionName]Features structure is included in the pNext chain of the 
+                 * VkPhysicalDeviceFeatures2 structure passed to vkGetPhysicalDeviceFeatures2, it is filled in to 
+                 * indicate whether each corresponding feature is supported
+                */
+                supportedFeatures2.pNext    = pNext;
+                if (querySupport == true)
+                    vkGetPhysicalDeviceFeatures2 (phyDevice, &supportedFeatures2);
+
+                return supportedFeatures2;
+            }
+
+            void pickPhyDevice (uint32_t resourceId) {
                 auto deviceInfo = getDeviceInfo();
                 /* Query all available graphic cards with vulkan support
                 */
                 uint32_t deviceCount = 0;
-                vkEnumeratePhysicalDevices (deviceInfo->shared.instance, &deviceCount, nullptr);
+                vkEnumeratePhysicalDevices (deviceInfo->shared.instance, &deviceCount, VK_NULL_HANDLE);
                 if (deviceCount == 0) {
                     LOG_ERROR (m_VKPhyDeviceLog) << "Failed to find GPUs with Vulkan support" << std::endl;
                     throw std::runtime_error ("Failed to find GPUs with Vulkan support");
@@ -257,7 +282,7 @@ namespace Renderer {
                 vkEnumeratePhysicalDevices (deviceInfo->shared.instance, &deviceCount, devices.data());
 
                 for (auto const& device: devices) {
-                    if (checkPhysicalDeviceSupport (resourceId, device)) {
+                    if (checkPhyDeviceSupport (resourceId, device)) {
                         VkPhysicalDeviceProperties properties;
                         vkGetPhysicalDeviceProperties (device, &properties);
 

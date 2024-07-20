@@ -52,7 +52,7 @@ namespace Renderer {
                 VkFramebuffer frameBuffer;
                 VkResult result = vkCreateFramebuffer (deviceInfo->shared.logDevice, 
                                                        &createInfo, 
-                                                       nullptr, 
+                                                       VK_NULL_HANDLE, 
                                                        &frameBuffer);
                 if (result != VK_SUCCESS) {
                     LOG_ERROR (m_VKFrameBufferLog) << "Failed to create framebuffer " 
@@ -74,7 +74,7 @@ namespace Renderer {
                 /* Destroy the framebuffers before the image views and render pass that they are based on
                 */
                 for (auto const& framebuffer: renderPassInfo->resource.framebuffers)
-                    vkDestroyFramebuffer (deviceInfo->shared.logDevice, framebuffer, nullptr);           
+                    vkDestroyFramebuffer (deviceInfo->shared.logDevice, framebuffer, VK_NULL_HANDLE);           
                 renderPassInfo->resource.framebuffers.clear();               
             }
     };

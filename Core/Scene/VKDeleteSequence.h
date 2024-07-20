@@ -132,7 +132,7 @@ namespace Renderer {
                  * |------------------------------------------------------------------------------------------------|
                 */
                 for (size_t i = 0; i < g_maxFramesInFlight; i++) {
-                    uint32_t uniformBufferInfoId = modelInfo->id.uniformBufferInfos[i];
+                    uint32_t uniformBufferInfoId = modelInfo->id.uniformBufferInfoBase + static_cast <uint32_t> (i); 
                     VKBufferMgr::cleanUp (uniformBufferInfoId, UNIFORM_BUFFER);
                     LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Uniform buffer " 
                                                      << "[" << uniformBufferInfoId << "]"
@@ -171,13 +171,16 @@ namespace Renderer {
                                                  << "[" << modelInfo->id.depthImageInfo << "]"
                                                  << std::endl; 
                 /* |------------------------------------------------------------------------------------------------|
-                 * | DESTROY TEXTURE RESOURCES                                                                      |
+                 * | DESTROY TEXTURE RESOURCES - DIFFUSE TEXTURE                                                    |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                VKImageMgr::cleanUp (modelInfo->id.textureImageInfo, TEXTURE_IMAGE);
-                LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Texture resources " 
-                                                 << "[" << modelInfo->id.textureImageInfo << "]"
-                                                 << std::endl; 
+                for (size_t i = 0; i < modelInfo->path.diffuseTextureImages.size(); i++) {
+                    uint32_t textureImageInfoId = modelInfo->id.diffuseTextureImageInfoBase + static_cast <uint32_t> (i);
+                    VKImageMgr::cleanUp (textureImageInfoId, TEXTURE_IMAGE);
+                    LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Texture resources " 
+                                                     << "[" << textureImageInfoId << "]"
+                                                     << std::endl; 
+                }
                 /* |------------------------------------------------------------------------------------------------|
                  * | DESTROY SWAP CHAIN RESOURCES                                                                   |
                  * |------------------------------------------------------------------------------------------------|
@@ -235,13 +238,13 @@ namespace Renderer {
                                                  << "[" << resourceId << "]"
                                                  << std::endl;   
                 /* |------------------------------------------------------------------------------------------------|
-                 * | DESTROY MODEL INFO                                                                             |
+                 * | DESTROY HAND OFF INFO                                                                          |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                VKModelMgr::cleanUp (modelInfoId);
-                LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Model info " 
-                                                 << "[" << modelInfoId << "]"
-                                                 << std::endl; 
+                VKDrawSequence::cleanUp (handOffInfoId);
+                LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Hand off info " 
+                                                 << "[" << handOffInfoId << "]"
+                                                 << std::endl;
                 /* |------------------------------------------------------------------------------------------------|
                  * | DESTROY CAMERA INFO                                                                            |
                  * |------------------------------------------------------------------------------------------------|
@@ -251,22 +254,22 @@ namespace Renderer {
                                                  << "[" << cameraInfoId << "]"
                                                  << std::endl; 
                 /* |------------------------------------------------------------------------------------------------|
-                 * | DESTROY HAND OFF INFO                                                                          |
+                 * | DESTROY MODEL INFO                                                                             |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                VKDrawSequence::cleanUp (handOffInfoId);
-                LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Hand off info " 
-                                                 << "[" << handOffInfoId << "]"
-                                                 << std::endl;
+                VKModelMgr::cleanUp (modelInfoId);
+                LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Model info " 
+                                                 << "[" << modelInfoId << "]"
+                                                 << std::endl; 
                 /* |------------------------------------------------------------------------------------------------|
                  * | DUMP METHODS                                                                                   |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                dumpModelInfoPool();
                 dumpImageInfoPool();
                 dumpBufferInfoPool();   
                 dumpRenderPassInfoPool();  
                 dumpPipelineInfoPool();
+                dumpModelInfoPool();
                 dumpCameraInfoPool();
                 dumpFenceInfoPool();
                 dumpSemaphoreInfoPool();

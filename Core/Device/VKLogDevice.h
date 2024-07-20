@@ -2,11 +2,13 @@
 #define VK_LOG_DEVICE_H
 
 #include "VKValidation.h"
+#include "VKPhyDevice.h"
 
 using namespace Collections;
 
 namespace Renderer {
-    class VKLogDevice: protected virtual VKValidation {
+    class VKLogDevice: protected virtual VKValidation,
+                       protected virtual VKPhyDevice {
         private:
             static Log::Record* m_VKLogDeviceLog;
             const size_t m_instanceId = g_collectionsId++;
@@ -23,7 +25,7 @@ namespace Renderer {
             }
 
         protected:
-            void createLogicalDevice (uint32_t resourceId) {
+            void createLogDevice (uint32_t resourceId) {
                 auto deviceInfo = getDeviceInfo();
                 /* The creation of a logical device involves specifying a bunch of details in structs again, of which 
                  * the first one will be VkDeviceQueueCreateInfo. This structure describes the number of queues we want 
@@ -54,18 +56,7 @@ namespace Renderer {
 
                     queueCreateInfos.push_back (createInfo);
                 }
-                /* The next information to specify is the set of device features that we'll be using. These are the 
-                 * features that we can query for with vkGetPhysicalDeviceFeatures
-                */
-                VkPhysicalDeviceFeatures deviceFeatures{};
-                /* Enable anisotropy feature for the texture sampler. Note that, even though it is very unlikely that a 
-                 * modern graphics card will not support it, we still check if it is available when picking the physical
-                 * device
-                */
-                deviceFeatures.samplerAnisotropy = VK_TRUE;
-                /* Enable sample shading
-                */
-                deviceFeatures.sampleRateShading = VK_TRUE;
+ 
                 /* With the previous two structures in place, we can start filling in the main VkDeviceCreateInfo 
                  * structure
                 */
@@ -73,8 +64,9 @@ namespace Renderer {
                 createInfo.sType                = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
                 createInfo.queueCreateInfoCount = static_cast <uint32_t> (queueCreateInfos.size());
                 createInfo.pQueueCreateInfos    = queueCreateInfos.data();
-                createInfo.pEnabledFeatures     = &deviceFeatures;
-
+                /* Note that, if we are using pNext, then pEnabledFeatures will have to be null as required by the spec
+                */
+                createInfo.pEnabledFeatures     = VK_NULL_HANDLE;
                 /* The remainder of the information bears a resemblance to the VkInstanceCreateInfo struct and requires 
                  * you to specify extensions and validation layers. The difference is that these are device specific this 
                  * time
@@ -98,6 +90,51 @@ namespace Renderer {
                 createInfo.enabledExtensionCount   = static_cast <uint32_t> (deviceInfo->meta.deviceExtensions.size());
                 createInfo.ppEnabledExtensionNames = deviceInfo->meta.deviceExtensions.data();
 
+                /* The next information to specify is the set of device features that we'll be using
+                 * (1) Core 1.0 features
+                 * These are the set of features that were available from the initial 1.0 release of Vulkan. The list of 
+                 * features can be found in VkPhysicalDeviceFeatures, we can selectively set the features that we require
+                 * by setting the boolean in an empty VkPhysicalDeviceFeatures struct, or use vkGetPhysicalDeviceFeatures
+                 * function to enable all supported features and pass it to VkDeviceCreateInfo
+                 * 
+                 * (2) Future core version features
+                 * With Vulkan 1.1+ some new features were added to the core version of Vulkan. To keep the size of 
+                 * VkPhysicalDeviceFeatures backward compatible, new structs were created to hold the grouping of 
+                 * features, for example VkPhysicalDeviceVulkan11Features, VkPhysicalDeviceVulkan12Features
+                 * 
+                 * (3) Extension features
+                 * Sometimes extensions contain features in order to enable certain aspects of the extension. These are 
+                 * easily found as they are all labeled as VkPhysicalDevice[ExtensionName]Features
+                 * 
+                 * Note that, for the core 1.0 features, this is as simple as setting VkDeviceCreateInfo::pEnabledFeatures
+                 * with the features desired to be turned on (only if we are not using pNext), and for all features, 
+                 * including the Core 1.0 Features, use VkPhysicalDeviceFeatures2 to pass into VkDeviceCreateInfo.pNext
+                */
+                VkPhysicalDeviceFeatures requiredFeatures{};
+                /* Enable only the following device features
+                 * (1) samplerAnisotropy
+                 * (2) sampleRateShading
+                 * 
+                 * Note that, even though it is very unlikely that a modern graphics card will not support it, we still 
+                 * check if it is available when picking the physical device
+                */
+                requiredFeatures.samplerAnisotropy = VK_TRUE;
+                requiredFeatures.sampleRateShading = VK_TRUE;
+
+                VkPhysicalDeviceDescriptorIndexingFeatures descriptorIndexingFeatures{};
+                descriptorIndexingFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES;
+                descriptorIndexingFeatures.pNext = VK_NULL_HANDLE;
+                /* Enable only the following descriptor indexing features, note that we have queried for their support 
+                 * already while selecting the phy device
+                 * (1) runtimeDescriptorArray
+                */
+                descriptorIndexingFeatures.runtimeDescriptorArray = VK_TRUE;
+
+                auto requiredFeatures2 = getPhyDeviceFeatures2 (deviceInfo->shared.phyDevice,
+                                                                requiredFeatures,
+                                                                &descriptorIndexingFeatures,
+                                                                false);
+                createInfo.pNext = &requiredFeatures2;
                 /* We're now ready to instantiate the logical device
                  * NOTE: Logical devices don't interact directly with instances, which is why it's not included as a 
                  * parameter while creating or destroying it
@@ -105,7 +142,7 @@ namespace Renderer {
                 VkDevice logDevice;
                 VkResult result = vkCreateDevice (deviceInfo->shared.phyDevice, 
                                                   &createInfo, 
-                                                  nullptr, 
+                                                  VK_NULL_HANDLE, 
                                                   &logDevice);
                 if (result != VK_SUCCESS) {
                     LOG_ERROR (m_VKLogDeviceLog) << "Failed to create logic device " 
@@ -142,7 +179,7 @@ namespace Renderer {
 
             void cleanUp (void) {
                 auto deviceInfo = getDeviceInfo();
-                vkDestroyDevice (deviceInfo->shared.logDevice, nullptr);
+                vkDestroyDevice (deviceInfo->shared.logDevice, VK_NULL_HANDLE);
             }
     };
 

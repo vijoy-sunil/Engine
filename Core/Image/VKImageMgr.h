@@ -157,7 +157,7 @@ namespace Renderer {
                 VkImageView imageView;
                 VkResult result = vkCreateImageView (deviceInfo->shared.logDevice, 
                                                      &createInfo, 
-                                                     nullptr,
+                                                     VK_NULL_HANDLE,
                                                      &imageView);
                 if (result != VK_SUCCESS) {
                     LOG_ERROR (m_VKImageMgrLog) << "Failed to create image view " 
@@ -259,7 +259,7 @@ namespace Renderer {
                 else {
                     createInfo.sharingMode           = VK_SHARING_MODE_EXCLUSIVE;
                     createInfo.queueFamilyIndexCount = 0;
-                    createInfo.pQueueFamilyIndices   = nullptr; 
+                    createInfo.pQueueFamilyIndices   = VK_NULL_HANDLE; 
                 }
 
                 /* There are some optional flags for images that are related to sparse images. Sparse images are images 
@@ -270,7 +270,7 @@ namespace Renderer {
                 createInfo.flags = 0; 
 
                 VkImage image;
-                VkResult result = vkCreateImage (deviceInfo->shared.logDevice, &createInfo, nullptr, &image);
+                VkResult result = vkCreateImage (deviceInfo->shared.logDevice, &createInfo, VK_NULL_HANDLE, &image);
                 if (result != VK_SUCCESS) {
                     LOG_ERROR (m_VKImageMgrLog) << "Failed to create image " 
                                                 << "[" << imageInfoId << "]"
@@ -297,7 +297,7 @@ namespace Renderer {
                 deviceInfo->meta.memoryAllocationCount++;
 
                 VkDeviceMemory imageMemory;
-                result = vkAllocateMemory (deviceInfo->shared.logDevice, &allocInfo, nullptr, &imageMemory);
+                result = vkAllocateMemory (deviceInfo->shared.logDevice, &allocInfo, VK_NULL_HANDLE, &imageMemory);
                 if (result != VK_SUCCESS) {
                     LOG_ERROR (m_VKImageMgrLog) << "Failed to allocate image memory " 
                                                 << "[" << imageInfoId << "]"
@@ -530,11 +530,11 @@ namespace Renderer {
                 /* If we are cleaning up swap chain resources, we are only going to delete the associated image view. The
                  * destroy swap chain method will take care of the rest
                 */
-                vkDestroyImageView (deviceInfo->shared.logDevice, imageInfo->resource.imageView,   nullptr);
+                vkDestroyImageView (deviceInfo->shared.logDevice, imageInfo->resource.imageView,   VK_NULL_HANDLE);
 
                 if (type != SWAPCHAIN_IMAGE) {
-                vkDestroyImage     (deviceInfo->shared.logDevice, imageInfo->resource.image,       nullptr);
-                vkFreeMemory       (deviceInfo->shared.logDevice, imageInfo->resource.imageMemory, nullptr);
+                vkDestroyImage     (deviceInfo->shared.logDevice, imageInfo->resource.image,       VK_NULL_HANDLE);
+                vkFreeMemory       (deviceInfo->shared.logDevice, imageInfo->resource.imageMemory, VK_NULL_HANDLE);
                 }
                 deleteImageInfo    (imageInfo, type);
             }

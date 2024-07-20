@@ -45,7 +45,20 @@ namespace Renderer {
                         /* Extensions for enabling swap chain, since image presentation is heavily tied into the window 
                          * system and the surfaces associated with windows, it is not actually part of the Vulkan core
                         */
-                        VK_KHR_SWAPCHAIN_EXTENSION_NAME
+                        VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+                        /* Extensions to enable descriptor indexing and bindless (run time) descriptor arrays. With 
+                         * bindless, the shader author does not need to know the upper limit of the array, and from the 
+                         * application side the implemeneter only needs to be sure they do not cause the shader to index 
+                         * outside of a valid range of bound descriptors
+                         * 
+                         * Features supported by this extension include
+                         * (1) Update after bind            [application side]
+                         * (2) Partially bound              [application side]
+                         * (3) Dynamic non uniform indexing [shader side]
+                         * (4) Run time descriptor array    [shader side]
+                        */
+                        VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME,
+                        VK_KHR_MAINTENANCE_3_EXTENSION_NAME
                     }; 
                 } meta;
 
@@ -203,7 +216,7 @@ namespace Renderer {
                 auto deviceInfo = getDeviceInfo();
                 vkDestroySwapchainKHR (deviceInfo->shared.logDevice, 
                                        deviceInfo->unique[resourceId].swapChain.swapChain, 
-                                       nullptr);
+                                       VK_NULL_HANDLE);
             }
     };
 

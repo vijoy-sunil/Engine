@@ -15,9 +15,9 @@ namespace Renderer {
             uint32_t m_modelInfoId;
             uint32_t m_vertexBufferInfoId;
             uint32_t m_indexBufferInfoId;
-            std::vector <uint32_t> m_uniformBufferInfoIds;
+            uint32_t m_uniformBufferInfoIdBase;
             uint32_t m_swapChainImageInfoIdBase;
-            uint32_t m_textureImageInfoId;
+            uint32_t m_diffuseTextureImageInfoIdBase;
             uint32_t m_depthImageInfoId;
             uint32_t m_multiSampleImageInfoId;
 
@@ -32,18 +32,38 @@ namespace Renderer {
 
         public:
             RDApplication (void) {
-                m_deviceResourcesCount     = 1;
-
-                m_modelInfoId              = 0;
-                m_vertexBufferInfoId       = 1;
-                m_indexBufferInfoId        = 2;
-                m_uniformBufferInfoIds     = { 
-                                                3, 4 
-                                             };
-                m_swapChainImageInfoIdBase = 0;
-                m_textureImageInfoId       = 0;
-                m_depthImageInfoId         = 0;
-                m_multiSampleImageInfoId   = 0;
+                m_deviceResourcesCount            = 1;
+                m_modelInfoId                     = 0;
+                /* Info id overview
+                 * |--------------------|--------------------|
+                 * | MODEL INFO ID      |   0                |
+                 * |--------------------|--------------------|
+                 * | STAGING_BUFFER     |   0, 1,    2, 3, 4 |
+                 * |--------------------|   ^  ^     ^  ^  ^ |
+                 * | VERTEX_BUFFER      |   0  :     :  :  : |
+                 * |--------------------|      :     :  :  : |
+                 * | INDEX_BUFFER       |   1 >:     :  :  : |
+                 * |--------------------|            :  :  : |
+                 * | UNIFORM_BUFFER     |   2, 3     :  :  : |
+                 * |--------------------|            :  :  : |
+                 *                                   :  :  : |
+                 * |--------------------|            :  :  : |
+                 * | SWAPCHAIN_IMAGE    |   0, 1, 2  :  :  : |
+                 * |--------------------|            :  :  : |
+                 * | TEXTURE_IMAGE      |   2, 3, 4 >: >: >: |
+                 * |--------------------|                    |
+                 * | DEPTH_IMAGE        |   0                |
+                 * |--------------------|                    |
+                 * | MULTISAMPLE_IMAGE  |   0                |
+                 * |--------------------|--------------------|
+                */
+                m_vertexBufferInfoId            = 0;
+                m_indexBufferInfoId             = 1;
+                m_uniformBufferInfoIdBase       = 2;
+                m_swapChainImageInfoIdBase      = 0;
+                m_diffuseTextureImageInfoIdBase = 2;
+                m_depthImageInfoId              = 0;
+                m_multiSampleImageInfoId        = 0;
 
                 m_renderPassInfoId         = 0;
                 m_pipelineInfoId           = 0;
@@ -63,31 +83,29 @@ namespace Renderer {
                 auto infoIds      = std::vector {
                                                     m_vertexBufferInfoId, 
                                                     m_indexBufferInfoId, 
+                                                    m_uniformBufferInfoIdBase,
                                                     m_swapChainImageInfoIdBase,
-                                                    m_textureImageInfoId, 
+                                                    m_diffuseTextureImageInfoIdBase, 
                                                     m_depthImageInfoId, 
                                                     m_multiSampleImageInfoId
-                                                };
-                auto infoIdGroups = std::vector {
-                                                    {m_uniformBufferInfoIds}
                                                 };
                 /* Scene #1
                  * Single model - single texture
                 */
                 readyModelInfo (m_modelInfoId,
                                 g_pathSettings.model,
-                                g_pathSettings.textureImage,
+                                g_pathSettings.mtlFileDir,
                                 g_pathSettings.vertexShaderBinary,
                                 g_pathSettings.fragmentShaderBinary,
-                                infoIds, infoIdGroups);
+                                infoIds);
 
                 TransformInfo transformInfo{};
                 transformInfo.model.translate      = {0.0f,  0.0f,  0.0f};
-                transformInfo.model.rotateAxis     = {0.0f,  0.0f,  1.0f};
+                transformInfo.model.rotateAxis     = {0.0f,  1.0f,  0.0f};
                 transformInfo.model.scale          = {1.0f,  1.0f,  1.0f};
                 transformInfo.model.rotateAngleDeg = 0.0f; 
 
-                transformInfo.camera.position  = {0.0f,  0.0f, -2.0f};
+                transformInfo.camera.position  = {0.0f,  0.0f, -4.0f};
                 transformInfo.camera.center    = {0.0f,  0.0f,  0.0f};
                 transformInfo.camera.upVector  = {0.0f, -1.0f,  0.0f};
                 transformInfo.camera.fovDeg    = 45.0f;
@@ -109,7 +127,7 @@ namespace Renderer {
                 */
                 while (!glfwWindowShouldClose (deviceInfo->unique[m_resourceId].window)) {
                     glfwPollEvents();
-#if 0
+#if 1
                     auto handOffInfo = getHandOffInfo (m_handOffInfoId);
                     /* Calculate the time in seconds since rendering has started with floating point accuracy
                     */

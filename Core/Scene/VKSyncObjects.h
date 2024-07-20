@@ -126,7 +126,7 @@ namespace Renderer {
                 VkSemaphore semaphore;
                 VkResult result = vkCreateSemaphore (deviceInfo->shared.logDevice, 
                                                      &createInfo, 
-                                                     nullptr, 
+                                                     VK_NULL_HANDLE, 
                                                      &semaphore);
                 if (result != VK_SUCCESS) {
                     LOG_ERROR (m_VKSyncObjectsLog) << "Failed to create semaphore " 
@@ -179,7 +179,7 @@ namespace Renderer {
                 VkFence fence;
                 VkResult result = vkCreateFence (deviceInfo->shared.logDevice, 
                                                  &createInfo, 
-                                                 nullptr, 
+                                                 VK_NULL_HANDLE, 
                                                  &fence);
                 if (result != VK_SUCCESS) {
                     LOG_ERROR (m_VKSyncObjectsLog) << "Failed to create fence " 
@@ -270,7 +270,7 @@ namespace Renderer {
 
                 vkDestroySemaphore  (deviceInfo->shared.logDevice, 
                                      semaphoreInfo->resource.semaphore, 
-                                     nullptr);
+                                     VK_NULL_HANDLE);
                 deleteSemaphoreInfo (semaphoreInfo, type);
             }
 
@@ -280,7 +280,7 @@ namespace Renderer {
 
                 vkDestroyFence  (deviceInfo->shared.logDevice, 
                                  fenceInfo->resource.fence, 
-                                 nullptr);
+                                 VK_NULL_HANDLE);
                 deleteFenceInfo (fenceInfo, type); 
             }
     };

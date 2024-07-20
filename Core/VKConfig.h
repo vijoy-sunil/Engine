@@ -9,7 +9,7 @@ namespace Renderer {
 #define DEBUG_DISABLE               (false)
 /* Manually inject vertex attributes and indices instead of populating them from imported model, usefult for testing
 */
-#define OVERRIDE_MODEL_IMPORT       (true)
+#define OVERRIDE_MODEL_IMPORT       (false)
 /* Window settings (resolution is in screen coordinates)
 */
 struct windowSettings {
@@ -17,17 +17,16 @@ struct windowSettings {
     const int height  = 600;
     const char* title = "WINDOW_";
 } g_windowSettings;
-
 /* File/directory path settings
 */
 struct pathSettings {
-    const char* logSaveDir           = "Build/Log/";
-    const char* vertexShaderBinary   = "Build/Bin/vert.spv";
-    const char* fragmentShaderBinary = "Build/Bin/frag.spv"; 
-    const char* model                = "SandBox/Models/model_1.obj";
-    const char* textureImage         = "SandBox/Textures/tex_512x512_rg.png";
+    const char* logSaveDir            = "Build/Log/";
+    const char* model                 = "SandBox/Models/Model_3.obj";
+    const char* mtlFileDir            = "SandBox/Models/";
+    const char* defaultDiffuseTexture = "SandBox/Textures/tex_10x10_#D91EFF.png";
+    const char* vertexShaderBinary    = "Build/Bin/vert.spv";
+    const char* fragmentShaderBinary  = "Build/Bin/frag.spv"; 
 } g_pathSettings;
- 
 /* Frames in flight
  * As of now, we are required to wait on the previous frame to finish before we can start rendering the next which 
  * results in unnecessary idling of the host. The way to fix this is to allow multiple frames to be in-flight at once, 

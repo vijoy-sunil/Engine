@@ -220,7 +220,7 @@ namespace Renderer {
                 else {
                     createInfo.imageSharingMode      = VK_SHARING_MODE_EXCLUSIVE;
                     createInfo.queueFamilyIndexCount = 0;
-                    createInfo.pQueueFamilyIndices   = nullptr;
+                    createInfo.pQueueFamilyIndices   = VK_NULL_HANDLE;
                 }
 
                 /* We can specify that a certain transform should be applied to images in the swap chain if it is 
@@ -250,7 +250,7 @@ namespace Renderer {
                 VkSwapchainKHR swapChain;
                 VkResult result = vkCreateSwapchainKHR (deviceInfo->shared.logDevice, 
                                                         &createInfo, 
-                                                        nullptr, 
+                                                        VK_NULL_HANDLE, 
                                                         &swapChain);
                 if (result != VK_SUCCESS) {
                     LOG_ERROR (m_VKSwapChainImageLog) << "Failed to create swap chain "
@@ -265,7 +265,7 @@ namespace Renderer {
                 vkGetSwapchainImagesKHR (deviceInfo->shared.logDevice, 
                                          swapChain, 
                                          &swapChainSize, 
-                                         nullptr);
+                                         VK_NULL_HANDLE);
 
                 std::vector <VkImage> swapChainImages (swapChainSize);
                 vkGetSwapchainImagesKHR (deviceInfo->shared.logDevice, 

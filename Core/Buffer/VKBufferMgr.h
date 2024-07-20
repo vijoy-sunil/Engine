@@ -110,14 +110,14 @@ namespace Renderer {
                 else {
                     createInfo.sharingMode           = VK_SHARING_MODE_EXCLUSIVE;
                     createInfo.queueFamilyIndexCount = 0;
-                    createInfo.pQueueFamilyIndices   = nullptr; 
+                    createInfo.pQueueFamilyIndices   = VK_NULL_HANDLE; 
                 }
                 /* The flags parameter is used to configure sparse buffer memory, we'll leave it at the default value of 0
                 */
                 createInfo.flags = 0;
 
                 VkBuffer buffer;
-                VkResult result = vkCreateBuffer (deviceInfo->shared.logDevice, &createInfo, nullptr, &buffer);
+                VkResult result = vkCreateBuffer (deviceInfo->shared.logDevice, &createInfo, VK_NULL_HANDLE, &buffer);
                 if (result != VK_SUCCESS) {
                     LOG_ERROR (m_VKBufferMgrLog) << "Failed to create buffer " 
                                                  << "[" << bufferInfoId << "]"
@@ -169,7 +169,7 @@ namespace Renderer {
                 deviceInfo->meta.memoryAllocationCount++;
 
                 VkDeviceMemory bufferMemory;
-                result = vkAllocateMemory (deviceInfo->shared.logDevice, &allocInfo, nullptr, &bufferMemory);
+                result = vkAllocateMemory (deviceInfo->shared.logDevice, &allocInfo, VK_NULL_HANDLE, &bufferMemory);
                 if (result != VK_SUCCESS) {
                     LOG_ERROR (m_VKBufferMgrLog) << "Failed to allocate buffer memory " 
                                                  << "[" << bufferInfoId << "]"
@@ -190,7 +190,7 @@ namespace Renderer {
                 BufferInfo info{};
                 info.meta.id                    = bufferInfoId;
                 info.meta.size                  = size;
-                info.meta.bufferMapped          = nullptr;
+                info.meta.bufferMapped          = VK_NULL_HANDLE;
                 info.resource.buffer            = buffer;
                 info.resource.bufferMemory      = bufferMemory;
                 info.params.usage               = usage;
@@ -272,11 +272,11 @@ namespace Renderer {
                 auto bufferInfo = getBufferInfo (bufferInfoId, type);
                 auto deviceInfo = getDeviceInfo();
 
-                vkDestroyBuffer  (deviceInfo->shared.logDevice, bufferInfo->resource.buffer,       nullptr);
+                vkDestroyBuffer  (deviceInfo->shared.logDevice, bufferInfo->resource.buffer,       VK_NULL_HANDLE);
                 /* Memory that is bound to a buffer object may be freed once the buffer is no longer used, so let's free 
                  * it after the buffer has been destroyed
                 */
-                vkFreeMemory     (deviceInfo->shared.logDevice, bufferInfo->resource.bufferMemory, nullptr);
+                vkFreeMemory     (deviceInfo->shared.logDevice, bufferInfo->resource.bufferMemory, VK_NULL_HANDLE);
                 deleteBufferInfo (bufferInfo, type);
             } 
     };

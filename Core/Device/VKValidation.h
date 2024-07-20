@@ -39,7 +39,7 @@ namespace Renderer {
             */
             bool checkValidationLayerSupport (void) {
                 uint32_t layerCount = 0;
-                vkEnumerateInstanceLayerProperties (&layerCount, nullptr);
+                vkEnumerateInstanceLayerProperties (&layerCount, VK_NULL_HANDLE);
                 std::vector <VkLayerProperties> availableLayers (layerCount);
                 vkEnumerateInstanceLayerProperties (&layerCount, availableLayers.data());
 
@@ -108,7 +108,7 @@ namespace Renderer {
                 
                 auto func = (PFN_vkCreateDebugUtilsMessengerEXT) vkGetInstanceProcAddr (instance, 
                                                                  "vkCreateDebugUtilsMessengerEXT");
-                if (func != nullptr)
+                if (func != VK_NULL_HANDLE)
                     return func (instance, pCreateInfo, pAllocator, pDebugMessenger);
                 else
                     return VK_ERROR_EXTENSION_NOT_PRESENT;
@@ -123,7 +123,7 @@ namespace Renderer {
                 
                 auto func = (PFN_vkDestroyDebugUtilsMessengerEXT) vkGetInstanceProcAddr (instance, 
                                                                   "vkDestroyDebugUtilsMessengerEXT");
-                if (func != nullptr)
+                if (func != VK_NULL_HANDLE)
                     func (instance, debugMessenger, pAllocator);
             }
 
@@ -189,7 +189,7 @@ namespace Renderer {
                                               VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT    | 
                                               VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
                 createInfo.pfnUserCallback  = debugCallback;
-                createInfo.pUserData        = nullptr;
+                createInfo.pUserData        = VK_NULL_HANDLE;
             }
             
             void setupDebugMessenger (void) {
@@ -205,7 +205,7 @@ namespace Renderer {
                 */
                 VkResult result = CreateDebugUtilsMessengerEXT (deviceInfo->shared.instance, 
                                                                 &createInfo, 
-                                                                nullptr, 
+                                                                VK_NULL_HANDLE, 
                                                                 &m_debugMessenger);
                 if (result != VK_SUCCESS) {
                     LOG_ERROR (m_VKValidationLog) << "Failed to set up debug messenger " 
@@ -220,7 +220,7 @@ namespace Renderer {
                 if (isValidationLayersEnabled())
                     DestroyDebugUtilsMessengerEXT (deviceInfo->shared.instance, 
                                                    m_debugMessenger, 
-                                                   nullptr);            
+                                                   VK_NULL_HANDLE);            
             }
     };
 
