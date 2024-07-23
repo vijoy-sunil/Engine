@@ -11,7 +11,7 @@ namespace Renderer {
     class VKQueue: protected virtual VKDeviceMgr {
         private:
             static Log::Record* m_VKQueueLog;
-            const size_t m_instanceId = g_collectionsId++;
+            const uint32_t m_instanceId = g_collectionsId++;
             
         public:
             VKQueue (void) {

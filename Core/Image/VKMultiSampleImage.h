@@ -9,7 +9,7 @@ namespace Renderer {
     class VKMultiSampleImage: protected virtual VKImageMgr {
         private:
             static Log::Record* m_VKMultiSampleImageLog;
-            const size_t m_instanceId = g_collectionsId++; 
+            const uint32_t m_instanceId = g_collectionsId++; 
 
         public:
             VKMultiSampleImage (void) {

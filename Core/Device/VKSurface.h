@@ -9,7 +9,7 @@ namespace Renderer {
     class VKSurface: protected virtual VKDeviceMgr {
         private:
             static Log::Record* m_VKSurfaceLog;
-            const size_t m_instanceId = g_collectionsId++;
+            const uint32_t m_instanceId = g_collectionsId++;
 
         public:
             VKSurface (void) {

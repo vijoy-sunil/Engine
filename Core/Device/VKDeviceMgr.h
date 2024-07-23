@@ -41,7 +41,7 @@ namespace Renderer {
                     const std::vector <const char*> deviceExtensions = {
 #if __APPLE__
                         "VK_KHR_portability_subset",
-#endif
+#endif  // __APPLE__
                         /* Extensions for enabling swap chain, since image presentation is heavily tied into the window 
                          * system and the surfaces associated with windows, it is not actually part of the Vulkan core
                         */
@@ -96,6 +96,7 @@ namespace Renderer {
                     /* Sample points for MSAA (multi sample anit aliasing)
                     */
                     VkSampleCountFlagBits sampleCount;
+                    uint32_t maxPushConstantsSize;
                     uint32_t maxMemoryAllocationCount;
                     /* maxAnisotropy is the anisotropy value clamp used by the sampler, it limits the amount of texel 
                      * samples that can be used to calculate the final color
@@ -105,7 +106,7 @@ namespace Renderer {
             } m_deviceInfo;
 
             static Log::Record* m_VKDeviceMgrLog;
-            const size_t m_instanceId = g_collectionsId++;
+            const uint32_t m_instanceId = g_collectionsId++;
 
         public:
             VKDeviceMgr (void) {
@@ -202,6 +203,10 @@ namespace Renderer {
                                             << "[" << string_VkSampleCountFlagBits 
                                                       (deviceInfo->params.sampleCount) << "]"
                                             << std::endl; 
+
+                LOG_INFO (m_VKDeviceMgrLog) << "Max push constants size "
+                                            << "[" << deviceInfo->params.maxPushConstantsSize << "]"
+                                            << std::endl;
 
                 LOG_INFO (m_VKDeviceMgrLog) << "Max memory allocation count "
                                             << "[" << deviceInfo->params.maxMemoryAllocationCount << "]"

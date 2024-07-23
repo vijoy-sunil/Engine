@@ -34,6 +34,9 @@ layout (location = 0) out vec4 outColor;
  * Note that, only the final binding in a descriptor set can have a variable size
 */
 layout (binding = 1) uniform sampler2D texSampler[];
+layout (push_constant) uniform FragShaderVarsPC {
+    uint texId;
+} fragShaderVars;
 
 /* The main function is called for every fragment just like the vertex shader main function is called for every vertex
 */
@@ -48,9 +51,13 @@ void main (void) {
      * data using colors is the shader programming equivalent of printf debugging, for lack of a better option
      * outColor = vec4 (fragTexCoord, 0.0, 1.0);
     */
-
-    /* Textures are sampled using the built-in texture function. It takes a sampler and coordinate as arguments. The 
-     * sampler automatically takes care of the filtering and transformations in the background
+    /* Replace texture at this id with another texture whose id is specified via push constants
     */
-    outColor = texture (texSampler[fragTexId], fragTexCoord);
+    if (fragTexId == 0)
+        /* Textures are sampled using the built-in texture function. It takes a sampler and coordinate as arguments. The 
+         * sampler automatically takes care of the filtering and transformations in the background
+        */
+        outColor = texture (texSampler[fragShaderVars.texId], fragTexCoord);
+    else
+        outColor = texture (texSampler[fragTexId], fragTexCoord);
 }

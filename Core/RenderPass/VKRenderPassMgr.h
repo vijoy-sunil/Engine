@@ -9,21 +9,18 @@ namespace Renderer {
     class VKRenderPassMgr: protected virtual VKDeviceMgr {
         private:
             struct RenderPassInfo {
-                struct Meta {
+                struct Resource {
                     std::vector <VkAttachmentDescription> attachments;
                     std::vector <VkSubpassDescription>    subPasses;
                     std::vector <VkSubpassDependency>     dependencies;
-                } meta;
-
-                struct Resource {
+                    std::vector <VkFramebuffer>           framebuffers;
                     VkRenderPass renderPass;
-                    std::vector <VkFramebuffer> framebuffers;
                 } resource;
             };
             std::map <uint32_t, RenderPassInfo> m_renderPassInfoPool{};
 
             static Log::Record* m_VKRenderPassMgrLog;
-            const size_t m_instanceId = g_collectionsId++;
+            const uint32_t m_instanceId = g_collectionsId++;
             
             void deleteRenderPassInfo (uint32_t renderPassInfoId) {
                 if (m_renderPassInfoPool.find (renderPassInfoId) != m_renderPassInfoPool.end()) {
@@ -67,12 +64,12 @@ namespace Renderer {
 
                 VkRenderPassCreateInfo createInfo{};
                 createInfo.sType           = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-                createInfo.attachmentCount = static_cast <uint32_t> (renderPassInfo->meta.attachments.size());
-                createInfo.pAttachments    = renderPassInfo->meta.attachments.data();
-                createInfo.subpassCount    = static_cast <uint32_t> (renderPassInfo->meta.subPasses.size());
-                createInfo.pSubpasses      = renderPassInfo->meta.subPasses.data();
-                createInfo.dependencyCount = static_cast <uint32_t> (renderPassInfo->meta.dependencies.size());
-                createInfo.pDependencies   = renderPassInfo->meta.dependencies.data();
+                createInfo.attachmentCount = static_cast <uint32_t> (renderPassInfo->resource.attachments.size());
+                createInfo.pAttachments    = renderPassInfo->resource.attachments.data();
+                createInfo.subpassCount    = static_cast <uint32_t> (renderPassInfo->resource.subPasses.size());
+                createInfo.pSubpasses      = renderPassInfo->resource.subPasses.data();
+                createInfo.dependencyCount = static_cast <uint32_t> (renderPassInfo->resource.dependencies.size());
+                createInfo.pDependencies   = renderPassInfo->resource.dependencies.data();
 
                 VkRenderPass renderPass;
                 VkResult result = vkCreateRenderPass (deviceInfo->shared.logDevice, 
@@ -111,15 +108,15 @@ namespace Renderer {
                                                     << std::endl;
 
                     LOG_INFO (m_VKRenderPassMgrLog) << "Attachment count " 
-                                                    << "[" << val.meta.attachments.size() << "]"
+                                                    << "[" << val.resource.attachments.size() << "]"
                                                     << std::endl;
 
                     LOG_INFO (m_VKRenderPassMgrLog) << "Subpass count " 
-                                                    << "[" << val.meta.subPasses.size() << "]"
+                                                    << "[" << val.resource.subPasses.size() << "]"
                                                     << std::endl; 
 
                     LOG_INFO (m_VKRenderPassMgrLog) << "Dependency count " 
-                                                    << "[" << val.meta.dependencies.size() << "]"
+                                                    << "[" << val.resource.dependencies.size() << "]"
                                                     << std::endl;
 
                     LOG_INFO (m_VKRenderPassMgrLog) << "Framebuffer count " 

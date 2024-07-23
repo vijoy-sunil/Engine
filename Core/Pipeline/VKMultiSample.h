@@ -11,7 +11,7 @@ namespace Renderer {
                          protected virtual VKImageMgr {
         private:
             static Log::Record* m_VKMultiSampleLog;
-            const size_t m_instanceId = g_collectionsId++;
+            const uint32_t m_instanceId = g_collectionsId++;
             
         public:
             VKMultiSample (void) {

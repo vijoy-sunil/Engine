@@ -12,7 +12,7 @@ namespace Renderer {
     class VKModelMatrix: protected virtual VKModelMgr {
         private:
             static Log::Record* m_VKModelMatrixLog;
-            const size_t m_instanceId = g_collectionsId++;
+            const uint32_t m_instanceId = g_collectionsId++;
             
         public:
             VKModelMatrix (void) {

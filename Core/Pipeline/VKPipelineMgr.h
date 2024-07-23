@@ -80,7 +80,7 @@ namespace Renderer {
             std::map <uint32_t, PipelineInfo> m_pipelineInfoPool{};
 
             static Log::Record* m_VKPipelineMgrLog;
-            const size_t m_instanceId = g_collectionsId++;
+            const uint32_t m_instanceId = g_collectionsId++;
             
             void deletePipelineInfo (uint32_t pipelineInfoId) {
                 if (m_pipelineInfoPool.find (pipelineInfoId) != m_pipelineInfoPool.end()) {

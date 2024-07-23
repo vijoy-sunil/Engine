@@ -33,21 +33,21 @@ namespace Admin {
     */
     class InstanceMgr {
         protected:
-            std::map <size_t, NonTemplateBase*> m_instancePool;
+            std::map <uint32_t, NonTemplateBase*> m_instancePool;
 
         public:
             ~InstanceMgr (void) {
                 closeAllInstances();
             }
 
-            NonTemplateBase* getInstance (size_t instanceId) {
+            NonTemplateBase* getInstance (uint32_t instanceId) {
                 if (m_instancePool.find (instanceId) != m_instancePool.end())
                     return m_instancePool[instanceId];
                 else
-                    throw std::runtime_error ("Unable to find instance id");
+                    throw std::runtime_error ("Failed to find instance id");
             }
 
-            void closeInstance (size_t instanceId) {
+            void closeInstance (uint32_t instanceId) {
                 if (m_instancePool.find (instanceId) != m_instancePool.end()) {
                     delete m_instancePool[instanceId];
                     /* Remove from map, so you are able to reuse the instance id
@@ -59,7 +59,6 @@ namespace Admin {
             void closeAllInstances (void) {
                 for (auto const& [key, val]: m_instancePool)
                     delete m_instancePool[key];
-
                 /* Clear all entries in pool
                 */
                 m_instancePool.clear();

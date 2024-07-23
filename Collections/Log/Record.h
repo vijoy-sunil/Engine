@@ -32,7 +32,7 @@ namespace Log {
 
     class Record: public Admin::NonTemplateBase {
         private:
-            size_t m_instanceId;
+            uint32_t m_instanceId;
             std::string m_callingFile;
             std::string m_saveDir;
             size_t m_bufferCapacity;
@@ -100,12 +100,12 @@ namespace Log {
                 */
                 if (file.peek() == std::ifstream::traits_type::eof()) {
                     if (remove (filePath) != 0)
-                        throw std::runtime_error ("Unable to delete file");
+                        throw std::runtime_error ("Failed to delete file");
                 }
             }
 
         public:
-            Record (size_t instanceId, 
+            Record (uint32_t instanceId, 
                     std::string callingFile,
                     std::string saveDir,
                     size_t bufferCapacity,
@@ -136,21 +136,22 @@ namespace Log {
                 clearConfig();
             }
 
-            void addConfig (e_level level, e_sink sink) {
+            void addConfig (e_level level, e_sink sink, const char* nameExtension = "") {
                 m_levelConfig[level] = sink;
                 /* Open file, note that for this sink we are in append mode
                 */
                 if (!m_fileImmediateReady && (sink & TO_FILE_IMMEDIATE)) { 
                     m_saveFilePathImmediate = m_saveDir + "i_" + 
                                               std::to_string (m_instanceId) + "_" +
-                                              m_callingFile + 
+                                              m_callingFile +
+                                              nameExtension +
                                               m_format;
 
                     m_saveFileImmediate.open (m_saveFilePathImmediate, 
                                               std::ios_base::app | std::ios_base::out);
 
                     if (!m_saveFileImmediate.is_open())
-                        throw std::runtime_error ("Unable to open file for TO_FILE_IMMEDIATE sink");
+                        throw std::runtime_error ("Failed to open file for TO_FILE_IMMEDIATE sink");
                     
                     m_fileImmediateReady = true;
                 }
@@ -173,7 +174,7 @@ namespace Log {
                                               std::ios_base::out);
                                               
                     if (!m_saveFileBuffered.is_open())
-                        throw std::runtime_error ("Unable to open file for TO_FILE_BUFFER_CIRCULAR sink");
+                        throw std::runtime_error ("Failed to open file for TO_FILE_BUFFER_CIRCULAR sink");
 
                     m_fileBufferedReady = true;
                 }
@@ -233,7 +234,7 @@ namespace Log {
 
             std::string getHeader (e_level level,
                                    const char* callingFunction, 
-                                   const size_t line,
+                                   uint32_t line,
                                    bool enHeader) {
                 /* Skip header for lightweight logging
                 */

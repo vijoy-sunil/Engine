@@ -9,7 +9,7 @@ namespace Renderer {
     class VKSwapChainImage: protected virtual VKImageMgr {
         private:
             static Log::Record* m_VKSwapChainImageLog;
-            const size_t m_instanceId = g_collectionsId++; 
+            const uint32_t m_instanceId = g_collectionsId++; 
 
             /* If the swapChainAdequate conditions were met (see physical device support function) then the support is 
              * definitely sufficient, but there may still be many different modes of varying optimality. We'll need to 

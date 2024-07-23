@@ -9,7 +9,7 @@ namespace Renderer {
     class VKInstance: protected virtual VKValidation {
         private:
             static Log::Record* m_VKInstanceLog;
-            const size_t m_instanceId = g_collectionsId++;
+            const uint32_t m_instanceId = g_collectionsId++;
             /* List of instance level extensions
             */
             std::vector <const char*> m_instanceExtensions;
@@ -39,7 +39,7 @@ namespace Renderer {
                 */
                 m_instanceExtensions.emplace_back (VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
                 m_instanceExtensions.emplace_back (VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
-#endif
+#endif  // __APPLE__
 
                 /* The validation layers will print debug messages to the standard output by default, but we can also 
                  * handle them ourselves by providing an explicit callback in our program. Set up a debug messenger 
@@ -161,7 +161,7 @@ namespace Renderer {
                 createInfo.ppEnabledExtensionNames = m_instanceExtensions.data();
 #if __APPLE__
                 createInfo.flags |= VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
-#endif
+#endif  // __APPLE__
                 /* Verify instance extension support
                 */
                 if (!checkInstanceExtensionSupport()) {

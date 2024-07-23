@@ -33,7 +33,7 @@ namespace Renderer {
                             protected virtual VKDrawSequence {
         private:
             static Log::Record* m_VKDeleteSequenceLog;
-            const size_t m_instanceId = g_collectionsId++;
+            const uint32_t m_instanceId = g_collectionsId++;
 
         public:
             VKDeleteSequence (void) {
@@ -131,8 +131,8 @@ namespace Renderer {
                  * | DESTROY UNIFORM BUFFERS                                                                        |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                for (size_t i = 0; i < g_maxFramesInFlight; i++) {
-                    uint32_t uniformBufferInfoId = modelInfo->id.uniformBufferInfoBase + static_cast <uint32_t> (i); 
+                for (uint32_t i = 0; i < g_maxFramesInFlight; i++) {
+                    uint32_t uniformBufferInfoId = modelInfo->id.uniformBufferInfoBase + i; 
                     VKBufferMgr::cleanUp (uniformBufferInfoId, UNIFORM_BUFFER);
                     LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Uniform buffer " 
                                                      << "[" << uniformBufferInfoId << "]"

@@ -9,7 +9,7 @@ namespace Renderer {
     class VKVertexInput: protected virtual VKPipelineMgr {
         private:
             static Log::Record* m_VKVertexInputLog;
-            const size_t m_instanceId = g_collectionsId++;
+            const uint32_t m_instanceId = g_collectionsId++;
             
         public:
             VKVertexInput (void) {

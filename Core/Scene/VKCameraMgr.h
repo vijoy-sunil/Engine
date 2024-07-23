@@ -29,7 +29,7 @@ namespace Renderer {
             std::map <uint32_t, CameraInfo> m_cameraInfoPool{};
 
             static Log::Record* m_VKCameraMgrLog;
-            const size_t m_instanceId = g_collectionsId++;
+            const uint32_t m_instanceId = g_collectionsId++;
 
             void deleteCameraInfo (uint32_t cameraInfoId) {
                 if (m_cameraInfoPool.find (cameraInfoId) != m_cameraInfoPool.end()) {

@@ -13,8 +13,18 @@ namespace Renderer {
         private:
             struct ModelInfo {
                 struct Meta {
-                    uint32_t uniqueVerticesCount;
+                    /* The attributes are combined into one array of vertices, this is known as interleaving vertex 
+                     * attributes
+                    */
+                    std::vector <Vertex> vertices;
+                    /* Note that it is possible to use either uint16_t or uint32_t for your index buffer depending on the
+                     * number of entries in vertices, you also have to specify the correct type when binding the index 
+                     * buffer
+                    */
+                    std::vector <uint32_t> indices;
+                    uint32_t verticesCount;
                     uint32_t indicesCount;
+                    uint32_t parsedDataLogInstanceId;
                     glm::mat4 modelMatrix;
                 } meta;
 
@@ -37,15 +47,6 @@ namespace Renderer {
                 } id;
 
                 struct Resource {
-                    /* The attributes are combined into one array of vertices, this is known as interleaving vertex 
-                     * attributes
-                    */
-                    std::vector <Vertex> vertices;
-                    /* Note that it is possible to use either uint16_t or uint32_t for your index buffer depending on the
-                     * number of entries in vertices, you also have to specify the correct type when binding the index 
-                     * buffer
-                    */
-                    std::vector <uint32_t> indices;
                     VkSampler textureSampler;
                     VkDescriptorPool descriptorPool;
                     std::vector <VkDescriptorSet> descriptorSets;
@@ -54,10 +55,13 @@ namespace Renderer {
             std::map <uint32_t, ModelInfo> m_modelInfoPool{};
             
             static Log::Record* m_VKModelMgrLog;
-            const size_t m_instanceId = g_collectionsId++; 
+            const uint32_t m_instanceId = g_collectionsId++; 
 
             void deleteModelInfo (uint32_t modelInfoId) {
                 if (m_modelInfoPool.find (modelInfoId) != m_modelInfoPool.end()) {
+                    /* Delete parsed model data log
+                    */
+                    LOG_CLOSE (m_modelInfoPool[modelInfoId].meta.parsedDataLogInstanceId);
                     m_modelInfoPool.erase (modelInfoId);
                     return;
                 }
@@ -66,6 +70,38 @@ namespace Renderer {
                                             << "[" << modelInfoId << "]"          
                                             << std::endl;
                 throw std::runtime_error ("Failed to delete model info");   
+            }
+
+            void dumpParsedModelData (uint32_t modelInfoId) {
+                auto modelInfo     = getModelInfo (modelInfoId);
+                auto parsedDataLog = GET_LOG (modelInfo->meta.parsedDataLogInstanceId);
+
+                LOG_INFO (parsedDataLog) << "Dumping parsed model data "
+                                         << "[" << modelInfoId << "]"
+                                         << std::endl;
+
+                LOG_INFO (parsedDataLog) << "Vertex data"
+                                         << std::endl;
+                for (auto const& vertex: modelInfo->meta.vertices) {
+                LOG_INFO (parsedDataLog) << "[" << vertex.pos.x      << ", " << vertex.pos.y      << ", " 
+                                                << vertex.pos.z      << "] "
+                                         << "[" << vertex.texCoord.x << ", " << vertex.texCoord.y << "] "
+                                         << "[" << vertex.normal.x   << ", " << vertex.normal.y   << ", "
+                                                << vertex.normal.z   << "] "
+                                         << "[" << vertex.texId      << "]"
+                                         << std::endl;
+                }
+
+                LOG_INFO (parsedDataLog) << "Index data"
+                                         << std::endl;
+                uint32_t loopIdx = 0;
+                while (loopIdx < modelInfo->meta.indicesCount) {
+                LOG_INFO (parsedDataLog) << "[" << modelInfo->meta.indices[loopIdx++] << ", "
+                                                << modelInfo->meta.indices[loopIdx++] << ", "
+                                                << modelInfo->meta.indices[loopIdx++]
+                                         << "]"
+                                         << std::endl;
+                }
             }
 
         public:
@@ -96,8 +132,13 @@ namespace Renderer {
                 }
 
                 ModelInfo info{};
+                info.meta.parsedDataLogInstanceId   = g_collectionsId++;
                 info.path.model                     = modelPath;
                 info.path.mtlFileDir                = mtlFileDirPath;
+                /* Add default diffuse texture as the fist entry in the group of textures. This way, faces with no 
+                 * texture (material_ids = -1) can sample from this default texture
+                */
+                info.path.diffuseTextureImages.push_back (g_pathSettings.defaultDiffuseTexture);
                 info.path.vertexShaderBinary        = vertexShaderBinaryPath;
                 info.path.fragmentShaderBinary      = fragmentShaderBinaryPath;
 
@@ -110,24 +151,30 @@ namespace Renderer {
                 info.id.multiSampleImageInfo        = infoIds[6];
 
                 m_modelInfoPool[modelInfoId]        = info;
+                /* Config log for parsed model data
+                */
+                std::string nameExtension = "_PD_" + std::to_string (modelInfoId);
+                LOG_INIT       (info.meta.parsedDataLogInstanceId, g_pathSettings.logSaveDir);
+                LOG_ADD_CONFIG (info.meta.parsedDataLogInstanceId, 
+                                Log::INFO, 
+                                Log::TO_FILE_IMMEDIATE, 
+                                nameExtension.c_str());
             }
 
             void createVertices (uint32_t modelInfoId, 
                                  const std::vector <Vertex>& vertices) {
 
                 auto modelInfo = getModelInfo (modelInfoId);
-
-                modelInfo->meta.uniqueVerticesCount = static_cast <uint32_t> (vertices.size());
-                modelInfo->resource.vertices        = vertices;
+                modelInfo->meta.verticesCount = static_cast <uint32_t> (vertices.size());
+                modelInfo->meta.vertices      = vertices;
             }
 
             void createIndices (uint32_t modelInfoId,
                                 const std::vector <uint32_t>& indices) {
 
                 auto modelInfo = getModelInfo (modelInfoId);
-
                 modelInfo->meta.indicesCount = static_cast <uint32_t> (indices.size());
-                modelInfo->resource.indices  = indices;
+                modelInfo->meta.indices      = indices;
             }
 
             /* OBJ file format
@@ -216,22 +263,26 @@ namespace Renderer {
                                                 << std::endl;
                     throw std::runtime_error ("Failed to import model");
                 }
-                /* Add default diffuse texture as the fist entry in the group of textures. This way, faces with no 
-                 * texture (material_ids = -1) can sample from this default texture
-                */
-                modelInfo->path.diffuseTextureImages.push_back (g_pathSettings.defaultDiffuseTexture);
-                /* Extract texture image paths from .mtl file
+
+                if (materials.size() == 0) {
+                    LOG_WARNING (m_VKModelMgrLog) << "Failed to find .mtl file "
+                                                  << "[" << modelInfo->path.mtlFileDir << "]"
+                                                  << std::endl;
+                } 
+                /* Extract texture image paths from .mtl file if any
                  * [O] Diffuse texure
                  * [X] Other textures like specular, emission etc.
                 */
-                for (auto const& material: materials) {
-                    modelInfo->path.diffuseTextureImages.push_back (material.diffuse_texname);
-                }
-                if (materials.size() == 0) {
-                    LOG_WARNING (m_VKModelMgrLog) << "Failed to find any material info "
-                                                  << "[" << modelInfo->path.mtlFileDir << "]"
-                                                  << std::endl;
-                }             
+                else {
+                    for (auto const& material: materials) {
+                        if (!material.diffuse_texname.empty())
+                            modelInfo->path.diffuseTextureImages.push_back (material.diffuse_texname);
+                        else
+                            LOG_WARNING (m_VKModelMgrLog) << "Failed to find diffuse textures "
+                                                          << "[" << modelInfo->path.mtlFileDir << "]"
+                                                          << std::endl;
+                    } 
+                }           
                 /* Map to take advantage of indices vector (index buffer). Note that, to be able to use std::unordered_map
                  * with a user-defined key-type, you need to define two thing:
                  * (1) A hash function; this must be a class that overrides operator() and calculates the hash value given
@@ -246,6 +297,10 @@ namespace Renderer {
                 std::unordered_map <Vertex, uint32_t> uniqueVertices{};
                 std::vector <Vertex>   vertices;
                 std::vector <uint32_t> indices;
+                const std::vector <glm::vec2> defaultTexCoords = {
+                    {0.0f, 0.0f}, {0.0f, 1.0f}, {1.0f, 0.0f},
+                    {0.0f, 1.0f}, {1.0f, 1.0f}, {1.0f, 0.0f}
+                };
                 /* Iterate overall all faces (may belong to different objects in a scene) and populate the vertex and 
                  * index vectors
                 */
@@ -254,8 +309,11 @@ namespace Renderer {
                      * so we can now directly iterate over the vertices and dump them straight into our vertices vector
                     */
                     const uint32_t verticesPerFace = 3;
+                    const uint32_t verticesPerQuad = 6;
                     uint32_t faceIndex             = 0;
+                    uint32_t quadIndex             = 0;
                     uint32_t indexProcessedCount   = 0;
+                    
                     for (auto const& index: shape.mesh.indices) {
                         Vertex vertex{};
                         /* The index variable is of type tinyobj::index_t, which contains the vertex_index, normal_index 
@@ -285,10 +343,11 @@ namespace Renderer {
                          * the u coordinate goes from 0.0 to 1.0, left to right
                          * the v coordinate goes from 0.0 to 1.0, top to bottom
                         */
-                        vertex.texCoord = {
-                                                   attrib.texcoords[2 * index.texcoord_index + 0],
-                                            1.0f - attrib.texcoords[2 * index.texcoord_index + 1]
-                                          };
+                        if (!attrib.texcoords.empty())
+                            vertex.texCoord = {
+                                                       attrib.texcoords[2 * index.texcoord_index + 0],
+                                                1.0f - attrib.texcoords[2 * index.texcoord_index + 1]
+                                              };
 
                         vertex.normal   = {
                                             attrib.normals[3 * index.normal_index + 0],
@@ -299,6 +358,12 @@ namespace Renderer {
                          * will allow us to use the default texture whose texture id is 0
                         */
                         vertex.texId = shape.mesh.material_ids[faceIndex] + 1;
+                        /* Manual uv mapping of default texture
+                        */
+                        if (vertex.texId == 0) {
+                            vertex.texCoord = defaultTexCoords[quadIndex];
+                            quadIndex       == verticesPerQuad - 1 ? quadIndex = 0: quadIndex++;
+                        }
                         /* To take advantage of the index buffer, we should keep only the unique vertices and use the 
                          * index buffer to reuse them whenever they come up. Every time we read a vertex from the OBJ 
                          * file, we check if we've already seen a vertex with the exact same position and texture 
@@ -322,8 +387,9 @@ namespace Renderer {
                         }
                     }
                 }
-                createVertices (modelInfoId, vertices);
-                createIndices  (modelInfoId, indices);
+                createVertices      (modelInfoId, vertices);
+                createIndices       (modelInfoId, indices);
+                dumpParsedModelData (modelInfoId);
             }
 
             ModelInfo* getModelInfo (uint32_t modelInfoId) {
@@ -345,12 +411,16 @@ namespace Renderer {
                                                << "[" << key << "]"
                                                << std::endl;
 
-                    LOG_INFO (m_VKModelMgrLog) << "Unique vertices count " 
-                                               << "[" << val.meta.uniqueVerticesCount << "]"
+                    LOG_INFO (m_VKModelMgrLog) << "Vertices count " 
+                                               << "[" << val.meta.verticesCount << "]"
                                                << std::endl;
 
                     LOG_INFO (m_VKModelMgrLog) << "Indices count " 
                                                << "[" << val.meta.indicesCount << "]"
+                                               << std::endl;
+
+                    LOG_INFO (m_VKModelMgrLog) << "Parsed model data log instance id " 
+                                               << "[" << val.meta.parsedDataLogInstanceId << "]"
                                                << std::endl;
 
                     LOG_INFO (m_VKModelMgrLog) << "Model matrix" 

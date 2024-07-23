@@ -39,7 +39,7 @@ namespace Renderer {
             std::map <e_bufferType, std::vector <BufferInfo>> m_bufferInfoPool{};
 
             static Log::Record* m_VKBufferMgrLog;
-            const size_t m_instanceId = g_collectionsId++;
+            const uint32_t m_instanceId = g_collectionsId++;
 
             void deleteBufferInfo (BufferInfo* bufferInfo, e_bufferType type) {
                 if (m_bufferInfoPool.find (type) != m_bufferInfoPool.end()) {

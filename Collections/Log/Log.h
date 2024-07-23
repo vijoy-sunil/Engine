@@ -5,8 +5,11 @@
 
 /* Macro overloading
 */
-#define GET_MACRO(_1, _2, _3, NAME, ...)        NAME
-#define LOG_INIT(...)                           GET_MACRO(__VA_ARGS__, LOG_INIT_A, LOG_INIT_B)(__VA_ARGS__)
+#define INIT_MACRO(_1, _2, _3, NAME, ...)       NAME
+#define CONFIG_MACRO(_1, _2, _3, _4, NAME, ...) NAME
+#define LOG_INIT(...)                           INIT_MACRO(__VA_ARGS__, LOG_INIT_A, LOG_INIT_B)(__VA_ARGS__)
+#define LOG_ADD_CONFIG(...)                     CONFIG_MACRO(__VA_ARGS__, LOG_ADD_CONFIG_A, LOG_ADD_CONFIG_B)(__VA_ARGS__)
+
 #define LOG_INIT_A(id, saveDir, bufferCap)      Log::recordMgr.initRecord (id,                                          \
                                                                            LOG_GET_FILE,                                \
                                                                            saveDir,                                     \
@@ -17,7 +20,10 @@
     
 #define LOG_CLOSE(id)                           Log::recordMgr.closeRecord (id)
 #define LOG_CLOSE_ALL                           Log::recordMgr.closeAllRecords()
-#define LOG_ADD_CONFIG(id, level, sink)         GET_LOG (id)->addConfig (level, sink);
+#define LOG_ADD_CONFIG_A(id, level, sink, nameExt)                                                                      \
+                                                GET_LOG (id)->addConfig (level, sink, nameExt);
+#define LOG_ADD_CONFIG_B(id, level, sink)       GET_LOG (id)->addConfig (level, sink);
+
 #define LOG_CLEAR_CONFIG(id)                    GET_LOG (id)->clearConfig();
 #define LOG_CLEAR_ALL_CONFIGS                   Log::recordMgr.clearAllConfigs();
 

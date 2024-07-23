@@ -9,7 +9,7 @@ namespace Renderer {
     class VKFrameBuffer: protected virtual VKRenderPassMgr {
         private:
             static Log::Record* m_VKFrameBufferLog;
-            const size_t m_instanceId = g_collectionsId++;
+            const uint32_t m_instanceId = g_collectionsId++;
             
         public:
             VKFrameBuffer (void) {

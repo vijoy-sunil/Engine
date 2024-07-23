@@ -9,7 +9,7 @@ namespace Renderer {
     class VKRasterization: protected virtual VKPipelineMgr {
         private:
             static Log::Record* m_VKRasterizationLog;
-            const size_t m_instanceId = g_collectionsId++;
+            const uint32_t m_instanceId = g_collectionsId++;
             
         public:
             VKRasterization (void) {

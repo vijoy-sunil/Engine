@@ -13,7 +13,7 @@ namespace Renderer {
                   protected virtual VKPipelineMgr {
         private:
             static Log::Record* m_VKCmdsLog;
-            const size_t m_instanceId = g_collectionsId++;
+            const uint32_t m_instanceId = g_collectionsId++;
 
         public:
             VKCmds (void) {
@@ -412,6 +412,18 @@ namespace Renderer {
                 vkCmdBindPipeline (commandBuffer, 
                                    bindPoint, 
                                    pipelineInfo->resource.pipeline);
+            }
+
+            void updatePushConstants (VkCommandBuffer commandBuffer,
+                                      uint32_t pipelineInfoId,
+                                      VkShaderStageFlags stageFlags, 
+                                      uint32_t offset, uint32_t size, const void* data) {
+                
+                auto pipelineInfo = getPipelineInfo (pipelineInfoId);
+                vkCmdPushConstants (commandBuffer,
+                                    pipelineInfo->resource.layout,
+                                    stageFlags, 
+                                    offset, size, data);
             }
 
             void bindVertexBuffers (VkCommandBuffer commandBuffer,

@@ -17,7 +17,7 @@ namespace Renderer {
                       protected virtual VKFrameBuffer {
         private:
             static Log::Record* m_VKResizingLog;
-            const size_t m_instanceId = g_collectionsId++;
+            const uint32_t m_instanceId = g_collectionsId++;
 
         public:
             VKResizing (void) {

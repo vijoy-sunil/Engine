@@ -7,11 +7,11 @@ namespace Collections {
 namespace Log {
     class RecordMgr: public Admin::InstanceMgr {
         public:
-            Record* initRecord (size_t instanceId, 
+            Record* initRecord (uint32_t instanceId, 
                                 std::string callingFile,
-                                std::string saveDir = "",
-                                size_t bufferCapacity = 0,
-                                const char* format = ".txt") {
+                                std::string saveDir       = "",
+                                size_t bufferCapacity     = 0,
+                                const char* format        = ".txt") {
             
                 /* Add record object to pool
                 */
@@ -31,7 +31,7 @@ namespace Log {
                     throw std::runtime_error ("Record instance id already exists");
             }
 
-            void closeRecord (size_t instanceId) {
+            void closeRecord (uint32_t instanceId) {
                 if (m_instancePool.find (instanceId) != m_instancePool.end()) { 
                     Record* c_record = static_cast <Record*> (m_instancePool[instanceId]);
 

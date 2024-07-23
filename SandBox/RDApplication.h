@@ -80,24 +80,31 @@ namespace Renderer {
 
             void createScene (void) {
                 setDeviceResourceCount (m_deviceResourcesCount);
-                auto infoIds      = std::vector {
-                                                    m_vertexBufferInfoId, 
-                                                    m_indexBufferInfoId, 
-                                                    m_uniformBufferInfoIdBase,
-                                                    m_swapChainImageInfoIdBase,
-                                                    m_diffuseTextureImageInfoIdBase, 
-                                                    m_depthImageInfoId, 
-                                                    m_multiSampleImageInfoId
-                                                };
-                /* Scene #1
-                 * Single model - single texture
+                /* |------------------------------------------------------------------------------------------------|
+                 * | READY MODEL INFO                                                                               |
+                 * |------------------------------------------------------------------------------------------------|
                 */
+                auto infoIds = std::vector {
+                                                m_vertexBufferInfoId, 
+                                                m_indexBufferInfoId, 
+                                                m_uniformBufferInfoIdBase,
+                                                m_swapChainImageInfoIdBase,
+                                                m_diffuseTextureImageInfoIdBase, 
+                                                m_depthImageInfoId, 
+                                                m_multiSampleImageInfoId
+                                           };
                 readyModelInfo (m_modelInfoId,
-                                g_pathSettings.model,
+                                g_pathSettings.models[3],
                                 g_pathSettings.mtlFileDir,
                                 g_pathSettings.vertexShaderBinary,
                                 g_pathSettings.fragmentShaderBinary,
                                 infoIds);
+                /* |------------------------------------------------------------------------------------------------|
+                 * | READY HAND OFF INFO                                                                            |
+                 * |------------------------------------------------------------------------------------------------|
+                */
+                readyHandOffInfo (m_handOffInfoId);
+                auto handOffInfo = getHandOffInfo (m_handOffInfoId);
 
                 TransformInfo transformInfo{};
                 transformInfo.model.translate      = {0.0f,  0.0f,  0.0f};
@@ -112,23 +119,52 @@ namespace Renderer {
                 transformInfo.camera.nearPlane = 0.1f;
                 transformInfo.camera.farPlane  = 10.0f;
 
+                FragShaderVarsPC fragShaderVars{};
+                fragShaderVars.texId = 0;
+
+                handOffInfo->meta.transformInfo  = transformInfo;
+                handOffInfo->meta.fragShaderVars = fragShaderVars;
+
                 VKInitSequence::runSequence (m_modelInfoId, 
                                              m_renderPassInfoId,
                                              m_pipelineInfoId,
                                              m_cameraInfoId,
                                              m_resourceId,
-                                             m_handOffInfoId,
-                                             transformInfo);
+                                             m_handOffInfoId);
             }
 
             void runScene (void) {
-                auto deviceInfo = getDeviceInfo();
-                /* Event loop to keep the application running until either an error occurs or the window is closed
+                auto deviceInfo  = getDeviceInfo();
+
+#if ENABLE_IDLE_ROTATION || ENABLE_CYCLE_TEXTURES
+                auto handOffInfo = getHandOffInfo (m_handOffInfoId);
+#endif  // ENABLE_IDLE_ROTATION || ENABLE_CYCLE_TEXTURES
+
+#if ENABLE_CYCLE_TEXTURES
+                auto modelInfo   = getModelInfo   (m_modelInfoId);
+                /* Array of textures that will be used to cycle through using push push constant
+                 *                                          V               V               V               V      
+                 * |----------------|---------------|---------------|---------------|---------------|---------------|
+                 * |    default     |   model       |   tex 0       |   tex 1       |   tex 2       |   tex 3       |
+                 * |    texture     |   textures    |               |               |               |               |
+                 * |----------------|---------------|---------------|---------------|---------------|---------------|
+                 *                                          ^
+                 *                                          offset
+                */
+                uint32_t cycleTexturesOffset = static_cast <uint32_t> (modelInfo->path.diffuseTextureImages.size() - 
+                                                                       g_pathSettings.cycleTextures.size());
+                uint32_t framesUntilNextDefaultTexture = g_framesPerCycleTexture;
+                handOffInfo->meta.fragShaderVars.texId = cycleTexturesOffset;
+#endif  // ENABLE_CYCLE_TEXTURES
+
+                /* |------------------------------------------------------------------------------------------------|
+                 * | EVENT LOOP                                                                                     |
+                 * |------------------------------------------------------------------------------------------------|
                 */
                 while (!glfwWindowShouldClose (deviceInfo->unique[m_resourceId].window)) {
                     glfwPollEvents();
-#if 1
-                    auto handOffInfo = getHandOffInfo (m_handOffInfoId);
+
+#if ENABLE_IDLE_ROTATION
                     /* Calculate the time in seconds since rendering has started with floating point accuracy
                     */
                     static auto startTime = std::chrono::high_resolution_clock::now();
@@ -136,11 +172,12 @@ namespace Renderer {
                     float time            = std::chrono::duration <float, std::chrono::seconds::period> 
                                             (currentTime - startTime).count();  
                     
-                    handOffInfo->resource.transformInfo.model.rotateAngleDeg  = time * 20.0f;
+                    handOffInfo->meta.transformInfo.model.rotateAngleDeg  = time * 20.0f;
 
                     m_refreshModelTransform  = true;
                     m_refreshCameraTransform = false;
-#endif
+#endif  // ENABLE_IDLE_ROTATION
+
                     VKDrawSequence::runSequence (m_modelInfoId, 
                                                  m_renderPassInfoId,
                                                  m_pipelineInfoId,
@@ -151,7 +188,20 @@ namespace Renderer {
                     /* Reset flags
                     */
                     m_refreshModelTransform  = false;
-                    m_refreshCameraTransform = false;                    
+                    m_refreshCameraTransform = false;       
+
+#if ENABLE_CYCLE_TEXTURES
+                    framesUntilNextDefaultTexture--;
+                    if (framesUntilNextDefaultTexture == 0) {
+                        framesUntilNextDefaultTexture    = g_framesPerCycleTexture;
+                        FragShaderVarsPC fragShaderVars  = handOffInfo->meta.fragShaderVars;
+                        fragShaderVars.texId             = (fragShaderVars.texId + 1) % static_cast <uint32_t> 
+                                                           (modelInfo->path.diffuseTextureImages.size());
+                        if (fragShaderVars.texId == 0)
+                            fragShaderVars.texId         = cycleTexturesOffset;
+                        handOffInfo->meta.fragShaderVars = fragShaderVars;
+                    }
+#endif  // ENABLE_CYCLE_TEXTURES             
                 }
                 /* Remember that all of the operations in the above render method are asynchronous. That means that when
                  * we exit the render loop, drawing and presentation operations may still be going on. Cleaning up

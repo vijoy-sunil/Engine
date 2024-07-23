@@ -9,7 +9,7 @@ namespace Renderer {
     class VKShaderStage: protected virtual VKPipelineMgr {
         private:
             static Log::Record* m_VKShaderStageLog;
-            const size_t m_instanceId = g_collectionsId++;
+            const uint32_t m_instanceId = g_collectionsId++;
 
             /* Read all of the bytes from the specified file and return them in a byte array managed by std::vector. This 
              * function is used to read shader binary files

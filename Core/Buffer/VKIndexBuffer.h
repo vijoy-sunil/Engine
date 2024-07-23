@@ -9,7 +9,7 @@ namespace Renderer {
     class VKIndexBuffer: protected virtual VKBufferMgr {
         private:
             static Log::Record* m_VKIndexBufferLog;
-            const size_t m_instanceId = g_collectionsId++; 
+            const uint32_t m_instanceId = g_collectionsId++; 
 
         public:
             VKIndexBuffer (void) {

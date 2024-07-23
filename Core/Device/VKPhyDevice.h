@@ -9,7 +9,7 @@ namespace Renderer {
     class VKPhyDevice: protected VKQueue {
         private:
             static Log::Record* m_VKPhyDeviceLog;
-            const size_t m_instanceId = g_collectionsId++;
+            const uint32_t m_instanceId = g_collectionsId++;
 
             bool checkDeviceExtensionSupport (VkPhysicalDevice phyDevice) {
                 auto deviceInfo = getDeviceInfo();
@@ -288,6 +288,7 @@ namespace Renderer {
 
                         deviceInfo->shared.phyDevice                = device;
                         deviceInfo->params.sampleCount              = getMaxUsableSampleCount();
+                        deviceInfo->params.maxPushConstantsSize     = properties.limits.maxPushConstantsSize;
                         deviceInfo->params.maxMemoryAllocationCount = properties.limits.maxMemoryAllocationCount;
                         deviceInfo->params.maxSamplerAnisotropy     = properties.limits.maxSamplerAnisotropy;
                         break;

@@ -11,7 +11,7 @@ namespace Renderer {
                         protected virtual VKImageMgr {
         private:
             static Log::Record* m_VKAttachmentLog;
-            const size_t m_instanceId = g_collectionsId++;
+            const uint32_t m_instanceId = g_collectionsId++;
             
         public:
             VKAttachment (void) {
@@ -68,7 +68,7 @@ namespace Renderer {
                 attachment.initialLayout  = VK_IMAGE_LAYOUT_UNDEFINED;
                 attachment.finalLayout    = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
-                renderPassInfo->meta.attachments.push_back (attachment);
+                renderPassInfo->resource.attachments.push_back (attachment);
             }
 
             void createDepthStencilAttachment (uint32_t renderPassInfoId, uint32_t imageInfoId) {
@@ -89,7 +89,7 @@ namespace Renderer {
                 attachment.initialLayout   = VK_IMAGE_LAYOUT_UNDEFINED;
                 attachment.finalLayout     = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL; 
 
-                renderPassInfo->meta.attachments.push_back (attachment);                 
+                renderPassInfo->resource.attachments.push_back (attachment);                 
             }
 
             /* Note that, multisampled images cannot be presented directly. We first need to resolve them to a regular
@@ -109,7 +109,7 @@ namespace Renderer {
                 attachment.initialLayout  = VK_IMAGE_LAYOUT_UNDEFINED;
                 attachment.finalLayout    = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;       
 
-                renderPassInfo->meta.attachments.push_back (attachment);         
+                renderPassInfo->resource.attachments.push_back (attachment);         
             }            
     };
 

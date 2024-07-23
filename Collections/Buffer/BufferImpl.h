@@ -13,7 +13,7 @@ namespace Buffer {
     template <typename T>
     class Buffer: public Admin::NonTemplateBase {
         private:
-            size_t m_instanceId;
+            uint32_t m_instanceId;
             e_type m_type;
             size_t m_capacity;
             size_t m_numItems;
@@ -32,7 +32,7 @@ namespace Buffer {
             }
 
         public:
-            Buffer (size_t instanceId, e_type type, size_t capacity) {
+            Buffer (uint32_t instanceId, e_type type, size_t capacity) {
                 m_instanceId = instanceId;
                 m_type       = type;
                 m_capacity   = capacity;

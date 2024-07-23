@@ -9,7 +9,7 @@ namespace Renderer {
     class VKWindow: protected virtual VKDeviceMgr {
         private:
             static Log::Record* m_VKWindowLog;
-            const size_t m_instanceId = g_collectionsId++;
+            const uint32_t m_instanceId = g_collectionsId++;
             /* Although many drivers and platforms trigger VK_ERROR_OUT_OF_DATE_KHR automatically after a window resize, 
              * it is not guaranteed to happen. That's why we'll add some extra code to also handle resizes explicitly
              * using this boolean

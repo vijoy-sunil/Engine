@@ -218,6 +218,8 @@
     |
     |<----------------------|VKDescriptorSetLayout
     |
+    |<----------------------|VKPushConstantRange
+    |
     |<----------------------|VKPipelineLayout
     |
     |<----------------------|{VKTextureSampler}

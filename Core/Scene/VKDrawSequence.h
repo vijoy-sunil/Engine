@@ -27,6 +27,11 @@ namespace Renderer {
             /* Data to be handed off between sequences are packed into this struct and saved to the pool
             */
             struct HandOffInfo {
+                struct Meta {
+                    TransformInfo transformInfo;
+                    FragShaderVarsPC fragShaderVars;
+                } meta;
+
                 struct Id {
                     std::vector <uint32_t> inFlightFenceInfos;
                     std::vector <uint32_t> imageAvailableSemaphoreInfos;
@@ -36,16 +41,16 @@ namespace Renderer {
                 struct Resource {
                     VkCommandPool commandPool;
                     std::vector <VkCommandBuffer> commandBuffers;
-                    TransformInfo transformInfo;
                 } resource;
             };
             std::map <uint32_t, HandOffInfo> m_handOffInfoPool{};
 
             static Log::Record* m_VKDrawSequenceLog;
-            const size_t m_instanceId = g_collectionsId++;
-            /* To use the right objects (command buffers and sync objects) every frame, keep track of the current frame
+            const uint32_t m_instanceId = g_collectionsId++;
+            /* To use the right objects (command buffers and sync objects) every frame, keep track of the current frame 
+             * in flight
             */
-            uint32_t m_currentFrame;
+            uint32_t m_currentFrameInFlight;
 
             void deleteHandOffInfo (uint32_t handOffInfoId) {
                 if (m_handOffInfoPool.find (handOffInfoId) != m_handOffInfoPool.end()) {
@@ -61,7 +66,7 @@ namespace Renderer {
 
         public:
             VKDrawSequence (void) {
-                m_currentFrame = 0;
+                m_currentFrameInFlight = 0;
 
                 m_VKDrawSequenceLog = LOG_INIT (m_instanceId, g_pathSettings.logSaveDir);
                 LOG_ADD_CONFIG (m_instanceId, Log::INFO,    Log::TO_FILE_IMMEDIATE);
@@ -101,7 +106,7 @@ namespace Renderer {
                  * frame's work to the command buffer until the current frame has finished executing, as we don't want to 
                  * overwrite the current contents of the command buffer while the GPU is using it
                 */
-                auto inFlightFenceInfoId = handOffInfo->id.inFlightFenceInfos[m_currentFrame];
+                auto inFlightFenceInfoId = handOffInfo->id.inFlightFenceInfos[m_currentFrameInFlight];
                 vkWaitForFences (deviceInfo->shared.logDevice, 
                                  1, 
                                  &getFenceInfo (inFlightFenceInfoId, FEN_IN_FLIGHT)->resource.fence, 
@@ -124,7 +129,7 @@ namespace Renderer {
                  * notified by the semaphore
                 */
                 uint32_t swapChainImageId;
-                auto imageAvailableSemaphoreInfoId = handOffInfo->id.imageAvailableSemaphoreInfos[m_currentFrame];
+                auto imageAvailableSemaphoreInfoId = handOffInfo->id.imageAvailableSemaphoreInfos[m_currentFrameInFlight];
                 VkResult result = vkAcquireNextImageKHR (deviceInfo->shared.logDevice, 
                                                          deviceInfo->unique[resourceId].swapChain.swapChain, 
                                                          UINT64_MAX, 
@@ -176,10 +181,10 @@ namespace Renderer {
                 */
                 if (refreshModelTransform == true) {
                     createModelMatrix (modelInfoId, 
-                                       handOffInfo->resource.transformInfo.model.translate,
-                                       handOffInfo->resource.transformInfo.model.rotateAxis, 
-                                       handOffInfo->resource.transformInfo.model.rotateAngleDeg,
-                                       handOffInfo->resource.transformInfo.model.scale);
+                                       handOffInfo->meta.transformInfo.model.translate,
+                                       handOffInfo->meta.transformInfo.model.rotateAxis, 
+                                       handOffInfo->meta.transformInfo.model.rotateAngleDeg,
+                                       handOffInfo->meta.transformInfo.model.scale);
                 }
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG DRAW OPS - CAMERA TRANSFORM                                                             |
@@ -187,9 +192,9 @@ namespace Renderer {
                 */
                 if (refreshCameraTransform == true) {
                     createViewMatrix (cameraInfoId, 
-                                      handOffInfo->resource.transformInfo.camera.position,
-                                      handOffInfo->resource.transformInfo.camera.center,
-                                      handOffInfo->resource.transformInfo.camera.upVector);
+                                      handOffInfo->meta.transformInfo.camera.position,
+                                      handOffInfo->meta.transformInfo.camera.center,
+                                      handOffInfo->meta.transformInfo.camera.upVector);
                 }
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG DRAW OPS - UPDATE UNIFORMS                                                              |
@@ -200,7 +205,7 @@ namespace Renderer {
                 mvpMatrix.view       = cameraInfo->meta.viewMatrix;
                 mvpMatrix.projection = cameraInfo->meta.projectionMatrix;
 
-                updateUniformBuffer (modelInfo->id.uniformBufferInfoBase + m_currentFrame,
+                updateUniformBuffer (modelInfo->id.uniformBufferInfoBase + m_currentFrameInFlight,
                                      sizeof (MVPMatrixUBO),
                                      &mvpMatrix);
                 /* |------------------------------------------------------------------------------------------------|
@@ -209,8 +214,8 @@ namespace Renderer {
                 */
                 /* First, we call vkResetCommandBuffer on the command buffer to make sure it is able to be recorded
                 */
-                vkResetCommandBuffer (handOffInfo->resource.commandBuffers[m_currentFrame], 0);
-                beginRecording       (handOffInfo->resource.commandBuffers[m_currentFrame], 0, VK_NULL_HANDLE);
+                vkResetCommandBuffer (handOffInfo->resource.commandBuffers[m_currentFrameInFlight], 0);
+                beginRecording       (handOffInfo->resource.commandBuffers[m_currentFrameInFlight], 0, VK_NULL_HANDLE);
                 /* Define the clear values to use for VK_ATTACHMENT_LOAD_OP_CLEAR, which we used as load operation for 
                  * the attachments. Note that, the order of clearValues should be identical to the order of your 
                  * attachments
@@ -235,24 +240,29 @@ namespace Renderer {
                         {{1.0f, 0}}
                     }
                 };
-                beginRenderPass      (handOffInfo->resource.commandBuffers[m_currentFrame],
+                beginRenderPass      (handOffInfo->resource.commandBuffers[m_currentFrameInFlight],
                                       renderPassInfoId,
                                       resourceId,
                                       swapChainImageId,
                                       clearValues);
 
-                bindPipeline         (handOffInfo->resource.commandBuffers[m_currentFrame],
+                bindPipeline         (handOffInfo->resource.commandBuffers[m_currentFrameInFlight],
                                       pipelineInfoId,
                                       VK_PIPELINE_BIND_POINT_GRAPHICS);
 
+                updatePushConstants  (handOffInfo->resource.commandBuffers[m_currentFrameInFlight],
+                                      pipelineInfoId,
+                                      VK_SHADER_STAGE_FRAGMENT_BIT,
+                                      0, sizeof (FragShaderVarsPC), &handOffInfo->meta.fragShaderVars);
+
                 auto secondaryViewPorts = std::vector <VkViewport> {};
-                setViewPorts         (handOffInfo->resource.commandBuffers[m_currentFrame],
+                setViewPorts         (handOffInfo->resource.commandBuffers[m_currentFrameInFlight],
                                       resourceId,
                                       0,
                                       secondaryViewPorts);
 
                 auto secondaryScissors = std::vector <VkRect2D> {};
-                setScissors          (handOffInfo->resource.commandBuffers[m_currentFrame],
+                setScissors          (handOffInfo->resource.commandBuffers[m_currentFrameInFlight],
                                       resourceId,
                                       0,
                                       secondaryScissors);
@@ -263,31 +273,31 @@ namespace Renderer {
                 auto offsets = std::vector <VkDeviceSize> {
                     0
                 };
-                bindVertexBuffers    (handOffInfo->resource.commandBuffers[m_currentFrame],
+                bindVertexBuffers    (handOffInfo->resource.commandBuffers[m_currentFrameInFlight],
                                       vertexBufferInfoIdsToBind,
                                       0,
                                       offsets);
 
-                bindIndexBuffer      (handOffInfo->resource.commandBuffers[m_currentFrame],
+                bindIndexBuffer      (handOffInfo->resource.commandBuffers[m_currentFrameInFlight],
                                       modelInfo->id.indexBufferInfo,
                                       0,
                                       VK_INDEX_TYPE_UINT32);
 
                 auto descriptorSetsToBind = std::vector {
-                    modelInfo->resource.descriptorSets[m_currentFrame]
+                    modelInfo->resource.descriptorSets[m_currentFrameInFlight]
                 };        
-                bindDescriptorSets   (handOffInfo->resource.commandBuffers[m_currentFrame],
+                bindDescriptorSets   (handOffInfo->resource.commandBuffers[m_currentFrameInFlight],
                                       0,
                                       descriptorSetsToBind,
                                       pipelineInfoId,
                                       VK_PIPELINE_BIND_POINT_GRAPHICS);
 
-                drawIndexed          (handOffInfo->resource.commandBuffers[m_currentFrame],
+                drawIndexed          (handOffInfo->resource.commandBuffers[m_currentFrameInFlight],
                                       modelInfo->meta.indicesCount,
                                       1, 0, 0, 0);
 
-                endRenderPass        (handOffInfo->resource.commandBuffers[m_currentFrame]);
-                endRecording         (handOffInfo->resource.commandBuffers[m_currentFrame]);  
+                endRenderPass        (handOffInfo->resource.commandBuffers[m_currentFrameInFlight]);
+                endRecording         (handOffInfo->resource.commandBuffers[m_currentFrameInFlight]);  
 
                 VkSubmitInfo drawOpsSubmitInfo{};
                 drawOpsSubmitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -309,11 +319,11 @@ namespace Renderer {
                 drawOpsSubmitInfo.pWaitSemaphores    = waitSemaphores.data();
                 drawOpsSubmitInfo.pWaitDstStageMask  = waitStages.data();
                 drawOpsSubmitInfo.commandBufferCount = 1;
-                drawOpsSubmitInfo.pCommandBuffers    = &handOffInfo->resource.commandBuffers[m_currentFrame];
+                drawOpsSubmitInfo.pCommandBuffers    = &handOffInfo->resource.commandBuffers[m_currentFrameInFlight];
                 /* The signalSemaphoreCount and pSignalSemaphores parameters specify which semaphores to signal once the 
                  * command buffer(s) have finished execution
                 */
-                auto renderDoneSemaphoreInfoId = handOffInfo->id.renderDoneSemaphoreInfos[m_currentFrame];
+                auto renderDoneSemaphoreInfoId = handOffInfo->id.renderDoneSemaphoreInfos[m_currentFrameInFlight];
                 auto signalSemaphores = std::vector {
                     getSemaphoreInfo (renderDoneSemaphoreInfoId, SEM_RENDER_DONE)->resource.semaphore 
                 };
@@ -404,10 +414,10 @@ namespace Renderer {
                     throw std::runtime_error ("Failed to present swap chain image");
                 } 
                 /* |------------------------------------------------------------------------------------------------|
-                 * | CONFIG DRAW OPS - UPDATE CURRENT FRAME COUNT                                                   |
+                 * | CONFIG DRAW OPS - UPDATE CURRENT FRAME IN FLIGHT COUNT                                         |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                m_currentFrame = (m_currentFrame + 1) % g_maxFramesInFlight;        
+                m_currentFrameInFlight = (m_currentFrameInFlight + 1) % g_maxFramesInFlight;        
             }
 
             void readyHandOffInfo (uint32_t handOffInfoId) {
@@ -441,6 +451,72 @@ namespace Renderer {
                                                    << "[" << key << "]"
                                                    << std::endl;
 
+                    LOG_INFO (m_VKDrawSequenceLog) << "Model transform info" 
+                                                   << std::endl;  
+                    LOG_INFO (m_VKDrawSequenceLog) << "Translate "
+                                                   << "[" << val.meta.transformInfo.model.translate.x << ", "
+                                                          << val.meta.transformInfo.model.translate.y << ", "
+                                                          << val.meta.transformInfo.model.translate.z
+                                                   << "]"  
+                                                   << std::endl;
+
+                    LOG_INFO (m_VKDrawSequenceLog) << "Rotate axis "
+                                                   << "[" << val.meta.transformInfo.model.rotateAxis.x << ", "
+                                                          << val.meta.transformInfo.model.rotateAxis.y << ", "
+                                                          << val.meta.transformInfo.model.rotateAxis.z
+                                                   << "]"  
+                                                   << std::endl;
+
+                    LOG_INFO (m_VKDrawSequenceLog) << "Scale "
+                                                   << "[" << val.meta.transformInfo.model.scale.x << ", "
+                                                          << val.meta.transformInfo.model.scale.y << ", "
+                                                          << val.meta.transformInfo.model.scale.z
+                                                   << "]"  
+                                                   << std::endl;                                                   
+
+                    LOG_INFO (m_VKDrawSequenceLog) << "Rotate angle degrees "
+                                                   << "[" << val.meta.transformInfo.model.rotateAngleDeg << "]" 
+                                                   << std::endl; 
+
+                    LOG_INFO (m_VKDrawSequenceLog) << "Camera transform info" 
+                                                   << std::endl;   
+                    LOG_INFO (m_VKDrawSequenceLog) << "Position "
+                                                   << "[" << val.meta.transformInfo.camera.position.x << ", "
+                                                          << val.meta.transformInfo.camera.position.y << ", "
+                                                          << val.meta.transformInfo.camera.position.z
+                                                   << "]"  
+                                                   << std::endl;
+
+                    LOG_INFO (m_VKDrawSequenceLog) << "Center "
+                                                   << "[" << val.meta.transformInfo.camera.center.x << ", "
+                                                          << val.meta.transformInfo.camera.center.y << ", "
+                                                          << val.meta.transformInfo.camera.center.z
+                                                   << "]"  
+                                                   << std::endl;
+
+                    LOG_INFO (m_VKDrawSequenceLog) << "Up vector "
+                                                   << "[" << val.meta.transformInfo.camera.upVector.x << ", "
+                                                          << val.meta.transformInfo.camera.upVector.y << ", "
+                                                          << val.meta.transformInfo.camera.upVector.z
+                                                   << "]"  
+                                                   << std::endl;  
+
+                    LOG_INFO (m_VKDrawSequenceLog) << "FOV degrees "
+                                                   << "[" << val.meta.transformInfo.camera.fovDeg << "]" 
+                                                   << std::endl;
+
+                    LOG_INFO (m_VKDrawSequenceLog) << "Near plane "
+                                                   << "[" << val.meta.transformInfo.camera.nearPlane << "]" 
+                                                   << std::endl;
+
+                    LOG_INFO (m_VKDrawSequenceLog) << "Far plane "
+                                                   << "[" << val.meta.transformInfo.camera.farPlane << "]" 
+                                                   << std::endl;  
+
+                    LOG_INFO (m_VKDrawSequenceLog) << "Fragment shader push constant texture id "
+                                                   << "[" << val.meta.fragShaderVars.texId << "]" 
+                                                   << std::endl;  
+
                     LOG_INFO (m_VKDrawSequenceLog) << "In flight fence info ids" 
                                                    << std::endl;
                     for (auto const& infoId: val.id.inFlightFenceInfos) 
@@ -461,69 +537,7 @@ namespace Renderer {
 
                     LOG_INFO (m_VKDrawSequenceLog) << "Command buffers count " 
                                                    << "[" << val.resource.commandBuffers.size() << "]"
-                                                   << std::endl;      
-
-                    LOG_INFO (m_VKDrawSequenceLog) << "Model transform info" 
-                                                   << std::endl;  
-                    LOG_INFO (m_VKDrawSequenceLog) << "Translate "
-                                                   << "[" << val.resource.transformInfo.model.translate.x << ", "
-                                                          << val.resource.transformInfo.model.translate.y << ", "
-                                                          << val.resource.transformInfo.model.translate.z
-                                                   << "]"  
-                                                   << std::endl;
-
-                    LOG_INFO (m_VKDrawSequenceLog) << "Rotate axis "
-                                                   << "[" << val.resource.transformInfo.model.rotateAxis.x << ", "
-                                                          << val.resource.transformInfo.model.rotateAxis.y << ", "
-                                                          << val.resource.transformInfo.model.rotateAxis.z
-                                                   << "]"  
-                                                   << std::endl;
-
-                    LOG_INFO (m_VKDrawSequenceLog) << "Scale "
-                                                   << "[" << val.resource.transformInfo.model.scale.x << ", "
-                                                          << val.resource.transformInfo.model.scale.y << ", "
-                                                          << val.resource.transformInfo.model.scale.z
-                                                   << "]"  
-                                                   << std::endl;                                                   
-
-                    LOG_INFO (m_VKDrawSequenceLog) << "Rotate angle degrees "
-                                                   << "[" << val.resource.transformInfo.model.rotateAngleDeg << "]" 
-                                                   << std::endl; 
-
-                    LOG_INFO (m_VKDrawSequenceLog) << "Camera transform info" 
-                                                   << std::endl;   
-                    LOG_INFO (m_VKDrawSequenceLog) << "Position "
-                                                   << "[" << val.resource.transformInfo.camera.position.x << ", "
-                                                          << val.resource.transformInfo.camera.position.y << ", "
-                                                          << val.resource.transformInfo.camera.position.z
-                                                   << "]"  
-                                                   << std::endl;
-
-                    LOG_INFO (m_VKDrawSequenceLog) << "Center "
-                                                   << "[" << val.resource.transformInfo.camera.center.x << ", "
-                                                          << val.resource.transformInfo.camera.center.y << ", "
-                                                          << val.resource.transformInfo.camera.center.z
-                                                   << "]"  
-                                                   << std::endl;
-
-                    LOG_INFO (m_VKDrawSequenceLog) << "Up vector "
-                                                   << "[" << val.resource.transformInfo.camera.upVector.x << ", "
-                                                          << val.resource.transformInfo.camera.upVector.y << ", "
-                                                          << val.resource.transformInfo.camera.upVector.z
-                                                   << "]"  
-                                                   << std::endl;  
-
-                    LOG_INFO (m_VKDrawSequenceLog) << "FOV degrees "
-                                                   << "[" << val.resource.transformInfo.camera.fovDeg << "]" 
-                                                   << std::endl;
-
-                    LOG_INFO (m_VKDrawSequenceLog) << "Near plane "
-                                                   << "[" << val.resource.transformInfo.camera.nearPlane << "]" 
-                                                   << std::endl;
-
-                    LOG_INFO (m_VKDrawSequenceLog) << "Far plane "
-                                                   << "[" << val.resource.transformInfo.camera.farPlane << "]" 
-                                                   << std::endl;                                                   
+                                                   << std::endl;                                                                         
                 }              
             }
 

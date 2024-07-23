@@ -87,5 +87,13 @@ namespace Renderer {
         alignas (16) glm::mat4 view;
         alignas (16) glm::mat4 projection;
     };
+
+    struct FragShaderVarsPC {
+        /* This texture id variable cycles through an array of textures at certain interval and the fragment shader 
+         * replaces a texture (for example, the default texture) by sampling from the array of textures indexed by this 
+         * variable using push constants
+        */
+        uint32_t texId;
+    };
 }   // namespace Renderer
 #endif  // VK_UNIFORMS_H

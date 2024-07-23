@@ -11,7 +11,7 @@ namespace Renderer {
                        protected virtual VKPhyDevice {
         private:
             static Log::Record* m_VKLogDeviceLog;
-            const size_t m_instanceId = g_collectionsId++;
+            const uint32_t m_instanceId = g_collectionsId++;
 
         public:
             VKLogDevice (void) {

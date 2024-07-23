@@ -46,7 +46,7 @@ namespace Renderer {
             std::map <e_syncType, std::vector <FenceInfo>> m_fenceInfoPool{};
 
             static Log::Record* m_VKSyncObjectsLog;
-            const size_t m_instanceId = g_collectionsId++;
+            const uint32_t m_instanceId = g_collectionsId++;
 
             void deleteSemaphoreInfo (SemaphoreInfo* semaphoreInfo, e_syncType type) {
                 if (m_semaphoreInfoPool.find (type) != m_semaphoreInfoPool.end()) {

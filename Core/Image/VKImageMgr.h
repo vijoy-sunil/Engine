@@ -50,7 +50,7 @@ namespace Renderer {
             std::map <e_imageType, std::vector <ImageInfo>> m_imageInfoPool{};
 
             static Log::Record* m_VKImageMgrLog;
-            const size_t m_instanceId = g_collectionsId++;
+            const uint32_t m_instanceId = g_collectionsId++;
 
             /* Helper function that tells us if the format contains a stencil component
             */

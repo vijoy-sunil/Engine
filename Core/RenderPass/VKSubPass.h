@@ -53,7 +53,7 @@ namespace Renderer {
     class VKSubPass: protected virtual VKRenderPassMgr {
         private:
             static Log::Record* m_VKSubPassLog;
-            const size_t m_instanceId = g_collectionsId++;
+            const uint32_t m_instanceId = g_collectionsId++;
             
         public:
             VKSubPass (void) {
@@ -160,7 +160,7 @@ namespace Renderer {
                 dependency.dstStageMask  = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
                 dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
 
-                renderPassInfo->meta.dependencies.push_back (dependency);
+                renderPassInfo->resource.dependencies.push_back (dependency);
             }
 
             /* It is possible that multiple frames are rendered simultaneously by the GPU. This is a problem when using 
@@ -192,7 +192,7 @@ namespace Renderer {
                                            VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
                 dependency.dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT; 
 
-                renderPassInfo->meta.dependencies.push_back (dependency);            
+                renderPassInfo->resource.dependencies.push_back (dependency);            
             }
 
             void createSubPass (uint32_t renderPassInfoId,
@@ -218,7 +218,7 @@ namespace Renderer {
                 */
                 subPass.pResolveAttachments = resolveAttachments.data();
 
-                renderPassInfo->meta.subPasses.push_back (subPass);
+                renderPassInfo->resource.subPasses.push_back (subPass);
             }
     };
 

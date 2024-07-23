@@ -29,7 +29,7 @@ namespace Renderer {
             };
 
             static Log::Record* m_VKValidationLog;
-            const size_t m_instanceId = g_collectionsId++;
+            const uint32_t m_instanceId = g_collectionsId++;
             /* Logging to a circular buffer requires us to specify the buffer capacity. A multiple of 3 will allow us to
              * save the validation message as a whole (msg, severity and type)
             */

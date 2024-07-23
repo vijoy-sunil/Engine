@@ -11,7 +11,7 @@ namespace Renderer {
                             protected virtual VKDeviceMgr {
         private:
             static Log::Record* m_VKTextureSamplerLog;
-            const size_t m_instanceId = g_collectionsId++;
+            const uint32_t m_instanceId = g_collectionsId++;
             
         public:
             VKTextureSampler (void) {

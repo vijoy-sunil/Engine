@@ -25,6 +25,7 @@
 #include "../Pipeline/VKColorBlend.h"
 #include "../Pipeline/VKDynamicState.h"
 #include "../Pipeline/VKDescriptorSetLayout.h"
+#include "../Pipeline/VKPushConstantRange.h"
 #include "../Pipeline/VKPipelineLayout.h"
 #include "../Model/VKTextureSampler.h"
 #include "../Model/VKDescriptor.h"
@@ -64,6 +65,7 @@ namespace Renderer {
                           protected VKColorBlend,
                           protected VKDynamicState,
                           protected VKDescriptorSetLayout,
+                          protected VKPushConstantRange,
                           protected VKPipelineLayout,
                           protected virtual VKTextureSampler,
                           protected virtual VKDescriptor,
@@ -82,7 +84,7 @@ namespace Renderer {
             const float m_maxLod = 13.0;
 
             static Log::Record* m_VKInitSequenceLog;
-            const size_t m_instanceId = g_collectionsId++;
+            const uint32_t m_instanceId = g_collectionsId++;
 
         public:
             VKInitSequence (void) {
@@ -100,19 +102,19 @@ namespace Renderer {
                               uint32_t pipelineInfoId,
                               uint32_t cameraInfoId, 
                               uint32_t resourceId,
-                              uint32_t handOffInfoId,
-                              const TransformInfo& transformInfo) {
+                              uint32_t handOffInfoId) {
 
-                auto modelInfo  = getModelInfo (modelInfoId);
-                auto deviceInfo = getDeviceInfo();
-#if DEBUG_DIASBLE
+                auto modelInfo   = getModelInfo   (modelInfoId);
+                auto handOffInfo = getHandOffInfo (handOffInfoId);
+                auto deviceInfo  = getDeviceInfo();
+#if ENABLE_LOGGING
+                enableValidationLayers();
+#else
                 LOG_INFO (m_VKInitSequenceLog) << "Disabling validation layers and logging" 
                                                << std::endl;
                 disableValidationLayers();
                 LOG_CLEAR_ALL_CONFIGS;
-#else
-                enableValidationLayers();
-#endif
+#endif  // ENABLE_LOGGING
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG WINDOW                                                                                  |
                  * |------------------------------------------------------------------------------------------------|
@@ -163,10 +165,10 @@ namespace Renderer {
                  * | IMPORT MODEL                                                                                   |
                  * |------------------------------------------------------------------------------------------------|
                 */
-#if OVERRIDE_MODEL_IMPORT
+#if ENABLE_MODEL_IMPORT
+                importOBJModel (modelInfoId);
+#else
                 uint32_t texId = 0;
-                modelInfo->path.diffuseTextureImages.push_back (g_pathSettings.defaultDiffuseTexture);
-
                 const std::vector <Vertex> vertices = {
                     /* pos, textCoord, normal, texId
                     */
@@ -182,12 +184,18 @@ namespace Renderer {
 
                 createVertices (modelInfoId, vertices);
                 createIndices  (modelInfoId, indices);
-#else
-                importOBJModel (modelInfoId);
-#endif
+#endif  // ENABLE_MODEL_IMPORT
                 LOG_INFO (m_VKInitSequenceLog) << "[OK] Import model " 
                                                << "[" << modelInfoId << "]"
-                                               << std::endl; 
+                                               << std::endl;                                    
+#if ENABLE_CYCLE_TEXTURES
+                /* Add textures to be cycled in place of another texture to the end of the array of texture paths. Note 
+                 * that, we will be using the texture coordinates of the default textures for the new textures in the 
+                 * cycle
+                */
+                for (auto const& path: g_pathSettings.cycleTextures)
+                    modelInfo->path.diffuseTextureImages.push_back (path);
+#endif  // ENABLE_CYCLE_TEXTURES
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG SWAP CHAIN RESOURCES                                                                    |
                  * |------------------------------------------------------------------------------------------------|
@@ -239,8 +247,8 @@ namespace Renderer {
                 */
                 createVertexBuffer (modelInfo->id.vertexBufferInfo, 
                                     resourceId,
-                                    modelInfo->meta.uniqueVerticesCount * sizeof (modelInfo->resource.vertices[0]),
-                                    modelInfo->resource.vertices.data());
+                                    modelInfo->meta.verticesCount * sizeof (modelInfo->meta.vertices[0]),
+                                    modelInfo->meta.vertices.data());
                 LOG_INFO (m_VKInitSequenceLog) << "[OK] Vertex buffer " 
                                                << "[" << modelInfo->id.vertexBufferInfo << "]"
                                                << " "
@@ -252,8 +260,8 @@ namespace Renderer {
                 */
                 createIndexBuffer (modelInfo->id.indexBufferInfo, 
                                    resourceId,
-                                   modelInfo->meta.indicesCount * sizeof (modelInfo->resource.indices[0]),
-                                   modelInfo->resource.indices.data());
+                                   modelInfo->meta.indicesCount * sizeof (modelInfo->meta.indices[0]),
+                                   modelInfo->meta.indices.data());
                 LOG_INFO (m_VKInitSequenceLog) << "[OK] Index buffer " 
                                                << "[" << modelInfo->id.indexBufferInfo << "]"
                                                << " "
@@ -268,8 +276,8 @@ namespace Renderer {
                  * reading from it. Thus, we need to have as many uniform buffers as we have frames in flight, and write 
                  * to a uniform buffer that is not currently being read by the GPU
                 */
-                for (size_t i = 0; i < g_maxFramesInFlight; i++) { 
-                    uint32_t uniformBufferInfoId = modelInfo->id.uniformBufferInfoBase + static_cast <uint32_t> (i);    
+                for (uint32_t i = 0; i < g_maxFramesInFlight; i++) { 
+                    uint32_t uniformBufferInfoId = modelInfo->id.uniformBufferInfoBase + i;    
                     createUniformBuffer (uniformBufferInfoId,
                                          resourceId,
                                          sizeof (MVPMatrixUBO));
@@ -515,6 +523,14 @@ namespace Renderer {
                 };
                 createDescriptorSetLayout (pipelineInfoId, layoutBindings, bindingFlags, 0);
                 /* |------------------------------------------------------------------------------------------------|
+                 * | CONFIG PUSH CONSTANT RANGES                                                                    |
+                 * |------------------------------------------------------------------------------------------------|
+                */
+                createPushConstantRange (pipelineInfoId, 
+                                         VK_SHADER_STAGE_FRAGMENT_BIT,
+                                         0, 
+                                         sizeof (FragShaderVarsPC));
+                /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG PIPELINE LAYOUT                                                                         |
                  * |------------------------------------------------------------------------------------------------|
                 */
@@ -556,16 +572,14 @@ namespace Renderer {
                  * |------------------------------------------------------------------------------------------------|
                 */
                 auto poolSizes = std::vector {
-                    getPoolSize (VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 
-                                 static_cast <uint32_t> (g_maxFramesInFlight)),
+                    getPoolSize (VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, g_maxFramesInFlight),
 
-                    getPoolSize (VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,  
-                                 static_cast <uint32_t> (modelInfo->path.diffuseTextureImages.size() * 
-                                                         g_maxFramesInFlight))
+                    getPoolSize (VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, static_cast <uint32_t> 
+                                (modelInfo->path.diffuseTextureImages.size()) * g_maxFramesInFlight)
                 };
                 createDescriptorPool (modelInfoId, 
                                       poolSizes, 
-                                      static_cast <uint32_t> (g_maxFramesInFlight), 
+                                      g_maxFramesInFlight, 
                                       0);
                 LOG_INFO (m_VKInitSequenceLog) << "[OK] Descriptor pool " 
                                                << "[" << modelInfoId << "]"
@@ -577,13 +591,13 @@ namespace Renderer {
                 createDescriptorSets (modelInfoId, 
                                       pipelineInfoId, 
                                       0, 
-                                      static_cast <uint32_t> (g_maxFramesInFlight));
+                                      g_maxFramesInFlight);
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG DESCRIPTOR SETS UPDATE                                                                  |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                for (size_t i = 0; i < g_maxFramesInFlight; i++) {
-                    uint32_t uniformBufferInfoId = modelInfo->id.uniformBufferInfoBase + static_cast <uint32_t> (i); 
+                for (uint32_t i = 0; i < g_maxFramesInFlight; i++) {
+                    uint32_t uniformBufferInfoId = modelInfo->id.uniformBufferInfoBase + i; 
                     auto bufferInfo              = getBufferInfo (uniformBufferInfoId, UNIFORM_BUFFER);
                     auto descriptorBufferInfos   = std::vector {
                         getDescriptorBufferInfo (bufferInfo->resource.buffer,
@@ -630,9 +644,10 @@ namespace Renderer {
                  * |------------------------------------------------------------------------------------------------|
                 */                                              
                 createModelMatrix (modelInfoId, 
-                                   transformInfo.model.translate,
-                                   transformInfo.model.rotateAxis, transformInfo.model.rotateAngleDeg,
-                                   transformInfo.model.scale);
+                                   handOffInfo->meta.transformInfo.model.translate,
+                                   handOffInfo->meta.transformInfo.model.rotateAxis, 
+                                   handOffInfo->meta.transformInfo.model.rotateAngleDeg,
+                                   handOffInfo->meta.transformInfo.model.scale);
                 LOG_INFO (m_VKInitSequenceLog) << "[OK] Model matrix " 
                                                << "[" << modelInfoId << "]"
                                                << std::endl;
@@ -643,12 +658,12 @@ namespace Renderer {
                 readyCameraInfo    (cameraInfoId);
                 createCameraMatrix (cameraInfoId, 
                                     resourceId,
-                                    transformInfo.camera.position,
-                                    transformInfo.camera.center,
-                                    transformInfo.camera.upVector,
-                                    transformInfo.camera.fovDeg, 
-                                    transformInfo.camera.nearPlane, 
-                                    transformInfo.camera.farPlane);
+                                    handOffInfo->meta.transformInfo.camera.position,
+                                    handOffInfo->meta.transformInfo.camera.center,
+                                    handOffInfo->meta.transformInfo.camera.upVector,
+                                    handOffInfo->meta.transformInfo.camera.fovDeg, 
+                                    handOffInfo->meta.transformInfo.camera.nearPlane, 
+                                    handOffInfo->meta.transformInfo.camera.farPlane);
                 LOG_INFO (m_VKInitSequenceLog) << "[OK] Camera " 
                                                << "[" << cameraInfoId << "]"
                                                << std::endl;
@@ -892,7 +907,7 @@ namespace Renderer {
                                             
                 auto drawOpsCommandBuffers = std::vector {
                     getCommandBuffers (drawOpsCommandPool, 
-                                       static_cast <uint32_t> (g_maxFramesInFlight), 
+                                       g_maxFramesInFlight, 
                                        VK_COMMAND_BUFFER_LEVEL_PRIMARY)
                 };
                 /* |------------------------------------------------------------------------------------------------|
@@ -904,26 +919,26 @@ namespace Renderer {
                  * rendering has finished and presentation can happen, but since we can handle multiple frames in flight, 
                  * each frame should have its own set of semaphores and fence
                 */
-                for (size_t i = 0; i < g_maxFramesInFlight; i++) {
+                for (uint32_t i = 0; i < g_maxFramesInFlight; i++) {
                     /* On the very first frame, we immediately wait on in flight fence to be signaled. This fence is only 
                      * signaled after a frame has finished rendering, yet since this is the first frame, there are no 
                      * previous frames in which to signal the fence! Thus vkWaitForFences() blocks indefinitely, waiting 
                      * on something which will never happen. To combat this, create the fence in the signaled state, so 
                      * that the first call to vkWaitForFences() returns immediately since the fence is already signaled
                     */
-                    uint32_t drawOpsInFlightFenceInfoId = static_cast <uint32_t> (i);
+                    uint32_t drawOpsInFlightFenceInfoId = i;
                     createFence (drawOpsInFlightFenceInfoId, FEN_IN_FLIGHT, VK_FENCE_CREATE_SIGNALED_BIT);
                     LOG_INFO (m_VKInitSequenceLog) << "[OK] Draw ops fence " 
                                                    << "[" << drawOpsInFlightFenceInfoId << "]"
                                                    << std::endl;
 
-                    uint32_t drawOpsImageAvailableSemaphoreInfoId = static_cast <uint32_t> (i);
+                    uint32_t drawOpsImageAvailableSemaphoreInfoId = i;
                     createSemaphore (drawOpsImageAvailableSemaphoreInfoId, SEM_IMAGE_AVAILABLE);
                     LOG_INFO (m_VKInitSequenceLog) << "[OK] Draw ops semaphore " 
                                                    << "[" << drawOpsImageAvailableSemaphoreInfoId << "]"
                                                    << std::endl;
 
-                    uint32_t drawOpsRenderDoneSemaphoreInfoId = static_cast <uint32_t> (i);
+                    uint32_t drawOpsRenderDoneSemaphoreInfoId = i;
                     createSemaphore (drawOpsRenderDoneSemaphoreInfoId, SEM_RENDER_DONE);
                     LOG_INFO (m_VKInitSequenceLog) << "[OK] Draw ops semaphore " 
                                                    << "[" << drawOpsRenderDoneSemaphoreInfoId << "]"
@@ -933,12 +948,8 @@ namespace Renderer {
                  * | CONFIG DRAW OPS - HAND OFF                                                                     |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                readyHandOffInfo (handOffInfoId);
-
-                auto handOffInfo = getHandOffInfo (handOffInfoId);
-
-                for (size_t i = 0; i < g_maxFramesInFlight; i++) {
-                    uint32_t syncObjectId = static_cast <uint32_t> (i);
+                for (uint32_t i = 0; i < g_maxFramesInFlight; i++) {
+                    uint32_t syncObjectId = i;
 
                     handOffInfo->id.inFlightFenceInfos.push_back (syncObjectId);
                     handOffInfo->id.imageAvailableSemaphoreInfos.push_back (syncObjectId);
@@ -947,7 +958,6 @@ namespace Renderer {
                 
                 handOffInfo->resource.commandPool    = drawOpsCommandPool;
                 handOffInfo->resource.commandBuffers = drawOpsCommandBuffers;
-                handOffInfo->resource.transformInfo  = transformInfo;
                 /* |------------------------------------------------------------------------------------------------|
                  * | DUMP METHODS                                                                                   |
                  * |------------------------------------------------------------------------------------------------|
