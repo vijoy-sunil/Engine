@@ -37,7 +37,8 @@ namespace Log {
             std::string m_saveDir;
             size_t m_bufferCapacity;
             const char* m_format;
-            std::map <e_level, e_sink> m_levelConfig;
+
+            std::map <e_level, e_sink> m_levelConfig{};
             std::fstream m_saveFileImmediate;
             std::fstream m_saveFileBuffered; 
             /* std::endl is a template function, and this is the signature of that function

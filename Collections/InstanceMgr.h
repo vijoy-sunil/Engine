@@ -33,7 +33,7 @@ namespace Admin {
     */
     class InstanceMgr {
         protected:
-            std::map <uint32_t, NonTemplateBase*> m_instancePool;
+            std::map <uint32_t, NonTemplateBase*> m_instancePool{};
 
         public:
             ~InstanceMgr (void) {
