@@ -1,5 +1,5 @@
-#ifndef VK_SUBPASS_H
-#define VK_SUBPASS_H
+#ifndef VK_SUB_PASS_H
+#define VK_SUB_PASS_H
 
 #include "VKRenderPassMgr.h"
 
@@ -224,4 +224,4 @@ namespace Renderer {
 
     Log::Record* VKSubPass::m_VKSubPassLog;
 }   // namespace Renderer
-#endif  // VK_SUBPASS_H
+#endif  // VK_SUB_PASS_H

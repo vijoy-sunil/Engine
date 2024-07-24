@@ -10,9 +10,9 @@
 #include "../RenderPass/VKFrameBuffer.h"
 #include "../Model/VKTextureSampler.h"
 #include "../Model/VKDescriptor.h"
-#include "../Cmds/VKCmdBuffer.h"
+#include "../Cmd/VKCmdBuffer.h"
 #include "VKCameraMgr.h"
-#include "VKSyncObjects.h"
+#include "VKSyncObject.h"
 #include "VKDrawSequence.h"
 
 using namespace Collections;
@@ -29,7 +29,7 @@ namespace Renderer {
                             protected virtual VKDescriptor,
                             protected virtual VKCmdBuffer,
                             protected virtual VKCameraMgr,
-                            protected virtual VKSyncObjects,
+                            protected virtual VKSyncObject,
                             protected virtual VKDrawSequence {
         private:
             static Log::Record* m_VKDeleteSequenceLog;

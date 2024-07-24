@@ -30,12 +30,12 @@
 #include "../Model/VKTextureSampler.h"
 #include "../Model/VKDescriptor.h"
 #include "../Model/VKModelMatrix.h"
-#include "../Cmds/VKCmdBuffer.h"
-#include "../Cmds/VKCmds.h"
-#include "VKUniforms.h"
+#include "../Cmd/VKCmdBuffer.h"
+#include "../Cmd/VKCmd.h"
+#include "VKUniform.h"
 #include "VKTransform.h"
 #include "VKCameraMgr.h"
-#include "VKSyncObjects.h"
+#include "VKSyncObject.h"
 #include "VKDrawSequence.h"
 
 using namespace Collections;
@@ -71,9 +71,9 @@ namespace Renderer {
                           protected virtual VKDescriptor,
                           protected virtual VKModelMatrix,
                           protected virtual VKCmdBuffer,
-                          protected virtual VKCmds,
+                          protected virtual VKCmd,
                           protected virtual VKCameraMgr,
-                          protected virtual VKSyncObjects,
+                          protected virtual VKSyncObject,
                           protected virtual VKDrawSequence {
         private:
             /* Set upper bound lod for the texture sampler It is recommended that to sample from the entire mipmap chain, 

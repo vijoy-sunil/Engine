@@ -1,5 +1,5 @@
-#ifndef VK_UNIFORMS_H
-#define VK_UNIFORMS_H
+#ifndef VK_UNIFORM_H
+#define VK_UNIFORM_H
 
 #include <glm/glm.hpp>
 
@@ -96,4 +96,4 @@ namespace Renderer {
         uint32_t texId;
     };
 }   // namespace Renderer
-#endif  // VK_UNIFORMS_H
+#endif  // VK_UNIFORM_H

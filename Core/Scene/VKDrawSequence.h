@@ -4,12 +4,12 @@
 #include "../Device/VKWindow.h"
 #include "../Buffer/VKUniformBuffer.h"
 #include "../Model/VKModelMatrix.h"
-#include "../Cmds/VKCmdBuffer.h"
-#include "../Cmds/VKCmds.h"
-#include "VKUniforms.h"
+#include "../Cmd/VKCmdBuffer.h"
+#include "../Cmd/VKCmd.h"
+#include "VKUniform.h"
 #include "VKTransform.h"
 #include "VKCameraMgr.h"
-#include "VKSyncObjects.h"
+#include "VKSyncObject.h"
 #include "VKResizing.h"
 
 using namespace Collections;
@@ -19,9 +19,9 @@ namespace Renderer {
                           protected virtual VKUniformBuffer,
                           protected virtual VKModelMatrix,
                           protected virtual VKCmdBuffer,
-                          protected virtual VKCmds,
+                          protected virtual VKCmd,
                           protected virtual VKCameraMgr,
-                          protected virtual VKSyncObjects,
+                          protected virtual VKSyncObject,
                           protected VKResizing {
         private:
             /* Data to be handed off between sequences are packed into this struct and saved to the pool

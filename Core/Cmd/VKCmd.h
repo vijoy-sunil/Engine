@@ -1,5 +1,5 @@
-#ifndef VK_CMDS_H
-#define VK_CMDS_H
+#ifndef VK_CMD_H
+#define VK_CMD_H
 
 #include "../Buffer/VKBufferMgr.h"
 #include "../Image/VKImageMgr.h"
@@ -8,19 +8,19 @@
 using namespace Collections;
 
 namespace Renderer {
-    class VKCmds: protected virtual VKBufferMgr,
-                  protected virtual VKImageMgr,
-                  protected virtual VKPipelineMgr {
+    class VKCmd: protected virtual VKBufferMgr,
+                 protected virtual VKImageMgr,
+                 protected virtual VKPipelineMgr {
         private:
-            static Log::Record* m_VKCmdsLog;
+            static Log::Record* m_VKCmdLog;
             const uint32_t m_instanceId = g_collectionsId++;
 
         public:
-            VKCmds (void) {
-                m_VKCmdsLog = LOG_INIT (m_instanceId, g_pathSettings.logSaveDir);
+            VKCmd (void) {
+                m_VKCmdLog = LOG_INIT (m_instanceId, g_pathSettings.logSaveDir);
             }
 
-            ~VKCmds (void) {
+            ~VKCmd (void) {
                 LOG_CLOSE (m_instanceId);
             }
 
@@ -567,6 +567,6 @@ namespace Renderer {
             }
     };
 
-    Log::Record* VKCmds::m_VKCmdsLog;
+    Log::Record* VKCmd::m_VKCmdLog;
 }   // namespace Renderer
-#endif  // VK_CMDS_H
+#endif  // VK_CMD_H

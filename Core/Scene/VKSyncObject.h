@@ -1,5 +1,5 @@
-#ifndef VK_SYNC_OBJECTS_H
-#define VK_SYNC_OBJECTS_H
+#ifndef VK_SYNC_OBJECT_H
+#define VK_SYNC_OBJECT_H
 
 #include "../Device/VKDeviceMgr.h"
 #include "../../Utils/LogHelper.h"
@@ -13,7 +13,7 @@ namespace Renderer {
      * the functions will return before the operation has finished and there are a number of events that we need to order
      * explicitly
     */
-    class VKSyncObjects: protected virtual VKDeviceMgr {
+    class VKSyncObject: protected virtual VKDeviceMgr {
         private:
             struct SemaphoreInfo {
                 struct Meta {
@@ -45,7 +45,7 @@ namespace Renderer {
             };
             std::map <e_syncType, std::vector <FenceInfo>> m_fenceInfoPool{};
 
-            static Log::Record* m_VKSyncObjectsLog;
+            static Log::Record* m_VKSyncObjectLog;
             const uint32_t m_instanceId = g_collectionsId++;
 
             void deleteSemaphoreInfo (SemaphoreInfo* semaphoreInfo, e_syncType type) {
@@ -57,11 +57,11 @@ namespace Renderer {
                     return;
                 }
 
-                LOG_ERROR (m_VKSyncObjectsLog) << "Failed to delete semaphore info "
-                                               << "[" << semaphoreInfo->meta.id << "]"
-                                               << " "
-                                               << "[" << Utils::string_syncType (type) << "]"            
-                                               << std::endl;
+                LOG_ERROR (m_VKSyncObjectLog) << "Failed to delete semaphore info "
+                                              << "[" << semaphoreInfo->meta.id << "]"
+                                              << " "
+                                              << "[" << Utils::string_syncType (type) << "]"            
+                                              << std::endl;
                 throw std::runtime_error ("Failed to delete semaphore info");              
             }
 
@@ -74,22 +74,22 @@ namespace Renderer {
                     return;
                 }
 
-                LOG_ERROR (m_VKSyncObjectsLog) << "Failed to delete fence info "
-                                               << "[" << fenceInfo->meta.id << "]"
-                                               << " "
-                                               << "[" << Utils::string_syncType (type) << "]"            
-                                               << std::endl;
+                LOG_ERROR (m_VKSyncObjectLog) << "Failed to delete fence info "
+                                              << "[" << fenceInfo->meta.id << "]"
+                                              << " "
+                                              << "[" << Utils::string_syncType (type) << "]"            
+                                              << std::endl;
                 throw std::runtime_error ("Failed to delete fence info");              
             }
 
         public:
-            VKSyncObjects (void) {
-                m_VKSyncObjectsLog = LOG_INIT (m_instanceId, g_pathSettings.logSaveDir);
+            VKSyncObject (void) {
+                m_VKSyncObjectLog = LOG_INIT (m_instanceId, g_pathSettings.logSaveDir);
                 LOG_ADD_CONFIG (m_instanceId, Log::INFO,    Log::TO_FILE_IMMEDIATE);
                 LOG_ADD_CONFIG (m_instanceId, Log::ERROR,   Log::TO_FILE_IMMEDIATE | Log::TO_CONSOLE); 
             }
 
-            ~VKSyncObjects (void) {
+            ~VKSyncObject (void) {
                 LOG_CLOSE (m_instanceId);
             }
 
@@ -98,11 +98,11 @@ namespace Renderer {
                 auto deviceInfo = getDeviceInfo();
                 for (auto const& info: m_semaphoreInfoPool[type]) {
                     if (info.meta.id == semaphoreInfoId) {
-                        LOG_ERROR (m_VKSyncObjectsLog) << "Semaphore info id already exists " 
-                                                       << "[" << semaphoreInfoId << "]"
-                                                       << " "
-                                                       << "[" << Utils::string_syncType (type) << "]"
-                                                       << std::endl;
+                        LOG_ERROR (m_VKSyncObjectLog) << "Semaphore info id already exists " 
+                                                      << "[" << semaphoreInfoId << "]"
+                                                      << " "
+                                                      << "[" << Utils::string_syncType (type) << "]"
+                                                      << std::endl;
                         throw std::runtime_error ("Semaphore info id already exists");
                     }
                 }
@@ -129,13 +129,13 @@ namespace Renderer {
                                                      VK_NULL_HANDLE, 
                                                      &semaphore);
                 if (result != VK_SUCCESS) {
-                    LOG_ERROR (m_VKSyncObjectsLog) << "Failed to create semaphore " 
-                                                   << "[" << semaphoreInfoId << "]"
-                                                   << " "
-                                                   << "[" << Utils::string_syncType (type) << "]"
-                                                   << " "
-                                                   << "[" << string_VkResult (result) << "]"
-                                                   << std::endl;
+                    LOG_ERROR (m_VKSyncObjectLog) << "Failed to create semaphore " 
+                                                  << "[" << semaphoreInfoId << "]"
+                                                  << " "
+                                                  << "[" << Utils::string_syncType (type) << "]"
+                                                  << " "
+                                                  << "[" << string_VkResult (result) << "]"
+                                                  << std::endl;
                     throw std::runtime_error ("Failed to create semaphore");
                 }
 
@@ -152,11 +152,11 @@ namespace Renderer {
                 auto deviceInfo = getDeviceInfo();
                 for (auto const& info: m_fenceInfoPool[type]) {
                     if (info.meta.id == fenceInfoId) {
-                        LOG_ERROR (m_VKSyncObjectsLog) << "Fence info id already exists " 
-                                                       << "[" << fenceInfoId << "]"
-                                                       << " "
-                                                       << "[" << Utils::string_syncType (type) << "]"
-                                                       << std::endl;
+                        LOG_ERROR (m_VKSyncObjectLog) << "Fence info id already exists " 
+                                                      << "[" << fenceInfoId << "]"
+                                                      << " "
+                                                      << "[" << Utils::string_syncType (type) << "]"
+                                                      << std::endl;
                         throw std::runtime_error ("Fence info id already exists");
                     }
                 }
@@ -182,13 +182,13 @@ namespace Renderer {
                                                  VK_NULL_HANDLE, 
                                                  &fence);
                 if (result != VK_SUCCESS) {
-                    LOG_ERROR (m_VKSyncObjectsLog) << "Failed to create fence " 
-                                                   << "[" << fenceInfoId << "]"
-                                                   << " "
-                                                   << "[" << Utils::string_syncType (type) << "]"
-                                                   << " "
-                                                   << "[" << string_VkResult (result) << "]" 
-                                                   << std::endl;
+                    LOG_ERROR (m_VKSyncObjectLog) << "Failed to create fence " 
+                                                  << "[" << fenceInfoId << "]"
+                                                  << " "
+                                                  << "[" << Utils::string_syncType (type) << "]"
+                                                  << " "
+                                                  << "[" << string_VkResult (result) << "]" 
+                                                  << std::endl;
                     throw std::runtime_error ("Failed to create fence");
                 }
 
@@ -206,11 +206,11 @@ namespace Renderer {
                     }
                 }
 
-                LOG_ERROR (m_VKSyncObjectsLog) << "Failed to find semaphore info "
-                                               << "[" << semaphoreInfoId << "]"
-                                               << " "
-                                               << "[" << Utils::string_syncType (type) << "]"           
-                                               << std::endl;
+                LOG_ERROR (m_VKSyncObjectLog) << "Failed to find semaphore info "
+                                              << "[" << semaphoreInfoId << "]"
+                                              << " "
+                                              << "[" << Utils::string_syncType (type) << "]"           
+                                              << std::endl;
                 throw std::runtime_error ("Failed to find semaphore info");                
             }
 
@@ -222,44 +222,44 @@ namespace Renderer {
                     }
                 }
 
-                LOG_ERROR (m_VKSyncObjectsLog) << "Failed to find fence info "
-                                               << "[" << fenceInfoId << "]"
-                                               << " "
-                                               << "[" << Utils::string_syncType (type) << "]"             
-                                               << std::endl;
+                LOG_ERROR (m_VKSyncObjectLog) << "Failed to find fence info "
+                                              << "[" << fenceInfoId << "]"
+                                              << " "
+                                              << "[" << Utils::string_syncType (type) << "]"             
+                                              << std::endl;
                 throw std::runtime_error ("Failed to find fence info"); 
             }
 
             void dumpSemaphoreInfoPool (void) {
-                LOG_INFO (m_VKSyncObjectsLog) << "Dumping semaphore info pool"
-                                              << std::endl;
+                LOG_INFO (m_VKSyncObjectLog) << "Dumping semaphore info pool"
+                                             << std::endl;
 
                 for (auto const& [key, val]: m_semaphoreInfoPool) {
-                    LOG_INFO (m_VKSyncObjectsLog) << "Type "
-                                                  << "[" << Utils::string_syncType (key) << "]"
-                                                  << std::endl;
+                    LOG_INFO (m_VKSyncObjectLog) << "Type "
+                                                 << "[" << Utils::string_syncType (key) << "]"
+                                                 << std::endl;
                     
                     for (auto const& info: val) {
-                        LOG_INFO (m_VKSyncObjectsLog) << "Id "
-                                                      << "[" << info.meta.id << "]"
-                                                      << std::endl; 
+                        LOG_INFO (m_VKSyncObjectLog) << "Id "
+                                                     << "[" << info.meta.id << "]"
+                                                     << std::endl; 
                     }                                                                                                                                                                                                                                                                                    
                 }    
             }
 
             void dumpFenceInfoPool (void) {
-                LOG_INFO (m_VKSyncObjectsLog) << "Dumping fence info pool"
-                                              << std::endl;
+                LOG_INFO (m_VKSyncObjectLog) << "Dumping fence info pool"
+                                             << std::endl;
 
                 for (auto const& [key, val]: m_fenceInfoPool) {
-                    LOG_INFO (m_VKSyncObjectsLog) << "Type "
-                                                  << "[" << Utils::string_syncType (key) << "]"
-                                                  << std::endl;
+                    LOG_INFO (m_VKSyncObjectLog) << "Type "
+                                                 << "[" << Utils::string_syncType (key) << "]"
+                                                 << std::endl;
                     
                     for (auto const& info: val) {
-                        LOG_INFO (m_VKSyncObjectsLog) << "Id "
-                                                      << "[" << info.meta.id << "]"
-                                                      << std::endl; 
+                        LOG_INFO (m_VKSyncObjectLog) << "Id "
+                                                     << "[" << info.meta.id << "]"
+                                                     << std::endl; 
                     }                                                                                                                                                                                                                                                                                    
                 }  
             }
@@ -285,6 +285,6 @@ namespace Renderer {
             }
     };
 
-    Log::Record* VKSyncObjects::m_VKSyncObjectsLog;
+    Log::Record* VKSyncObject::m_VKSyncObjectLog;
 }   // namespace Renderer
-#endif  // VK_SYNC_OBJECTS_H
+#endif  // VK_SYNC_OBJECT_H
