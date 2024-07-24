@@ -102,7 +102,7 @@ namespace Renderer {
                  * This struct in turn has a member called maxSamplerAnisotropy and this is the maximum value we can 
                  * specify for maxAnisotropy. If we want to go for maximum quality, we can simply use that value directly
                 */
-                anisotropyEnable == VK_TRUE ? createInfo.maxAnisotropy = deviceInfo->params.maxSamplerAnisotropy :
+                anisotropyEnable == VK_TRUE ? createInfo.maxAnisotropy = deviceInfo->params.maxSamplerAnisotropy:
                                               createInfo.maxAnisotropy = 1.0f;
 
                 /* The borderColor field specifies which color is returned when sampling beyond the image with clamp to 

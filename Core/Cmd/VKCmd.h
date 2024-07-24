@@ -282,8 +282,8 @@ namespace Renderer {
 
                     blit.dstOffsets[0] = {0, 0, 0};
                     blit.dstOffsets[1] = {
-                                            mipWidth  > 1 ? mipWidth  / 2 : 1, 
-                                            mipHeight > 1 ? mipHeight / 2 : 1, 
+                                            mipWidth  > 1 ?  mipWidth/2: 1, 
+                                            mipHeight > 1 ? mipHeight/2: 1, 
                                             1 
                                          };
 

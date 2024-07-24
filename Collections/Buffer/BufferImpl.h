@@ -73,7 +73,7 @@ namespace Buffer {
             }
 
             T* popFirst (void) {
-                T* data = NULL;
+                T* data = nullptr;
 
                 if (!isEmpty()) {
                     data = m_tail;
@@ -86,7 +86,7 @@ namespace Buffer {
             }
 
             T* popLast (void) {
-                T* data = NULL;
+                T* data = nullptr;
 
                 if (!isEmpty()) {
                     /* When head pointer is at the head of the buffer
@@ -107,11 +107,11 @@ namespace Buffer {
             }
             
             inline T* peekFirst (void) {
-                return isEmpty() ? NULL: m_tail;
+                return isEmpty() ? nullptr: m_tail;
             }
 
             inline T* peekLast (void) {
-                return isEmpty() ? NULL: 
+                return isEmpty() ? nullptr: 
                 /* Head pointer will be at the start either when the buffer is empty, or when an item has been inserted at 
                  * the end and wrap around is complete
                 */
