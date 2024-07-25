@@ -28,7 +28,7 @@ namespace Renderer {
                 static_cast <void> (width);
                 static_cast <void> (height);
                 auto thisPtr = reinterpret_cast <VKWindow*> (glfwGetWindowUserPointer (window));
-                thisPtr-> setFrameBufferResized (true);
+                thisPtr->setFrameBufferResized (true);
             }
 
         public:

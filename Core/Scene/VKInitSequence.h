@@ -89,7 +89,8 @@ namespace Renderer {
         public:
             VKInitSequence (void) {
                 m_VKInitSequenceLog = LOG_INIT (m_instanceId, g_pathSettings.logSaveDir);
-                LOG_ADD_CONFIG (m_instanceId, Log::INFO,    Log::TO_FILE_IMMEDIATE);
+                LOG_ADD_CONFIG (m_instanceId, Log::INFO,  Log::TO_FILE_IMMEDIATE);
+                LOG_ADD_CONFIG (m_instanceId, Log::ERROR, Log::TO_FILE_IMMEDIATE | Log::TO_CONSOLE); 
             }
 
             ~VKInitSequence (void) {
@@ -373,19 +374,19 @@ namespace Renderer {
                 auto attributeDescriptions = std::vector {
                     getAttributeDescription (0,
                                              0,
-                                             offsetof(Vertex, pos),
+                                             offsetof (Vertex, pos),
                                              VK_FORMAT_R32G32B32_SFLOAT),
                     getAttributeDescription (0,
                                              1,
-                                             offsetof(Vertex, texCoord),
+                                             offsetof (Vertex, texCoord),
                                              VK_FORMAT_R32G32_SFLOAT),
                     getAttributeDescription (0,
                                              2,
-                                             offsetof(Vertex, normal),
+                                             offsetof (Vertex, normal),
                                              VK_FORMAT_R32G32B32_SFLOAT),
                     getAttributeDescription (0,
                                              3,
-                                             offsetof(Vertex, texId),
+                                             offsetof (Vertex, texId),
                                              VK_FORMAT_R32_UINT)
                 };
                 createVertexInputState   (pipelineInfoId, bindingDescriptions, attributeDescriptions);
@@ -620,7 +621,7 @@ namespace Renderer {
                     /* The configuration of descriptors is updated using the vkUpdateDescriptorSets function, which takes 
                      * an array of VkWriteDescriptorSet structs as parameter
                     */                    
-                    auto descriptorWrites = std::vector {
+                    auto writeDescriptorSets = std::vector {
                         getWriteBufferDescriptorSetInfo (VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
                                                          modelInfo->resource.descriptorSets[i],
                                                          descriptorBufferInfos,
@@ -632,7 +633,7 @@ namespace Renderer {
                                                          1, 0, textureCount)
                     };
 
-                    updateDescriptorSets (descriptorWrites);
+                    updateDescriptorSets (writeDescriptorSets);
                 }
                 LOG_INFO (m_VKInitSequenceLog) << "[OK] Descriptor sets " 
                                                << "[" << modelInfoId << "]"

@@ -77,13 +77,14 @@ namespace Renderer {
                 static_cast <void> (pUserData);
                 LOG_WARNING (m_VKValidationLog) << "Message " 
                                                 << "[" 
-                                                << pCallbackData-> pMessage 
+                                                << pCallbackData->pMessage 
                                                 << "]" 
                                                 << std::endl;
                 LOG_WARNING (m_VKValidationLog) << "Message severity " 
                                                 << "[" 
                                                 << string_VkDebugUtilsMessageSeverityFlagBitsEXT (messageSeverity) 
-                                                << "]" << std::endl;
+                                                << "]" 
+                                                << std::endl;
                 LOG_WARNING (m_VKValidationLog) << "Message type " 
                                                 << "[" 
                                                 << string_VkDebugUtilsMessageTypeFlagsEXT (messageType) 

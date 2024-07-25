@@ -78,8 +78,8 @@ namespace Renderer {
         public:
             VKImageMgr (void) {
                 m_VKImageMgrLog = LOG_INIT (m_instanceId, g_pathSettings.logSaveDir);
-                LOG_ADD_CONFIG (m_instanceId, Log::INFO,    Log::TO_FILE_IMMEDIATE);
-                LOG_ADD_CONFIG (m_instanceId, Log::ERROR,   Log::TO_FILE_IMMEDIATE | Log::TO_CONSOLE); 
+                LOG_ADD_CONFIG (m_instanceId, Log::INFO,  Log::TO_FILE_IMMEDIATE);
+                LOG_ADD_CONFIG (m_instanceId, Log::ERROR, Log::TO_FILE_IMMEDIATE | Log::TO_CONSOLE); 
                 /* Create a type empty image, since the image info struct is private, there may be cases where we need
                  * its type. Using the get function with an auto will help to resolve this
                 */
@@ -104,7 +104,8 @@ namespace Renderer {
                                            << std::endl;   
                 auto flags = Utils::splitString (string_VkFormatFeatureFlags (features), "|");
                 for (auto const& flag: flags)
-                    LOG_INFO (m_VKImageMgrLog) << "[" << flag << "]" << std::endl;
+                LOG_INFO (m_VKImageMgrLog) << "[" << flag << "]" 
+                                           << std::endl;
 
                 for (auto const& format: formatCandidates) {
                     VkFormatProperties properties;
@@ -119,7 +120,8 @@ namespace Renderer {
                         return format;
                 }
                 
-                LOG_ERROR (m_VKImageMgrLog) << "Failed to find supported format" << std::endl;
+                LOG_ERROR (m_VKImageMgrLog) << "Failed to find supported format" 
+                                            << std::endl;
                 throw std::runtime_error ("Failed to find supported format");
             }
 
@@ -430,7 +432,7 @@ namespace Renderer {
                                                 << "->"
                                                 << "[" << string_VkImageLayout (newLayout) << "]"
                                                 << std::endl;
-                    throw std::invalid_argument ("Unsupported layout transition");
+                    throw std::runtime_error ("Unsupported layout transition");
                 }
             }
 
@@ -447,7 +449,7 @@ namespace Renderer {
                                             << " "
                                             << "[" << Utils::string_imageType (type) << "]"                                         
                                             << std::endl;
-                throw std::runtime_error ("Failed to find iamge info");
+                throw std::runtime_error ("Failed to find image info");
             }
 
             void dumpImageInfoPool (void) {
@@ -485,7 +487,8 @@ namespace Renderer {
                                                    << std::endl;
                         auto flags = Utils::splitString (string_VkImageUsageFlags (info.params.usage), "|");
                         for (auto const& flag: flags)
-                            LOG_INFO (m_VKImageMgrLog) << "[" << flag << "]" << std::endl; 
+                        LOG_INFO (m_VKImageMgrLog) << "[" << flag << "]" 
+                                                   << std::endl; 
 
                         LOG_INFO (m_VKImageMgrLog) << "Sample count "
                                                    << "[" << string_VkSampleCountFlagBits (info.params.sampleCount) << "]"
@@ -499,7 +502,8 @@ namespace Renderer {
                                                    << std::endl;
                         auto properties = Utils::splitString (string_VkMemoryPropertyFlags (info.params.property), "|");
                         for (auto const& property: properties)
-                            LOG_INFO (m_VKImageMgrLog) << "[" << property << "]" << std::endl; 
+                        LOG_INFO (m_VKImageMgrLog) << "[" << property << "]" 
+                                                   << std::endl; 
 
                         LOG_INFO (m_VKImageMgrLog) << "Sharing mode "
                                                    << "[" << string_VkSharingMode (info.params.sharingMode) << "]"

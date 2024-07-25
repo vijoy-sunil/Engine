@@ -39,20 +39,20 @@ namespace Renderer {
                 auto deviceInfo = getDeviceInfo();
                 /* Query list of available queue families
                 */
-                uint32_t queueFamilyCount = 0;
+                uint32_t queueFamiliesCount = 0;
                 vkGetPhysicalDeviceQueueFamilyProperties (phyDevice, 
-                                                          &queueFamilyCount, 
+                                                          &queueFamiliesCount, 
                                                           VK_NULL_HANDLE);
-                LOG_INFO (m_VKQueueLog) << "Queue family count "
-                                        << "[" << queueFamilyCount << "]" 
+                LOG_INFO (m_VKQueueLog) << "Queue families count "
+                                        << "[" << queueFamiliesCount << "]" 
                                         << std::endl;
 
-                std::vector <VkQueueFamilyProperties> queueFamilies (queueFamilyCount);
+                std::vector <VkQueueFamilyProperties> queueFamilies (queueFamiliesCount);
                 vkGetPhysicalDeviceQueueFamilyProperties (phyDevice, 
-                                                          &queueFamilyCount, 
+                                                          &queueFamiliesCount, 
                                                           queueFamilies.data());
 
-                int queueFamilyIndex = 0;
+                uint32_t queueFamilyIndex = 0;
                 for (auto const& queueFamily: queueFamilies) {
                     /* find a queue family that supports graphics commnands
                     */
@@ -73,13 +73,15 @@ namespace Renderer {
                         deviceInfo->unique[resourceId].indices.transferFamily = queueFamilyIndex;
 
                     LOG_INFO (m_VKQueueLog) << "Queue family index "
-                                            << "[" << queueFamilyIndex << "]" << std::endl; 
+                                            << "[" << queueFamilyIndex << "]" 
+                                            << std::endl; 
                                             
                     LOG_INFO (m_VKQueueLog) << "Queue family supported flags" 
                                             << std::endl;  
                     auto flags = Utils::splitString (string_VkQueueFlags (queueFamily.queueFlags), "|");
                     for (auto const& flag: flags)
-                        LOG_INFO (m_VKQueueLog) << "[" << flag << "]" << std::endl;
+                    LOG_INFO (m_VKQueueLog) << "[" << flag << "]" 
+                                            << std::endl;
                               
                     if (isQueueFamilyIndicesComplete (resourceId))                     
                         break;

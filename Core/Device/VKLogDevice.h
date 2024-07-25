@@ -77,7 +77,8 @@ namespace Renderer {
                  * idea to set them anyway to be compatible with older implementations
                 */
                 if (isValidationLayersEnabled() && !isValidationLayersSupported()) {
-                    LOG_WARNING (m_VKLogDeviceLog) << "Required validation layers not available" << std::endl;
+                    LOG_WARNING (m_VKLogDeviceLog) << "Required validation layers not available" 
+                                                   << std::endl;
                     createInfo.enabledLayerCount = 0;
                 }
                 else if (isValidationLayersEnabled()) {

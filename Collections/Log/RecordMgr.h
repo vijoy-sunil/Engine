@@ -37,8 +37,8 @@ namespace Log {
 
                     /* Flush buffered sink
                     */
-                    if (c_record-> getSink() & TO_FILE_BUFFER_CIRCULAR)
-                        c_record-> flushBufferToFile();
+                    if (c_record->getSink() & TO_FILE_BUFFER_CIRCULAR)
+                        c_record->flushBufferToFile();
 
                     delete c_record;
                     /* Remove from map, so you are able to reuse the instance id
@@ -59,8 +59,8 @@ namespace Log {
                     Record* c_record = static_cast <Record*> (val);
                     /* Flush buffered sink
                     */
-                    if (c_record-> getSink() & TO_FILE_BUFFER_CIRCULAR)
-                        c_record-> flushBufferToFile();
+                    if (c_record->getSink() & TO_FILE_BUFFER_CIRCULAR)
+                        c_record->flushBufferToFile();
 
                     delete c_record;
                     BUFFER_CLOSE (RESERVED_ID_LOG_SINK + key);

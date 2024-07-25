@@ -16,7 +16,7 @@ namespace Renderer {
         public:
             VKTextureSampler (void) {
                 m_VKTextureSamplerLog = LOG_INIT (m_instanceId, g_pathSettings.logSaveDir);
-                LOG_ADD_CONFIG (m_instanceId, Log::ERROR,   Log::TO_FILE_IMMEDIATE | Log::TO_CONSOLE);
+                LOG_ADD_CONFIG (m_instanceId, Log::ERROR, Log::TO_FILE_IMMEDIATE | Log::TO_CONSOLE);
             }
 
             ~VKTextureSampler (void) { 

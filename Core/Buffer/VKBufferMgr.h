@@ -61,8 +61,8 @@ namespace Renderer {
         public:
             VKBufferMgr (void) {
                 m_VKBufferMgrLog = LOG_INIT (m_instanceId, g_pathSettings.logSaveDir);
-                LOG_ADD_CONFIG (m_instanceId, Log::INFO,    Log::TO_FILE_IMMEDIATE);
-                LOG_ADD_CONFIG (m_instanceId, Log::ERROR,   Log::TO_FILE_IMMEDIATE | Log::TO_CONSOLE); 
+                LOG_ADD_CONFIG (m_instanceId, Log::INFO,  Log::TO_FILE_IMMEDIATE);
+                LOG_ADD_CONFIG (m_instanceId, Log::ERROR, Log::TO_FILE_IMMEDIATE | Log::TO_CONSOLE); 
             }
 
             ~VKBufferMgr (void) {
@@ -241,13 +241,15 @@ namespace Renderer {
                                                     << std::endl;
                         auto flags = Utils::splitString (string_VkBufferUsageFlags (info.params.usage), "|");
                         for (auto const& flag: flags)
-                            LOG_INFO (m_VKBufferMgrLog) << "[" << flag << "]" << std::endl; 
+                        LOG_INFO (m_VKBufferMgrLog) << "[" << flag << "]" 
+                                                    << std::endl; 
 
                         LOG_INFO (m_VKBufferMgrLog) << "Property"
                                                     << std::endl;
                         auto properties = Utils::splitString (string_VkMemoryPropertyFlags (info.params.property), "|");
                         for (auto const& property: properties)
-                            LOG_INFO (m_VKBufferMgrLog) << "[" << property << "]" << std::endl; 
+                        LOG_INFO (m_VKBufferMgrLog) << "[" << property << "]" 
+                                                    << std::endl; 
 
                         LOG_INFO (m_VKBufferMgrLog) << "Sharing mode "
                                                     << "[" << string_VkSharingMode (info.params.sharingMode) << "]"

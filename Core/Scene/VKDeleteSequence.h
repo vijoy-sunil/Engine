@@ -38,7 +38,7 @@ namespace Renderer {
         public:
             VKDeleteSequence (void) {
                 m_VKDeleteSequenceLog = LOG_INIT (m_instanceId, g_pathSettings.logSaveDir);
-                LOG_ADD_CONFIG (m_instanceId, Log::INFO,    Log::TO_FILE_IMMEDIATE);
+                LOG_ADD_CONFIG (m_instanceId, Log::INFO, Log::TO_FILE_IMMEDIATE);
             }
 
             ~VKDeleteSequence (void) {

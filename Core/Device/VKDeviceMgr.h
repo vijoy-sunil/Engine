@@ -111,8 +111,8 @@ namespace Renderer {
         public:
             VKDeviceMgr (void) {
                 m_VKDeviceMgrLog = LOG_INIT (m_instanceId, g_pathSettings.logSaveDir);
-                LOG_ADD_CONFIG (m_instanceId, Log::INFO,    Log::TO_FILE_IMMEDIATE);
-                LOG_ADD_CONFIG (m_instanceId, Log::ERROR,   Log::TO_FILE_IMMEDIATE | Log::TO_CONSOLE);
+                LOG_ADD_CONFIG (m_instanceId, Log::INFO,  Log::TO_FILE_IMMEDIATE);
+                LOG_ADD_CONFIG (m_instanceId, Log::ERROR, Log::TO_FILE_IMMEDIATE | Log::TO_CONSOLE);
             }
 
             ~VKDeviceMgr (void) {
@@ -122,22 +122,22 @@ namespace Renderer {
         protected:
             void setDeviceResourceCount (uint32_t val) {
                 if (val > g_maxDeviceResourcesCount) {
-                    LOG_ERROR (m_VKDeviceMgrLog) << "Invalid device resource count "
+                    LOG_ERROR (m_VKDeviceMgrLog) << "Invalid device resources count "
                                                  << "[" << val << "]"
                                                  << "->"
                                                  << "[" << g_maxDeviceResourcesCount << "]"
                                                  << std::endl;
-                    throw std::runtime_error ("Invalid device resource count");                    
+                    throw std::runtime_error ("Invalid device resources count");                    
                 }
                 m_deviceInfo.meta.deviceResourcesCount = val;
             }
             
             DeviceInfo* getDeviceInfo (void) {
                 if (m_deviceInfo.meta.deviceResourcesCount == 0) {
-                    LOG_ERROR (m_VKDeviceMgrLog) << "Invalid device resource count "
+                    LOG_ERROR (m_VKDeviceMgrLog) << "Invalid device resources count "
                                                  << "[" << m_deviceInfo.meta.deviceResourcesCount << "]"
                                                  << std::endl;
-                    throw std::runtime_error ("Invalid device resource count");
+                    throw std::runtime_error ("Invalid device resources count");
                 }
                 return &m_deviceInfo;
             }    

@@ -26,7 +26,8 @@ namespace Renderer {
                                                       &extensionCount, 
                                                       availableExtensions.data());
 
-                LOG_INFO (m_VKPhyDeviceLog) << "Available device extensions" << std::endl;
+                LOG_INFO (m_VKPhyDeviceLog) << "Available device extensions" 
+                                            << std::endl;
                 for (auto const& extension: availableExtensions)
                     LOG_INFO (m_VKPhyDeviceLog) << "[" << extension.extensionName << "]" 
                                                 << " "
@@ -109,8 +110,8 @@ namespace Renderer {
         public:
             VKPhyDevice (void) {
                 m_VKPhyDeviceLog = LOG_INIT (m_instanceId, g_pathSettings.logSaveDir); 
-                LOG_ADD_CONFIG (m_instanceId, Log::INFO,    Log::TO_FILE_IMMEDIATE);
-                LOG_ADD_CONFIG (m_instanceId, Log::ERROR,   Log::TO_FILE_IMMEDIATE | Log::TO_CONSOLE);               
+                LOG_ADD_CONFIG (m_instanceId, Log::INFO,  Log::TO_FILE_IMMEDIATE);
+                LOG_ADD_CONFIG (m_instanceId, Log::ERROR, Log::TO_FILE_IMMEDIATE | Log::TO_CONSOLE);               
             }
 
             ~VKPhyDevice (void) {
@@ -199,7 +200,8 @@ namespace Renderer {
                 LOG_INFO (m_VKPhyDeviceLog) << "Physical device memory types" 
                                             << std::endl;               
                 for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++) {
-                    LOG_INFO (m_VKPhyDeviceLog) << "[" << i << "]" << std::endl;
+                    LOG_INFO (m_VKPhyDeviceLog) << "[" << i << "]" 
+                                                << std::endl;
 
                     LOG_INFO (m_VKPhyDeviceLog) << "Heap index "
                                                 << "[" << memProperties.memoryTypes[i].heapIndex << "]"
@@ -208,13 +210,15 @@ namespace Renderer {
                     auto flags = Utils::splitString (string_VkMemoryPropertyFlags 
                                                     (memProperties.memoryTypes[i].propertyFlags), "|");
                     for (auto const& flag: flags)
-                        LOG_INFO (m_VKPhyDeviceLog) << "[" << flag << "]" << std::endl; 
+                    LOG_INFO (m_VKPhyDeviceLog) << "[" << flag << "]" 
+                                                << std::endl; 
                 }
 
                 LOG_INFO (m_VKPhyDeviceLog) << "Physical device memory heaps" 
                                             << std::endl;  
                 for (uint32_t i = 0; i < memProperties.memoryHeapCount; i++) {
-                    LOG_INFO (m_VKPhyDeviceLog) << "[" << i << "]" << std::endl;
+                    LOG_INFO (m_VKPhyDeviceLog) << "[" << i << "]" 
+                                                << std::endl;
 
                     LOG_INFO (m_VKPhyDeviceLog) << "Heap size (bytes) "
                                                 << "[" << memProperties.memoryHeaps[i].size << "]"
@@ -223,7 +227,8 @@ namespace Renderer {
                     auto flags = Utils::splitString (string_VkMemoryHeapFlags 
                                                     (memProperties.memoryHeaps[i].flags), "|");
                     for (auto const& flag: flags)
-                        LOG_INFO (m_VKPhyDeviceLog) << "[" << flag << "]" << std::endl;                                                     
+                    LOG_INFO (m_VKPhyDeviceLog) << "[" << flag << "]" 
+                                                << std::endl;                                                     
                 }                                                                                              
                 /* We may have more than one desirable property, so we should check if the result of the bitwise AND is 
                  * not just non-zero, but equal to the desired properties bit field. If there is a memory type suitable 
@@ -234,7 +239,8 @@ namespace Renderer {
                                             << std::endl;  
                 auto flags = Utils::splitString (string_VkMemoryPropertyFlags (properties), "|");
                 for (auto const& flag: flags)
-                    LOG_INFO (m_VKPhyDeviceLog) << "[" << flag << "]" << std::endl;                                                   
+                LOG_INFO (m_VKPhyDeviceLog) << "[" << flag << "]" 
+                                            << std::endl;                                                   
 
                 for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++) {
                     if ((typeFilter & (1 << i)) && 
@@ -246,7 +252,8 @@ namespace Renderer {
                         }
                 }
 
-                LOG_ERROR (m_VKPhyDeviceLog) << "Failed to find suitable memory type" << std::endl;
+                LOG_ERROR (m_VKPhyDeviceLog) << "Failed to find suitable memory type" 
+                                             << std::endl;
                 throw std::runtime_error ("Failed to find suitable memory type");
             }
 
@@ -275,7 +282,8 @@ namespace Renderer {
                 uint32_t deviceCount = 0;
                 vkEnumeratePhysicalDevices (deviceInfo->shared.instance, &deviceCount, VK_NULL_HANDLE);
                 if (deviceCount == 0) {
-                    LOG_ERROR (m_VKPhyDeviceLog) << "Failed to find GPUs with Vulkan support" << std::endl;
+                    LOG_ERROR (m_VKPhyDeviceLog) << "Failed to find GPUs with Vulkan support" 
+                                                 << std::endl;
                     throw std::runtime_error ("Failed to find GPUs with Vulkan support");
                 }
                 std::vector <VkPhysicalDevice> devices (deviceCount);

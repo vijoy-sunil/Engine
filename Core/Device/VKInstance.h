@@ -63,14 +63,16 @@ namespace Renderer {
                 std::vector <VkExtensionProperties> availableExtensions (extensionCount);
                 vkEnumerateInstanceExtensionProperties (VK_NULL_HANDLE, &extensionCount, availableExtensions.data());
 
-                LOG_INFO (m_VKInstanceLog) << "Available instance extensions" << std::endl;
+                LOG_INFO (m_VKInstanceLog) << "Available instance extensions" 
+                                           << std::endl;
                 for (auto const& extension: availableExtensions)
                     LOG_INFO (m_VKInstanceLog) << "[" << extension.extensionName << "]"
                                                << " " 
                                                << "[" << extension.specVersion   << "]"
                                                << std::endl;
                 
-                LOG_INFO (m_VKInstanceLog) << "Required instance extensions" << std::endl;
+                LOG_INFO (m_VKInstanceLog) << "Required instance extensions" 
+                                           << std::endl;
                 for (auto const& extension: m_instanceExtensions)
                     LOG_INFO (m_VKInstanceLog) << "[" << extension << "]"
                                                << std::endl;
@@ -140,7 +142,8 @@ namespace Renderer {
                  * your application for zero overhead
                 */
                 if (isValidationLayersEnabled() && !isValidationLayersSupported()) {
-                    LOG_WARNING (m_VKInstanceLog) << "Required validation layers not available" << std::endl;
+                    LOG_WARNING (m_VKInstanceLog) << "Required validation layers not available" 
+                                                  << std::endl;
                     createInfo.enabledLayerCount = 0;
                     createInfo.pNext             = VK_NULL_HANDLE;
                 }
@@ -165,7 +168,8 @@ namespace Renderer {
                 /* Verify instance extension support
                 */
                 if (!checkInstanceExtensionSupport()) {
-                    LOG_ERROR (m_VKInstanceLog) << "Required instance extensions not available" << std::endl;
+                    LOG_ERROR (m_VKInstanceLog) << "Required instance extensions not available" 
+                                                << std::endl;
                     throw std::runtime_error ("Required instance extensions not available");
                 }
 

@@ -248,11 +248,11 @@ namespace Log {
                 if (m_instanceId < 10)
                     instanceId.insert (0, 1, '0');
 
-                std::string header = "[ " + instanceId + " ]" + 
+                std::string header = "[" + instanceId + "]" + 
                                      " " +
                                      getLocalTimestamp() + 
                                      " " +
-                                     "[ " + levelToString (level) + " ]" 
+                                     "[" + levelToString (level) + "]" 
                                      + " " +
                                      callingFunction + 
                                      " " +
@@ -267,7 +267,7 @@ namespace Log {
             void flushBufferToFile (void) {
                 if (m_saveFileBuffered.is_open()) {
                     auto logBuffer = GET_BUFFER (RESERVED_ID_LOG_SINK + m_instanceId, std::string);
-                    logBuffer-> BUFFER_FLUSH (m_saveFileBuffered);
+                    logBuffer->BUFFER_FLUSH (m_saveFileBuffered);
                 }
             }
 
@@ -291,7 +291,7 @@ namespace Log {
                 */
                 if (m_activeSink & TO_FILE_BUFFER_CIRCULAR) {
                     auto logBuffer = GET_BUFFER (RESERVED_ID_LOG_SINK + m_instanceId, std::string);
-                    logBuffer-> BUFFER_PUSH (m_bufferedSinkHolder);
+                    logBuffer->BUFFER_PUSH (m_bufferedSinkHolder);
                     /* Clear after flush
                     */
                     m_bufferedSinkHolder = "";

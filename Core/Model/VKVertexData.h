@@ -35,9 +35,9 @@ namespace Renderer {
 namespace std {
     /* Hash function for Vertex struct
     */
-    template<> 
+    template <> 
     struct hash <Renderer::Vertex> {
-        size_t operator()(Renderer::Vertex const& vertex) const {
+        size_t operator() (Renderer::Vertex const& vertex) const {
             /* The difficulty with the hash function is that if your key type consists of several members, you will 
              * usually have the hash function calculate hash values for the individual members, and then somehow combine 
              * them into one hash value for the entire object. For good performance (i.e., few collisions) you should 

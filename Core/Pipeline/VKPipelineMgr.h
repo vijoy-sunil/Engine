@@ -66,7 +66,7 @@ namespace Renderer {
                 struct Resource {
                     VkPipelineLayout layout;
                     std::vector <VkDescriptorSetLayout> descriptorSetLayouts;
-                    std::vector <VkPushConstantRange> pushConstantRanges;
+                    std::vector <VkPushConstantRange>   pushConstantRanges;
                     VkPipeline pipeline;
                     VkRenderPass renderPass;
                     /* Vulkan allows you to create a new graphics pipeline by deriving from an existing pipeline. The idea
@@ -97,8 +97,8 @@ namespace Renderer {
         public:
             VKPipelineMgr (void) {
                 m_VKPipelineMgrLog = LOG_INIT (m_instanceId, g_pathSettings.logSaveDir); 
-                LOG_ADD_CONFIG (m_instanceId, Log::INFO,    Log::TO_FILE_IMMEDIATE);
-                LOG_ADD_CONFIG (m_instanceId, Log::ERROR,   Log::TO_FILE_IMMEDIATE | Log::TO_CONSOLE); 
+                LOG_ADD_CONFIG (m_instanceId, Log::INFO,  Log::TO_FILE_IMMEDIATE);
+                LOG_ADD_CONFIG (m_instanceId, Log::ERROR, Log::TO_FILE_IMMEDIATE | Log::TO_CONSOLE); 
             }
 
             ~VKPipelineMgr (void) {
@@ -225,7 +225,15 @@ namespace Renderer {
 
                     LOG_INFO (m_VKPipelineMgrLog) << "Base pipeline index " 
                                                   << "[" << val.meta.basePipelineIndex << "]"
-                                                  << std::endl;                                                                                                   
+                                                  << std::endl;      
+
+                    LOG_INFO (m_VKPipelineMgrLog) << "Descriptor set layouts count " 
+                                                  << "[" << val.resource.descriptorSetLayouts.size() << "]"
+                                                  << std::endl; 
+
+                    LOG_INFO (m_VKPipelineMgrLog) << "Push constant ranges count " 
+                                                  << "[" << val.resource.pushConstantRanges.size() << "]"
+                                                  << std::endl;                                                                                               
                 }
             }
 

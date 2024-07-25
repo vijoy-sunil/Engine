@@ -29,7 +29,7 @@ namespace Renderer {
         public:
             VKDescriptor (void) {
                 m_VKDescriptorLog = LOG_INIT (m_instanceId, g_pathSettings.logSaveDir);
-                LOG_ADD_CONFIG (m_instanceId, Log::ERROR,   Log::TO_FILE_IMMEDIATE | Log::TO_CONSOLE);
+                LOG_ADD_CONFIG (m_instanceId, Log::ERROR, Log::TO_FILE_IMMEDIATE | Log::TO_CONSOLE);
             }
 
             ~VKDescriptor (void) {

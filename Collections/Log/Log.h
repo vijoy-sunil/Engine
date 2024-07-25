@@ -21,10 +21,10 @@
 #define LOG_CLOSE(id)                           Log::recordMgr.closeRecord (id)
 #define LOG_CLOSE_ALL                           Log::recordMgr.closeAllRecords()
 #define LOG_ADD_CONFIG_A(id, level, sink, nameExt)                                                                      \
-                                                GET_LOG (id)->addConfig (level, sink, nameExt);
-#define LOG_ADD_CONFIG_B(id, level, sink)       GET_LOG (id)->addConfig (level, sink);
+                                                GET_LOG(id)->addConfig (level, sink, nameExt);
+#define LOG_ADD_CONFIG_B(id, level, sink)       GET_LOG(id)->addConfig (level, sink);
 
-#define LOG_CLEAR_CONFIG(id)                    GET_LOG (id)->clearConfig();
+#define LOG_CLEAR_CONFIG(id)                    GET_LOG(id)->clearConfig();
 #define LOG_CLEAR_ALL_CONFIGS                   Log::recordMgr.clearAllConfigs();
 
 /* Normally, the dump method in the manager contains only the instance ids that are currently active, but we can use a
@@ -54,11 +54,11 @@
 #define LOG_GET_FILE                            __FILE__
 #define LOG_GET_FUNCTION                        __FUNCTION__
 #define LOG_GET_LINE                            __LINE__
-#define LOG(c_record, level, header)            if (! (c_record-> filterLevel (level))) { ; }                           \
+#define LOG(c_record, level, header)            if (!c_record->filterLevel (level)) { ; }                               \
                                                 else                                                                    \
-                                                    c_record-> getReference() <<                                        \
-                                                    c_record-> getHeader (level,                                        \
-                                                                          LOG_GET_FUNCTION,                             \
-                                                                          LOG_GET_LINE,                                 \
-                                                                          header)
+                                                    c_record->getReference() <<                                         \
+                                                    c_record->getHeader (level,                                         \
+                                                                         LOG_GET_FUNCTION,                              \
+                                                                         LOG_GET_LINE,                                  \
+                                                                         header)
 #endif  // LOG_H

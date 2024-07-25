@@ -30,7 +30,7 @@ using namespace Collections;
                                  capacity);                         // buffer capacity
 
     // push to buffer
-    for (auto i : input) 
+    for (auto const& i: input) 
         myBuffer->BUFFER_PUSH (i);
 
     // dump buffer contents

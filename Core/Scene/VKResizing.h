@@ -22,7 +22,7 @@ namespace Renderer {
         public:
             VKResizing (void) {
                 m_VKResizingLog = LOG_INIT (m_instanceId, g_pathSettings.logSaveDir);
-                LOG_ADD_CONFIG (m_instanceId, Log::INFO,    Log::TO_FILE_IMMEDIATE);                
+                LOG_ADD_CONFIG (m_instanceId, Log::INFO, Log::TO_FILE_IMMEDIATE);                
             }
 
             ~VKResizing (void) {
@@ -124,7 +124,7 @@ namespace Renderer {
                                            << "[" << modelInfo->id.swapChainImageInfoBase << "]"
                                            << " "
                                            << "[" << resourceId << "]"
-                                          << std::endl;
+                                           << std::endl;
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG DEPTH RESOURCES                                                                         |
                  * |------------------------------------------------------------------------------------------------|

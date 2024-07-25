@@ -206,7 +206,7 @@ namespace Renderer {
                 subPass.pipelineBindPoint    = VK_PIPELINE_BIND_POINT_GRAPHICS;
                 subPass.colorAttachmentCount = static_cast <uint32_t> (colorAttachments.size());
                 /* The index of the attachment in this array is directly referenced from the fragment shader with the 
-                 * layout(location = ?) out vec4 outColor directive
+                 * layout (location = ?) out vec4 outColor directive
                 */
                 subPass.pColorAttachments = colorAttachments.data();
                 /* Unlike color attachments, a subpass can only use a single depth (+stencil) attachment. That is why 
