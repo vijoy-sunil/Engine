@@ -25,7 +25,8 @@ VARIABLES
 [ X ] static cast instead of C-style cast
 [ - ] For loops use matching types for iterator
 [ - ] Stack allocate whenever you can instead of heap
-[ X ] Use const and/or reference in function params when passing vectors, structs etc.
+[ X ] Use const and/or reference in function params when passing vectors
+[ X ] Use const and/or pointer in function params when passing structs, allows us to pass nullptr
 [ X ] Pool structs resource will only have Vulkan objects, others could be in meta
 [ X ] createInfo and allocInfo used everywhere for consistency
 [ X ] populate info structure by reference via local variable at the end
