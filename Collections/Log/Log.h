@@ -54,7 +54,7 @@
 #define LOG_GET_FILE                            __FILE__
 #define LOG_GET_FUNCTION                        __FUNCTION__
 #define LOG_GET_LINE                            __LINE__
-#define LOG(c_record, level, header)            if (!c_record->filterLevel (level)) { ; }                               \
+#define LOG(c_record, level, header)            if (!c_record->isSinkPresent (level)) { ; }                             \
                                                 else                                                                    \
                                                     c_record->getReference() <<                                         \
                                                     c_record->getHeader (level,                                         \

@@ -17,9 +17,9 @@
 #define BUFFER_POP_FIRST                        popFirst()
 #define BUFFER_POP_LAST                         popLast()
 #define BUFFER_FLUSH(stream)                    flush (stream)
-#define BUFFER_PEEK_FIRST                       peekFirst()
-#define BUFFER_PEEK_LAST                        peekLast()
-#define BUFFER_AVAILABILITY                     availability()
+#define BUFFER_PEEK_FIRST                       getFirst()
+#define BUFFER_PEEK_LAST                        getLast()
+#define BUFFER_AVAILABILITY                     getAvailability()
 #define BUFFER_RESET                            reset()
 /* Default sink for buffer dump is set to cout
 */

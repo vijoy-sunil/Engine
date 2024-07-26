@@ -37,7 +37,7 @@ namespace Renderer {
 
             /* Check if required validation layers are supported
             */
-            bool checkValidationLayerSupport (void) {
+            bool isValidationLayersSupported (void) {
                 uint32_t layerCount = 0;
                 vkEnumerateInstanceLayerProperties (&layerCount, VK_NULL_HANDLE);
                 std::vector <VkLayerProperties> availableLayers (layerCount);
@@ -147,7 +147,7 @@ namespace Renderer {
             void enableValidationLayers (void) {
                 m_enableValidationLayers = true;
 
-                if (checkValidationLayerSupport())
+                if (isValidationLayersSupported())
                     m_validationLayersSupported = true;
             }
 
@@ -159,7 +159,7 @@ namespace Renderer {
                 return m_enableValidationLayers;
             }
 
-            bool isValidationLayersSupported (void) {
+            bool isValidationLayersSupportedAlias (void) {
                 return m_validationLayersSupported;
             }
 

@@ -11,7 +11,7 @@ namespace Renderer {
             static Log::Record* m_VKPhyDeviceLog;
             const uint32_t m_instanceId = g_collectionsId++;
 
-            bool checkDeviceExtensionSupport (VkPhysicalDevice phyDevice) {
+            bool isDeviceExtensionsSupported (VkPhysicalDevice phyDevice) {
                 auto deviceInfo = getDeviceInfo();
                 /* Query all available extensions
                 */
@@ -45,14 +45,14 @@ namespace Renderer {
                 return requiredExtensions.empty();
             }
 
-            bool checkPhyDeviceSupport (uint32_t resourceId, VkPhysicalDevice phyDevice) {
+            bool isPhyDeviceSupported (uint32_t resourceId, VkPhysicalDevice phyDevice) {
                 /* list of gpu devices have already been queried and is passed into this function one by one, which is 
                  * then checked for support
                 */
                 populateQueueFamilyIndices (resourceId, phyDevice);
                 /* check device extension support
                 */
-                bool extensionsSupported = checkDeviceExtensionSupport (phyDevice);
+                bool extensionsSupported = isDeviceExtensionsSupported (phyDevice);
                 /* It should be noted that the availability of a presentation queue, implies that the swap chain 
                  * extension must be supported. However, it's still good to be explicit about things, and the extension 
                  * does have to be explicitly enabled
@@ -207,8 +207,8 @@ namespace Renderer {
                                                 << "[" << memProperties.memoryTypes[i].heapIndex << "]"
                                                 << std::endl;
 
-                    auto flags = Utils::splitString (string_VkMemoryPropertyFlags 
-                                                    (memProperties.memoryTypes[i].propertyFlags), "|");
+                    auto flags = Utils::getSplitString (string_VkMemoryPropertyFlags 
+                                                       (memProperties.memoryTypes[i].propertyFlags), "|");
                     for (auto const& flag: flags)
                     LOG_INFO (m_VKPhyDeviceLog) << "[" << flag << "]" 
                                                 << std::endl; 
@@ -224,8 +224,8 @@ namespace Renderer {
                                                 << "[" << memProperties.memoryHeaps[i].size << "]"
                                                 << std::endl;
 
-                    auto flags = Utils::splitString (string_VkMemoryHeapFlags 
-                                                    (memProperties.memoryHeaps[i].flags), "|");
+                    auto flags = Utils::getSplitString (string_VkMemoryHeapFlags 
+                                                       (memProperties.memoryHeaps[i].flags), "|");
                     for (auto const& flag: flags)
                     LOG_INFO (m_VKPhyDeviceLog) << "[" << flag << "]" 
                                                 << std::endl;                                                     
@@ -237,7 +237,7 @@ namespace Renderer {
                 */
                 LOG_INFO (m_VKPhyDeviceLog) << "Desired memory properties" 
                                             << std::endl;  
-                auto flags = Utils::splitString (string_VkMemoryPropertyFlags (properties), "|");
+                auto flags = Utils::getSplitString (string_VkMemoryPropertyFlags (properties), "|");
                 for (auto const& flag: flags)
                 LOG_INFO (m_VKPhyDeviceLog) << "[" << flag << "]" 
                                             << std::endl;                                                   
@@ -293,7 +293,7 @@ namespace Renderer {
                 vkEnumeratePhysicalDevices (deviceInfo->shared.instance, &deviceCount, devices.data());
 
                 for (auto const& device: devices) {
-                    if (checkPhyDeviceSupport (resourceId, device)) {
+                    if (isPhyDeviceSupported (resourceId, device)) {
                         VkPhysicalDeviceProperties properties;
                         vkGetPhysicalDeviceProperties (device, &properties);
 

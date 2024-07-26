@@ -78,7 +78,7 @@ namespace Renderer {
                                             
                     LOG_INFO (m_VKQueueLog) << "Queue family supported flags" 
                                             << std::endl;  
-                    auto flags = Utils::splitString (string_VkQueueFlags (queueFamily.queueFlags), "|");
+                    auto flags = Utils::getSplitString (string_VkQueueFlags (queueFamily.queueFlags), "|");
                     for (auto const& flag: flags)
                     LOG_INFO (m_VKQueueLog) << "[" << flag << "]" 
                                             << std::endl;

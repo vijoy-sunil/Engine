@@ -57,7 +57,7 @@ namespace Log {
             bool m_fileImmediateReady;
             bool m_fileBufferedReady;
 
-            const char* levelToString (e_level level) {
+            const char* getLevelString (e_level level) {
                 switch (level) {
                     case INFO:
                         return "INFO";
@@ -252,7 +252,7 @@ namespace Log {
                                      " " +
                                      getLocalTimestamp() + 
                                      " " +
-                                     "[" + levelToString (level) + "]" 
+                                     "[" + getLevelString (level) + "]" 
                                      + " " +
                                      callingFunction + 
                                      " " +
@@ -271,7 +271,7 @@ namespace Log {
                 }
             }
 
-            bool filterLevel (e_level level) {
+            bool isSinkPresent (e_level level) {
                 /* Set active sink, this will decide where the logging will output to for this level
                 */
                 m_activeSink = m_levelConfig[level];

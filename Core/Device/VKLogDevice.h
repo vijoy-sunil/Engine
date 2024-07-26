@@ -76,7 +76,7 @@ namespace Renderer {
                  * fields of VkDeviceCreateInfo are ignored by up-to-date implementations. However, it is still a good 
                  * idea to set them anyway to be compatible with older implementations
                 */
-                if (isValidationLayersEnabled() && !isValidationLayersSupported()) {
+                if (isValidationLayersEnabled() && !isValidationLayersSupportedAlias()) {
                     LOG_WARNING (m_VKLogDeviceLog) << "Required validation layers not available" 
                                                    << std::endl;
                     createInfo.enabledLayerCount = 0;

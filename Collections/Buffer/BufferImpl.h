@@ -106,11 +106,11 @@ namespace Buffer {
                 ost.flush();
             }
             
-            inline T* peekFirst (void) {
+            inline T* getFirst (void) {
                 return isEmpty() ? nullptr: m_tail;
             }
 
-            inline T* peekLast (void) {
+            inline T* getLast (void) {
                 return isEmpty() ? nullptr: 
                 /* Head pointer will be at the start either when the buffer is empty, or when an item has been inserted at 
                  * the end and wrap around is complete
@@ -118,7 +118,7 @@ namespace Buffer {
                 m_head == m_buffer ? m_end: (m_head - 1);
             }
 
-            inline size_t availability (void) {
+            inline size_t getAvailability (void) {
                 return m_capacity - m_numItems;
             }
 
@@ -154,15 +154,15 @@ namespace Buffer {
                 ost << OPEN_L1;
 
                 ost << TAB_L2 << "Id: "             << m_instanceId         << "\n";
-                ost << TAB_L2 << "Availability: "   << availability()       << "\n";
+                ost << TAB_L2 << "Availability: "   << getAvailability()    << "\n";
 
                 ost << TAB_L2 << "First: ";        
-                if (m_numItems != 0)            lambda (peekFirst(), ost); 
+                if (m_numItems != 0)            lambda (getFirst(), ost); 
                 else                            ost << "NULL";                       
                 ost << "\n"; 
 
                 ost << TAB_L2 << "Last: ";        
-                if (m_numItems != 0)            lambda (peekLast(), ost);
+                if (m_numItems != 0)            lambda (getLast(), ost);
                 else                            ost << "NULL";                       
                 ost << "\n"; 
 

@@ -10,7 +10,7 @@ namespace Utils {
      * "VK_QUEUE_GRAPHICS_BIT|VK_QUEUE_COMPUTE_BIT|VK_QUEUE_TRANSFER_BIT" will be split into individual flags for better
      * readability in log files
     */
-    std::vector <std::string> splitString (std::string inputString, const std::string& delimiter) {
+    std::vector <std::string> getSplitString (std::string inputString, const std::string& delimiter) {
         std::vector <std::string> outputStrings;
         size_t pos = 0;
         std::string token;
@@ -24,7 +24,7 @@ namespace Utils {
         return outputStrings;
     }
 
-    const char* string_bufferType (e_bufferType type) {
+    const char* getBufferTypeString (e_bufferType type) {
         switch (type)
         {
             case VOID_BUFFER:
@@ -42,7 +42,7 @@ namespace Utils {
         }
     }
 
-    const char* string_imageType (e_imageType type) {
+    const char* getImageTypeString (e_imageType type) {
         switch (type)
         {
             case VOID_IMAGE:
@@ -60,7 +60,7 @@ namespace Utils {
         }
     }
 
-    const char* string_syncType (e_syncType type) {
+    const char* getSyncTypeString (e_syncType type) {
         switch (type)
         {
             case SEM_RENDER_DONE:

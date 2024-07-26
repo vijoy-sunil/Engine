@@ -54,7 +54,7 @@ namespace Renderer {
 
             /* Helper function that tells us if the format contains a stencil component
             */
-            bool hasStencilComponent (VkFormat format) {
+            bool isStencilComponentSupported (VkFormat format) {
                 return format == VK_FORMAT_D32_SFLOAT_S8_UINT || format == VK_FORMAT_D24_UNORM_S8_UINT;
             }
 
@@ -70,7 +70,7 @@ namespace Renderer {
                 LOG_ERROR (m_VKImageMgrLog) << "Failed to delete image info "
                                             << "[" << imageInfo->meta.id << "]"
                                             << " "
-                                            << "[" << Utils::string_imageType (type) << "]"           
+                                            << "[" << Utils::getImageTypeString (type) << "]"           
                                             << std::endl;
                 throw std::runtime_error ("Failed to delete image info");              
             }
@@ -102,7 +102,7 @@ namespace Renderer {
 
                 LOG_INFO (m_VKImageMgrLog) << "Required features"
                                            << std::endl;   
-                auto flags = Utils::splitString (string_VkFormatFeatureFlags (features), "|");
+                auto flags = Utils::getSplitString (string_VkFormatFeatureFlags (features), "|");
                 for (auto const& flag: flags)
                 LOG_INFO (m_VKImageMgrLog) << "[" << flag << "]" 
                                            << std::endl;
@@ -165,7 +165,7 @@ namespace Renderer {
                     LOG_ERROR (m_VKImageMgrLog) << "Failed to create image view " 
                                                 << "[" << imageInfo->meta.id << "]"
                                                 << " "
-                                                << "[" << Utils::string_imageType (type) << "]"
+                                                << "[" << Utils::getImageTypeString (type) << "]"
                                                 << " "
                                                 << "[" << string_VkResult (result) << "]"
                                                 << std::endl;
@@ -197,7 +197,7 @@ namespace Renderer {
                         LOG_ERROR (m_VKImageMgrLog) << "Image info id already exists " 
                                                     << "[" << imageInfoId << "]"
                                                     << " "
-                                                    << "[" << Utils::string_imageType (type) << "]"
+                                                    << "[" << Utils::getImageTypeString (type) << "]"
                                                     << std::endl;
                         throw std::runtime_error ("Image info id already exists");
                     }
@@ -277,7 +277,7 @@ namespace Renderer {
                     LOG_ERROR (m_VKImageMgrLog) << "Failed to create image " 
                                                 << "[" << imageInfoId << "]"
                                                 << " "
-                                                << "[" << Utils::string_imageType (type) << "]"
+                                                << "[" << Utils::getImageTypeString (type) << "]"
                                                 << " "
                                                 << "[" << string_VkResult (result) << "]"
                                                 << std::endl; 
@@ -304,7 +304,7 @@ namespace Renderer {
                     LOG_ERROR (m_VKImageMgrLog) << "Failed to allocate image memory " 
                                                 << "[" << imageInfoId << "]"
                                                 << " "
-                                                << "[" << Utils::string_imageType (type) << "]"
+                                                << "[" << Utils::getImageTypeString (type) << "]"
                                                 << " "
                                                 << "[" << string_VkResult (result) << "]"
                                                 << std::endl;                     
@@ -447,7 +447,7 @@ namespace Renderer {
                 LOG_ERROR (m_VKImageMgrLog) << "Failed to find image info "
                                             << "[" << imageInfoId << "]"
                                             << " "
-                                            << "[" << Utils::string_imageType (type) << "]"                                         
+                                            << "[" << Utils::getImageTypeString (type) << "]"                                         
                                             << std::endl;
                 throw std::runtime_error ("Failed to find image info");
             }
@@ -458,7 +458,7 @@ namespace Renderer {
 
                 for (auto const& [key, val]: m_imageInfoPool) {
                     LOG_INFO (m_VKImageMgrLog) << "Type " 
-                                               << "[" << Utils::string_imageType (key) << "]"
+                                               << "[" << Utils::getImageTypeString (key) << "]"
                                                << std::endl;
                     
                     for (auto const& info: val) {
@@ -485,7 +485,7 @@ namespace Renderer {
 
                         LOG_INFO (m_VKImageMgrLog) << "Usage"
                                                    << std::endl;
-                        auto flags = Utils::splitString (string_VkImageUsageFlags (info.params.usage), "|");
+                        auto flags = Utils::getSplitString (string_VkImageUsageFlags (info.params.usage), "|");
                         for (auto const& flag: flags)
                         LOG_INFO (m_VKImageMgrLog) << "[" << flag << "]" 
                                                    << std::endl; 
@@ -500,7 +500,7 @@ namespace Renderer {
 
                         LOG_INFO (m_VKImageMgrLog) << "Property"
                                                    << std::endl;
-                        auto properties = Utils::splitString (string_VkMemoryPropertyFlags (info.params.property), "|");
+                        auto properties = Utils::getSplitString (string_VkMemoryPropertyFlags (info.params.property), "|");
                         for (auto const& property: properties)
                         LOG_INFO (m_VKImageMgrLog) << "[" << property << "]" 
                                                    << std::endl; 

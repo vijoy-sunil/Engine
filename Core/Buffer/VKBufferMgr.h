@@ -53,7 +53,7 @@ namespace Renderer {
                 LOG_ERROR (m_VKBufferMgrLog) << "Failed to delete buffer info "
                                              << "[" << bufferInfo->meta.id << "]"
                                              << " "
-                                             << "[" << Utils::string_bufferType (type) << "]"             
+                                             << "[" << Utils::getBufferTypeString (type) << "]"             
                                              << std::endl;
                 throw std::runtime_error ("Failed to delete buffer info");              
             }
@@ -83,7 +83,7 @@ namespace Renderer {
                         LOG_ERROR (m_VKBufferMgrLog) << "Buffer info id already exists " 
                                                      << "[" << bufferInfoId << "]"
                                                      << " "
-                                                     << "[" << Utils::string_bufferType (type) << "]"
+                                                     << "[" << Utils::getBufferTypeString (type) << "]"
                                                      << std::endl;
                         throw std::runtime_error ("Buffer info id already exists");
                     }
@@ -122,7 +122,7 @@ namespace Renderer {
                     LOG_ERROR (m_VKBufferMgrLog) << "Failed to create buffer " 
                                                  << "[" << bufferInfoId << "]"
                                                  << " "
-                                                 << "[" << Utils::string_bufferType (type) << "]"
+                                                 << "[" << Utils::getBufferTypeString (type) << "]"
                                                  << " "
                                                  << "[" << string_VkResult (result) << "]" 
                                                  << std::endl; 
@@ -174,7 +174,7 @@ namespace Renderer {
                     LOG_ERROR (m_VKBufferMgrLog) << "Failed to allocate buffer memory " 
                                                  << "[" << bufferInfoId << "]"
                                                  << " "
-                                                 << "[" << Utils::string_bufferType (type) << "]"
+                                                 << "[" << Utils::getBufferTypeString (type) << "]"
                                                  << " "
                                                  << "[" << string_VkResult (result) << "]"
                                                  << std::endl; 
@@ -214,7 +214,7 @@ namespace Renderer {
                 LOG_ERROR (m_VKBufferMgrLog) << "Failed to find buffer info "
                                              << "[" << bufferInfoId << "]"
                                              << " "
-                                             << "[" << Utils::string_bufferType (type) << "]"           
+                                             << "[" << Utils::getBufferTypeString (type) << "]"           
                                              << std::endl;
                 throw std::runtime_error ("Failed to find buffer info");
             }
@@ -225,7 +225,7 @@ namespace Renderer {
 
                 for (auto const& [key, val]: m_bufferInfoPool) {
                     LOG_INFO (m_VKBufferMgrLog) << "Type " 
-                                                << "[" << Utils::string_bufferType (key) << "]"
+                                                << "[" << Utils::getBufferTypeString (key) << "]"
                                                 << std::endl;
                     
                     for (auto const& info: val) {
@@ -239,14 +239,14 @@ namespace Renderer {
 
                         LOG_INFO (m_VKBufferMgrLog) << "Usage"
                                                     << std::endl;
-                        auto flags = Utils::splitString (string_VkBufferUsageFlags (info.params.usage), "|");
+                        auto flags = Utils::getSplitString (string_VkBufferUsageFlags (info.params.usage), "|");
                         for (auto const& flag: flags)
                         LOG_INFO (m_VKBufferMgrLog) << "[" << flag << "]" 
                                                     << std::endl; 
 
                         LOG_INFO (m_VKBufferMgrLog) << "Property"
                                                     << std::endl;
-                        auto properties = Utils::splitString (string_VkMemoryPropertyFlags (info.params.property), "|");
+                        auto properties = Utils::getSplitString (string_VkMemoryPropertyFlags (info.params.property), "|");
                         for (auto const& property: properties)
                         LOG_INFO (m_VKBufferMgrLog) << "[" << property << "]" 
                                                     << std::endl; 

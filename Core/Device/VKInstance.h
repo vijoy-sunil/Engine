@@ -53,7 +53,7 @@ namespace Renderer {
                 m_instanceExtensions.clear();
             }
 
-            bool checkInstanceExtensionSupport (void) {
+            bool isInstanceExtensionsSupported (void) {
                 /* Query all available extensions, to allocate an array to hold the extension details we first need to 
                  * know how many there are. You can request just the number of extensions by leaving the latter parameter 
                  * empty
@@ -141,7 +141,7 @@ namespace Renderer {
                  * thing is that you can enable them during development and then completely disable them when releasing 
                  * your application for zero overhead
                 */
-                if (isValidationLayersEnabled() && !isValidationLayersSupported()) {
+                if (isValidationLayersEnabled() && !isValidationLayersSupportedAlias()) {
                     LOG_WARNING (m_VKInstanceLog) << "Required validation layers not available" 
                                                   << std::endl;
                     createInfo.enabledLayerCount = 0;
@@ -167,7 +167,7 @@ namespace Renderer {
 #endif  // __APPLE__
                 /* Verify instance extension support
                 */
-                if (!checkInstanceExtensionSupport()) {
+                if (!isInstanceExtensionsSupported()) {
                     LOG_ERROR (m_VKInstanceLog) << "Required instance extensions not available" 
                                                 << std::endl;
                     throw std::runtime_error ("Required instance extensions not available");
