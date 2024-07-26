@@ -106,10 +106,10 @@ namespace Renderer {
              * use the original {WIDTH, HEIGHT}. Instead, we must use glfwGetFramebufferSize to query the resolution of 
              * the window in pixel before matching it against the minimum and maximum image extent.
             */
-            VkExtent2D getSwapExtent (uint32_t resourceId, const VkSurfaceCapabilitiesKHR& capabilities) {
+            VkExtent2D getSwapExtent (uint32_t resourceId, const VkSurfaceCapabilitiesKHR* capabilities) {
                 auto deviceInfo = getDeviceInfo();
-                if (capabilities.currentExtent.width != std::numeric_limits <uint32_t> ::max())
-                    return capabilities.currentExtent;
+                if (capabilities->currentExtent.width != std::numeric_limits <uint32_t> ::max())
+                    return capabilities->currentExtent;
                     
                 else {
                     int width, height;
@@ -121,11 +121,11 @@ namespace Renderer {
                     };
 
                     actualExtent.width = std::clamp (actualExtent.width, 
-                                                     capabilities.minImageExtent.width, 
-                                                     capabilities.maxImageExtent.width);
+                                                     capabilities->minImageExtent.width, 
+                                                     capabilities->maxImageExtent.width);
                     actualExtent.height = std::clamp (actualExtent.height, 
-                                                     capabilities.minImageExtent.height, 
-                                                     capabilities.maxImageExtent.height);
+                                                     capabilities->minImageExtent.height, 
+                                                     capabilities->maxImageExtent.height);
 
                     return actualExtent;
                 }
@@ -159,7 +159,7 @@ namespace Renderer {
 
                 VkSurfaceFormatKHR surfaceFormat = getSwapSurfaceFormat (swapChainSupport.formats);
                 VkPresentModeKHR presentMode     = getSwapPresentMode   (swapChainSupport.presentModes);
-                VkExtent2D extent                = getSwapExtent        (resourceId, swapChainSupport.capabilities); 
+                VkExtent2D extent                = getSwapExtent        (resourceId, &swapChainSupport.capabilities); 
 
                 /* Aside from the above properties we also have to decide how many images we would like to have in the 
                  * swap chain. The implementation specifies the minimum number that it requires to function.

@@ -350,30 +350,30 @@ namespace Renderer {
                                         uint32_t baseMipLevel,
                                         uint32_t mipLevels,
                                         VkImageAspectFlags aspect,
-                                        VkImageMemoryBarrier& barrier,
+                                        VkImageMemoryBarrier* barrier,
                                         VkPipelineStageFlags& sourceStage,
                                         VkPipelineStageFlags& destinationStage) {
 
-                barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+                barrier->sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
                 /* The first two fields specify layout transition. It is possible to use VK_IMAGE_LAYOUT_UNDEFINED as 
                  * oldLayout if you don't care about the existing contents of the image
                 */
-                barrier.oldLayout = oldLayout;
-                barrier.newLayout = newLayout;
+                barrier->oldLayout = oldLayout;
+                barrier->newLayout = newLayout;
                 /* If you are using the barrier to transfer queue family ownership, then these two fields should be the 
                  * indices of the queue families. They must be set to VK_QUEUE_FAMILY_IGNORED if you don't want to do 
                  * this (not the default value!)
                 */
-                barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-                barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+                barrier->srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+                barrier->dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
                 /* The image and subresourceRange specify the image that is affected and the specific part of the image
                 */
-                barrier.image = image;
-                barrier.subresourceRange.aspectMask     = aspect; 
-                barrier.subresourceRange.baseMipLevel   = baseMipLevel;
-                barrier.subresourceRange.levelCount     = mipLevels;
-                barrier.subresourceRange.baseArrayLayer = 0;
-                barrier.subresourceRange.layerCount     = 1;
+                barrier->image = image;
+                barrier->subresourceRange.aspectMask     = aspect; 
+                barrier->subresourceRange.baseMipLevel   = baseMipLevel;
+                barrier->subresourceRange.levelCount     = mipLevels;
+                barrier->subresourceRange.baseArrayLayer = 0;
+                barrier->subresourceRange.layerCount     = 1;
                 /* Barriers are primarily used for synchronization purposes, so you must specify which types of 
                  * operations that involve the resource 'must happen before the barrier', and which operations that  
                  * involve the resource 'must wait on the barrier'. We need to do that despite already using a fence/
@@ -386,44 +386,44 @@ namespace Renderer {
                      * operations
                     */
                     sourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
-                    barrier.srcAccessMask = VK_ACCESS_NONE;
+                    barrier->srcAccessMask = VK_ACCESS_NONE;
                     /* Note that, even though at this point we may not have a pipeline bound, we still use the pipeline
                      * stage VK_PIPELINE_STAGE_TRANSFER_BIT. This is possible because VK_PIPELINE_STAGE_TRANSFER_BIT 
                      * pipeline stage is not a real stage within the graphics and compute pipelines, it is more of a 
                      * pseudo-stage where transfers happen
                     */
                     destinationStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
-                    barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+                    barrier->dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
                 }
 
                 else if (oldLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL && 
                          newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) {
 
                     sourceStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
-                    barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+                    barrier->srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
 
                     destinationStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-                    barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+                    barrier->dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
                 }
 
                 else if (oldLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL &&
                          newLayout == VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL) {
 
                     sourceStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
-                    barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+                    barrier->srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
 
                     destinationStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
-                    barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;                    
+                    barrier->dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;                    
                 } 
 
                 else if (oldLayout == VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL &&
                          newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) {
 
                     sourceStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
-                    barrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+                    barrier->srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
 
                     destinationStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-                    barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;                    
+                    barrier->dstAccessMask = VK_ACCESS_SHADER_READ_BIT;                    
                 }                 
 
                 else {

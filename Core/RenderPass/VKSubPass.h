@@ -197,7 +197,7 @@ namespace Renderer {
 
             void createSubPass (uint32_t renderPassInfoId,
                                 const std::vector <VkAttachmentReference>& colorAttachments,
-                                const VkAttachmentReference& depthStencilAttachment,
+                                const VkAttachmentReference* depthStencilAttachment,
                                 const std::vector <VkAttachmentReference>& resolveAttachments) {
 
                 auto renderPassInfo = getRenderPassInfo (renderPassInfoId);
@@ -212,7 +212,7 @@ namespace Renderer {
                 /* Unlike color attachments, a subpass can only use a single depth (+stencil) attachment. That is why 
                  * pDepthStencilAttachment accepts only a single attachment reference and not an array of references
                 */
-                subPass.pDepthStencilAttachment = &depthStencilAttachment;
+                subPass.pDepthStencilAttachment = depthStencilAttachment;
                 /* This will let the render pass define a multisample resolve operation which will let us render the image
                  * to screen
                 */

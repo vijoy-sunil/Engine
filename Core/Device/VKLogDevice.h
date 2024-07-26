@@ -132,7 +132,7 @@ namespace Renderer {
                 descriptorIndexingFeatures.runtimeDescriptorArray = VK_TRUE;
 
                 auto requiredFeatures2 = getPhyDeviceFeatures2 (deviceInfo->shared.phyDevice,
-                                                                requiredFeatures,
+                                                                &requiredFeatures,
                                                                 &descriptorIndexingFeatures,
                                                                 false);
                 createInfo.pNext = &requiredFeatures2;

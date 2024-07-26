@@ -106,7 +106,7 @@ namespace Renderer {
                                        0,
                                        dstImageInfo->meta.mipLevels,
                                        dstImageInfo->params.aspect,
-                                       barrier,
+                                       &barrier,
                                        sourceStage,
                                        destinationStage);
                 /* All types of pipeline barriers are submitted using the same function. The first parameter after the 
@@ -248,7 +248,7 @@ namespace Renderer {
                                            srcMipLevel,
                                            1,
                                            imageInfo->params.aspect,
-                                           barrier,
+                                           &barrier,
                                            sourceStage,
                                            destinationStage);
 
@@ -316,7 +316,7 @@ namespace Renderer {
                                            srcMipLevel,
                                            1,
                                            imageInfo->params.aspect,
-                                           barrier,
+                                           &barrier,
                                            sourceStage,
                                            destinationStage);
 
@@ -344,7 +344,7 @@ namespace Renderer {
                                        imageInfo->meta.mipLevels - 1,
                                        1,
                                        imageInfo->params.aspect,
-                                       barrier,
+                                       &barrier,
                                        sourceStage,
                                        destinationStage);
 

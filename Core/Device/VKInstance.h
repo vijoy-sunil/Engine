@@ -154,7 +154,7 @@ namespace Renderer {
                     /* By creating an additional debug messenger this way it will automatically be used during 
                      * vkCreateInstance and vkDestroyInstance and cleaned up after that
                     */
-                    populateDebugMessengerCreateInfo (debugCreateInfo);
+                    populateDebugMessengerCreateInfo (&debugCreateInfo);
                     createInfo.pNext = (VkDebugUtilsMessengerCreateInfoEXT*) &debugCreateInfo;
                 }
 

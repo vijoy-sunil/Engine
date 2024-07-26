@@ -312,7 +312,7 @@ namespace Renderer {
                 };
                 createSubPass (renderPassInfoId,
                                colorAttachmentRefs,
-                               depthStencilAttachmentRef,
+                               &depthStencilAttachmentRef,
                                resolveAttachmentRefs);
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG SUB PASS DEPENDENCIES                                                                   |
@@ -400,18 +400,14 @@ namespace Renderer {
                  * |------------------------------------------------------------------------------------------------|
                 */
                 VkShaderModule vertexShaderModule;
-                createShaderStage        (pipelineInfoId, 
-                                          VK_SHADER_STAGE_VERTEX_BIT, 
-                                          modelInfo->path.vertexShaderBinary,
-                                          "main",
-                                          vertexShaderModule);
+                vertexShaderModule   = createShaderStage (pipelineInfoId, 
+                                                          VK_SHADER_STAGE_VERTEX_BIT, 
+                                                          modelInfo->path.vertexShaderBinary, "main");
 
                 VkShaderModule fragmentShaderModule;
-                createShaderStage        (pipelineInfoId, 
-                                          VK_SHADER_STAGE_FRAGMENT_BIT, 
-                                          modelInfo->path.fragmentShaderBinary,
-                                          "main",
-                                          fragmentShaderModule);
+                fragmentShaderModule = createShaderStage (pipelineInfoId, 
+                                                          VK_SHADER_STAGE_FRAGMENT_BIT, 
+                                                          modelInfo->path.fragmentShaderBinary, "main");
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG PIPELINE STATE - VIEW PORT                                                              |
                  * |------------------------------------------------------------------------------------------------|

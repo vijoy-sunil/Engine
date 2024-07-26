@@ -72,7 +72,7 @@ namespace Renderer {
                 VkPhysicalDeviceDescriptorIndexingFeatures descriptorIndexingFeatures{};
                 descriptorIndexingFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES;
                 descriptorIndexingFeatures.pNext = VK_NULL_HANDLE;
-                getPhyDeviceFeatures2 (phyDevice, supportedFeatures, &descriptorIndexingFeatures);
+                getPhyDeviceFeatures2 (phyDevice, VK_NULL_HANDLE, &descriptorIndexingFeatures);
 
                 return isQueueFamilyIndicesComplete (resourceId) && 
                        extensionsSupported && 
@@ -258,17 +258,20 @@ namespace Renderer {
             }
 
             VkPhysicalDeviceFeatures2 getPhyDeviceFeatures2 (VkPhysicalDevice phyDevice, 
-                                                             const VkPhysicalDeviceFeatures& features,
+                                                             const VkPhysicalDeviceFeatures* features,
                                                              void* pNext,
                                                              bool querySupport = true) {
+
                 VkPhysicalDeviceFeatures2 supportedFeatures2{};
-                supportedFeatures2.sType    = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
-                supportedFeatures2.features = features;
+                supportedFeatures2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
+                if (features != VK_NULL_HANDLE)
+                    supportedFeatures2.features = *features;
+                    
                 /* If the VkPhysicalDevice[ExtensionName]Features structure is included in the pNext chain of the 
                  * VkPhysicalDeviceFeatures2 structure passed to vkGetPhysicalDeviceFeatures2, it is filled in to 
                  * indicate whether each corresponding feature is supported
                 */
-                supportedFeatures2.pNext    = pNext;
+                supportedFeatures2.pNext = pNext;
                 if (querySupport == true)
                     vkGetPhysicalDeviceFeatures2 (phyDevice, &supportedFeatures2);
 

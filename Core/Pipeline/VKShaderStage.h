@@ -81,11 +81,10 @@ namespace Renderer {
             }
 
         protected:  
-            void createShaderStage (uint32_t pipelineInfoId,
-                                    VkShaderStageFlagBits stage,
-                                    const char* shaderBinaryPath,
-                                    const char* entryPoint,
-                                    VkShaderModule& module) {
+            VkShaderModule createShaderStage (uint32_t pipelineInfoId,
+                                              VkShaderStageFlagBits stage,
+                                              const char* shaderBinaryPath,
+                                              const char* entryPoint) {
 
                 auto pipelineInfo = getPipelineInfo (pipelineInfoId);
                 auto shaderCode   = getByteCode     (shaderBinaryPath);
@@ -99,7 +98,7 @@ namespace Renderer {
                     throw std::runtime_error ("Invalid file size for shader file");
                 }
 
-                module = getShaderModule (shaderCode);
+                VkShaderModule module = getShaderModule (shaderCode);
                 if (module == VK_NULL_HANDLE) {
                     LOG_ERROR (m_VKShaderStageLog) << "Invalid shader module "
                                                    << "[" << pipelineInfoId << "]"
@@ -127,6 +126,7 @@ namespace Renderer {
                 createInfo.pSpecializationInfo = VK_NULL_HANDLE;
 
                 pipelineInfo->state.stages.push_back (createInfo);
+                return module;
             }
     };
 
