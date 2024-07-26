@@ -40,7 +40,8 @@ VARIABLES
 METHODS
 -------------------------------------------------------------------------------------------------------------------------
 [ X ] Common methods - create, get, ready, destroy
-[ X ] Return methods start with get
+[ X ] Return objects/literals methods start with get
+[ X ] Return boolean methods start with is
 [ X ] Return via parameter only if returning multiple variables
 [ X ] private/public/protected methods are placed appropriately
 [ X ] Clean ups should remove entry from pool
