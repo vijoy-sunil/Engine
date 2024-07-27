@@ -10,11 +10,9 @@ namespace Renderer {
         private:
             static Log::Record* m_VKInstanceLog;
             const uint32_t m_instanceId = g_collectionsId++;
-            /* List of instance level extensions
-            */
-            std::vector <const char*> m_instanceExtensions;
 
-            void getInstanceExtensions (void) {
+            std::vector <const char*> getInstanceExtensions (void) {
+                std::vector <const char*> instanceExtensions;
                 /* Since Vulkan is a platform agnostic API, it can not interface directly with the window system on its 
                  * own. To establish the connection between Vulkan and the window system to present results to the 
                  * screen, we need to use the WSI (Window System Integration) extensions (ex: VK_KHR_surface) (included 
@@ -25,7 +23,7 @@ namespace Renderer {
                 glfwExtensions = glfwGetRequiredInstanceExtensions (&glfwExtensionCount);
 
                 for (uint32_t i = 0; i < glfwExtensionCount; i++)
-                    m_instanceExtensions.emplace_back (glfwExtensions[i]);
+                    instanceExtensions.emplace_back (glfwExtensions[i]);
 
 #if __APPLE__
                 /* If using MacOS with the latest MoltenVK sdk, you may get VK_ERROR_INCOMPATIBLE_DRIVER (-9) returned 
@@ -37,8 +35,8 @@ namespace Renderer {
                  * Also, the "VK_KHR_get_physical_device_properties2" extension must be enabled for the Vulkan instance 
                  * because it's listed as a dependency for the "VK_KHR_portability_subset" device extension
                 */
-                m_instanceExtensions.emplace_back (VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
-                m_instanceExtensions.emplace_back (VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
+                instanceExtensions.emplace_back (VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
+                instanceExtensions.emplace_back (VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
 #endif  // __APPLE__
 
                 /* The validation layers will print debug messages to the standard output by default, but we can also 
@@ -46,14 +44,12 @@ namespace Renderer {
                  * extension with a callback using the VK_EXT_debug_utils extension.
                 */
                 if (isValidationLayersEnabled())
-                    m_instanceExtensions.emplace_back (VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+                    instanceExtensions.emplace_back (VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+
+                return instanceExtensions;
             }
 
-            void deleteInstanceExtensions (void) {
-                m_instanceExtensions.clear();
-            }
-
-            bool isInstanceExtensionsSupported (void) {
+            bool isInstanceExtensionsSupported (const std::vector <const char*>& instanceExtensions) {
                 /* Query all available extensions, to allocate an array to hold the extension details we first need to 
                  * know how many there are. You can request just the number of extensions by leaving the latter parameter 
                  * empty
@@ -73,11 +69,11 @@ namespace Renderer {
                 
                 LOG_INFO (m_VKInstanceLog) << "Required instance extensions" 
                                            << std::endl;
-                for (auto const& extension: m_instanceExtensions)
+                for (auto const& extension: instanceExtensions)
                     LOG_INFO (m_VKInstanceLog) << "[" << extension << "]"
                                                << std::endl;
 
-                std::set <std::string> requiredExtensions (m_instanceExtensions.begin(), m_instanceExtensions.end());
+                std::set <std::string> requiredExtensions (instanceExtensions.begin(), instanceExtensions.end());
                 for (auto const& extension: availableExtensions)
                     requiredExtensions.erase (extension.extensionName);
 
@@ -98,11 +94,8 @@ namespace Renderer {
             
         protected:
             void createInstance (void) {
-                auto deviceInfo = getDeviceInfo();
-                /* Clear and populate instance extension list every time you create an instance
-                */
-                deleteInstanceExtensions();
-                getInstanceExtensions();
+                auto deviceInfo         = getDeviceInfo();
+                auto instanceExtensions = getInstanceExtensions();
 
                 /* This data is technically optional when creating an instance, but it may provide some useful 
                  * information to the driver in order to optimize our specific application
@@ -160,14 +153,14 @@ namespace Renderer {
 
                 /* Setup instance extensions
                 */
-                createInfo.enabledExtensionCount   = static_cast <uint32_t> (m_instanceExtensions.size());
-                createInfo.ppEnabledExtensionNames = m_instanceExtensions.data();
+                createInfo.enabledExtensionCount   = static_cast <uint32_t> (instanceExtensions.size());
+                createInfo.ppEnabledExtensionNames = instanceExtensions.data();
 #if __APPLE__
                 createInfo.flags |= VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
 #endif  // __APPLE__
                 /* Verify instance extension support
                 */
-                if (!isInstanceExtensionsSupported()) {
+                if (!isInstanceExtensionsSupported (instanceExtensions)) {
                     LOG_ERROR (m_VKInstanceLog) << "Required instance extensions not available" 
                                                 << std::endl;
                     throw std::runtime_error ("Required instance extensions not available");
