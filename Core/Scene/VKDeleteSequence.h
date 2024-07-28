@@ -13,7 +13,7 @@
 #include "../Cmd/VKCmdBuffer.h"
 #include "VKCameraMgr.h"
 #include "VKSyncObject.h"
-#include "VKDrawSequence.h"
+#include "VKHandOff.h"
 
 using namespace Collections;
 
@@ -30,7 +30,7 @@ namespace Renderer {
                             protected virtual VKCmdBuffer,
                             protected virtual VKCameraMgr,
                             protected virtual VKSyncObject,
-                            protected virtual VKDrawSequence {
+                            protected virtual VKHandOff {
         private:
             static Log::Record* m_VKDeleteSequenceLog;
             const uint32_t m_instanceId = g_collectionsId++;
@@ -241,7 +241,7 @@ namespace Renderer {
                  * | DESTROY HAND OFF INFO                                                                          |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                VKDrawSequence::cleanUp (handOffInfoId);
+                VKHandOff::cleanUp (handOffInfoId);
                 LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Hand off info " 
                                                  << "[" << handOffInfoId << "]"
                                                  << std::endl;

@@ -103,6 +103,8 @@
     |
     |---------------------->|VKDescriptorSetLayout
     |
+    |---------------------->|VKPushConstantRange
+    |
     |---------------------->|VKPipelineLayout
 
 
@@ -132,9 +134,9 @@
     |Cmd/VKCmdBuffer
 
 
-    |<----------------------|{VKBufferMgr}
-    |
     |<----------------------|{VKImageMgr}
+    |
+    |<----------------------|{VKBufferMgr}
     |
     |<----------------------|{VKPipelineMgr}
     |
@@ -170,6 +172,18 @@
     |Scene/VKResizing
 
 
+    |<......................|VKUniform
+    |
+    |<......................|VKTransform
+    |
+    |<......................|VKConfig
+    |
+    |<......................|Log
+    |
+    |
+    |Scene/VKHandOFF
+
+
     |<----------------------|{VKWindow}
     |
     |<----------------------|{VKInstance}
@@ -178,13 +192,13 @@
     |
     |<----------------------|{VKLogDevice}
     |
-    |<----------------------|VKSwapChainImage
+    |<----------------------|{VKSwapChainImage}
     |
     |<----------------------|VKTextureImage
     |
-    |<----------------------|VKDepthImage
+    |<----------------------|{VKDepthImage}
     |
-    |<----------------------|VKMultiSampleImage
+    |<----------------------|{VKMultiSampleImage}
     |
     |<----------------------|VKVertexBuffer
     |
@@ -232,15 +246,11 @@
     |
     |<----------------------|{VKCmd}
     |
-    |<......................|VKUniform
-    |
-    |<......................|VKTransform
-    |
     |<----------------------|{VKCameraMgr}
     |
     |<----------------------|{VKSyncObject}
     |
-    |<----------------------|{VKDrawSequence}
+    |<----------------------|{VKHandOff}
     |
     |
     |Scene/VKInitSequence
@@ -256,15 +266,13 @@
     |
     |<----------------------|{VKCmd}
     |
-    |<......................|VKUniform
-    |
-    |<......................|VKTransform
-    |
     |<----------------------|{VKCameraMgr}
     |
     |<----------------------|{VKSyncObject}
     |
     |<----------------------|VKResizing
+    |
+    |<----------------------|{VKHandOff}
     |
     |
     |Scene/VKDrawSequence
@@ -294,7 +302,7 @@
     |
     |<----------------------|{VKSyncObject}
     |
-    |<----------------------|{VKDrawSequence}
+    |<----------------------|{VKHandOff}
     |
     |
     |Scene/VKDeleteSequence
@@ -302,7 +310,7 @@
 
     |<----------------------|VKInitSequence
     |
-    |<----------------------|{VKDrawSequence}
+    |<----------------------|VKDrawSequence
     |
     |<----------------------|VKDeleteSequence
     |

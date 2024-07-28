@@ -1,7 +1,6 @@
 #ifndef VK_CMD_BUFFER_H
 #define VK_CMD_BUFFER_H
 
-#include <vector>
 #include "../Device/VKDeviceMgr.h"
 
 using namespace Collections;

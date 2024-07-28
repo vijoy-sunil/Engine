@@ -7,7 +7,7 @@
 
 namespace Renderer {
     class RDApplication: protected VKInitSequence,
-                         protected virtual VKDrawSequence,
+                         protected VKDrawSequence,
                          protected VKDeleteSequence {
         private:
             uint32_t m_deviceResourcesCount;

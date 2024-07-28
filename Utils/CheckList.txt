@@ -5,11 +5,11 @@ FILES/FOLDERS
 [ - ] Class name match file name
 [ - ] File name has to be singular, not a plural
 [ - ] Core/, Collections/ sub folder names have to be singular
-[ X ] hierarchy graph, mark virtual
+[ - ] hierarchy graph, mark virtual
 [ - ] All #endif should have comment
-[ X ] Make sure every header file is necessary
-[ X ] include order match inheritance order and hierarchy graph
-[ X ] include <> paths before “” paths
+[ - ] Make sure every header file is necessary
+[ - ] include order match inheritance order and hierarchy graph
+[ - ] include <> paths before “” paths
 -------------------------------------------------------------------------------------------------------------------------
 VARIABLES
 -------------------------------------------------------------------------------------------------------------------------
@@ -39,7 +39,7 @@ VARIABLES
 -------------------------------------------------------------------------------------------------------------------------
 METHODS
 -------------------------------------------------------------------------------------------------------------------------
-[ X ] Common methods - create, get, ready, destroy
+[ X ] Common methods - create, get, is, ready, destroy
 [ - ] Return objects/literals methods start with get
 [ - ] Return boolean methods start with is
 [ X ] Return via parameter only if returning multiple variables

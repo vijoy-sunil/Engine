@@ -32,11 +32,9 @@
 #include "../Model/VKModelMatrix.h"
 #include "../Cmd/VKCmdBuffer.h"
 #include "../Cmd/VKCmd.h"
-#include "VKUniform.h"
-#include "VKTransform.h"
 #include "VKCameraMgr.h"
 #include "VKSyncObject.h"
-#include "VKDrawSequence.h"
+#include "VKHandOff.h"
 
 using namespace Collections;
 
@@ -74,7 +72,7 @@ namespace Renderer {
                           protected virtual VKCmd,
                           protected virtual VKCameraMgr,
                           protected virtual VKSyncObject,
-                          protected virtual VKDrawSequence {
+                          protected virtual VKHandOff {
         private:
             /* Set upper bound lod for the texture sampler It is recommended that to sample from the entire mipmap chain, 
              * set minLod to 0.0, and set maxLod to a level of detail high enough that the computed level of detail will 

@@ -1,15 +1,15 @@
 #ifndef VK_CMD_H
 #define VK_CMD_H
 
-#include "../Buffer/VKBufferMgr.h"
 #include "../Image/VKImageMgr.h"
+#include "../Buffer/VKBufferMgr.h"
 #include "../Pipeline/VKPipelineMgr.h"
 
 using namespace Collections;
 
 namespace Renderer {
-    class VKCmd: protected virtual VKBufferMgr,
-                 protected virtual VKImageMgr,
+    class VKCmd: protected virtual VKImageMgr,
+                 protected virtual VKBufferMgr,
                  protected virtual VKPipelineMgr {
         private:
             static Log::Record* m_VKCmdLog;
