@@ -184,7 +184,7 @@ namespace Log {
             /* Clear config method should be used to overwrite an existing configuration. Since the overwrite may include
              * buffered/immediate sinks, we need to handle that by flushing file contents and closing the file
             */
-            void clearConfig (void) {
+            void clearConfig (bool deleteEmptyFiles = true) {
                 e_sink allSinks = getSink();
                 if (allSinks & TO_FILE_BUFFER_CIRCULAR) {
                     /* Flush buffered sink before closing
@@ -193,14 +193,18 @@ namespace Log {
                     m_saveFileBuffered.close();
                     /* Open the file in read mode and delete if empty
                     */
-                    m_saveFileBuffered.open (m_saveFilePathBuffered, std::ios_base::in);
-                    deleteEmptyFile (m_saveFileBuffered, m_saveFilePathBuffered.c_str());
+                    if (deleteEmptyFiles) {
+                        m_saveFileBuffered.open (m_saveFilePathBuffered, std::ios_base::in);
+                        deleteEmptyFile (m_saveFileBuffered, m_saveFilePathBuffered.c_str());
+                    }
                 }
 
                 if (allSinks & TO_FILE_IMMEDIATE) {
                     m_saveFileImmediate.close();
-                    m_saveFileImmediate.open (m_saveFilePathImmediate, std::ios_base::in);
-                    deleteEmptyFile (m_saveFileImmediate, m_saveFilePathImmediate.c_str());
+                    if (deleteEmptyFiles) {
+                        m_saveFileImmediate.open (m_saveFilePathImmediate, std::ios_base::in);
+                        deleteEmptyFile (m_saveFileImmediate, m_saveFilePathImmediate.c_str());
+                    }
                 }
 
                 m_levelConfig[INFO]    = TO_NONE;
