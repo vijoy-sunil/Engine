@@ -11,7 +11,7 @@ namespace Buffer {
     } e_type;
 
     template <typename T>
-    class Buffer: public Admin::NonTemplateBase {
+    class BufferImpl: public Admin::NonTemplateBase {
         private:
             uint32_t m_instanceId;
             e_type m_type;
@@ -32,7 +32,7 @@ namespace Buffer {
             }
 
         public:
-            Buffer (uint32_t instanceId, e_type type, size_t capacity) {
+            BufferImpl (uint32_t instanceId, e_type type, size_t capacity) {
                 m_instanceId = instanceId;
                 m_type       = type;
                 m_capacity   = capacity;
@@ -43,7 +43,7 @@ namespace Buffer {
                 m_end        = m_buffer + m_capacity - 1;
             }
 
-            ~Buffer (void) {
+            ~BufferImpl (void) {
                 delete[] m_buffer;
             }
             

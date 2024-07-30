@@ -6,12 +6,12 @@
 #define BUFFER_INIT(id,                                                                                         \
                     type,                                                                                       \
                     dataType,                                                                                   \
-                    capacity)                   Buffer::bufferMgr.initBuffer <dataType> (id, type, capacity)
-#define GET_BUFFER(id, dataType)                dynamic_cast <Buffer::Buffer <dataType> *>                      \
-                                                (Buffer::bufferMgr.getInstance (id)) 
-#define BUFFER_CLOSE(id)                        Buffer::bufferMgr.closeInstance (id)
-#define BUFFER_CLOSE_ALL                        Buffer::bufferMgr.closeAllInstances()
-#define BUFFER_MGR_DUMP                         Buffer::bufferMgr.dump (std::cout)  
+                    capacity)                   Buffer::g_bufferMgr.createBuffer <dataType> (id, type, capacity)
+#define GET_BUFFER(id, dataType)                dynamic_cast <Buffer::BufferImpl <dataType> *>                  \
+                                                (Buffer::g_bufferMgr.getInstance (id)) 
+#define BUFFER_CLOSE(id)                        Buffer::g_bufferMgr.closeInstance (id)
+#define BUFFER_CLOSE_ALL                        Buffer::g_bufferMgr.closeAllInstances()
+#define BUFFER_MGR_DUMP                         Buffer::g_bufferMgr.dump (std::cout)  
 
 #define BUFFER_PUSH(data)                       push (data)
 #define BUFFER_POP_FIRST                        popFirst()

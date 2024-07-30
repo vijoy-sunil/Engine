@@ -105,6 +105,15 @@ namespace Log {
                 }
             }
 
+            /* Write buffered data to file, only used when sink is a buffered sink
+            */
+            void flushBufferToFile (void) {
+                if (m_saveFileBuffered.is_open()) {
+                    auto logBuffer = GET_BUFFER (RESERVED_ID_LOG_SINK + m_instanceId, std::string);
+                    logBuffer->BUFFER_FLUSH (m_saveFileBuffered);
+                }
+            }
+
         public:
             Record (uint32_t instanceId, 
                     std::string callingFile,
@@ -264,15 +273,6 @@ namespace Log {
                                      " ";
 
                 return header;
-            }
-
-            /* Write buffered data to file, only used when sink is a buffered sink
-            */
-            void flushBufferToFile (void) {
-                if (m_saveFileBuffered.is_open()) {
-                    auto logBuffer = GET_BUFFER (RESERVED_ID_LOG_SINK + m_instanceId, std::string);
-                    logBuffer->BUFFER_FLUSH (m_saveFileBuffered);
-                }
             }
 
             bool isSinkPresent (e_level level) {

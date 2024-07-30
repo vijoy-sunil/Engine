@@ -6,23 +6,22 @@ FILES/FOLDERS
 [ - ] File name has to be singular, not a plural
 [ - ] Core/, Collections/ sub folder names have to be singular
 [ - ] hierarchy graph, mark virtual
-[ - ] All #endif should have comment
 [ - ] Make sure every header file is necessary
 [ - ] include order match inheritance order and hierarchy graph
 [ - ] include <> paths before “” paths
 -------------------------------------------------------------------------------------------------------------------------
 VARIABLES
 -------------------------------------------------------------------------------------------------------------------------
-[ X ] Use auto whenever possible except for basic types
-[ X ] global member vars, structs indicated by g_
+[ X ] Use auto for vectors and structs
+[ X ] global member objects indicated by g_
 [ - ] enums indicated by e_
-[ X ] local member vars indicated by m_
+[ X ] private member vars indicated by m_
 [ - ] vector names end with s
 [ X ] Maps, structs etc. declare with {}
 [ - ] Reduce use of macros, use const instead
 [ - ] use nullptr for null pointers instead of NULL
 [ - ] use VK_NULL_HANDLE instead of nullptr for Vulkan objects
-[ X ] static cast instead of C-style cast
+[ - ] static cast instead of C-style cast
 [ - ] For loops use matching types for iterator
 [ - ] Stack allocate whenever you can instead of heap
 [ X ] Pool structs resource will only have Vulkan objects, others could be in meta
@@ -75,6 +74,7 @@ MISC
 [ - ] () { 				                        void parameter
 [ - ] [a-z>]&                                   use of references
 [ - ] [a-z]\*			                        use of pointers
+[ - ] [^ ]\) [a-z]                              no use of C-style casting
 [ X ] auto          	                        use of auto for vectors, structs etc.
 [ - ] const char*                               use const char* for string literals
 [ - ] std::string                               use only if you require std::string features like concat, size etc.
@@ -82,5 +82,6 @@ MISC
 [ - ] c_str()                                   when passing it to const char* parameter
 [ - ] size_t                                    only used for size of an object and in fns that accept size_t
 [ - ] std::endl                                 in new line
+[ - ] #endif                                    all endifs should have comment
 [ - ] " [", "[ ", " ]", "] ", " [ ", " ] "      spacing around log brackets
 -------------------------------------------------------------------------------------------------------------------------

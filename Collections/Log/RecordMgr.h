@@ -7,11 +7,11 @@ namespace Collections {
 namespace Log {
     class RecordMgr: public Admin::InstanceMgr {
         public:
-            Record* initRecord (uint32_t instanceId, 
-                                std::string callingFile,
-                                std::string saveDir       = "",
-                                size_t bufferCapacity     = 0,
-                                const char* format        = ".txt") {
+            Record* createRecord (uint32_t instanceId, 
+                                  std::string callingFile,
+                                  std::string saveDir       = "",
+                                  size_t bufferCapacity     = 0,
+                                  const char* format        = ".txt") {
             
                 /* Add record object to pool
                 */
@@ -34,12 +34,6 @@ namespace Log {
             void closeRecord (uint32_t instanceId) {
                 if (m_instancePool.find (instanceId) != m_instancePool.end()) { 
                     Record* c_record = static_cast <Record*> (m_instancePool[instanceId]);
-
-                    /* Flush buffered sink
-                    */
-                    if (c_record->getSink() & TO_FILE_BUFFER_CIRCULAR)
-                        c_record->flushBufferToFile();
-
                     delete c_record;
                     /* Remove from map, so you are able to reuse the instance id
                     */
@@ -57,11 +51,6 @@ namespace Log {
             void closeAllRecords (void) {
                 for (auto const& [key, val]: m_instancePool) {
                     Record* c_record = static_cast <Record*> (val);
-                    /* Flush buffered sink
-                    */
-                    if (c_record->getSink() & TO_FILE_BUFFER_CIRCULAR)
-                        c_record->flushBufferToFile();
-
                     delete c_record;
                     BUFFER_CLOSE (RESERVED_ID_LOG_SINK + key);
                 }
@@ -78,7 +67,7 @@ namespace Log {
                 }
             }
     };
-    RecordMgr recordMgr;
+    RecordMgr g_recordMgr;
 }   // namespace Log
 }   // namespace Collections
 #endif  // RECORD_MGR_H
