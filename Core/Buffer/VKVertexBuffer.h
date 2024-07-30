@@ -51,7 +51,7 @@ namespace Renderer {
                  *
                  * Memory type properties:
                  * (1) VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
-                 * This property says that we are able to map the allocated memry so we can write to it from the CPU
+                 * This property says that we are able to map the allocated memory so we can write to it from the CPU
                  * 
                  * (2) VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
                  * After we memcpy the vertex data to the mapped memory (see memcpy below) and unmap it again using 

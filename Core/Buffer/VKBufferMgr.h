@@ -36,7 +36,7 @@ namespace Renderer {
                     return meta.id == other.meta.id;
                 }                   
             };
-            std::map <e_bufferType, std::vector <BufferInfo>> m_bufferInfoPool{};
+            std::map <e_bufferType, std::vector <BufferInfo>> m_bufferInfoPool;
 
             static Log::Record* m_VKBufferMgrLog;
             const uint32_t m_instanceId = g_collectionsId++;
@@ -89,12 +89,12 @@ namespace Renderer {
                     }
                 }
 
-                VkBufferCreateInfo createInfo{};
+                VkBufferCreateInfo createInfo;
                 createInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
                 createInfo.size  = size;
                 createInfo.usage = usage;
                 /* If the queue families differ, then we'll be using the concurrent mode (buffers can be used across 
-                 * multiple queue families without explicit ownership transfers.) Concurrent mode requires you to specify 
+                 * multiple queue families without explicit ownership transfers). Concurrent mode requires you to specify 
                  * in advance between which queue families ownership will be shared using the queueFamilyIndexCount and 
                  * pQueueFamilyIndices parameters
                 */
@@ -105,7 +105,7 @@ namespace Renderer {
                 }
                 /* If the queue families are the same, then we should stick to exclusive mode (A buffer is owned by one 
                  * queue family at a time and ownership must be explicitly transferred before using it in another queue 
-                 * family. This option offers the best performance.)
+                 * family. This option offers the best performance)
                 */
                 else {
                     createInfo.sharingMode           = VK_SHARING_MODE_EXCLUSIVE;
@@ -115,6 +115,7 @@ namespace Renderer {
                 /* The flags parameter is used to configure sparse buffer memory, we'll leave it at the default value of 0
                 */
                 createInfo.flags = 0;
+                createInfo.pNext = VK_NULL_HANDLE;
 
                 VkBuffer buffer;
                 VkResult result = vkCreateBuffer (deviceInfo->shared.logDevice, &createInfo, VK_NULL_HANDLE, &buffer);
@@ -133,9 +134,10 @@ namespace Renderer {
                  * step of allocating memory for the buffer is to query its memory requirements
                  *
                  * The VkMemoryRequirements struct has three fields:
-                 * (1) size: The size of the required amount of memory in bytes, may differ from bufferInfo.size
+                 * (1) size: The size of the required amount of memory in bytes, may differ from size specified in create
+                 * info struct
                  * (2) alignment: The offset in bytes where the buffer begins in the allocated region of memory, depends 
-                 * on bufferInfo.usage and bufferInfo.flags
+                 * on usage and flags in create info struct
                  * (3) memoryTypeBits: A bitmask which contains one bit set for every supported memory type for the 
                  * resource. Bit i is set if and only if the memory type i in the VkPhysicalDeviceMemoryProperties 
                  * structure for the physical device is supported for the resource
@@ -144,7 +146,7 @@ namespace Renderer {
                 vkGetBufferMemoryRequirements (deviceInfo->shared.logDevice, buffer, &memRequirements);
                 /* Next, we can allocate the memory by filling in the VkMemoryAllocateInfo structure
                 */
-                VkMemoryAllocateInfo allocInfo{};
+                VkMemoryAllocateInfo allocInfo;
                 allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
                 /* Memory allocation is now as simple as specifying the size and type, both of which are derived from 
                  * the memory requirements of the buffer and the desired property
@@ -153,6 +155,7 @@ namespace Renderer {
                 /* Find suitable memory type
                 */
                 allocInfo.memoryTypeIndex = getMemoryTypeIndex (memRequirements.memoryTypeBits, property);
+                allocInfo.pNext           = VK_NULL_HANDLE;
 
                 /* It should be noted that in a real world application, you're not supposed to actually call 
                  * vkAllocateMemory for every individual buffer. The maximum number of simultaneous memory allocations 
@@ -187,7 +190,7 @@ namespace Renderer {
                 */
                 vkBindBufferMemory (deviceInfo->shared.logDevice, buffer, bufferMemory, 0);
 
-                BufferInfo info{};
+                BufferInfo info;
                 info.meta.id                    = bufferInfoId;
                 info.meta.size                  = size;
                 info.meta.bufferMapped          = VK_NULL_HANDLE;

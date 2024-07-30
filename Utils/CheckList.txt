@@ -17,7 +17,6 @@ VARIABLES
 [ - ] enums indicated by e_
 [ X ] private member vars indicated by m_
 [ - ] vector names end with s
-[ X ] Maps, structs etc. declare with {}
 [ - ] Reduce use of macros, use const instead
 [ - ] use nullptr for null pointers instead of NULL
 [ - ] use VK_NULL_HANDLE instead of nullptr for Vulkan objects
@@ -34,11 +33,12 @@ VARIABLES
                    pipeline,
                    camera,
                    resource,
-                   handOff}
+                   handOff,
+                   device}
 -------------------------------------------------------------------------------------------------------------------------
 METHODS
 -------------------------------------------------------------------------------------------------------------------------
-[ X ] Common methods - create, get, is, ready, destroy
+[ X ] Common methods - create, get, is, ready, delete, dump, cleanUp
 [ - ] Return objects/literals methods start with get
 [ - ] Return boolean methods start with is
 [ X ] Return via parameter only if returning multiple variables
