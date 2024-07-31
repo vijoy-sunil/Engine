@@ -31,11 +31,11 @@ namespace Renderer {
                                std::vector <VkViewport>& viewPorts) {
                 
                 auto deviceInfo = getDeviceInfo();
-                /* Up until now, we've told Vulkan which operations to execute in the graphics pipeline and which 
-                 * attachment to use in the fragment shader. Also, we did specify viewport and scissor state for this 
-                 * pipeline to be dynamic. So we need to set them in the command buffer before issuing our draw command
+                /* We've told Vulkan which operations to execute in the graphics pipeline and specified viewport and 
+                 * scissor state for the pipeline to be dynamic. So we need to set them in the command buffer before 
+                 * issuing our draw command
                 */
-                VkViewport defaultViewPort{};
+                VkViewport defaultViewPort;
                 defaultViewPort.x        = 0.0f;
                 defaultViewPort.y        = 0.0f;
                 defaultViewPort.width    = static_cast <float> (deviceInfo->unique[resourceId].swapChain.extent.width);
@@ -59,7 +59,7 @@ namespace Renderer {
 
                 auto deviceInfo = getDeviceInfo();
 
-                VkRect2D defaultScissor{};
+                VkRect2D defaultScissor;
                 defaultScissor.offset = {0, 0};
                 defaultScissor.extent = deviceInfo->unique[resourceId].swapChain.extent;
 
@@ -80,7 +80,7 @@ namespace Renderer {
                  * destination buffers as arguments, and an array of regions to copy. The regions are defined in 
                  * VkBufferCopy structs and consist of a source buffer offset, destination buffer offset and size
                 */
-                VkBufferCopy copyRegion{};
+                VkBufferCopy copyRegion;
                 copyRegion.srcOffset = srcOffset; 
                 copyRegion.dstOffset = dstOffset;
                 copyRegion.size      = srcBufferInfo->meta.size;
@@ -93,12 +93,13 @@ namespace Renderer {
 
             void copyBufferToImage (VkCommandBuffer commandBuffer,
                                     uint32_t srcBufferInfoId, e_bufferType srcBufferType, VkDeviceSize srcOffset,
-                                    uint32_t dstImageInfoId,  e_imageType  dstImageType, VkImageLayout dstImageLayout) {
+                                    uint32_t dstImageInfoId,  e_imageType  dstImageType, 
+                                    VkImageLayout dstImageLayout) {
 
                 auto srcBufferInfo = getBufferInfo (srcBufferInfoId, srcBufferType);
                 auto dstImageInfo  = getImageInfo  (dstImageInfoId,  dstImageType);
 
-                VkImageMemoryBarrier barrier{};
+                VkImageMemoryBarrier barrier;
                 VkPipelineStageFlags sourceStage, destinationStage;
                 transitionImageLayout (dstImageInfo->resource.image,
                                        dstImageInfo->params.initialLayout,
@@ -144,7 +145,7 @@ namespace Renderer {
                  * that the pixels are simply tightly packed. The imageSubresource, imageOffset and imageExtent fields 
                  * indicate to which part of the image we want to copy the pixels
                 */
-                VkBufferImageCopy copyRegion{};
+                VkBufferImageCopy copyRegion;
                 copyRegion.bufferOffset      = srcOffset;
                 copyRegion.bufferRowLength   = 0;
                 copyRegion.bufferImageHeight = 0;
@@ -202,7 +203,7 @@ namespace Renderer {
                  * VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL
                  * 
                  * Vulkan allows us to transition each mip level of an image independently. Each blit will only deal with 
-                 * two mip levels at a time, so we can transition each level into the optimal layout between blits commands
+                 * two mip levels at a time, so we can transition each level into the optimal layout between blit commands
                  * 
                  * Mip level 0
                  * Transition layout VK_IMAGE_LAYOUT_UNDEFINED -> VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL
@@ -230,7 +231,7 @@ namespace Renderer {
                  *          .
                  * }
                 */
-                VkImageMemoryBarrier barrier{};
+                VkImageMemoryBarrier barrier;
                 VkPipelineStageFlags sourceStage, destinationStage;
 
                 int32_t mipWidth  = static_cast <int32_t> (imageInfo->meta.width);
@@ -267,7 +268,7 @@ namespace Renderer {
                      * the previous level. The Z dimension of srcOffsets[1] and dstOffsets[1] must be 1, since a 2D image 
                      * has a depth of 1
                     */
-                    VkImageBlit blit{};
+                    VkImageBlit blit;
                     blit.srcOffsets[0] = {0, 0, 0};
                     blit.srcOffsets[1] = {
                                             mipWidth, 
@@ -368,11 +369,12 @@ namespace Renderer {
                 /* Drawing starts by beginning the render pass with vkCmdBeginRenderPass. The render pass is configured 
                  * using some parameters in a VkRenderPassBeginInfo struct
                 */
-                VkRenderPassBeginInfo beginInfo{};
+                VkRenderPassBeginInfo beginInfo;
                 beginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+                beginInfo.pNext = VK_NULL_HANDLE;
                 /* The first parameters are the render pass itself and the attachments to bind. We created a framebuffer 
                  * for each swap chain image where it is specified as a color attachment. Thus we need to bind the 
-                 * framebuffer for the swapchain image we want to draw to. Using the imageIndex parameter which was 
+                 * framebuffer for the swapchain image we want to draw to. Using the image index parameter which was 
                  * passed in, we can pick the right framebuffer for the current swapchain image
                 */
                 beginInfo.renderPass  = renderPassInfo->resource.renderPass;
@@ -432,10 +434,10 @@ namespace Renderer {
                                     const std::vector <VkDeviceSize>& offsets) {
                 
                 std::vector <VkBuffer> vertexBuffers;
-                /* The vkCmdBindVertexBuffers function is used to bind vertex buffers to bindings, which is already set 
-                 * up in createGraphicsPipeline function. The first two parameters, besides the command buffer, specify 
-                 * the offset and number of bindings we're going to specify vertex buffers for. The last two parameters 
-                 * specify the array of vertex buffers to bind and the byte offsets to start reading vertex data from
+                /* The vkCmdBindVertexBuffers function is used to bind vertex buffers to bindings. The first two 
+                 * parameters, besides the command buffer, specify the offset and number of bindings we're going to 
+                 * specify vertex buffers for. The last two parameters specify the array of vertex buffers to bind and 
+                 * the byte offsets to start reading vertex data from
                 */
                 for (auto const& infoId: bufferInfoIds) {
                     auto bufferInfo = getBufferInfo (infoId, VERTEX_BUFFER);
@@ -458,60 +460,7 @@ namespace Renderer {
                 /* The vkCmdBindIndexBuffer binds the index buffer, just like we did for the vertex buffer. The 
                  * difference is that you can only have a single index buffer. It's unfortunately not possible to use 
                  * different indices for each vertex attribute, so we do still have to completely duplicate vertex data 
-                 * even if just one attribute varies. For example,
-                 * 
-                 * vertex attribute 1
-                 * {
-                 *      [x1, y1],
-                 *      [x2, y2],
-                 *      [x3, y3]
-                 * }
-                 * 
-                 * vertex attribute 2
-                 * {
-                 *      [a1, b1, c1],
-                 *      [a2, b2, c2],
-                 *      [a3, b3, c3]
-                 * }
-                 * 
-                 * index data 1
-                 * {
-                 *      0, 1, 2, 0, 1, 2
-                 * }
-                 * 
-                 * index data 2
-                 * {
-                 *      0, 1, 2, 1, 1, 1
-                 * }
-                 * 
-                 * Let us say this is the case where multiple same vertices (attribute 1) can have different normals 
-                 * (attribute 2). But this is not possible, and we will need to duplicate the data so each unique vertex 
-                 * has its own data, as stated above
-                 * 
-                 * vertex attribute 1
-                 * {
-                 *      [x1, y1],
-                 *      [x2, y2],
-                 *      [x3, y3],
-                 *      [x1, y1],
-                 *      [x2, y2],
-                 *      [x3, y3]
-                 * }
-                 * 
-                 * vertex attribute 2
-                 * {
-                 *      [a1, b1, c1],
-                 *      [a2, b2, c2],
-                 *      [a3, b3, c3],
-                 *      [a2, b2, c2],
-                 *      [a2, b2, c2],
-                 *      [a2, b2, c2],
-                 * }
-                 * 
-                 * index data
-                 * {
-                 *      0, 1, 2, 3, 4, 5  
-                 * }
+                 * even if just one attribute varies
                 */
                 vkCmdBindIndexBuffer (commandBuffer, 
                                       bufferInfo->resource.buffer, 
@@ -520,10 +469,10 @@ namespace Renderer {
             }
 
             void bindDescriptorSets (VkCommandBuffer commandBuffer,
-                                     uint32_t firstSet,
-                                     const std::vector <VkDescriptorSet>& descriptorSets,
                                      uint32_t pipelineInfoId,
-                                     VkPipelineBindPoint bindPoint) {
+                                     VkPipelineBindPoint bindPoint,
+                                     uint32_t firstSet,
+                                     const std::vector <VkDescriptorSet>& descriptorSets) {
                 
                 auto pipelineInfo = getPipelineInfo (pipelineInfoId);
                 /* Unlike vertex and index buffers, descriptor sets are not unique to graphics pipelines. Therefore we 
@@ -555,7 +504,7 @@ namespace Renderer {
                 /* InstanceCount: Used for instanced rendering, use 1 if you're not doing that
                  * firstIndex:    Specifies an offset into the index buffer, using a value of 1 would cause the graphics 
                  *                card to start reading at the second index
-                 * vertexOffset:  Specifies an offset to add to the indices in the index buffer
+                 * vertexOffset:  Specifies the value added to the vertex index before indexing into the vertex buffer
                  * firstInstance: Used as an offset for instanced rendering, defines the lowest value of gl_InstanceIndex
                 */
                 vkCmdDrawIndexed (commandBuffer, 

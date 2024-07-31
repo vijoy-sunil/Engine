@@ -34,8 +34,9 @@ namespace Renderer {
             VkCommandPool getCommandPool (VkCommandPoolCreateFlags flags, uint32_t queueFamilyIndex) {
                 auto deviceInfo = getDeviceInfo();
 
-                VkCommandPoolCreateInfo createInfo{};
+                VkCommandPoolCreateInfo createInfo;
                 createInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+                createInfo.pNext = VK_NULL_HANDLE;
                 /* Command pool possible flags:
                  * (1) VK_COMMAND_POOL_CREATE_TRANSIENT_BIT specifies that command buffers allocated from the pool will 
                  * be short-lived, meaning that they will be reset or freed in a relatively short timeframe
@@ -71,8 +72,9 @@ namespace Renderer {
 
                 auto deviceInfo = getDeviceInfo();
 
-                VkCommandBufferAllocateInfo allocInfo{};
+                VkCommandBufferAllocateInfo allocInfo;
                 allocInfo.sType              = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+                allocInfo.pNext              = VK_NULL_HANDLE;
                 allocInfo.commandPool        = commandPool;
                 allocInfo.commandBufferCount = bufferCount;
                 /* The level parameter specifies if the allocated command buffers are primary or secondary command buffers
@@ -104,8 +106,9 @@ namespace Renderer {
                  * VkCommandBufferBeginInfo structure as argument that specifies some details about the usage of this 
                  * specific command buffer
                 */
-                VkCommandBufferBeginInfo beginInfo{};
+                VkCommandBufferBeginInfo beginInfo;
                 beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+                beginInfo.pNext = VK_NULL_HANDLE;
                 /* The flags parameter specifies how we're going to use the command buffer
                  * (1) VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT specifies that each recording of the command buffer 
                  * will only be submitted once, and the command buffer will be reset and recorded again between each 
