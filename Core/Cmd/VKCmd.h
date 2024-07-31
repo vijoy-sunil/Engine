@@ -360,8 +360,8 @@ namespace Renderer {
 
             void beginRenderPass (VkCommandBuffer commandBuffer,
                                   uint32_t renderPassInfoId,
-                                  uint32_t resourceId,
                                   uint32_t swapChainImageId,
+                                  uint32_t resourceId,
                                   const std::vector <VkClearValue>& clearValues) {
                 
                 auto renderPassInfo = getRenderPassInfo (renderPassInfoId);
@@ -429,8 +429,8 @@ namespace Renderer {
             }
 
             void bindVertexBuffers (VkCommandBuffer commandBuffer,
-                                    const std::vector <uint32_t>& bufferInfoIds,
                                     uint32_t firstBinding,
+                                    const std::vector <uint32_t>& bufferInfoIds,
                                     const std::vector <VkDeviceSize>& offsets) {
                 
                 std::vector <VkBuffer> vertexBuffers;
