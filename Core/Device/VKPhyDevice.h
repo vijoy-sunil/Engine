@@ -46,11 +46,11 @@ namespace Renderer {
             }
 
             bool isPhyDeviceSupported (uint32_t resourceId, VkPhysicalDevice phyDevice) {
-                /* list of gpu devices have already been queried and is passed into this function one by one, which is 
+                /* List of gpu devices have already been queried and is passed into this function one by one, which is 
                  * then checked for support
                 */
-                populateQueueFamilyIndices (resourceId, phyDevice);
-                /* check device extension support
+                pickQueueFamilyIndices (resourceId, phyDevice);
+                /* Check device extension support
                 */
                 bool extensionsSupported = isDeviceExtensionsSupported (phyDevice);
                 /* It should be noted that the availability of a presentation queue, implies that the swap chain 
@@ -59,17 +59,17 @@ namespace Renderer {
                 */
                 bool swapChainAdequate = false;
                 if (extensionsSupported) {
-                    SwapChainSupportDetails swapChainSupport = getSwapChainSupportDetails (resourceId, phyDevice);
+                    auto swapChainSupport = getSwapChainSupportDetails (resourceId, phyDevice);
                     /* Swap chain support is sufficient for now if there is at least one supported image format and one 
                      * supported presentation mode given the window surface we have
                     */
                     swapChainAdequate = !swapChainSupport.formats.empty() && !swapChainSupport.presentModes.empty();
                 }
 
-                VkPhysicalDeviceFeatures supportedFeatures{};
+                VkPhysicalDeviceFeatures supportedFeatures;
                 vkGetPhysicalDeviceFeatures (phyDevice, &supportedFeatures);
 
-                VkPhysicalDeviceDescriptorIndexingFeatures descriptorIndexingFeatures{};
+                VkPhysicalDeviceDescriptorIndexingFeatures descriptorIndexingFeatures;
                 descriptorIndexingFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES;
                 descriptorIndexingFeatures.pNext = VK_NULL_HANDLE;
                 getPhyDeviceFeatures2 (phyDevice, VK_NULL_HANDLE, &descriptorIndexingFeatures);
@@ -262,7 +262,7 @@ namespace Renderer {
                                                              void* pNext,
                                                              bool querySupport = true) {
 
-                VkPhysicalDeviceFeatures2 supportedFeatures2{};
+                VkPhysicalDeviceFeatures2 supportedFeatures2;
                 supportedFeatures2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
                 if (features != VK_NULL_HANDLE)
                     supportedFeatures2.features = *features;
@@ -298,7 +298,7 @@ namespace Renderer {
                         vkGetPhysicalDeviceProperties (device, &properties);
 
                         deviceInfo->shared.phyDevice                = device;
-                        deviceInfo->params.sampleCount              = getMaxUsableSampleCount();
+                        deviceInfo->params.maxSampleCount           = getMaxUsableSampleCount();
                         deviceInfo->params.maxPushConstantsSize     = properties.limits.maxPushConstantsSize;
                         deviceInfo->params.maxMemoryAllocationCount = properties.limits.maxMemoryAllocationCount;
                         deviceInfo->params.maxSamplerAnisotropy     = properties.limits.maxSamplerAnisotropy;

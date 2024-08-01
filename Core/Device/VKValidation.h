@@ -119,13 +119,13 @@ namespace Renderer {
              * to be explicitly loaded
             */
             void DestroyDebugUtilsMessengerEXT (VkInstance instance, 
-                                                VkDebugUtilsMessengerEXT debugMessenger, 
+                                                const VkDebugUtilsMessengerEXT* debugMessenger, 
                                                 const VkAllocationCallbacks* pAllocator) {
                 
                 auto func = (PFN_vkDestroyDebugUtilsMessengerEXT) vkGetInstanceProcAddr (instance, 
                                                                   "vkDestroyDebugUtilsMessengerEXT");
                 if (func != VK_NULL_HANDLE)
-                    func (instance, debugMessenger, pAllocator);
+                    func (instance, *debugMessenger, pAllocator);
             }
 
         public:
@@ -191,14 +191,16 @@ namespace Renderer {
                                               VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
                 createInfo->pfnUserCallback = debugCallback;
                 createInfo->pUserData       = VK_NULL_HANDLE;
+                createInfo->pNext           = VK_NULL_HANDLE;
+                createInfo->flags           = 0;
             }
             
-            void setupDebugMessenger (void) {
-                if (!m_enableValidationLayers)
+            void createDebugMessenger (void) {
+                if (!isValidationLayersEnabled())
                     return;
 
                 auto deviceInfo = getDeviceInfo();
-                VkDebugUtilsMessengerCreateInfoEXT createInfo{};
+                VkDebugUtilsMessengerCreateInfoEXT createInfo;
                 populateDebugMessengerCreateInfo (&createInfo);
 
                 /* Next, we need to pass this struct to vkCreateDebugUtilsMessengerEXT function to create the handle to 
@@ -220,7 +222,7 @@ namespace Renderer {
                 auto deviceInfo = getDeviceInfo();
                 if (isValidationLayersEnabled())
                     DestroyDebugUtilsMessengerEXT (deviceInfo->shared.instance, 
-                                                   m_debugMessenger, 
+                                                   &m_debugMessenger, 
                                                    VK_NULL_HANDLE);            
             }
     };

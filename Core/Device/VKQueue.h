@@ -35,7 +35,7 @@ namespace Renderer {
              * submitted to a queue. There are different types of queues that originate from different queue families 
              * and each family of queues allows only a subset of commands
             */
-            void populateQueueFamilyIndices (uint32_t resourceId, VkPhysicalDevice phyDevice) {
+            void pickQueueFamilyIndices (uint32_t resourceId, VkPhysicalDevice phyDevice) {
                 auto deviceInfo = getDeviceInfo();
                 /* Query list of available queue families
                 */
@@ -44,6 +44,8 @@ namespace Renderer {
                                                           &queueFamiliesCount, 
                                                           VK_NULL_HANDLE);
                 LOG_INFO (m_VKQueueLog) << "Queue families count "
+                                        << "[" << resourceId << "]"
+                                        << " "
                                         << "[" << queueFamiliesCount << "]" 
                                         << std::endl;
 
@@ -54,11 +56,11 @@ namespace Renderer {
 
                 uint32_t queueFamilyIndex = 0;
                 for (auto const& queueFamily: queueFamilies) {
-                    /* find a queue family that supports graphics commnands
+                    /* Find a queue family that supports graphics commnands
                     */
                     if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT)
                         deviceInfo->unique[resourceId].indices.graphicsFamily = queueFamilyIndex;
-                    /* find a queue family that has the capability of presenting to our window surface
+                    /* Find a queue family that has the capability of presenting to our window surface
                     */
                     VkBool32 presentSupport = false;
                     vkGetPhysicalDeviceSurfaceSupportKHR (phyDevice, 
@@ -67,7 +69,7 @@ namespace Renderer {
                                                           &presentSupport);
                     if (presentSupport)
                         deviceInfo->unique[resourceId].indices.presentFamily = queueFamilyIndex;
-                    /* find a queue family that supports transfer commands
+                    /* Find a queue family that supports transfer commands
                     */
                     if (queueFamily.queueFlags & VK_QUEUE_TRANSFER_BIT)
                         deviceInfo->unique[resourceId].indices.transferFamily = queueFamilyIndex;

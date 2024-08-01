@@ -19,8 +19,7 @@ namespace Renderer {
                  * in glfw extensions)
                 */
                 uint32_t glfwExtensionCount = 0;
-                const char** glfwExtensions;
-                glfwExtensions = glfwGetRequiredInstanceExtensions (&glfwExtensionCount);
+                auto glfwExtensions = glfwGetRequiredInstanceExtensions (&glfwExtensionCount);
 
                 for (uint32_t i = 0; i < glfwExtensionCount; i++)
                     instanceExtensions.emplace_back (glfwExtensions[i]);
@@ -100,10 +99,11 @@ namespace Renderer {
                 /* This data is technically optional when creating an instance, but it may provide some useful 
                  * information to the driver in order to optimize our specific application
                 */
-                VkApplicationInfo appInfo{};
+                VkApplicationInfo appInfo;
                 /* Many structures in Vulkan require you to explicitly specify the type of structure in the sType member
                 */
                 appInfo.sType               = VK_STRUCTURE_TYPE_APPLICATION_INFO;
+                appInfo.pNext               = VK_NULL_HANDLE;
                 appInfo.pApplicationName    = "VULKAN APPLICATION";
                 appInfo.applicationVersion  = VK_MAKE_VERSION(1, 0, 0);
                 appInfo.pEngineName         = "NO ENGINE";
@@ -113,10 +113,10 @@ namespace Renderer {
                 /* This next struct is not optional and tells the Vulkan driver which global extensions and validation 
                  * layers we want to use
                 */
-                VkInstanceCreateInfo createInfo{};
+                VkInstanceCreateInfo createInfo;
                 createInfo.sType            = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
                 createInfo.pApplicationInfo = &appInfo;
-
+                createInfo.flags            = 0;
                 /* Why do we need a separated debug messenger struct? 
                  * The vkCreateDebugUtilsMessengerEXT call requires a valid instance to have been created and 
                  * vkDestroyDebugUtilsMessengerEXT must be called before the instance is destroyed. This currently leaves 
@@ -125,7 +125,7 @@ namespace Renderer {
                  * calls. It requires you to simply pass a pointer to a VkDebugUtilsMessengerCreateInfoEXT struct in the 
                  * pNext extension field of VkInstanceCreateInfo
                 */
-                VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo{};
+                VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo;
 
                 /* Setup validation layers
                  * Vulkan allows you to enable extensive checks through a feature known as validation layers. Validation 
@@ -148,7 +148,7 @@ namespace Renderer {
                      * vkCreateInstance and vkDestroyInstance and cleaned up after that
                     */
                     populateDebugMessengerCreateInfo (&debugCreateInfo);
-                    createInfo.pNext = (VkDebugUtilsMessengerCreateInfoEXT*) &debugCreateInfo;
+                    createInfo.pNext = static_cast <VkDebugUtilsMessengerCreateInfoEXT*> (&debugCreateInfo);
                 }
 
                 /* Setup instance extensions
@@ -190,7 +190,7 @@ namespace Renderer {
             }
     };
 
-    /* static variables are essentially syntactic sugar around global variables. Just like global variables, they must 
+    /* Static variables are essentially syntactic sugar around global variables. Just like global variables, they must 
      * be defined in exactly one source file
     */
     Log::Record* VKInstance::m_VKInstanceLog;

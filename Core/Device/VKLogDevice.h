@@ -48,11 +48,13 @@ namespace Renderer {
                 /* Populate the structs
                 */
                 for (auto const& queueFamily: uniqueQueueFamilies) {
-                    VkDeviceQueueCreateInfo createInfo{};
+                    VkDeviceQueueCreateInfo createInfo;
                     createInfo.sType            = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
                     createInfo.queueFamilyIndex = queueFamily;
                     createInfo.queueCount       = 1;
                     createInfo.pQueuePriorities = &queuePriority;
+                    createInfo.flags            = 0;
+                    createInfo.pNext            = VK_NULL_HANDLE;
 
                     queueCreateInfos.push_back (createInfo);
                 }
@@ -60,10 +62,11 @@ namespace Renderer {
                 /* With the previous two structures in place, we can start filling in the main VkDeviceCreateInfo 
                  * structure
                 */
-                VkDeviceCreateInfo createInfo{};
+                VkDeviceCreateInfo createInfo;
                 createInfo.sType                = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
                 createInfo.queueCreateInfoCount = static_cast <uint32_t> (queueCreateInfos.size());
                 createInfo.pQueueCreateInfos    = queueCreateInfos.data();
+                createInfo.flags                = 0;
                 /* Note that, if we are using pNext, then pEnabledFeatures will have to be null as required by the spec
                 */
                 createInfo.pEnabledFeatures     = VK_NULL_HANDLE;
@@ -111,7 +114,7 @@ namespace Renderer {
                  * with the features desired to be turned on (only if we are not using pNext), and for all features, 
                  * including the Core 1.0 Features, use VkPhysicalDeviceFeatures2 to pass into VkDeviceCreateInfo.pNext
                 */
-                VkPhysicalDeviceFeatures requiredFeatures{};
+                VkPhysicalDeviceFeatures requiredFeatures;
                 /* Enable only the following device features
                  * (1) samplerAnisotropy
                  * (2) sampleRateShading
@@ -122,7 +125,7 @@ namespace Renderer {
                 requiredFeatures.samplerAnisotropy = VK_TRUE;
                 requiredFeatures.sampleRateShading = VK_TRUE;
 
-                VkPhysicalDeviceDescriptorIndexingFeatures descriptorIndexingFeatures{};
+                VkPhysicalDeviceDescriptorIndexingFeatures descriptorIndexingFeatures;
                 descriptorIndexingFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES;
                 descriptorIndexingFeatures.pNext = VK_NULL_HANDLE;
                 /* Enable only the following descriptor indexing features, note that we have queried for their support 

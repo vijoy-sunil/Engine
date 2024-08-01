@@ -48,7 +48,7 @@ namespace Renderer {
                         VK_KHR_SWAPCHAIN_EXTENSION_NAME,
                         /* Extensions to enable descriptor indexing and bindless (run time) descriptor arrays. With 
                          * bindless, the shader author does not need to know the upper limit of the array, and from the 
-                         * application side the implemeneter only needs to be sure they do not cause the shader to index 
+                         * application side the implementer only needs to be sure they do not cause the shader to index 
                          * outside of a valid range of bound descriptors
                          * 
                          * Features supported by this extension include
@@ -95,7 +95,7 @@ namespace Renderer {
                 struct Parameters {
                     /* Sample points for MSAA (multi sample anit aliasing)
                     */
-                    VkSampleCountFlagBits sampleCount;
+                    VkSampleCountFlagBits maxSampleCount;
                     uint32_t maxPushConstantsSize;
                     uint32_t maxMemoryAllocationCount;
                     /* maxAnisotropy is the anisotropy value clamp used by the sampler, it limits the amount of texel 
@@ -120,16 +120,16 @@ namespace Renderer {
             }
 
         protected:
-            void setDeviceResourceCount (uint32_t val) {
-                if (val > g_maxDeviceResourcesCount) {
+            void readyDeviceInfo (uint32_t deviceResourceCount) {
+                if (deviceResourceCount > g_maxDeviceResourcesCount) {
                     LOG_ERROR (m_VKDeviceMgrLog) << "Invalid device resources count "
-                                                 << "[" << val << "]"
+                                                 << "[" << deviceResourceCount << "]"
                                                  << "->"
                                                  << "[" << g_maxDeviceResourcesCount << "]"
                                                  << std::endl;
                     throw std::runtime_error ("Invalid device resources count");                    
                 }
-                m_deviceInfo.meta.deviceResourcesCount = val;
+                m_deviceInfo.meta.deviceResourcesCount = deviceResourceCount;
             }
             
             DeviceInfo* getDeviceInfo (void) {
@@ -199,9 +199,9 @@ namespace Renderer {
                                                 << std::endl;                      
                 }
 
-                LOG_INFO (m_VKDeviceMgrLog) << "Sample count "
+                LOG_INFO (m_VKDeviceMgrLog) << "Max sample count "
                                             << "[" << string_VkSampleCountFlagBits 
-                                                      (deviceInfo->params.sampleCount) << "]"
+                                                      (deviceInfo->params.maxSampleCount) << "]"
                                             << std::endl; 
 
                 LOG_INFO (m_VKDeviceMgrLog) << "Max push constants size "

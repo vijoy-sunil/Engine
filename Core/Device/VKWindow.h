@@ -20,7 +20,7 @@ namespace Renderer {
              * properly call a member function with the right 'this' pointer to our VKWindow class instance. However, 
              * we do get a reference to the GLFWwindow in the callback and glfwSetWindowUserPointer function allows you 
              * to store an arbitrary pointer inside of it. The 'this' pointer can then be used to properly set the 
-             * boolean m_framebufferResized
+             * boolean to indicate that a resize has happened
             */
             static void framebufferResizeCallback (GLFWwindow* window, int width, int height) {
                 /* Suppress unused parameter warning
@@ -50,33 +50,34 @@ namespace Renderer {
                 return m_framebufferResized;
             }
 
-            void initWindow (uint32_t resourceId, int width, int height) {
+            void createWindow (uint32_t resourceId, int width, int height, bool enResizing = true) {
                 auto deviceInfo = getDeviceInfo();
                 /* First, initialize the GLFW library. Because GLFW was originally designed to create an OpenGL context, 
                  * we need to tell it to not create an OpenGL context with a subsequent call
                 */
                 glfwInit();
                 glfwWindowHint (GLFW_CLIENT_API, GLFW_NO_API);
-                /* Disable window resizing if we are not handling it using 
-                 * glfwWindowHint (GLFW_RESIZABLE, GLFW_FALSE);
-                */
+                if (!enResizing)
+                    glfwWindowHint (GLFW_RESIZABLE, GLFW_FALSE);
 
                 /* Create window, note that the fourth parameter allows you to optionally specify a monitor to open the 
                  * window on and the last parameter is only relevant to OpenGL
                 */
                 std::string windowTitle = g_windowSettings.title + std::to_string (resourceId);
-                deviceInfo->unique[resourceId].window = glfwCreateWindow (width, 
-                                                                          height, 
-                                                                          windowTitle.c_str(), 
-                                                                          VK_NULL_HANDLE, 
-                                                                          VK_NULL_HANDLE);
+                GLFWwindow *window = glfwCreateWindow (width, 
+                                                       height, 
+                                                       windowTitle.c_str(), 
+                                                       VK_NULL_HANDLE, 
+                                                       VK_NULL_HANDLE);
                 /* Set user pointer of window, this pointer is used in the callback function
                 */
-                glfwSetWindowUserPointer (deviceInfo->unique[resourceId].window, this);
+                glfwSetWindowUserPointer (window, this);
                 /* To detect window resizes we can use the glfwSetFramebufferSizeCallback function in the GLFW framework 
                  * to set up a callback (this is done to handle resizes explicitly)
                 */
-                glfwSetFramebufferSizeCallback (deviceInfo->unique[resourceId].window, framebufferResizeCallback);
+                glfwSetFramebufferSizeCallback (window, framebufferResizeCallback);
+
+                deviceInfo->unique[resourceId].window = window;
             }
 
             void cleanUp (uint32_t resourceId) {
