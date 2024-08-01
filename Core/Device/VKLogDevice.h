@@ -114,7 +114,7 @@ namespace Renderer {
                  * with the features desired to be turned on (only if we are not using pNext), and for all features, 
                  * including the Core 1.0 Features, use VkPhysicalDeviceFeatures2 to pass into VkDeviceCreateInfo.pNext
                 */
-                VkPhysicalDeviceFeatures requiredFeatures;
+                VkPhysicalDeviceFeatures requiredFeatures{};
                 /* Enable only the following device features
                  * (1) samplerAnisotropy
                  * (2) sampleRateShading
@@ -125,7 +125,7 @@ namespace Renderer {
                 requiredFeatures.samplerAnisotropy = VK_TRUE;
                 requiredFeatures.sampleRateShading = VK_TRUE;
 
-                VkPhysicalDeviceDescriptorIndexingFeatures descriptorIndexingFeatures;
+                VkPhysicalDeviceDescriptorIndexingFeatures descriptorIndexingFeatures{};
                 descriptorIndexingFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES;
                 descriptorIndexingFeatures.pNext = VK_NULL_HANDLE;
                 /* Enable only the following descriptor indexing features, note that we have queried for their support 
