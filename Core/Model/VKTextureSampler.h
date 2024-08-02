@@ -58,8 +58,10 @@ namespace Renderer {
                 /* Samplers are configured through a VkSamplerCreateInfo structure, which specifies all filters and 
                  * transformations that it should apply
                 */
-                VkSamplerCreateInfo createInfo{};
+                VkSamplerCreateInfo createInfo;
                 createInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+                createInfo.pNext = VK_NULL_HANDLE;
+                createInfo.flags = 0;
                 /* The magFilter and minFilter fields specify how to interpolate texels that are magnified or minified. 
                  * Magnification concerns the oversampling problem described above, and minification concerns 
                  * undersampling

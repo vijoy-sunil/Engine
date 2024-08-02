@@ -88,7 +88,7 @@ namespace Renderer {
             VkVertexInputBindingDescription getBindingDescription (uint32_t bindingNumber,
                                                                    uint32_t stride,
                                                                    VkVertexInputRate inputRate) {
-                VkVertexInputBindingDescription bindingDescription{};
+                VkVertexInputBindingDescription bindingDescription;
                 /* If all of our per-vertex data is packed together in one array, then we're only going to have one 
                  * binding. The binding parameter specifies the index of the binding in the array of bindings
                 */
@@ -111,7 +111,7 @@ namespace Renderer {
                                                                        uint32_t location,
                                                                        uint32_t offset,
                                                                        VkFormat format) {
-                VkVertexInputAttributeDescription attributeDescription{};
+                VkVertexInputAttributeDescription attributeDescription;
                 /* The binding parameter tells Vulkan from which binding the per-vertex data comes
                 */
                 attributeDescription.binding = bindingNumber;

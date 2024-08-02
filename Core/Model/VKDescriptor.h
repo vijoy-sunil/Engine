@@ -40,7 +40,7 @@ namespace Renderer {
             VkDescriptorPoolSize getPoolSize (VkDescriptorType descriptorType,
                                               uint32_t descriptorCount) {
                 
-                VkDescriptorPoolSize poolSize{};
+                VkDescriptorPoolSize poolSize;
                 poolSize.type            = descriptorType;
                 poolSize.descriptorCount = descriptorCount;
                 return poolSize;
@@ -60,8 +60,9 @@ namespace Renderer {
                 auto modelInfo  = getModelInfo (modelInfoId);
                 auto deviceInfo = getDeviceInfo();
 
-                VkDescriptorPoolCreateInfo createInfo{};
+                VkDescriptorPoolCreateInfo createInfo;
                 createInfo.sType         = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+                createInfo.pNext         = VK_NULL_HANDLE;
                 createInfo.poolSizeCount = static_cast <uint32_t> (poolSizes.size());
                 createInfo.pPoolSizes    = poolSizes.data();
                 /* Aside from the maximum number of individual descriptors that are available, we also need to specify 
@@ -136,8 +137,9 @@ namespace Renderer {
                  * specify the descriptor pool to allocate from, the number of descriptor sets to allocate, and the 
                  * descriptor layout to base them on
                 */
-                VkDescriptorSetAllocateInfo allocInfo{};
+                VkDescriptorSetAllocateInfo allocInfo;
                 allocInfo.sType              = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+                allocInfo.pNext              = VK_NULL_HANDLE;
                 allocInfo.descriptorPool     = modelInfo->resource.descriptorPool;
                 allocInfo.descriptorSetCount = descriptorSetCount;
                 allocInfo.pSetLayouts        = layouts.data();
@@ -165,7 +167,7 @@ namespace Renderer {
                                                             VkDeviceSize offset, 
                                                             VkDeviceSize range) {
                 
-                VkDescriptorBufferInfo descriptorBufferInfo{};
+                VkDescriptorBufferInfo descriptorBufferInfo;
                 descriptorBufferInfo.buffer = buffer;
                 descriptorBufferInfo.offset = offset;
                 /* If you're overwriting the whole buffer, like we are in this case, then it is also possible to use the 
@@ -176,14 +178,14 @@ namespace Renderer {
             }
 
             /* Bind the actual image and sampler resources to the descriptors in the descriptor set. The resources for a 
-             * combined image sampler structure must be specified in a VkDescriptorImageInfo struct, just ike the buffer 
-             * resource for a uniform buffer descriptor is specified in a VkDescriptorBufferInfo struct
+             * combined image sampler structure, for example, must be specified in a VkDescriptorImageInfo struct, just 
+             * like the buffer resource for a uniform buffer descriptor is specified in a VkDescriptorBufferInfo struct
             */
             VkDescriptorImageInfo getDescriptorImageInfo (VkSampler sampler,
                                                           VkImageView imageView, 
                                                           VkImageLayout imageLayout) {
                 
-                VkDescriptorImageInfo descriptorImageInfo{};
+                VkDescriptorImageInfo descriptorImageInfo;
                 descriptorImageInfo.sampler     = sampler;
                 descriptorImageInfo.imageView   = imageView;
                 descriptorImageInfo.imageLayout = imageLayout;
@@ -198,8 +200,9 @@ namespace Renderer {
                                                                   uint32_t arrayElement,
                                                                   uint32_t descriptorCount) {
 
-                VkWriteDescriptorSet writeDescriptorSet{};
+                VkWriteDescriptorSet writeDescriptorSet;
                 writeDescriptorSet.sType      = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+                writeDescriptorSet.pNext      = VK_NULL_HANDLE;
                 /* The two fields below specify the binding and the descriptor set to update
                 */
                 writeDescriptorSet.dstBinding = bindingNumber;
@@ -221,7 +224,9 @@ namespace Renderer {
                  * descriptors that refer to image data, and pTexelBufferView is used for descriptors that refer to buffer
                  * views
                 */
-                writeDescriptorSet.pBufferInfo = descriptorInfos.data();
+                writeDescriptorSet.pBufferInfo      = descriptorInfos.data();
+                writeDescriptorSet.pImageInfo       = VK_NULL_HANDLE;
+                writeDescriptorSet.pTexelBufferView = VK_NULL_HANDLE;
                 return writeDescriptorSet;
             }
 
@@ -232,19 +237,21 @@ namespace Renderer {
                                                                  uint32_t bindingNumber,
                                                                  uint32_t arrayElement,
                                                                  uint32_t descriptorCount) {
-                VkWriteDescriptorSet writeDescriptorSet{};
-                writeDescriptorSet.sType           = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-                writeDescriptorSet.dstBinding      = bindingNumber;
-                writeDescriptorSet.dstSet          = descriptorSet;
-                writeDescriptorSet.dstArrayElement = arrayElement;
-                writeDescriptorSet.descriptorType  = descriptorType;
-                writeDescriptorSet.descriptorCount = descriptorCount;  
-                writeDescriptorSet.pImageInfo      = descriptorInfos.data();
+                VkWriteDescriptorSet writeDescriptorSet;
+                writeDescriptorSet.sType            = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+                writeDescriptorSet.pNext            = VK_NULL_HANDLE;
+                writeDescriptorSet.dstBinding       = bindingNumber;
+                writeDescriptorSet.dstSet           = descriptorSet;
+                writeDescriptorSet.dstArrayElement  = arrayElement;
+                writeDescriptorSet.descriptorType   = descriptorType;
+                writeDescriptorSet.descriptorCount  = descriptorCount;  
+                writeDescriptorSet.pBufferInfo      = VK_NULL_HANDLE;
+                writeDescriptorSet.pImageInfo       = descriptorInfos.data();
+                writeDescriptorSet.pTexelBufferView = VK_NULL_HANDLE;
                 return writeDescriptorSet;
             }
 
-            /* The descriptor sets have been allocated now, but the descriptors within still need to be configured. 
-             * We'll now add a loop to populate every descriptor
+            /* The descriptor sets have been allocated now, but the descriptors within still need to be configured
             */
             void updateDescriptorSets (const std::vector <VkWriteDescriptorSet>& writeDescriptorSets) {
                 auto deviceInfo   = getDeviceInfo();
@@ -252,8 +259,8 @@ namespace Renderer {
                  * an array of VkWriteDescriptorSet and an array of VkCopyDescriptorSet. The latter can be used to 
                  * copy descriptors to each other, as its name implies
                  * 
-                 * Note that vkUpdateDescriptorSets doesn't copy a buffer into the descriptor set, but rather gives 
-                 * the descriptor set a pointer to the buffer described by VkDescriptorBufferInfo. So then 
+                 * Note that vkUpdateDescriptorSets doesn't copy a buffer, for example, into the descriptor set, but 
+                 * rather gives the descriptor set a pointer to the buffer described by VkDescriptorBufferInfo. So then 
                  * vkUpdateDescriptorSets doesn't need to be called more than once for a descriptor set, since 
                  * modifying the buffer that a descriptor set points to will update what the descriptor set sees
                 */

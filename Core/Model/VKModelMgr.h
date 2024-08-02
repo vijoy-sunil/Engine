@@ -1,6 +1,6 @@
 #ifndef VK_MODEL_MGR_H
 #define VK_MODEL_MGR_H
-/* We will use the tinyobjloader library to load vertices and faces from an OBJ file
+/* We will use the tinyobjloader library to load model data from an OBJ file
 */
 #define TINYOBJLOADER_IMPLEMENTATION
 #include <tiny_obj_loader.h>
@@ -52,14 +52,14 @@ namespace Renderer {
                     std::vector <VkDescriptorSet> descriptorSets;
                 } resource;
             };
-            std::map <uint32_t, ModelInfo> m_modelInfoPool{};
+            std::map <uint32_t, ModelInfo> m_modelInfoPool;
             
             static Log::Record* m_VKModelMgrLog;
             const uint32_t m_instanceId = g_collectionsId++; 
 
             void deleteModelInfo (uint32_t modelInfoId) {
                 if (m_modelInfoPool.find (modelInfoId) != m_modelInfoPool.end()) {
-                    /* Delete parsed model data log
+                    /* Delete parsed data log
                     */
                     LOG_CLOSE (m_modelInfoPool[modelInfoId].meta.parsedDataLogInstanceId);
                     m_modelInfoPool.erase (modelInfoId);
@@ -72,11 +72,11 @@ namespace Renderer {
                 throw std::runtime_error ("Failed to delete model info");   
             }
 
-            void dumpParsedModelData (uint32_t modelInfoId) {
+            void dumpParsedData (uint32_t modelInfoId) {
                 auto modelInfo     = getModelInfo (modelInfoId);
                 auto parsedDataLog = GET_LOG (modelInfo->meta.parsedDataLogInstanceId);
 
-                LOG_INFO (parsedDataLog) << "Dumping parsed model data "
+                LOG_INFO (parsedDataLog) << "Dumping parsed data "
                                          << "[" << modelInfoId << "]"
                                          << std::endl;
 
@@ -84,10 +84,13 @@ namespace Renderer {
                                          << std::endl;
                 for (auto const& vertex: modelInfo->meta.vertices) {
                 LOG_INFO (parsedDataLog) << "[" << vertex.pos.x      << ", " << vertex.pos.y      << ", " 
-                                                << vertex.pos.z      << "] "
-                                         << "[" << vertex.texCoord.x << ", " << vertex.texCoord.y << "] "
+                                                << vertex.pos.z      << "]"
+                                         << " "
+                                         << "[" << vertex.texCoord.x << ", " << vertex.texCoord.y << "]"
+                                         << " "
                                          << "[" << vertex.normal.x   << ", " << vertex.normal.y   << ", "
-                                                << vertex.normal.z   << "] "
+                                                << vertex.normal.z   << "]"
+                                         << " "
                                          << "[" << vertex.texId      << "]"
                                          << std::endl;
                 }
@@ -136,7 +139,7 @@ namespace Renderer {
                 info.path.model                     = modelPath;
                 info.path.mtlFileDir                = mtlFileDirPath;
                 /* Add default diffuse texture as the fist entry in the group of textures. This way, faces with no 
-                 * texture (material_ids = -1) can sample from this default texture
+                 * texture can sample from this default texture
                 */
                 info.path.diffuseTextureImages.push_back (g_pathSettings.defaultDiffuseTexture);
                 info.path.vertexShaderBinary        = vertexShaderBinaryPath;
@@ -151,7 +154,7 @@ namespace Renderer {
                 info.id.multiSampleImageInfo        = infoIds[6];
 
                 m_modelInfoPool[modelInfoId]        = info;
-                /* Config log for parsed model data
+                /* Config log for parsed data
                 */
                 std::string nameExtension = "_PD_" + std::to_string (modelInfoId);
                 LOG_INIT       (info.meta.parsedDataLogInstanceId, g_pathSettings.logSaveDir);
@@ -161,20 +164,16 @@ namespace Renderer {
                                 nameExtension.c_str());
             }
 
-            void createVertices (uint32_t modelInfoId, 
-                                 const std::vector <Vertex>& vertices) {
-
+            void createVertices (uint32_t modelInfoId, const std::vector <Vertex>& vertices) {
                 auto modelInfo = getModelInfo (modelInfoId);
-                modelInfo->meta.verticesCount = static_cast <uint32_t> (vertices.size());
                 modelInfo->meta.vertices      = vertices;
+                modelInfo->meta.verticesCount = static_cast <uint32_t> (vertices.size());
             }
 
-            void createIndices (uint32_t modelInfoId,
-                                const std::vector <uint32_t>& indices) {
-
+            void createIndices (uint32_t modelInfoId, const std::vector <uint32_t>& indices) {
                 auto modelInfo = getModelInfo (modelInfoId);
-                modelInfo->meta.indicesCount = static_cast <uint32_t> (indices.size());
                 modelInfo->meta.indices      = indices;
+                modelInfo->meta.indicesCount = static_cast <uint32_t> (indices.size());
             }
 
             /* OBJ file format
@@ -230,7 +229,7 @@ namespace Renderer {
             void importOBJModel (uint32_t modelInfoId) {
                 auto modelInfo = getModelInfo (modelInfoId);
                 /* The attrib container holds all of the positions, normals and texture coordinates in its 
-                 * attrib.vertices, attrib.normals, attrib.texcoords etc. vectors
+                 * attrib.vertices, attrib.normals, attrib.texcoords vectors
                 */
                 tinyobj::attrib_t attrib;
                 /* The shapes container contains all of the separate objects and their faces. Each face consists of an 
@@ -294,10 +293,10 @@ namespace Renderer {
                  * able to deal with collisions), so it needs a way to compare two given keys for an exact match. You can 
                  * implement this by overloading operator==() for your key type
                 */
-                std::unordered_map <Vertex, uint32_t> uniqueVertices{};
+                std::unordered_map <Vertex, uint32_t> uniqueVertices;
                 std::vector <Vertex>   vertices;
                 std::vector <uint32_t> indices;
-                const std::vector <glm::vec2> defaultTexCoords = {
+                auto defaultTexCoords = std::vector <glm::vec2> {
                     {0.0f, 0.0f}, {0.0f, 1.0f}, {1.0f, 0.0f},
                     {0.0f, 1.0f}, {1.0f, 1.0f}, {1.0f, 0.0f}
                 };
@@ -315,7 +314,7 @@ namespace Renderer {
                     uint32_t indexProcessedCount   = 0;
                     
                     for (auto const& index: shape.mesh.indices) {
-                        Vertex vertex{};
+                        Vertex vertex;
                         /* The index variable is of type tinyobj::index_t, which contains the vertex_index, normal_index 
                          * and texcoord_index members. We need to use these indices to look up the actual vertex 
                          * attributes in the attrib arrays. Unfortunately the attrib.vertices array is an array of float 
@@ -366,12 +365,12 @@ namespace Renderer {
                         }
                         /* To take advantage of the index buffer, we should keep only the unique vertices and use the 
                          * index buffer to reuse them whenever they come up. Every time we read a vertex from the OBJ 
-                         * file, we check if we've already seen a vertex with the exact same position and texture 
-                         * coordinates before. If not, we add it to m_vertices and store its index in the uniqueVertices 
-                         * container. After that we add the index of the new vertex to m_indices. 
+                         * file, we check if we've already seen a vertex with the exact same attributes before. If not, 
+                         * we add it to vertices array and store its index in the map container. After that we add the 
+                         * index of the new vertex to indices array
                          * 
-                         * If we've seen the exact same vertex before, then we look up its index in uniqueVertices and 
-                         * store that index in m_indices
+                         * If we've seen the exact same vertex before, then we look up its index in the map container and 
+                         * store that index in indices array
                         */
                         if (uniqueVertices.count (vertex) == 0) {
                             uniqueVertices[vertex] = static_cast <uint32_t> (vertices.size());
@@ -387,9 +386,9 @@ namespace Renderer {
                         }
                     }
                 }
-                createVertices      (modelInfoId, vertices);
-                createIndices       (modelInfoId, indices);
-                dumpParsedModelData (modelInfoId);
+                createVertices (modelInfoId, vertices);
+                createIndices  (modelInfoId, indices);
+                dumpParsedData (modelInfoId);
             }
 
             ModelInfo* getModelInfo (uint32_t modelInfoId) {
@@ -419,7 +418,7 @@ namespace Renderer {
                                                << "[" << val.meta.indicesCount << "]"
                                                << std::endl;
 
-                    LOG_INFO (m_VKModelMgrLog) << "Parsed model data log instance id " 
+                    LOG_INFO (m_VKModelMgrLog) << "Parsed data log instance id " 
                                                << "[" << val.meta.parsedDataLogInstanceId << "]"
                                                << std::endl;
 
