@@ -101,7 +101,7 @@ namespace Renderer {
                 /* The pixels are laid out row by row with 4 bytes per pixel in the case of STBI_rgb_alpha for a total of 
                  * texWidth * texHeight * 4 values
                 */
-                VkDeviceSize size = width * height * 4;
+                VkDeviceSize size = static_cast <VkDeviceSize> (width * height * 4);
                 auto stagingBufferShareQueueFamilyIndices = std::vector {
                     deviceInfo->unique[resourceId].indices.transferFamily.value()
                 };

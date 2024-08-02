@@ -50,11 +50,11 @@ namespace Renderer {
                 for (auto const& queueFamily: uniqueQueueFamilies) {
                     VkDeviceQueueCreateInfo createInfo;
                     createInfo.sType            = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+                    createInfo.pNext            = VK_NULL_HANDLE;
+                    createInfo.flags            = 0;
                     createInfo.queueFamilyIndex = queueFamily;
                     createInfo.queueCount       = 1;
                     createInfo.pQueuePriorities = &queuePriority;
-                    createInfo.flags            = 0;
-                    createInfo.pNext            = VK_NULL_HANDLE;
 
                     queueCreateInfos.push_back (createInfo);
                 }

@@ -80,7 +80,7 @@ namespace Renderer {
                                       deviceInfo->unique[resourceId].swapChain.format,
                                       VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | 
                                       VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, 
-                                      deviceInfo->params.sampleCount,
+                                      deviceInfo->params.maxSampleCount,
                                       VK_IMAGE_TILING_OPTIMAL,
                                       VK_MEMORY_PROPERTY_LAZILY_ALLOCATED_BIT,
                                       imageShareQueueFamilyIndices,

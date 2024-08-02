@@ -47,7 +47,7 @@ namespace Renderer {
                     return meta.id == other.meta.id;
                 }  
             };
-            std::map <e_imageType, std::vector <ImageInfo>> m_imageInfoPool{};
+            std::map <e_imageType, std::vector <ImageInfo>> m_imageInfoPool;
 
             static Log::Record* m_VKImageMgrLog;
             const uint32_t m_instanceId = g_collectionsId++;
@@ -80,7 +80,7 @@ namespace Renderer {
                 m_VKImageMgrLog = LOG_INIT (m_instanceId, g_pathSettings.logSaveDir);
                 LOG_ADD_CONFIG (m_instanceId, Log::INFO,  Log::TO_FILE_IMMEDIATE);
                 LOG_ADD_CONFIG (m_instanceId, Log::ERROR, Log::TO_FILE_IMMEDIATE | Log::TO_CONSOLE); 
-                /* Create a type empty image, since the image info struct is private, there may be cases where we need
+                /* Create a type void image, since the image info struct is private, there may be cases where we need
                  * its type. Using the get function with an auto will help to resolve this
                 */
                 ImageInfo info{};
@@ -93,7 +93,7 @@ namespace Renderer {
             
         protected:
             /* The below function takes a list of candidate formats in order from most desirable to least desirable, and 
-             * checks which is the first one that supports desired tiling mode and image usage
+             * checks which is the first one that supports desired tiling mode and format features
             */
             VkFormat getSupportedFormat (const std::vector <VkFormat>& formatCandidates, 
                                          VkImageTiling tiling, 
@@ -135,8 +135,11 @@ namespace Renderer {
                                   VkImage image) {
 
                 auto deviceInfo = getDeviceInfo();
-                VkImageViewCreateInfo createInfo{};
+
+                VkImageViewCreateInfo createInfo;
                 createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+                createInfo.pNext = VK_NULL_HANDLE;
+                createInfo.flags = 0;
                 createInfo.image = image;
                 /* The viewType and format fields specify how the image data should be interpreted (ex: 1D/2D/3D textures)
                 */
@@ -203,8 +206,15 @@ namespace Renderer {
                     }
                 }
 
-                VkImageCreateInfo createInfo{};
+                VkImageCreateInfo createInfo;
                 createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+                createInfo.pNext = VK_NULL_HANDLE;
+                /* There are some optional flags for images that are related to sparse images. Sparse images are images 
+                 * where only certain regions are actually backed by memory. If you were using a 3D texture for a voxel 
+                 * terrain, for example, then you could use this to avoid allocating memory to store large volumes of 
+                 * "air" values
+                */
+                createInfo.flags = 0; 
                 /* The image type, specified in the imageType field, tells Vulkan with what kind of coordinate system the 
                  * texels in the image are going to be addressed. It is possible to create 1D, 2D and 3D images. One 
                  * dimensional images can be used to store an array of data or gradient, two dimensional images are 
@@ -244,10 +254,10 @@ namespace Renderer {
                  * There are few situations where it is necessary for the texels to be preserved during the first 
                  * transition. One example, however, would be if you wanted to use an image as a staging image in 
                  * combination with the VK_IMAGE_TILING_LINEAR layout. In that case, you'd want to upload the texel data 
-                 * to it and then transition the image to be a transfer source without losing the data. In this case, 
-                 * however, we're first going to transition the image to be a transfer destination and then copy texel 
-                 * data to it from a buffer object, so we don't need this property and can safely use 
-                 * VK_IMAGE_LAYOUT_UNDEFINED
+                 * to it and then transition the image to be a transfer source without losing the data. Whereas, if we
+                 * are using a staging buffer, we're first going to transition the image to be a transfer destination and
+                 * then copy texel data to it from a buffer object, so we don't need this property and can safely use 
+                 * VK_IMAGE_LAYOUT_UNDEFINED instead
                 */
                 createInfo.initialLayout = initialLayout;   
                 createInfo.usage         = usage;
@@ -263,13 +273,6 @@ namespace Renderer {
                     createInfo.queueFamilyIndexCount = 0;
                     createInfo.pQueueFamilyIndices   = VK_NULL_HANDLE; 
                 }
-
-                /* There are some optional flags for images that are related to sparse images. Sparse images are images 
-                 * where only certain regions are actually backed by memory. If you were using a 3D texture for a voxel 
-                 * terrain, for example, then you could use this to avoid allocating memory to store large volumes of 
-                 * "air" values
-                */
-                createInfo.flags = 0; 
 
                 VkImage image;
                 VkResult result = vkCreateImage (deviceInfo->shared.logDevice, &createInfo, VK_NULL_HANDLE, &image);
@@ -291,8 +294,9 @@ namespace Renderer {
                 VkMemoryRequirements memRequirements;
                 vkGetImageMemoryRequirements (deviceInfo->shared.logDevice, image, &memRequirements);
 
-                VkMemoryAllocateInfo allocInfo{};
+                VkMemoryAllocateInfo allocInfo;
                 allocInfo.sType           = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+                allocInfo.pNext           = VK_NULL_HANDLE;
                 allocInfo.allocationSize  = memRequirements.size;
                 allocInfo.memoryTypeIndex = getMemoryTypeIndex (memRequirements.memoryTypeBits, property);
 
@@ -313,7 +317,7 @@ namespace Renderer {
 
                 vkBindImageMemory (deviceInfo->shared.logDevice, image, imageMemory, 0);
 
-                ImageInfo info{};
+                ImageInfo info;
                 info.meta.id                    = imageInfoId;
                 info.meta.width                 = width;
                 info.meta.height                = height;
@@ -355,6 +359,7 @@ namespace Renderer {
                                         VkPipelineStageFlags& destinationStage) {
 
                 barrier->sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+                barrier->pNext = VK_NULL_HANDLE;
                 /* The first two fields specify layout transition. It is possible to use VK_IMAGE_LAYOUT_UNDEFINED as 
                  * oldLayout if you don't care about the existing contents of the image
                 */

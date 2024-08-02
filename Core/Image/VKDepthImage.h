@@ -52,8 +52,8 @@ namespace Renderer {
 
         protected:
             /* Creating a depth image is fairly straightforward. It should have the same resolution as the color 
-             * attachment, defined by the swap chain extent, an image usage appropriate for a depth attachment, optimal 
-             * tiling and device local memory
+             * attachment, defined by the swap chain extent, an image usage appropriate for a depth attachment and optimal 
+             * tiling
             */
             void createDepthResources (uint32_t imageInfoId, uint32_t resourceId) {
                 auto deviceInfo = getDeviceInfo();
@@ -95,7 +95,7 @@ namespace Renderer {
                                       format,
                                       VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT |
                                       VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
-                                      deviceInfo->params.sampleCount,
+                                      deviceInfo->params.maxSampleCount,
                                       VK_IMAGE_TILING_OPTIMAL,
                                       VK_MEMORY_PROPERTY_LAZILY_ALLOCATED_BIT,
                                       imageShareQueueFamilyIndices,

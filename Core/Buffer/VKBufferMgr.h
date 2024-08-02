@@ -91,6 +91,8 @@ namespace Renderer {
 
                 VkBufferCreateInfo createInfo;
                 createInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+                createInfo.pNext = VK_NULL_HANDLE;
+                createInfo.flags = 0;
                 createInfo.size  = size;
                 createInfo.usage = usage;
                 /* If the queue families differ, then we'll be using the concurrent mode (buffers can be used across 
@@ -112,10 +114,6 @@ namespace Renderer {
                     createInfo.queueFamilyIndexCount = 0;
                     createInfo.pQueueFamilyIndices   = VK_NULL_HANDLE; 
                 }
-                /* The flags parameter is used to configure sparse buffer memory, we'll leave it at the default value of 0
-                */
-                createInfo.flags = 0;
-                createInfo.pNext = VK_NULL_HANDLE;
 
                 VkBuffer buffer;
                 VkResult result = vkCreateBuffer (deviceInfo->shared.logDevice, &createInfo, VK_NULL_HANDLE, &buffer);
@@ -148,6 +146,7 @@ namespace Renderer {
                 */
                 VkMemoryAllocateInfo allocInfo;
                 allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+                allocInfo.pNext = VK_NULL_HANDLE;
                 /* Memory allocation is now as simple as specifying the size and type, both of which are derived from 
                  * the memory requirements of the buffer and the desired property
                 */
@@ -155,7 +154,6 @@ namespace Renderer {
                 /* Find suitable memory type
                 */
                 allocInfo.memoryTypeIndex = getMemoryTypeIndex (memRequirements.memoryTypeBits, property);
-                allocInfo.pNext           = VK_NULL_HANDLE;
 
                 /* It should be noted that in a real world application, you're not supposed to actually call 
                  * vkAllocateMemory for every individual buffer. The maximum number of simultaneous memory allocations 

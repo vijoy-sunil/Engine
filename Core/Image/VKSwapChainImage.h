@@ -11,7 +11,7 @@ namespace Renderer {
             static Log::Record* m_VKSwapChainImageLog;
             const uint32_t m_instanceId = g_collectionsId++; 
 
-            /* If the swapChainAdequate conditions were met (see physical device support function) then the support is 
+            /* If the swap chain adequate conditions were met (see physical device support function) then the support is 
              * definitely sufficient, but there may still be many different modes of varying optimality. We'll need to 
              * find the right settings when creating the best possible swap chain. There are three types of settings to 
              * determine:
@@ -22,9 +22,7 @@ namespace Renderer {
              */
 
             /* (1) Surface format
-             * Note that we'll pass the formats member of the SwapChainSupportDetails struct as argument to this function
-             *
-             * Each VkSurfaceFormatKHR entry contains a format and a colorSpace member.
+             * Each VkSurfaceFormatKHR entry contains a format and a colorSpace member
              *  
              * format: The format member specifies the color channels and types. For example, VK_FORMAT_B8G8R8A8_SRGB 
              * means that we store the B, G, R and alpha channels in that order with an 8 bit unsigned integer for a 
@@ -95,16 +93,16 @@ namespace Renderer {
              * Vulkan tells us to match the resolution of the window by setting the width and height in the currentExtent 
              * member. However, some window managers do allow us to differ here and this is indicated by setting the 
              * width and height in currentExtent to a special value: the maximum value of uint32_t. In that case we'll 
-             * pick the resolution that best matches the window within the minImageExtent and maxImageExtent bounds.
+             * pick the resolution that best matches the window within the minImageExtent and maxImageExtent bounds
              * 
              * GLFW uses two units when measuring sizes: pixels and screen coordinates. For example, the resolution 
-             * {WIDTH, HEIGHT} that we specified earlier when creating the window is measured in screen coordinates. But 
+             * {width, height} that we specified earlier when creating the window is measured in screen coordinates. But 
              * Vulkan works with pixels, so the swap chain extent must be specified in pixels as well. Unfortunately, if 
              * you are using a high DPI display (like Apple's Retina display), screen coordinates don't correspond to 
              * pixels. Instead, due to the higher pixel density, the resolution of the window in pixel will be larger 
              * than the resolution in screen coordinates. So if Vulkan doesn't fix the swap extent for us, we can't just 
-             * use the original {WIDTH, HEIGHT}. Instead, we must use glfwGetFramebufferSize to query the resolution of 
-             * the window in pixel before matching it against the minimum and maximum image extent.
+             * use the original {width, height}. Instead, we must use glfwGetFramebufferSize to query the resolution of 
+             * the window in pixel before matching it against the minimum and maximum image extent
             */
             VkExtent2D getSwapExtent (uint32_t resourceId, const VkSurfaceCapabilitiesKHR* capabilities) {
                 auto deviceInfo = getDeviceInfo();
@@ -145,7 +143,7 @@ namespace Renderer {
             /* Vulkan does not have the concept of a "default framebuffer", hence it requires an infrastructure that will 
              * own the buffers we will render to before we visualize them on the screen. This infrastructure is known as 
              * the swap chain and must be created explicitly in Vulkan. The swap chain is essentially a queue of images 
-             * that are waiting to be presented to the screen.
+             * that are waiting to be presented to the screen
              * 
              * Our application will acquire such an image to draw to it, and then return it to the queue. How exactly the 
              * queue works and the conditions for presenting an image from the queue depend on how the swap chain is set 
@@ -153,16 +151,15 @@ namespace Renderer {
              * refresh rate of the screen
             */
             void createSwapChainResources (uint32_t imageInfoId, uint32_t resourceId) {
-                auto deviceInfo = getDeviceInfo();
-                SwapChainSupportDetails swapChainSupport = getSwapChainSupportDetails (resourceId, 
-                                                                                       deviceInfo->shared.phyDevice);
+                auto deviceInfo       = getDeviceInfo();
+                auto swapChainSupport = getSwapChainSupportDetails (resourceId, deviceInfo->shared.phyDevice);
 
-                VkSurfaceFormatKHR surfaceFormat = getSwapSurfaceFormat (swapChainSupport.formats);
-                VkPresentModeKHR presentMode     = getSwapPresentMode   (swapChainSupport.presentModes);
-                VkExtent2D extent                = getSwapExtent        (resourceId, &swapChainSupport.capabilities); 
+                auto surfaceFormat    = getSwapSurfaceFormat (swapChainSupport.formats);
+                auto presentMode      = getSwapPresentMode   (swapChainSupport.presentModes);
+                auto extent           = getSwapExtent        (resourceId, &swapChainSupport.capabilities); 
 
                 /* Aside from the above properties we also have to decide how many images we would like to have in the 
-                 * swap chain. The implementation specifies the minimum number that it requires to function.
+                 * swap chain. The implementation specifies the minimum number that it requires to function
                  *
                  * However, simply sticking to this minimum means that we (the application) may sometimes have to wait on 
                  * the driver to complete internal operations before we can acquire another image to render to. Therefore 
@@ -172,7 +169,7 @@ namespace Renderer {
                  * allowed to create a swap chain with more
                 */
                 uint32_t imageCount = swapChainSupport.capabilities.minImageCount + 1;
-                /* Make sure the imageCount is within bounds, if the queried maxImageCount was '0', this means that there
+                /* Make sure the image count is within bounds, if the queried maxImageCount was '0', this means that there
                  * is no maximum
                 */
                 if (swapChainSupport.capabilities.maxImageCount > 0 && 
@@ -181,8 +178,10 @@ namespace Renderer {
 
                 /* We are now ready to create the swap chain
                 */
-                VkSwapchainCreateInfoKHR createInfo{};
+                VkSwapchainCreateInfoKHR createInfo;
                 createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
+                createInfo.pNext = VK_NULL_HANDLE;
+                createInfo.flags = 0;
                 /* Specify which surface the swap chain should be tied to
                 */
                 createInfo.surface         = deviceInfo->unique[resourceId].surface;
@@ -196,16 +195,16 @@ namespace Renderer {
                 */
                 createInfo.imageArrayLayers = 1;
                 /* The imageUsage bit field specifies what kind of operations we'll use the images in the swap chain for.
-                 * Here, we're going to render directly to them, which means that they're used as color attachment. It is 
-                 * also possible that you'll render images to a separate image first to perform operations like 
-                 * post-processing. In that case you may use a value like VK_IMAGE_USAGE_TRANSFER_DST_BIT instead and use 
-                 * a memory operation to transfer the rendered image to a swap chain image
+                 * If we're going to render directly to them, they're used as color attachment. It is also possible that 
+                 * you'll render images to a separate image first to perform operations like post-processing. In that case
+                 * you may use a value like VK_IMAGE_USAGE_TRANSFER_DST_BIT instead and use a memory operation to transfer
+                 * the rendered image to a swap chain image
                 */
                 createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
                 /* Next, we need to specify how to handle swap chain images that will be used across multiple queue 
-                 * families. That will be the case in our application if the graphics queue family is different from the 
-                 * presentation queue. We'll be drawing on the images in the swap chain from the graphics queue and then 
-                 * submitting them on the presentation queue
+                 * families. For example, if the graphics queue family is different from the presentation queue, we'll 
+                 * be drawing on the images in the swap chain from the graphics queue and then submitting them on the 
+                 * presentation queue
                 */
                 auto queueFamilyIndices = std::vector { 
                     deviceInfo->unique[resourceId].indices.graphicsFamily.value(),
@@ -241,9 +240,9 @@ namespace Renderer {
                 createInfo.clipped = VK_TRUE;
                 /* With Vulkan it's possible that your swap chain becomes invalid or unoptimized while your application is 
                  * running, for example because the window was resized. In that case the swap chain actually needs to be 
-                 * recreated from scratch and a reference to the old one must be specified in this field.
+                 * recreated from scratch and a reference to the old one must be specified in this field
                  * 
-                 * We will be handling window resizing and swap chain recreation at a different place
+                 * Note that, we are handling window resizing and swap chain recreation at a different place
                 */
                 createInfo.oldSwapchain = VK_NULL_HANDLE;
 
@@ -255,6 +254,8 @@ namespace Renderer {
                 if (result != VK_SUCCESS) {
                     LOG_ERROR (m_VKSwapChainImageLog) << "Failed to create swap chain "
                                                       << "[" << imageInfoId << "]"
+                                                      << " "
+                                                      << "[" << resourceId  << "]"
                                                       << " "
                                                       << "[" << string_VkResult (result) << "]" 
                                                       << std::endl;
@@ -284,7 +285,7 @@ namespace Renderer {
                 imageInfo->params.sharingMode   = createInfo.imageSharingMode;
                 imageInfo->params.aspect        = VK_IMAGE_ASPECT_COLOR_BIT;
 
-                /* iterate over all of the swap chain images and create image views
+                /* Iterate over all of the swap chain images and create image views
                 */
                 for (uint32_t i = 0; i < swapChainSize; i++) {
                     imageInfo->meta.id = imageInfoId + i;
