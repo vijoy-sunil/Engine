@@ -31,7 +31,7 @@ namespace Renderer {
              * struct, VkPipelineColorBlendStateCreateInfo contains the global color blending settings
             */
             VkPipelineColorBlendAttachmentState getColorBlendAttachment (VkBool32 blendEnable) {
-                VkPipelineColorBlendAttachmentState attachment{};
+                VkPipelineColorBlendAttachmentState attachment;
                 /* This per-framebuffer struct allows you to configure the first way of color blending (if set to true) 
                  * using the formula configured using the struct members. If blendEnable is set to VK_FALSE, then the new 
                  * color from the fragment shader is passed through unmodified
@@ -42,7 +42,7 @@ namespace Renderer {
                  * (srcColorBlendFactor * newColor.rgb) <colorBlendOp> (dstColorBlendFactor * oldColor.rgb)
                  * 
                  * finalColor.a = 
-                 * (srcAlphaBlendFactor * newColor.a) <alphaBlendOp> (dstAlphaBlendFactor * oldColor.a);
+                 * (srcAlphaBlendFactor * newColor.a) <alphaBlendOp> (dstAlphaBlendFactor * oldColor.a)
                  * 
                  * The resulting color is AND'd with the colorWriteMask to determine which channels are actually passed 
                  * through
@@ -61,7 +61,7 @@ namespace Renderer {
                 /* Example: The most common way to use color blending is to implement alpha blending, where we want the 
                  * new color to be blended with the old color based on its opacity
                  * finalColor.rgb = newAlpha * newColor + (1 - newAlpha) * oldColor
-                 * finalColor.a = newAlpha.a
+                 * finalColor.a   = newAlpha.a
                  * 
                  * This can be configured like below
                  * attachment.blendEnable         = VK_TRUE;
@@ -85,8 +85,10 @@ namespace Renderer {
                 /* The second structure references the array of structures for all of the framebuffers and allows you to 
                  * set blend constants that you can use as blend factors in the aforementioned calculations
                 */
-                VkPipelineColorBlendStateCreateInfo createInfo{};
+                VkPipelineColorBlendStateCreateInfo createInfo;
                 createInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
+                createInfo.pNext = VK_NULL_HANDLE;
+                createInfo.flags = 0;
                 /* If you want to use the second method of blending (bitwise combination), then you should set 
                  * logicOpEnable to VK_TRUE. The bitwise operation can then be specified in the logicOp field. Note that 
                  * this will automatically disable the first method, as if you had set blendEnable to VK_FALSE for every 

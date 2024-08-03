@@ -27,12 +27,14 @@ namespace Renderer {
                                          uint32_t imageInfoId,
                                          VkBool32 sampleShadingEnable, 
                                          float minSampleShading) {
-                
-                auto pipelineInfo = getPipelineInfo (pipelineInfoId);
-                auto imageInfo    = getImageInfo    (imageInfoId, MULTISAMPLE_IMAGE);
 
-                VkPipelineMultisampleStateCreateInfo createInfo{};
+                auto imageInfo    = getImageInfo    (imageInfoId, MULTISAMPLE_IMAGE);                
+                auto pipelineInfo = getPipelineInfo (pipelineInfoId);
+
+                VkPipelineMultisampleStateCreateInfo createInfo;
                 createInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
+                createInfo.pNext = VK_NULL_HANDLE;
+                createInfo.flags = 0;
                 /* There are certain limitations of our current MSAA implementation which may impact the quality of the 
                  * output image in more detailed scenes. For example, we're currently not solving potential problems 
                  * caused by shader aliasing, i.e. MSAA only smoothens out the edges of geometry but not the interior 

@@ -44,8 +44,10 @@ namespace Renderer {
                  * VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP
                  * the second and third vertex of every triangle are used as first two vertices of the next triangle
                 */
-                VkPipelineInputAssemblyStateCreateInfo createInfo{};
+                VkPipelineInputAssemblyStateCreateInfo createInfo;
                 createInfo.sType    = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
+                createInfo.pNext    = VK_NULL_HANDLE;
+                createInfo.flags    = 0;
                 createInfo.topology = topology;
                 /* If you set the primitiveRestartEnable member to VK_TRUE, then it's possible to break up lines and 
                  * triangles in the _STRIP topology modes

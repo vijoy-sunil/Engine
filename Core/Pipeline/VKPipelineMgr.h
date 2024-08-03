@@ -77,7 +77,7 @@ namespace Renderer {
                     VkPipeline basePipeline; 
                 } resource;
             };
-            std::map <uint32_t, PipelineInfo> m_pipelineInfoPool{};
+            std::map <uint32_t, PipelineInfo> m_pipelineInfoPool;
 
             static Log::Record* m_VKPipelineMgrLog;
             const uint32_t m_instanceId = g_collectionsId++;
@@ -124,8 +124,8 @@ namespace Renderer {
                                          int32_t basePipelineIndex,
                                          VkPipeline basePipeline) {
 
-                auto pipelineInfo   = getPipelineInfo   (pipelineInfoId);
                 auto renderPassInfo = getRenderPassInfo (renderPassInfoId);
+                auto pipelineInfo   = getPipelineInfo   (pipelineInfoId);
                 auto deviceInfo     = getDeviceInfo();
 
                 pipelineInfo->meta.subPassIndex      = subPassIndex;
@@ -133,10 +133,13 @@ namespace Renderer {
                 pipelineInfo->resource.renderPass    = renderPassInfo->resource.renderPass;
                 pipelineInfo->resource.basePipeline  = basePipeline;  
 
-                VkGraphicsPipelineCreateInfo createInfo{};
+                VkGraphicsPipelineCreateInfo createInfo;
                 createInfo.sType               = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+                createInfo.pNext               = VK_NULL_HANDLE;
+                createInfo.flags               = 0;
                 createInfo.pVertexInputState   = &pipelineInfo->state.vertexInput;
                 createInfo.pInputAssemblyState = &pipelineInfo->state.inputAssembly; 
+                createInfo.pTessellationState  = VK_NULL_HANDLE;
                 createInfo.stageCount          = static_cast <uint32_t> (pipelineInfo->state.stages.size());
                 createInfo.pStages             = pipelineInfo->state.stages.data();
                 createInfo.pDepthStencilState  = &pipelineInfo->state.depthStencil;
@@ -146,9 +149,9 @@ namespace Renderer {
                 createInfo.pDynamicState       = &pipelineInfo->state.dynamicState;
                 createInfo.pViewportState      = &pipelineInfo->state.viewPort;
 
-                createInfo.layout              = pipelineInfo->resource.layout;
                 createInfo.subpass             = pipelineInfo->meta.subPassIndex;
                 createInfo.basePipelineIndex   = pipelineInfo->meta.basePipelineIndex;
+                createInfo.layout              = pipelineInfo->resource.layout;
                 /* Pipeline vs Render pass
                  * VkPipeline is a GPU context. Think of the GPU as a FPGA (which it isn't, but bear with me). Doing 
                  * vkCmdBindPipeline would set the GPU to a given gate configuration. But since the GPU is not a FPGA, it 

@@ -27,8 +27,8 @@ namespace Renderer {
                                                            VkDescriptorType descriptorType,
                                                            VkShaderStageFlags shaderStages,
                                                            const VkSampler* immutableSamplers) {
-                VkDescriptorSetLayoutBinding layoutBinding{};
-                /* binding field specifies the binding number of this entry and corresponds to a resource of the same 
+                VkDescriptorSetLayoutBinding layoutBinding;
+                /* The binding field specifies the binding number of this entry and corresponds to a resource of the same 
                  * binding number in the shader stages
                 */
                 layoutBinding.binding = bindingNumber;
@@ -68,18 +68,18 @@ namespace Renderer {
                 auto deviceInfo   = getDeviceInfo();
                 /* Specify descriptor set layout binding properties
                 */
-                VkDescriptorSetLayoutBindingFlagsCreateInfo bindingFlagsCreateInfo{};
+                VkDescriptorSetLayoutBindingFlagsCreateInfo bindingFlagsCreateInfo;
                 bindingFlagsCreateInfo.sType         = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_BINDING_FLAGS_CREATE_INFO;
                 bindingFlagsCreateInfo.pNext         = VK_NULL_HANDLE;
                 bindingFlagsCreateInfo.pBindingFlags = bindingFlags.data();
                 bindingFlagsCreateInfo.bindingCount  = static_cast <uint32_t> (bindingFlags.size());
 
-                VkDescriptorSetLayoutCreateInfo createInfo{};
+                VkDescriptorSetLayoutCreateInfo createInfo;
                 createInfo.sType        = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+                createInfo.pNext        = &bindingFlagsCreateInfo;
+                createInfo.flags        = layoutCreateFlags;
                 createInfo.bindingCount = static_cast <uint32_t> (layoutBindings.size());
                 createInfo.pBindings    = layoutBindings.data();
-                createInfo.flags        = layoutCreateFlags;
-                createInfo.pNext        = &bindingFlagsCreateInfo;
 
                 VkDescriptorSetLayout descriptorSetLayout;
                 VkResult result = vkCreateDescriptorSetLayout (deviceInfo->shared.logDevice, 

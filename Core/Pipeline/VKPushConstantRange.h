@@ -29,7 +29,7 @@ namespace Renderer {
              * through push constant uniform values. No synchronization is needed, as vkCmdPushConstants effectively 
              * executes immediately (within the command buffer)
              * 
-             * Note that, push constants are written in ranges. A important reason for that, is that you can have 
+             * Note that, push constants are written in ranges. An important reason for that, is that you can have 
              * different push constants, at different ranges, in different stages. For example, you can reserve 64 bytes
              * (1 glm::mat4) size on the vertex shader, and then start the frag shader push constant from offset 64. This
              * way you would have different push constants on different stages
@@ -41,7 +41,7 @@ namespace Renderer {
                 
                 auto pipelineInfo = getPipelineInfo (pipelineInfoId);
 
-                VkPushConstantRange range{};
+                VkPushConstantRange range;
                 range.stageFlags = stageFlags;
                 range.offset     = offset;
                 range.size       = size;

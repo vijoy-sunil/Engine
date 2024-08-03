@@ -31,7 +31,7 @@ namespace Renderer {
 
                 size_t fileSize = static_cast <size_t> (file.tellg());
                 std::vector <char> buffer (fileSize);
-                /* seek back to the beginning of the file and read all of the bytes at once
+                /* Seek back to the beginning of the file and read all of the bytes at once
                 */
                 file.seekg (0);
                 file.read (buffer.data(), fileSize);
@@ -41,14 +41,15 @@ namespace Renderer {
             }
 
             /* Before we can pass the shader code to the pipeline, we have to wrap it in a VkShaderModule object. Shader 
-             * modules are just a thin wrapper around the shader bytecode that we've previously loaded from a file and 
-             * the functions defined in it
+             * modules are just a thin wrapper around the shader byte code that we've previously loaded from a file
             */
             VkShaderModule getShaderModule (const std::vector <char>& shaderCode) {
                 auto deviceInfo = getDeviceInfo();
 
-                VkShaderModuleCreateInfo createInfo{};
+                VkShaderModuleCreateInfo createInfo;
                 createInfo.sType    = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+                createInfo.pNext    = VK_NULL_HANDLE;
+                createInfo.flags    = 0;
                 createInfo.codeSize = shaderCode.size();
                 /* The size of the bytecode is specified in bytes, but the bytecode pointer is a uint32_t pointer rather 
                  * than a char pointer. Therefore we will need to cast the pointer with reinterpret_cast
@@ -98,7 +99,7 @@ namespace Renderer {
                     throw std::runtime_error ("Invalid file size for shader file");
                 }
 
-                VkShaderModule module = getShaderModule (shaderCode);
+                auto module = getShaderModule (shaderCode);
                 if (module == VK_NULL_HANDLE) {
                     LOG_ERROR (m_VKShaderStageLog) << "Invalid shader module "
                                                    << "[" << pipelineInfoId << "]"
@@ -108,11 +109,13 @@ namespace Renderer {
                     throw std::runtime_error ("Invalid shader module");
                 }
 
-                VkPipelineShaderStageCreateInfo createInfo{};
+                VkPipelineShaderStageCreateInfo createInfo;
                 createInfo.sType  = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+                createInfo.pNext  = VK_NULL_HANDLE;
+                createInfo.flags  = 0; 
                 createInfo.stage  = stage;
                 createInfo.module = module;
-                /* The shader function to invoke (called as entrypoint) is specified here. That means that it's possible 
+                /* The shader function to invoke (called as entry point) is specified here. That means that it's possible 
                  * to combine multiple fragment shaders into a single shader module and use different entry points to 
                  * differentiate between their behaviors 
                 */

@@ -28,13 +28,15 @@ namespace Renderer {
                                           float minDepthBounds, 
                                           float maxDepthBounds,
                                           VkBool32 stencilTestEnable,
-                                          VkStencilOpState front,
-                                          VkStencilOpState back) {
+                                          const VkStencilOpState* front,
+                                          const VkStencilOpState* back) {
                 
                 auto pipelineInfo = getPipelineInfo (pipelineInfoId);
 
-                VkPipelineDepthStencilStateCreateInfo createInfo{};
+                VkPipelineDepthStencilStateCreateInfo createInfo;
                 createInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+                createInfo.pNext = VK_NULL_HANDLE;
+                createInfo.flags = 0;
                 /* The depthTestEnable field specifies if the depth of new fragments should be compared to the depth 
                  * buffer to see if they should be discarded. The depthWriteEnable field specifies if the new depth of 
                  * fragments that pass the depth test should actually be written to the depth buffer
@@ -56,8 +58,9 @@ namespace Renderer {
                  * you will have to make sure that the format of the depth/stencil image contains a stencil component
                 */
                 createInfo.stencilTestEnable = stencilTestEnable;
-                createInfo.front             = front;
-                createInfo.back              = back;
+
+                front != VK_NULL_HANDLE ? createInfo.front = *front : createInfo.front = {};
+                back  != VK_NULL_HANDLE ? createInfo.back  = *back  : createInfo.back  = {};
 
                 pipelineInfo->state.depthStencil = createInfo;
             }

@@ -54,10 +54,12 @@ namespace Renderer {
                  * discarded by the rasterizer. They function like a filter rather than a transformation. So if we wanted 
                  * to draw to the entire framebuffer, we would specify a scissor rectangle that covers it entirely
                  * 
-                 * Dynamic state allows us set up the actual viewport(s) and scissor rectangle(s) up at drawing time.
+                 * Dynamic state allows us set up the actual viewport(s) and scissor rectangle(s) up at drawing time
                 */
-                VkPipelineDynamicStateCreateInfo createInfo{};
+                VkPipelineDynamicStateCreateInfo createInfo;
                 createInfo.sType             = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
+                createInfo.pNext             = VK_NULL_HANDLE;
+                createInfo.flags             = 0;
                 createInfo.dynamicStateCount = static_cast <uint32_t> (dynamicStates.size());
                 createInfo.pDynamicStates    = dynamicStates.data();
 

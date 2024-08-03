@@ -44,8 +44,10 @@ namespace Renderer {
                  * or show its back to the user. What if we could only render the faces that are facing the viewer? This 
                  * is exactly what face culling does
                 */
-                VkPipelineRasterizationStateCreateInfo createInfo{};
+                VkPipelineRasterizationStateCreateInfo createInfo;
                 createInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
+                createInfo.pNext = VK_NULL_HANDLE;
+                createInfo.flags = 0;
                 /* If depthClampEnable is set to VK_TRUE, then fragments that are beyond the near and far planes are 
                  * clamped to them as opposed to discarding them. This is useful in some special cases like shadow maps 
                  * (technique that generates fast approximate shadows)

@@ -38,7 +38,7 @@ VARIABLES
 -------------------------------------------------------------------------------------------------------------------------
 METHODS
 -------------------------------------------------------------------------------------------------------------------------
-[ X ] Common methods - create, get, is, ready, delete, dump, cleanUp
+[ X ] Common methods - create, get, is, ready, delete, dump, cleanUp, pick
 [ - ] Return objects/literals methods start with get
 [ - ] Return boolean methods start with is
 [ X ] Return via parameter only if returning multiple variables
@@ -59,10 +59,9 @@ LOG
 [ X ] log_info, log_error, log_warning used appropriately
 [ - ] log_error followed by runtime error throwing same message
 [ X ] In log statements, make sure we are outputting related ids and vars like resourceid, bufferid, imageid etc.
-[ X ] In log statements, resource id must come after other ids
 [ - ] Check spacing in log statements; no spacing at the end if you are not logging any variables
 [ X ] Dump ordering must match relative member orders
-[ X ] Go through all log outputs when you run
+[ X ] Turn off delete empty and go through all log outputs when you run
 -------------------------------------------------------------------------------------------------------------------------
 MISC
 -------------------------------------------------------------------------------------------------------------------------
@@ -74,7 +73,8 @@ MISC
 [ - ] () { 				                        void parameter
 [ - ] [a-z>]&                                   use of references
 [ - ] [a-z]\*			                        use of pointers
-[ - ] [^ ]\) [a-z]                              no use of C-style casting
+[ - ] \) [a-z]                                  no use of C-style casting
+[ X ] \) &                                      no use of C-style casting
 [ X ] auto          	                        use of auto for vectors, structs etc.
 [ - ] const char*                               use const char* for string literals
 [ - ] std::string                               use only if you require std::string features like concat, size etc.

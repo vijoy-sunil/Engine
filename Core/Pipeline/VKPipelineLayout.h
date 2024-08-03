@@ -33,8 +33,10 @@ namespace Renderer {
                  * These uniform values need to be specified during pipeline creation by creating a VkPipelineLayout 
                  * object
                 */
-                VkPipelineLayoutCreateInfo createInfo{};
+                VkPipelineLayoutCreateInfo createInfo;
                 createInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+                createInfo.pNext = VK_NULL_HANDLE;
+                createInfo.flags = 0;
                 /* setLayoutCount is the number of descriptor sets included in the pipeline layout and pSetLayouts is a 
                  * pointer to an array of VkDescriptorSetLayout objects, meaning, it's possible to specify multiple 
                  * descriptor set layouts here
