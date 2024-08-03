@@ -13,11 +13,11 @@ namespace Renderer {
                     std::vector <VkAttachmentDescription> attachments;
                     std::vector <VkSubpassDescription>    subPasses;
                     std::vector <VkSubpassDependency>     dependencies;
-                    std::vector <VkFramebuffer>           framebuffers;
+                    std::vector <VkFramebuffer>           frameBuffers;
                     VkRenderPass renderPass;
                 } resource;
             };
-            std::map <uint32_t, RenderPassInfo> m_renderPassInfoPool{};
+            std::map <uint32_t, RenderPassInfo> m_renderPassInfoPool;
 
             static Log::Record* m_VKRenderPassMgrLog;
             const uint32_t m_instanceId = g_collectionsId++;
@@ -62,8 +62,10 @@ namespace Renderer {
                 auto renderPassInfo = getRenderPassInfo (renderPassInfoId);
                 auto deviceInfo     = getDeviceInfo();
 
-                VkRenderPassCreateInfo createInfo{};
+                VkRenderPassCreateInfo createInfo;
                 createInfo.sType           = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+                createInfo.pNext           = VK_NULL_HANDLE;
+                createInfo.flags           = 0;
                 createInfo.attachmentCount = static_cast <uint32_t> (renderPassInfo->resource.attachments.size());
                 createInfo.pAttachments    = renderPassInfo->resource.attachments.data();
                 createInfo.subpassCount    = static_cast <uint32_t> (renderPassInfo->resource.subPasses.size());
@@ -120,7 +122,7 @@ namespace Renderer {
                                                     << std::endl;
 
                     LOG_INFO (m_VKRenderPassMgrLog) << "Framebuffers count " 
-                                                    << "[" << val.resource.framebuffers.size() << "]"
+                                                    << "[" << val.resource.frameBuffers.size() << "]"
                                                     << std::endl;
                 }
             }

@@ -33,15 +33,17 @@ namespace Renderer {
                 auto renderPassInfo = getRenderPassInfo (renderPassInfoId);
                 auto deviceInfo     = getDeviceInfo();
 
-                VkFramebufferCreateInfo createInfo{};
+                VkFramebufferCreateInfo createInfo;
                 createInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-                /* Specify with which renderPass the framebuffer needs to be compatible. You can only use a framebuffer 
+                createInfo.pNext = VK_NULL_HANDLE;
+                createInfo.flags = 0;
+                /* Specify with which render pass the framebuffer needs to be compatible. You can only use a framebuffer 
                  * with the render passes that it is compatible with, which roughly means that they use the same number 
                  * and type of attachments
                 */
                 createInfo.renderPass = renderPassInfo->resource.renderPass;
                 /* The attachmentCount and pAttachments parameters specify the VkImageView objects that should be bound to
-                 * the respective attachment descriptions in the render pass pAttachment array
+                 * the respective attachment descriptions in the render pass pAttachments array
                 */
                 createInfo.attachmentCount = static_cast <uint32_t> (attachments.size());
                 createInfo.pAttachments    = attachments.data();
@@ -58,14 +60,12 @@ namespace Renderer {
                     LOG_ERROR (m_VKFrameBufferLog) << "Failed to create framebuffer " 
                                                    << "[" << renderPassInfoId << "]"
                                                    << " "
-                                                   << "[" << resourceId << "]"
-                                                   << " "
                                                    << "[" << string_VkResult (result) << "]"
                                                    << std::endl;
                     throw std::runtime_error ("Failed to create framebuffer");
                 }
 
-                renderPassInfo->resource.framebuffers.push_back (frameBuffer);
+                renderPassInfo->resource.frameBuffers.push_back (frameBuffer);
             }
 
             void cleanUp (uint32_t renderPassInfoId) {
@@ -73,9 +73,9 @@ namespace Renderer {
                 auto deviceInfo     = getDeviceInfo();
                 /* Destroy the framebuffers before the image views and render pass that they are based on
                 */
-                for (auto const& framebuffer: renderPassInfo->resource.framebuffers)
-                    vkDestroyFramebuffer (deviceInfo->shared.logDevice, framebuffer, VK_NULL_HANDLE);           
-                renderPassInfo->resource.framebuffers.clear();               
+                for (auto const& frameBuffer: renderPassInfo->resource.frameBuffers)
+                    vkDestroyFramebuffer (deviceInfo->shared.logDevice, frameBuffer, VK_NULL_HANDLE);           
+                renderPassInfo->resource.frameBuffers.clear();               
             }
     };
 

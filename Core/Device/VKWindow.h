@@ -14,7 +14,7 @@ namespace Renderer {
              * it is not guaranteed to happen. That's why we'll add some extra code to also handle resizes explicitly
              * using this boolean
             */
-            bool m_framebufferResized;
+            bool m_frameBufferResized;
 
             /* The reason that we're creating a static function as a callback is because GLFW does not know how to 
              * properly call a member function with the right 'this' pointer to our VKWindow class instance. However, 
@@ -22,7 +22,7 @@ namespace Renderer {
              * to store an arbitrary pointer inside of it. The 'this' pointer can then be used to properly set the 
              * boolean to indicate that a resize has happened
             */
-            static void framebufferResizeCallback (GLFWwindow* window, int width, int height) {
+            static void frameBufferResizeCallback (GLFWwindow* window, int width, int height) {
                 /* Suppress unused parameter warning
                 */
                 static_cast <void> (width);
@@ -33,7 +33,7 @@ namespace Renderer {
 
         public:
             VKWindow (void) {
-                m_framebufferResized = false;
+                m_frameBufferResized = false;
                 m_VKWindowLog = LOG_INIT (m_instanceId, g_pathSettings.logSaveDir);
             }
 
@@ -43,11 +43,11 @@ namespace Renderer {
 
         protected:
             void setFrameBufferResized (bool val) {
-                m_framebufferResized = val;
+                m_frameBufferResized = val;
             }
 
             bool isFrameBufferResized (void) {
-                return m_framebufferResized;
+                return m_frameBufferResized;
             }
 
             void createWindow (uint32_t resourceId, int width, int height, bool enResizing = true) {
@@ -75,7 +75,7 @@ namespace Renderer {
                 /* To detect window resizes we can use the glfwSetFramebufferSizeCallback function in the GLFW framework 
                  * to set up a callback (this is done to handle resizes explicitly)
                 */
-                glfwSetFramebufferSizeCallback (window, framebufferResizeCallback);
+                glfwSetFramebufferSizeCallback (window, frameBufferResizeCallback);
 
                 deviceInfo->unique[resourceId].window = window;
             }

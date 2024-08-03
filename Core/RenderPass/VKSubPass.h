@@ -100,7 +100,8 @@ namespace Renderer {
 
                 auto renderPassInfo = getRenderPassInfo (renderPassInfoId);
 
-                VkSubpassDependency dependency{};
+                VkSubpassDependency dependency;
+                dependency.dependencyFlags = 0;
                 /* Note that, stage masks relate to execution order, while access masks relate to memory/cache access
                  *
                  * Execution order is like a dependency chain between the two subpassess, with the stage masks saying 
@@ -177,9 +178,10 @@ namespace Renderer {
                 
                 auto renderPassInfo = getRenderPassInfo (renderPassInfoId);
 
-                VkSubpassDependency dependency{};
-                dependency.srcSubpass = srcSubPass;
-                dependency.dstSubpass = dstSubPass;
+                VkSubpassDependency dependency;
+                dependency.dependencyFlags = 0;
+                dependency.srcSubpass      = srcSubPass;
+                dependency.dstSubpass      = dstSubPass;
                 /* The depth image is first accessed in the early fragment test pipeline stage and we need to make sure 
                  * that there is no conflict between the transitioning of the depth image and it being cleared as part of 
                  * its load operation (VK_ATTACHMENT_LOAD_OP_CLEAR)
@@ -202,11 +204,16 @@ namespace Renderer {
 
                 auto renderPassInfo = getRenderPassInfo (renderPassInfoId);
 
-                VkSubpassDescription subPass{};
-                subPass.pipelineBindPoint    = VK_PIPELINE_BIND_POINT_GRAPHICS;
-                subPass.colorAttachmentCount = static_cast <uint32_t> (colorAttachments.size());
+                VkSubpassDescription subPass;
+                subPass.flags                   = 0;
+                subPass.pipelineBindPoint       = VK_PIPELINE_BIND_POINT_GRAPHICS;
+                subPass.inputAttachmentCount    = 0;
+                subPass.pInputAttachments       = VK_NULL_HANDLE;
+                subPass.preserveAttachmentCount = 0;
+                subPass.pPreserveAttachments    = VK_NULL_HANDLE;
+                subPass.colorAttachmentCount    = static_cast <uint32_t> (colorAttachments.size());
                 /* The index of the attachment in this array is directly referenced from the fragment shader with the 
-                 * layout (location = ?) out vec4 outColor directive
+                 * layout (location = ?) out directive
                 */
                 subPass.pColorAttachments = colorAttachments.data();
                 /* Unlike color attachments, a subpass can only use a single depth (+stencil) attachment. That is why 

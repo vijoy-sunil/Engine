@@ -378,7 +378,7 @@ namespace Renderer {
                  * passed in, we can pick the right framebuffer for the current swapchain image
                 */
                 beginInfo.renderPass  = renderPassInfo->resource.renderPass;
-                beginInfo.framebuffer = renderPassInfo->resource.framebuffers[swapChainImageId];
+                beginInfo.framebuffer = renderPassInfo->resource.frameBuffers[swapChainImageId];
                 /* The next two parameters define the size of the render area. The render area defines where shader loads 
                  * and stores will take place. The pixels outside this region will have undefined values. It should match 
                  * the size of the attachments for best performance

@@ -31,7 +31,7 @@ namespace Renderer {
              * reference. Vulkan will automatically transition the attachment to this layout when the subpass is started
             */
             VkAttachmentReference getAttachmentReference (uint32_t attachmentIndex, VkImageLayout layout) {
-                VkAttachmentReference attachmentReference{};
+                VkAttachmentReference attachmentReference;
                 attachmentReference.attachment = attachmentIndex;
                 attachmentReference.layout     = layout;
                 return attachmentReference;
@@ -45,10 +45,11 @@ namespace Renderer {
              * this depth attachment
             */
             void createMultiSampleAttachment (uint32_t renderPassInfoId, uint32_t imageInfoId) {
-                auto renderPassInfo = getRenderPassInfo (renderPassInfoId);
                 auto imageInfo      = getImageInfo (imageInfoId, MULTISAMPLE_IMAGE);
+                auto renderPassInfo = getRenderPassInfo (renderPassInfoId);
 
-                VkAttachmentDescription attachment{};
+                VkAttachmentDescription attachment;
+                attachment.flags          = 0;
                 attachment.format         = imageInfo->params.format;
                 attachment.samples        = imageInfo->params.sampleCount;
                 attachment.loadOp         = VK_ATTACHMENT_LOAD_OP_CLEAR;
@@ -72,22 +73,23 @@ namespace Renderer {
             }
 
             void createDepthStencilAttachment (uint32_t renderPassInfoId, uint32_t imageInfoId) {
-                auto renderPassInfo = getRenderPassInfo (renderPassInfoId);
                 auto imageInfo      = getImageInfo (imageInfoId, DEPTH_IMAGE);
+                auto renderPassInfo = getRenderPassInfo (renderPassInfoId);
 
                 /* The format should be the same as the depth image itself. We don't care about storing the depth data 
                  * (storeOp), because it will not be used after drawing has finished. This may allow the hardware to 
                  * perform additional optimizations. 
                 */
-                VkAttachmentDescription attachment{};
-                attachment.format          = imageInfo->params.format;
-                attachment.samples         = imageInfo->params.sampleCount;
-                attachment.loadOp          = VK_ATTACHMENT_LOAD_OP_CLEAR;
-                attachment.storeOp         = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-                attachment.stencilLoadOp   = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-                attachment.stencilStoreOp  = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-                attachment.initialLayout   = VK_IMAGE_LAYOUT_UNDEFINED;
-                attachment.finalLayout     = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL; 
+                VkAttachmentDescription attachment;
+                attachment.flags          = 0;
+                attachment.format         = imageInfo->params.format;
+                attachment.samples        = imageInfo->params.sampleCount;
+                attachment.loadOp         = VK_ATTACHMENT_LOAD_OP_CLEAR;
+                attachment.storeOp        = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+                attachment.stencilLoadOp  = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+                attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+                attachment.initialLayout  = VK_IMAGE_LAYOUT_UNDEFINED;
+                attachment.finalLayout    = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL; 
 
                 renderPassInfo->resource.attachments.push_back (attachment);                 
             }
@@ -96,10 +98,11 @@ namespace Renderer {
              * image
             */
             void createResolveAttachment (uint32_t renderPassInfoId, uint32_t imageInfoId) {
-                auto renderPassInfo = getRenderPassInfo (renderPassInfoId);
                 auto imageInfo      = getImageInfo (imageInfoId, SWAPCHAIN_IMAGE);
+                auto renderPassInfo = getRenderPassInfo (renderPassInfoId);
 
-                VkAttachmentDescription attachment{};
+                VkAttachmentDescription attachment;
+                attachment.flags          = 0;
                 attachment.format         = imageInfo->params.format;
                 attachment.samples        = imageInfo->params.sampleCount;
                 attachment.loadOp         = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
