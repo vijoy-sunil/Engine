@@ -19,11 +19,11 @@ namespace Renderer {
     } e_imageType;
 
     typedef enum {
-        SEM_RENDER_DONE     = 0,
-        SEM_IMAGE_AVAILABLE = 1,
+        FEN_TRANSFER_DONE   = 0,
+        FEN_BLIT_DONE       = 1,
         FEN_IN_FLIGHT       = 2,
-        FEN_TRANSFER_DONE   = 3,
-        FEN_BLIT_DONE       = 4
+        SEM_IMAGE_AVAILABLE = 3,
+        SEM_RENDER_DONE     = 4
     } e_syncType;
 }   // namespace Renderer
 #endif  // VK_ENUM_H

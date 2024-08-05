@@ -17,7 +17,7 @@ namespace Renderer {
 
     struct pathSettings {
         const char* logSaveDir            = "Build/Log/";
-        const std::vector <const char*> models = {
+        const std::vector <const char*> testModels = {
             "SandBox/Models/Model_1.obj",
             "SandBox/Models/Model_2.obj",
             "SandBox/Models/Model_3.obj",
@@ -39,7 +39,7 @@ namespace Renderer {
      * results in unnecessary idling of the host. The way to fix this is to allow multiple frames to be in-flight at once, 
      * that is to say, allow the rendering of one frame to not interfere with the recording of the next. Any resource that 
      * is accessed and modified during rendering must be duplicated. Thus, we need multiple command buffers, semaphores, 
-     * and fences. First, defines how many frames should be processed concurrently
+     * and fences etc. First, define how many frames should be processed concurrently
      * 
      * We choose the number 2 because we don't want the CPU to get too far ahead of the GPU. With 2 frames in flight, the 
      * CPU and the GPU can be working on their own tasks at the same time. If the CPU finishes early, it will wait till 
@@ -60,7 +60,7 @@ namespace Renderer {
     /* This frame count marker is used to cycle textures at specific intervals. For example, the default texture can be  
      * replaced by a group of textures which will be cycled every 'X' frames
     */
-    const uint32_t g_framesPerCycleTexture = 24;
+    const uint32_t g_framesPerCycleTexture = 60;
     /* Keep track of instance ids for Collections. Note that, we are not taking into account of reserved ids used by
      * Collections which may result in collision
     */
