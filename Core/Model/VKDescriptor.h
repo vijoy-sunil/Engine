@@ -63,13 +63,13 @@ namespace Renderer {
                 VkDescriptorPoolCreateInfo createInfo;
                 createInfo.sType         = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
                 createInfo.pNext         = VK_NULL_HANDLE;
+                createInfo.flags         = poolCreateFlags;
                 createInfo.poolSizeCount = static_cast <uint32_t> (poolSizes.size());
                 createInfo.pPoolSizes    = poolSizes.data();
                 /* Aside from the maximum number of individual descriptors that are available, we also need to specify 
                  * the maximum number of descriptor sets that may be allocated from the pool
                 */
                 createInfo.maxSets = maxDescriptorSets;
-                createInfo.flags   = poolCreateFlags;
 
                 /* Inadequate descriptor pools are a good example of a problem that the validation layers will not catch.
                  * As of Vulkan 1.1, vkAllocateDescriptorSets may fail with the error code VK_ERROR_POOL_OUT_OF_MEMORY if 
