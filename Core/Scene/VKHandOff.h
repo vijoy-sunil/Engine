@@ -32,7 +32,7 @@ namespace Renderer {
                     std::vector <VkCommandBuffer> commandBuffers;
                 } resource;
             };
-            std::map <uint32_t, HandOffInfo> m_handOffInfoPool{};
+            std::map <uint32_t, HandOffInfo> m_handOffInfoPool;
 
             static Log::Record* m_VKHandOffLog;
             const uint32_t m_instanceId = g_collectionsId++;

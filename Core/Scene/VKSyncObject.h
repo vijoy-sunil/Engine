@@ -28,7 +28,7 @@ namespace Renderer {
                     return meta.id == other.meta.id;
                 }
             };
-            std::map <e_syncType, std::vector <SemaphoreInfo>> m_semaphoreInfoPool{};
+            std::map <e_syncType, std::vector <SemaphoreInfo>> m_semaphoreInfoPool;
 
             struct FenceInfo {
                 struct Meta {
@@ -43,7 +43,7 @@ namespace Renderer {
                     return meta.id == other.meta.id;
                 }
             };
-            std::map <e_syncType, std::vector <FenceInfo>> m_fenceInfoPool{};
+            std::map <e_syncType, std::vector <FenceInfo>> m_fenceInfoPool;
 
             static Log::Record* m_VKSyncObjectLog;
             const uint32_t m_instanceId = g_collectionsId++;
@@ -120,8 +120,10 @@ namespace Renderer {
                  * 
                  * Note that, the waiting only happens on the GPU. The CPU continues running without blocking
                 */
-                VkSemaphoreCreateInfo createInfo{};
+                VkSemaphoreCreateInfo createInfo;
                 createInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+                createInfo.pNext = VK_NULL_HANDLE;
+                createInfo.flags = 0;
 
                 VkSemaphore semaphore;
                 VkResult result = vkCreateSemaphore (deviceInfo->shared.logDevice, 
@@ -139,7 +141,7 @@ namespace Renderer {
                     throw std::runtime_error ("Failed to create semaphore");
                 }
 
-                SemaphoreInfo info{};
+                SemaphoreInfo info;
                 info.meta.id            = semaphoreInfoId;
                 info.resource.semaphore = semaphore;
                 m_semaphoreInfoPool[type].push_back (info);
@@ -172,8 +174,9 @@ namespace Renderer {
                  * used to control the execution of the host, and so the host gets to decide when to reset the fence. 
                  * Contrast this to semaphores which are used to order work on the GPU without the host being involved
                 */
-                VkFenceCreateInfo createInfo{};
+                VkFenceCreateInfo createInfo;
                 createInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+                createInfo.pNext = VK_NULL_HANDLE;
                 createInfo.flags = flags;
 
                 VkFence fence;
@@ -192,7 +195,7 @@ namespace Renderer {
                     throw std::runtime_error ("Failed to create fence");
                 }
 
-                FenceInfo info{};
+                FenceInfo info;
                 info.meta.id        = fenceInfoId;
                 info.resource.fence = fence;
                 m_fenceInfoPool[type].push_back (info);

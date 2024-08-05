@@ -53,13 +53,13 @@ namespace Renderer {
                               uint32_t resourceId,
                               uint32_t handOffInfoId) {
 
-                auto modelInfo  = getModelInfo (modelInfoId);
-                auto deviceInfo = getDeviceInfo();
+                auto modelInfo   = getModelInfo   (modelInfoId);
+                auto handOffInfo = getHandOffInfo (handOffInfoId);
+                auto deviceInfo  = getDeviceInfo();
                 /* |------------------------------------------------------------------------------------------------|
                  * | DESTROY DRAW OPS - FENCE AND SEMAPHORES                                                        |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                auto handOffInfo = getHandOffInfo (handOffInfoId);
                 for (auto const& infoId: handOffInfo->id.renderDoneSemaphoreInfos) {
                     cleanUpSemaphore (infoId, SEM_RENDER_DONE);
                     LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Draw ops semaphore " 
@@ -265,11 +265,11 @@ namespace Renderer {
                  * | DUMP METHODS                                                                                   |
                  * |------------------------------------------------------------------------------------------------|
                 */
+                dumpModelInfoPool();
                 dumpImageInfoPool();
                 dumpBufferInfoPool();   
                 dumpRenderPassInfoPool();  
                 dumpPipelineInfoPool();
-                dumpModelInfoPool();
                 dumpCameraInfoPool();
                 dumpFenceInfoPool();
                 dumpSemaphoreInfoPool();

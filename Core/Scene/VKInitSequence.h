@@ -74,12 +74,12 @@ namespace Renderer {
                           protected virtual VKSyncObject,
                           protected virtual VKHandOff {
         private:
-            /* Set upper bound lod for the texture sampler It is recommended that to sample from the entire mipmap chain, 
-             * set minLod to 0.0, and set maxLod to a level of detail high enough that the computed level of detail will 
+            /* Set upper bound lod for the texture sampler. It is recommended that to sample from the entire mipmap chain, 
+             * set min lod to 0.0, and set max lod to a level of detail high enough that the computed level of detail will 
              * never be clamped. Assuming the standard approach of halving the dimensions of a texture for each miplevel, 
              * a max lod of 13 would be appropriate for a 4096x4096 source texture
             */
-            const float m_maxLod = 13.0;
+            const float m_maxLod = 13.0f;
 
             static Log::Record* m_VKInitSequenceLog;
             const uint32_t m_instanceId = g_collectionsId++;
@@ -118,7 +118,7 @@ namespace Renderer {
                  * | CONFIG WINDOW                                                                                  |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                initWindow (resourceId, g_windowSettings.width, g_windowSettings.height);
+                createWindow (resourceId, g_windowSettings.width, g_windowSettings.height);
                 LOG_INFO (m_VKInitSequenceLog) << "[OK] Window " 
                                                << "[" << resourceId << "]"
                                                << std::endl;
@@ -133,7 +133,7 @@ namespace Renderer {
                  * | CONFIG DEBUG MESSENGER                                                                         |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                setupDebugMessenger();
+                createDebugMessenger();
                 LOG_INFO (m_VKInitSequenceLog) << "[OK] Debug messenger" 
                                                << std::endl; 
                 /* |------------------------------------------------------------------------------------------------|
@@ -168,7 +168,7 @@ namespace Renderer {
                 importOBJModel (modelInfoId);
 #else
                 uint32_t texId = 0;
-                const std::vector <Vertex> vertices = {
+                auto vertices = std::vector <Vertex> {
                     /* pos, textCoord, normal, texId
                     */
                     {{-0.5f, -0.5f, 0.0f}, {0.0f, 0.0f}, {1.0f, 0.0f, 0.0f}, texId},
@@ -177,7 +177,7 @@ namespace Renderer {
                     {{-0.5f,  0.5f, 0.0f}, {0.0f, 1.0f}, {1.0f, 1.0f, 1.0f}, texId}
                 };
                 
-                const std::vector <uint32_t> indices = {
+                auto indices = std::vector <uint32_t> {
                     0, 1, 2, 2, 3, 0
                 };
 
@@ -188,8 +188,8 @@ namespace Renderer {
                                                << "[" << modelInfoId << "]"
                                                << std::endl;                                    
 #if ENABLE_CYCLE_TEXTURES
-                /* Add textures to be cycled in place of another texture to the end of the array of texture paths. Note 
-                 * that, we will be using the texture coordinates of the default textures for the new textures in the 
+                /* Add textures to be cycled, in place of another texture, to the end of the array of texture paths. Note 
+                 * that, we will be using the texture coordinates of the default texture for the new textures in the 
                  * cycle
                 */
                 for (auto const& path: g_pathSettings.cycleTextures)
@@ -318,7 +318,10 @@ namespace Renderer {
                 */                
                 createDepthStencilDependency (renderPassInfoId, VK_SUBPASS_EXTERNAL, 0);
                 createColorWriteDependency   (renderPassInfoId, VK_SUBPASS_EXTERNAL, 0);
-
+                /* |------------------------------------------------------------------------------------------------|
+                 * | CONFIG RENDER PASS                                                                             |
+                 * |------------------------------------------------------------------------------------------------|
+                */
                 createRenderPass (renderPassInfoId);
                 LOG_INFO (m_VKInitSequenceLog) << "[OK] Render pass " 
                                                << "[" << renderPassInfoId << "]"
@@ -335,12 +338,12 @@ namespace Renderer {
                  * have to create an additional render target. We only need one render target since only one drawing 
                  * operation is active at a time, just like with the depth buffer
                  * 
-                 * Note that, we are using the same depth image on each of the swapchain framebuffers. This is because 
+                 * Note that, we are using the same depth image on each of the swap chain framebuffers. This is because 
                  * we do not need to change the depth image between frames (in flight), we can just keep clearing and 
                  * reusing the same depth image for every frame (see subpass dependency)
                 */
-                auto multiSampleImageInfo = getImageInfo (modelInfo->id.multiSampleImageInfo,   MULTISAMPLE_IMAGE);
-                auto depthImageInfo       = getImageInfo (modelInfo->id.depthImageInfo,         DEPTH_IMAGE);
+                auto multiSampleImageInfo = getImageInfo (modelInfo->id.multiSampleImageInfo, MULTISAMPLE_IMAGE);
+                auto depthImageInfo       = getImageInfo (modelInfo->id.depthImageInfo,       DEPTH_IMAGE);
                 /* Create a framebuffer for all of the images in the swap chain and use the one that corresponds to the 
                  * retrieved image at drawing time
                 */
@@ -387,7 +390,7 @@ namespace Renderer {
                                              offsetof (Vertex, texId),
                                              VK_FORMAT_R32_UINT)
                 };
-                createVertexInputState   (pipelineInfoId, bindingDescriptions, attributeDescriptions);
+                createVertexInputState (pipelineInfoId, bindingDescriptions, attributeDescriptions);
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG PIPELINE STATE - INPUT ASSEMBLY                                                         |
                  * |------------------------------------------------------------------------------------------------|
@@ -397,20 +400,18 @@ namespace Renderer {
                  * | CONFIG PIPELINE STATE - SHADERS                                                                |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                VkShaderModule vertexShaderModule;
-                vertexShaderModule   = createShaderStage (pipelineInfoId, 
-                                                          VK_SHADER_STAGE_VERTEX_BIT, 
-                                                          modelInfo->path.vertexShaderBinary, "main");
+                auto vertexShaderModule   = createShaderStage (pipelineInfoId, 
+                                                               VK_SHADER_STAGE_VERTEX_BIT, 
+                                                               modelInfo->path.vertexShaderBinary, "main");
 
-                VkShaderModule fragmentShaderModule;
-                fragmentShaderModule = createShaderStage (pipelineInfoId, 
-                                                          VK_SHADER_STAGE_FRAGMENT_BIT, 
-                                                          modelInfo->path.fragmentShaderBinary, "main");
+                auto fragmentShaderModule = createShaderStage (pipelineInfoId, 
+                                                               VK_SHADER_STAGE_FRAGMENT_BIT, 
+                                                               modelInfo->path.fragmentShaderBinary, "main");
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG PIPELINE STATE - VIEW PORT                                                              |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                createViewPortState      (pipelineInfoId);
+                createViewPortState (pipelineInfoId);
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG PIPELINE STATE - RASTERIZATION                                                          |
                  * |------------------------------------------------------------------------------------------------|
@@ -424,18 +425,19 @@ namespace Renderer {
                  * | CONFIG PIPELINE STATE - MULTI SAMPLE                                                           |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                createMultiSampleState   (pipelineInfoId,
-                                          modelInfo->id.multiSampleImageInfo,
-                                          VK_TRUE, 0.2f);
+                createMultiSampleState (pipelineInfoId,
+                                        modelInfo->id.multiSampleImageInfo,
+                                        VK_TRUE, 0.2f);
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG PIPELINE STATE - DEPTH STENCIL                                                          |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                createDepthStencilState  (pipelineInfoId,
-                                          VK_TRUE,
-                                          VK_TRUE,
-                                          VK_FALSE, 0.0f, 1.0f,
-                                          VK_FALSE, {},   {});
+                createDepthStencilState (pipelineInfoId,
+                                         VK_TRUE,
+                                         VK_TRUE,
+                                         VK_FALSE, 0.0f, 1.0f,
+                                         VK_FALSE, 
+                                         VK_NULL_HANDLE, VK_NULL_HANDLE);
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG PIPELINE STATE - COLOR BLEND                                                            |
                  * |------------------------------------------------------------------------------------------------|
@@ -446,11 +448,11 @@ namespace Renderer {
                 auto blendConstants = std::vector {
                     0.0f, 0.0f, 0.0f, 0.0f
                 };
-                createColorBlendState    (pipelineInfoId,
-                                          VK_FALSE,
-                                          VK_LOGIC_OP_COPY,
-                                          blendConstants,
-                                          colorBlendAttachments);
+                createColorBlendState (pipelineInfoId,
+                                       VK_FALSE,
+                                       VK_LOGIC_OP_COPY,
+                                       blendConstants,
+                                       colorBlendAttachments);
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG PIPELINE STATE - DYNAMIC STATES                                                         |
                  * |------------------------------------------------------------------------------------------------|
@@ -529,13 +531,19 @@ namespace Renderer {
                  * | CONFIG PIPELINE LAYOUT                                                                         |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                createPipelineLayout      (pipelineInfoId);
-                createGraphicsPipeline    (pipelineInfoId, 
-                                           renderPassInfoId, 0,
-                                           -1, VK_NULL_HANDLE);
+                createPipelineLayout (pipelineInfoId);
+                /* |------------------------------------------------------------------------------------------------|
+                 * | CONFIG PIPELINE                                                                                |
+                 * |------------------------------------------------------------------------------------------------|
+                */
+                createGraphicsPipeline (pipelineInfoId, 
+                                        renderPassInfoId, 0,
+                                        -1, VK_NULL_HANDLE);
 
                 LOG_INFO (m_VKInitSequenceLog) << "[OK] Pipeline " 
                                                << "[" << pipelineInfoId << "]"
+                                               << " "
+                                               << "[" << renderPassInfoId << "]"
                                                << std::endl;  
                 /* |------------------------------------------------------------------------------------------------|
                  * | DESTROY SHADER MODULES                                                                         |
@@ -647,7 +655,7 @@ namespace Renderer {
                                                << "[" << modelInfoId << "]"
                                                << std::endl;
                 /* |------------------------------------------------------------------------------------------------|
-                 * | CONFIG CAMERA                                                                                  |
+                 * | CONFIG CAMERA MATRIX                                                                           |
                  * |------------------------------------------------------------------------------------------------|
                 */
                 readyCameraInfo    (cameraInfoId);
@@ -659,7 +667,7 @@ namespace Renderer {
                                     handOffInfo->meta.transformInfo.camera.fovDeg, 
                                     handOffInfo->meta.transformInfo.camera.nearPlane, 
                                     handOffInfo->meta.transformInfo.camera.farPlane);
-                LOG_INFO (m_VKInitSequenceLog) << "[OK] Camera " 
+                LOG_INFO (m_VKInitSequenceLog) << "[OK] Camera matrix " 
                                                << "[" << cameraInfoId << "]"
                                                << std::endl;
                 /* |------------------------------------------------------------------------------------------------|
@@ -670,8 +678,8 @@ namespace Renderer {
                  * we will choose the VK_COMMAND_POOL_CREATE_TRANSIENT_BIT flag. And, this buffer copy command requires a 
                  * queue family that supports transfer operations, which is indicated using VK_QUEUE_TRANSFER_BIT
                 */
-                VkCommandPool transferOpsCommandPool = getCommandPool (VK_COMMAND_POOL_CREATE_TRANSIENT_BIT,
-                                                       deviceInfo->unique[resourceId].indices.transferFamily.value());
+                auto transferOpsCommandPool = getCommandPool (VK_COMMAND_POOL_CREATE_TRANSIENT_BIT,
+                                              deviceInfo->unique[resourceId].indices.transferFamily.value());
                 LOG_INFO (m_VKInitSequenceLog) << "[OK] Transfer ops command pool " 
                                                << "[" << resourceId << "]"
                                                << std::endl;
@@ -699,15 +707,15 @@ namespace Renderer {
                  * copy operation has finished executing. It's good practice to tell the driver about our intent using 
                  * VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT
                 */ 
-                beginRecording     (transferOpsCommandBuffers[0],
-                                    VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
-                                    VK_NULL_HANDLE);
+                beginRecording (transferOpsCommandBuffers[0],
+                                VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
+                                VK_NULL_HANDLE);
 
                 for (size_t i = 0; i < modelInfo->path.diffuseTextureImages.size(); i++) {
                     uint32_t textureImageInfoId = modelInfo->id.diffuseTextureImageInfoBase + static_cast <uint32_t> (i);
-                    copyBufferToImage  (transferOpsCommandBuffers[0],
-                                        textureImageInfoId, STAGING_BUFFER, 0,
-                                        textureImageInfoId, TEXTURE_IMAGE,  VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+                    copyBufferToImage (transferOpsCommandBuffers[0],
+                                       textureImageInfoId, STAGING_BUFFER, 0,
+                                       textureImageInfoId, TEXTURE_IMAGE,  VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
                 }
 
                 copyBufferToBuffer (transferOpsCommandBuffers[0],
@@ -728,8 +736,11 @@ namespace Renderer {
                                                  1, 
                                                  &transferOpsSubmitInfo, 
                                                  getFenceInfo (transferOpsFenceInfoId, FEN_TRANSFER_DONE)->resource.fence);
+
                 if (result != VK_SUCCESS) {
-                    LOG_ERROR (m_VKInitSequenceLog) << "Failed to submit transfer ops command buffer " 
+                    LOG_ERROR (m_VKInitSequenceLog) << "Failed to submit transfer ops command buffer "
+                                                    << "[" << resourceId << "]"
+                                                    << " " 
                                                     << "[" << string_VkResult (result) << "]"
                                                     << std::endl; 
                     throw std::runtime_error ("Failed to submit transfer ops command buffer");                    
@@ -803,8 +814,8 @@ namespace Renderer {
                  * | CONFIG BLIT OPS - COMMAND POOL AND BUFFER                                                      |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                VkCommandPool blitOpsCommandPool = getCommandPool (VK_COMMAND_POOL_CREATE_TRANSIENT_BIT,
-                                                   deviceInfo->unique[resourceId].indices.graphicsFamily.value());
+                auto blitOpsCommandPool = getCommandPool (VK_COMMAND_POOL_CREATE_TRANSIENT_BIT,
+                                          deviceInfo->unique[resourceId].indices.graphicsFamily.value());
                 LOG_INFO (m_VKInitSequenceLog) << "[OK] Blit ops command pool " 
                                                << "[" << resourceId << "]"
                                                << std::endl;
@@ -845,8 +856,11 @@ namespace Renderer {
                                         1, 
                                         &blitOpsSubmitInfo, 
                                         getFenceInfo (blitOpsFenceInfoId, FEN_BLIT_DONE)->resource.fence);
+
                 if (result != VK_SUCCESS) {
-                    LOG_ERROR (m_VKInitSequenceLog) << "Failed to submit blit ops command buffer " 
+                    LOG_ERROR (m_VKInitSequenceLog) << "Failed to submit blit ops command buffer "
+                                                    << "[" << resourceId << "]"
+                                                    << " " 
                                                     << "[" << string_VkResult (result) << "]"
                                                     << std::endl; 
                     throw std::runtime_error ("Failed to submit blit ops command buffer");                    
@@ -894,8 +908,8 @@ namespace Renderer {
                  * pool. And, we're going to record commands for drawing, which is why we've chosen the graphics queue 
                  * family
                 */
-                VkCommandPool drawOpsCommandPool = getCommandPool (VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT,
-                                                   deviceInfo->unique[resourceId].indices.graphicsFamily.value());
+                auto drawOpsCommandPool = getCommandPool (VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT,
+                                          deviceInfo->unique[resourceId].indices.graphicsFamily.value());
                 LOG_INFO (m_VKInitSequenceLog) << "[OK] Draw ops command pool " 
                                                << "[" << resourceId << "]"
                                                << std::endl;
@@ -910,7 +924,7 @@ namespace Renderer {
                  * |------------------------------------------------------------------------------------------------|
                 */
                 /* We'll need one fence to make sure only one frame is rendering at a time, one semaphore to signal that 
-                 * an image has been acquired from the swapchain and is ready for rendering, another one to signal that 
+                 * an image has been acquired from the swap chain and is ready for rendering, another one to signal that 
                  * rendering has finished and presentation can happen, but since we can handle multiple frames in flight, 
                  * each frame should have its own set of semaphores and fence
                 */
@@ -946,9 +960,9 @@ namespace Renderer {
                 for (uint32_t i = 0; i < g_maxFramesInFlight; i++) {
                     uint32_t syncObjectId = i;
 
-                    handOffInfo->id.inFlightFenceInfos.push_back (syncObjectId);
+                    handOffInfo->id.inFlightFenceInfos.push_back           (syncObjectId);
                     handOffInfo->id.imageAvailableSemaphoreInfos.push_back (syncObjectId);
-                    handOffInfo->id.renderDoneSemaphoreInfos.push_back (syncObjectId);
+                    handOffInfo->id.renderDoneSemaphoreInfos.push_back     (syncObjectId);
                 }
                 
                 handOffInfo->resource.commandPool    = drawOpsCommandPool;
@@ -957,16 +971,16 @@ namespace Renderer {
                  * | DUMP METHODS                                                                                   |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                dumpDeviceInfoPool();
+                dumpModelInfoPool();
                 dumpImageInfoPool();
                 dumpBufferInfoPool(); 
                 dumpRenderPassInfoPool();  
                 dumpPipelineInfoPool();  
-                dumpModelInfoPool();
                 dumpCameraInfoPool(); 
                 dumpFenceInfoPool();
                 dumpSemaphoreInfoPool();
                 dumpHandOffInfoPool();
+                dumpDeviceInfoPool();
             }
     };
 

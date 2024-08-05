@@ -374,8 +374,8 @@ namespace Renderer {
                 beginInfo.pNext = VK_NULL_HANDLE;
                 /* The first parameters are the render pass itself and the attachments to bind. We created a framebuffer 
                  * for each swap chain image where it is specified as a color attachment. Thus we need to bind the 
-                 * framebuffer for the swapchain image we want to draw to. Using the image index parameter which was 
-                 * passed in, we can pick the right framebuffer for the current swapchain image
+                 * framebuffer for the swap chain image we want to draw to. Using the image index parameter which was 
+                 * passed in, we can pick the right framebuffer for the current swap chain image
                 */
                 beginInfo.renderPass  = renderPassInfo->resource.renderPass;
                 beginInfo.framebuffer = renderPassInfo->resource.frameBuffers[swapChainImageId];

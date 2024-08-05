@@ -4,10 +4,10 @@
 #include <glm/glm.hpp>
 
 namespace Renderer {
-    /* Define the data we want the vertex shader to have in a C struct like below. This data will be copied to a VkBuffer
+    /* Define the data we want the vertex shader to have in a struct like below. This data will be copied to a VkBuffer
      * and accessible through a uniform buffer object descriptor from the vertex shader. We can exactly match the 
      * definition in the shader using data types in GLM. The data in the matrices is binary compatible with the way the 
-     * shader expects it, so we can later just memcpy a UniformBufferObject to a VkBuffer
+     * shader expects it, so we can later just memcpy this data structure to a VkBuffer
      * 
      * Alignment requirements specifies how exactly the data in the C++ structure should match with the uniform definition
      * in the shader. Vulkan expects the data in your structure to be aligned in memory in a specific way, for example:

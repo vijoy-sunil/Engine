@@ -4,8 +4,8 @@
  * to configure it to use the Vulkan range of 0.0 to 1.0 using the GLM_FORCE_DEPTH_ZERO_TO_ONE definition
 */
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
-/* The GLM_FORCE_RADIANS definition is necessary to make sure that functions like glm::rotate use radians as arguments, 
- * to avoid any possible confusion
+/* The GLM_FORCE_RADIANS definition is necessary to make sure that glm functions use radians as arguments, to avoid any 
+ * possible confusion
 */
 #define GLM_FORCE_RADIANS
 #include <glm/glm.hpp>
@@ -26,7 +26,7 @@ namespace Renderer {
                     glm::mat4 projectionMatrix;
                 } meta;
             };
-            std::map <uint32_t, CameraInfo> m_cameraInfoPool{};
+            std::map <uint32_t, CameraInfo> m_cameraInfoPool;
 
             static Log::Record* m_VKCameraMgrLog;
             const uint32_t m_instanceId = g_collectionsId++;

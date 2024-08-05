@@ -46,8 +46,8 @@ namespace Renderer {
                                         uint32_t renderPassInfoId,
                                         uint32_t resourceId) {
 
-                auto modelInfo      = getModelInfo (modelInfoId);
-                auto deviceInfo     = getDeviceInfo();
+                auto modelInfo  = getModelInfo (modelInfoId);
+                auto deviceInfo = getDeviceInfo();
 
                 /* There is another case where a swap chain may become out of date and that is a special kind of window 
                  * resizing: window minimization. This case is special because it will result in a frame buffer size of 0.
@@ -149,8 +149,8 @@ namespace Renderer {
                  * | CONFIG FRAME BUFFERS                                                                           |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                auto multiSampleImageInfo = getImageInfo (modelInfo->id.multiSampleImageInfo,   MULTISAMPLE_IMAGE);
-                auto depthImageInfo       = getImageInfo (modelInfo->id.depthImageInfo,         DEPTH_IMAGE);
+                auto multiSampleImageInfo = getImageInfo (modelInfo->id.multiSampleImageInfo, MULTISAMPLE_IMAGE);
+                auto depthImageInfo       = getImageInfo (modelInfo->id.depthImageInfo,       DEPTH_IMAGE);
 
                 for (uint32_t i = 0; i < deviceInfo->unique[resourceId].swapChain.size; i++) {
                     uint32_t swapChainImageInfoId = modelInfo->id.swapChainImageInfoBase + i;
@@ -171,12 +171,11 @@ namespace Renderer {
                 /* That's all it takes to recreate the swap chain! However, the disadvantage of this approach is that we 
                  * need to stop all rendering before creating the new swap chain. It is possible to create a new swap 
                  * chain while drawing commands on an image from the old swap chain are still in-flight. You need to pass 
-                 * the previous swap chain to the oldSwapChain field in the VkSwapchainCreateInfoKHR struct and destroy 
+                 * the previous swap chain to the old swap chain field in the VkSwapchainCreateInfoKHR struct and destroy 
                  * the old swap chain as soon as you've finished using it
                 */
 
-                /* How do we figure out when swap chain recreation is necessary and call our new recreateSwapChain 
-                 * function?
+                /* How do we figure out when swap chain recreation is necessary?
                  * Luckily, Vulkan will usually just tell us that the swap chain is no longer adequate during 
                  * presentation. The vkAcquireNextImageKHR and vkQueuePresentKHR functions can return the following 
                  * special values to indicate this:
