@@ -1,4 +1,4 @@
-/* The geometry that is formed by the positions from the vertex shader fills an area on the screen with fragments. The 
+/* The geometry that is formed by the vertices from the vertex shader fills an area on the screen with fragments. The 
  * fragment shader is invoked on these fragments to produce a color and depth for the framebuffer (or framebuffers)
 */
 #version 450
@@ -13,14 +13,14 @@
 /* Note that the input variable does not necessarily have to use the same name, they will be linked together using the 
  * indexes specified by the location directives
 */
-layout (location = 0) in  vec2 fragTexCoord;
+layout (location = 0) in vec2 fragTexCoord;
 /* In the general case, there is not a 1:1 mapping between a vertex and a fragment. By default, the associated data per 
  * vertex is interpolated across the primitive to generate the corresponding associated data per fragment. Using the flat
  * keyword, no interpolation is done, so every fragment generated during the rasterization of that particular primitive 
  * will get the same data. Since primitives are usually defined by more than one vertex, this means that the data from 
  * only one vertex is used in that case (this is called the provoking vertex)
 */
-layout (location = 1) flat in  uint fragTexId;
+layout (location = 1) flat in uint fragTexId;
 layout (location = 0) out vec4 outColor;
 /* A combined image sampler descriptor is represented in GLSL by a sampler* uniform (where * is the type of a texture, 
  * such a 1D, 2D, Cube, etc.). Whereas, the GLSL type sampler (no *) represents a descriptor of the form 
@@ -48,8 +48,8 @@ void main (void) {
      *
      * The texture coordinate values will be smoothly interpolated across the area of the geometry by the rasterizer. We 
      * can visualize this by having the fragment shader output the texture coordinates as colors. Note that, visualizing
-     * data using colors is the shader programming equivalent of printf debugging, for lack of a better option
-     * outColor = vec4 (fragTexCoord, 0.0, 1.0);
+     * data using colors is the shader programming equivalent of printf debugging, for lack of a better option. For 
+     * example, outColor = vec4 (fragTexCoord, 0.0, 1.0);
     */
     /* Replace texture at this id with another texture whose id is specified via push constants
     */

@@ -15,7 +15,7 @@
  * position them inside a larger world. The coordinates in world space are exactly what they sound like: the coordinates 
  * of all your vertices relative to a (game) world. This is the coordinate space where you want your objects transformed 
  * to in such a way that they're all scattered around the place. The coordinates of your object are transformed from 
- * local to world space; this is accomplished with the model matrix via chaging it's position, rotation and scale.
+ * local to world space; this is accomplished with the model matrix via chaging it's position, rotation and scale
  *
  * (3) View space
  * The view space is what people usually refer to as the camera (it is sometimes also known as camera space or eye space).
@@ -82,10 +82,10 @@
 /* The vertex shader takes input from a vertex buffer using the in keyword. The input variables are the vertex attributes.
  * They're properties that are specified per-vertex in the vertex buffer
  *
- * Note that the vertex shader inputs can specify the 'attribute index' that the particular input uses, 
+ * Note that the vertex shader inputs can specify the 'attribute index' that the particular input uses. For example,
  * layout (location = attribute index) in vec3 inAttribute;
  *
- * Whereas, the fragment shader outputs can specify the 'buffer index' that a particular output writes to,
+ * Whereas, the fragment shader outputs can specify the 'buffer index' that a particular output writes to. For example,
  * layout (location = output index) out vec4 outColor;
 */
 layout (location = 0) in vec3 inPosition;
