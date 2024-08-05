@@ -13,13 +13,13 @@ namespace Renderer {
             uint32_t m_deviceResourcesCount;
 
             uint32_t m_modelInfoId;
-            uint32_t m_vertexBufferInfoId;
-            uint32_t m_indexBufferInfoId;
-            uint32_t m_uniformBufferInfoIdBase;
             uint32_t m_swapChainImageInfoIdBase;
             uint32_t m_diffuseTextureImageInfoIdBase;
             uint32_t m_depthImageInfoId;
             uint32_t m_multiSampleImageInfoId;
+            uint32_t m_vertexBufferInfoId;
+            uint32_t m_indexBufferInfoId;
+            uint32_t m_uniformBufferInfoIdBase;
 
             uint32_t m_renderPassInfoId;
             uint32_t m_pipelineInfoId;
@@ -35,35 +35,35 @@ namespace Renderer {
                 m_deviceResourcesCount            = 1;
                 m_modelInfoId                     = 0;
                 /* Info id overview
-                 * |--------------------|--------------------|
-                 * | MODEL INFO ID      |   0                |
-                 * |--------------------|--------------------|
-                 * | STAGING_BUFFER     |   0, 1,    2, 3, 4 |
-                 * |--------------------|   ^  ^     ^  ^  ^ |
-                 * | VERTEX_BUFFER      |   0  :     :  :  : |
-                 * |--------------------|      :     :  :  : |
-                 * | INDEX_BUFFER       |   1 >:     :  :  : |
-                 * |--------------------|            :  :  : |
-                 * | UNIFORM_BUFFER     |   2, 3     :  :  : |
-                 * |--------------------|            :  :  : |
-                 *                                   :  :  : |
-                 * |--------------------|            :  :  : |
-                 * | SWAPCHAIN_IMAGE    |   0, 1, 2  :  :  : |
-                 * |--------------------|            :  :  : |
-                 * | TEXTURE_IMAGE      |   2, 3, 4 >: >: >: |
-                 * |--------------------|                    |
-                 * | DEPTH_IMAGE        |   0                |
-                 * |--------------------|                    |
-                 * | MULTISAMPLE_IMAGE  |   0                |
-                 * |--------------------|--------------------|
+                 * |--------------------|-----------------------|
+                 * | MODEL INFO ID      |   0                   |
+                 * |--------------------|-----------------------|
+                 * | SWAPCHAIN_IMAGE    |   0, 1, 2             |
+                 * |--------------------|                       |
+                 * | TEXTURE_IMAGE      |            2, 3, 4    |
+                 * |--------------------|            :  :  :    |
+                 * | DEPTH_IMAGE        |   0        :  :  :    |
+                 * |--------------------|            :  :  :    |
+                 * | MULTISAMPLE_IMAGE  |   0        :  :  :    |
+                 * |--------------------|            :  :  :    |
+                 * |                                 :  :  :    |
+                 * |--------------------|            :  :  :    |
+                 * | STAGING_BUFFER     |   0, 1,    2, 3, 4    |
+                 * |--------------------|   :  :                |
+                 * | VERTEX_BUFFER      |   0  :                |
+                 * |--------------------|      :                |
+                 * | INDEX_BUFFER       |      1                |
+                 * |--------------------|                       |
+                 * | UNIFORM_BUFFER     |   2, 3                |
+                 * |--------------------|-----------------------|
                 */
-                m_vertexBufferInfoId            = 0;
-                m_indexBufferInfoId             = 1;
-                m_uniformBufferInfoIdBase       = 2;
                 m_swapChainImageInfoIdBase      = 0;
                 m_diffuseTextureImageInfoIdBase = 2;
                 m_depthImageInfoId              = 0;
                 m_multiSampleImageInfoId        = 0;
+                m_vertexBufferInfoId            = 0;
+                m_indexBufferInfoId             = 1;
+                m_uniformBufferInfoIdBase       = 2;
 
                 m_renderPassInfoId         = 0;
                 m_pipelineInfoId           = 0;
@@ -79,22 +79,26 @@ namespace Renderer {
             }
 
             void createScene (void) {
-                setDeviceResourceCount (m_deviceResourcesCount);
+                /* |------------------------------------------------------------------------------------------------|
+                 * | READY DEVICE INFO                                                                              |
+                 * |------------------------------------------------------------------------------------------------|
+                */
+                readyDeviceInfo (m_deviceResourcesCount);
                 /* |------------------------------------------------------------------------------------------------|
                  * | READY MODEL INFO                                                                               |
                  * |------------------------------------------------------------------------------------------------|
                 */
                 auto infoIds = std::vector {
-                                                m_vertexBufferInfoId, 
-                                                m_indexBufferInfoId, 
-                                                m_uniformBufferInfoIdBase,
                                                 m_swapChainImageInfoIdBase,
                                                 m_diffuseTextureImageInfoIdBase, 
                                                 m_depthImageInfoId, 
-                                                m_multiSampleImageInfoId
+                                                m_multiSampleImageInfoId,
+                                                m_vertexBufferInfoId, 
+                                                m_indexBufferInfoId, 
+                                                m_uniformBufferInfoIdBase
                                            };
                 readyModelInfo (m_modelInfoId,
-                                g_pathSettings.models[3],
+                                g_pathSettings.testModels[3],
                                 g_pathSettings.mtlFileDir,
                                 g_pathSettings.vertexShaderBinary,
                                 g_pathSettings.fragmentShaderBinary,
@@ -106,7 +110,7 @@ namespace Renderer {
                 readyHandOffInfo (m_handOffInfoId);
                 auto handOffInfo = getHandOffInfo (m_handOffInfoId);
 
-                TransformInfo transformInfo{};
+                TransformInfo transformInfo;
                 transformInfo.model.translate      = {0.0f,  0.0f,  0.0f};
                 transformInfo.model.rotateAxis     = {0.0f,  1.0f,  0.0f};
                 transformInfo.model.scale          = {1.0f,  1.0f,  1.0f};
@@ -119,7 +123,7 @@ namespace Renderer {
                 transformInfo.camera.nearPlane = 0.1f;
                 transformInfo.camera.farPlane  = 10.0f;
 
-                FragShaderVarsPC fragShaderVars{};
+                FragShaderVarsPC fragShaderVars;
                 fragShaderVars.texId = 0;
 
                 handOffInfo->meta.transformInfo  = transformInfo;
@@ -145,8 +149,8 @@ namespace Renderer {
                 /* Array of textures that will be used to cycle through using push push constant
                  *                                          V               V               V               V      
                  * |----------------|---------------|---------------|---------------|---------------|---------------|
-                 * |    default     |   model       |   tex 0       |   tex 1       |   tex 2       |   tex 3       |
-                 * |    texture     |   textures    |               |               |               |               |
+                 * |    default     |   model       |      tex      |      tex      |      tex      |      tex      |
+                 * |    texture     |   textures    |       0       |       1       |       2       |       3       |
                  * |----------------|---------------|---------------|---------------|---------------|---------------|
                  *                                          ^
                  *                                          offset
@@ -194,7 +198,7 @@ namespace Renderer {
                     framesUntilNextDefaultTexture--;
                     if (framesUntilNextDefaultTexture == 0) {
                         framesUntilNextDefaultTexture    = g_framesPerCycleTexture;
-                        FragShaderVarsPC fragShaderVars  = handOffInfo->meta.fragShaderVars;
+                        auto fragShaderVars              = handOffInfo->meta.fragShaderVars;
                         fragShaderVars.texId             = (fragShaderVars.texId + 1) % static_cast <uint32_t> 
                                                            (modelInfo->path.diffuseTextureImages.size());
                         if (fragShaderVars.texId == 0)

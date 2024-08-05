@@ -37,13 +37,13 @@ namespace Renderer {
                 } path;
 
                 struct Id {
-                    uint32_t vertexBufferInfo;
-                    uint32_t indexBufferInfo;
-                    uint32_t uniformBufferInfoBase;
                     uint32_t swapChainImageInfoBase;
                     uint32_t diffuseTextureImageInfoBase;
                     uint32_t depthImageInfo;
                     uint32_t multiSampleImageInfo;
+                    uint32_t vertexBufferInfo;
+                    uint32_t indexBufferInfo;
+                    uint32_t uniformBufferInfoBase;
                 } id;
 
                 struct Resource {
@@ -145,13 +145,13 @@ namespace Renderer {
                 info.path.vertexShaderBinary        = vertexShaderBinaryPath;
                 info.path.fragmentShaderBinary      = fragmentShaderBinaryPath;
 
-                info.id.vertexBufferInfo            = infoIds[0];
-                info.id.indexBufferInfo             = infoIds[1];
-                info.id.uniformBufferInfoBase       = infoIds[2];
-                info.id.swapChainImageInfoBase      = infoIds[3];
-                info.id.diffuseTextureImageInfoBase = infoIds[4];
-                info.id.depthImageInfo              = infoIds[5];
-                info.id.multiSampleImageInfo        = infoIds[6];
+                info.id.swapChainImageInfoBase      = infoIds[0];
+                info.id.diffuseTextureImageInfoBase = infoIds[1];
+                info.id.depthImageInfo              = infoIds[2];
+                info.id.multiSampleImageInfo        = infoIds[3];
+                info.id.vertexBufferInfo            = infoIds[4];
+                info.id.indexBufferInfo             = infoIds[5];
+                info.id.uniformBufferInfoBase       = infoIds[6];
 
                 m_modelInfoPool[modelInfoId]        = info;
                 /* Config log for parsed data
@@ -458,18 +458,6 @@ namespace Renderer {
                                                << "[" << val.path.fragmentShaderBinary << "]"
                                                << std::endl;
 
-                    LOG_INFO (m_VKModelMgrLog) << "Vettex buffer info id " 
-                                               << "[" << val.id.vertexBufferInfo << "]"
-                                               << std::endl;
-
-                    LOG_INFO (m_VKModelMgrLog) << "Index buffer info id " 
-                                               << "[" << val.id.indexBufferInfo << "]"
-                                               << std::endl;
-
-                    LOG_INFO (m_VKModelMgrLog) << "Uniform buffer info id base "
-                                               << "[" << val.id.uniformBufferInfoBase << "]"
-                                               << std::endl;                    
-
                     LOG_INFO (m_VKModelMgrLog) << "Swap chain image info id base " 
                                                << "[" << val.id.swapChainImageInfoBase << "]"
                                                << std::endl;
@@ -485,6 +473,18 @@ namespace Renderer {
                     LOG_INFO (m_VKModelMgrLog) << "Multi sample image info id " 
                                                << "[" << val.id.multiSampleImageInfo << "]"
                                                << std::endl;
+
+                    LOG_INFO (m_VKModelMgrLog) << "Vettex buffer info id " 
+                                               << "[" << val.id.vertexBufferInfo << "]"
+                                               << std::endl;
+
+                    LOG_INFO (m_VKModelMgrLog) << "Index buffer info id " 
+                                               << "[" << val.id.indexBufferInfo << "]"
+                                               << std::endl;
+
+                    LOG_INFO (m_VKModelMgrLog) << "Uniform buffer info id base "
+                                               << "[" << val.id.uniformBufferInfoBase << "]"
+                                               << std::endl; 
 
                     LOG_INFO (m_VKModelMgrLog) << "Descriptor sets count " 
                                                << "[" << val.resource.descriptorSets.size() << "]"

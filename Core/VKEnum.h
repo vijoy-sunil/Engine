@@ -3,20 +3,20 @@
 
 namespace Renderer {
     typedef enum {
-        VOID_BUFFER         = 0,
-        STAGING_BUFFER      = 1,
-        VERTEX_BUFFER       = 2,
-        INDEX_BUFFER        = 3,
-        UNIFORM_BUFFER      = 4
-    } e_bufferType;
-
-    typedef enum {
         VOID_IMAGE          = 0,
         SWAPCHAIN_IMAGE     = 1,
         TEXTURE_IMAGE       = 2,
         DEPTH_IMAGE         = 3,
         MULTISAMPLE_IMAGE   = 4
     } e_imageType;
+
+    typedef enum {
+        VOID_BUFFER         = 0,
+        STAGING_BUFFER      = 1,
+        VERTEX_BUFFER       = 2,
+        INDEX_BUFFER        = 3,
+        UNIFORM_BUFFER      = 4
+    } e_bufferType;
 
     typedef enum {
         FEN_TRANSFER_DONE   = 0,
