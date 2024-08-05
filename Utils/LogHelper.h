@@ -24,24 +24,6 @@ namespace Utils {
         return outputStrings;
     }
 
-    const char* getBufferTypeString (e_bufferType type) {
-        switch (type)
-        {
-            case VOID_BUFFER:
-                return "VOID_BUFFER";
-            case STAGING_BUFFER:
-                return "STAGING_BUFFER";
-            case VERTEX_BUFFER:
-                return "VERTEX_BUFFER";
-            case INDEX_BUFFER:
-                return "INDEX_BUFFER";
-            case UNIFORM_BUFFER:
-                return "UNIFORM_BUFFER";
-            default:
-                return "Unhandled e_bufferType";
-        }
-    }
-
     const char* getImageTypeString (e_imageType type) {
         switch (type)
         {
@@ -60,19 +42,37 @@ namespace Utils {
         }
     }
 
+    const char* getBufferTypeString (e_bufferType type) {
+        switch (type)
+        {
+            case VOID_BUFFER:
+                return "VOID_BUFFER";
+            case STAGING_BUFFER:
+                return "STAGING_BUFFER";
+            case VERTEX_BUFFER:
+                return "VERTEX_BUFFER";
+            case INDEX_BUFFER:
+                return "INDEX_BUFFER";
+            case UNIFORM_BUFFER:
+                return "UNIFORM_BUFFER";
+            default:
+                return "Unhandled e_bufferType";
+        }
+    }
+
     const char* getSyncTypeString (e_syncType type) {
         switch (type)
         {
-            case SEM_RENDER_DONE:
-                return "SEM_RENDER_DONE";
-            case SEM_IMAGE_AVAILABLE:
-                return "SEM_IMAGE_AVAILABLE";
-            case FEN_IN_FLIGHT:
-                return "FEN_IN_FLIGHT";
             case FEN_TRANSFER_DONE:
                 return "FEN_TRANSFER_DONE";
             case FEN_BLIT_DONE:
                 return "FEN_BLIT_DONE";
+            case FEN_IN_FLIGHT:
+                return "FEN_IN_FLIGHT";
+            case SEM_IMAGE_AVAILABLE:
+                return "SEM_IMAGE_AVAILABLE";
+            case SEM_RENDER_DONE:
+                return "SEM_RENDER_DONE";
             default:
                 return "Unhandled e_syncType";
         }
