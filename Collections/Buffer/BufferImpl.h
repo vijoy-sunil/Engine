@@ -6,8 +6,8 @@
 namespace Collections {
 namespace Buffer {
     typedef enum {
-        WITH_OVERFLOW    = 1,
-        WITHOUT_OVERFLOW = 2
+        WITH_OVERFLOW    = 0,
+        WITHOUT_OVERFLOW = 1
     } e_type;
 
     template <typename T>
