@@ -96,8 +96,8 @@ namespace Renderer {
                                     uint32_t dstImageInfoId,  e_imageType  dstImageType, 
                                     VkImageLayout dstImageLayout) {
 
-                auto srcBufferInfo = getBufferInfo (srcBufferInfoId, srcBufferType);
                 auto dstImageInfo  = getImageInfo  (dstImageInfoId,  dstImageType);
+                auto srcBufferInfo = getBufferInfo (srcBufferInfoId, srcBufferType);
 
                 VkImageMemoryBarrier barrier;
                 VkPipelineStageFlags sourceStage, destinationStage;

@@ -30,7 +30,7 @@ namespace Renderer {
                    texId    == other.texId;
         }
     };     
-}
+}   // namespace Renderer
 
 namespace std {
     /* Hash function for Vertex struct
@@ -58,7 +58,7 @@ namespace std {
             return hash;
         }
     };
-}
+}   // namespace std
 
 namespace Renderer {
     class VKVertexData {

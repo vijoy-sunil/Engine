@@ -79,9 +79,9 @@ namespace Renderer {
                     VK_FORMAT_D32_SFLOAT_S8_UINT, 
                     VK_FORMAT_D24_UNORM_S8_UINT
                 };
-                VkFormat format = getSupportedFormat (formatCandidates,
-                                                      VK_IMAGE_TILING_OPTIMAL,
-                                                      VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);
+                auto format = getSupportedFormat (formatCandidates,
+                                                  VK_IMAGE_TILING_OPTIMAL,
+                                                  VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);
 
                 auto imageShareQueueFamilyIndices = std::vector {
                     deviceInfo->unique[resourceId].indices.graphicsFamily.value()

@@ -194,7 +194,7 @@ namespace Log {
              * buffered/immediate sinks, we need to handle that by flushing file contents and closing the file
             */
             void clearConfig (bool deleteEmptyFiles = true) {
-                e_sink allSinks = getSink();
+                auto allSinks = getSink();
                 if (allSinks & TO_FILE_BUFFER_CIRCULAR) {
                     /* Flush buffered sink before closing
                     */

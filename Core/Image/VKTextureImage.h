@@ -166,9 +166,9 @@ namespace Renderer {
                 auto formatCandidates = std::vector {
                     VK_FORMAT_R8G8B8A8_SRGB
                 };
-                VkFormat format = getSupportedFormat (formatCandidates,
-                                                      VK_IMAGE_TILING_OPTIMAL,
-                                                      VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT);
+                auto format = getSupportedFormat (formatCandidates,
+                                                  VK_IMAGE_TILING_OPTIMAL,
+                                                  VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT);
 
                 auto imageShareQueueFamilyIndices = std::vector {
                     deviceInfo->unique[resourceId].indices.graphicsFamily.value(),

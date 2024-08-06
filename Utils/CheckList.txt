@@ -12,10 +12,10 @@ FILES/FOLDERS
 -------------------------------------------------------------------------------------------------------------------------
 VARIABLES
 -------------------------------------------------------------------------------------------------------------------------
-[ X ] Use auto for vectors and structs
-[ X ] global member objects indicated by g_
+[ - ] Use auto for vectors and structs
+[ - ] global member objects indicated by g_
 [ - ] enums indicated by e_
-[ X ] private member vars indicated by m_
+[ - ] private member vars indicated by m_
 [ - ] vector names end with s
 [ - ] Reduce use of macros, use const instead
 [ - ] use nullptr for null pointers instead of NULL
@@ -23,10 +23,10 @@ VARIABLES
 [ - ] static cast instead of C-style cast
 [ - ] For loops use matching types for iterator
 [ - ] Stack allocate whenever you can instead of heap
-[ X ] Pool structs resource will only have Vulkan objects, others could be in meta
-[ X ] createInfo and allocInfo used everywhere for consistency
-[ X ] populate info structure by reference via local variable at the end
-[ X ] ID ordering {model, 
+[ - ] Pool structs resource will only have Vulkan objects, others could be in meta
+[ - ] createInfo and allocInfo used everywhere for consistency
+[ - ] populate info structure by reference via local variable at the end
+[ - ] ID ordering {model, 
                    image,
                    buffer,
                    renderPass,
@@ -38,29 +38,29 @@ VARIABLES
 -------------------------------------------------------------------------------------------------------------------------
 METHODS
 -------------------------------------------------------------------------------------------------------------------------
-[ X ] Common methods - create, get, is, ready, delete, dump, cleanUp, pick
+[ - ] Common methods - create, get, is, ready, delete, dump, cleanUp, pick
 [ - ] Return objects/literals methods start with get
 [ - ] Return boolean methods start with is
-[ X ] Return via parameter only if returning multiple variables
-[ X ] private/public/protected methods are placed appropriately
-[ X ] Clean ups should remove entry from pool
-[ X ] When deleting resources stored in vectors make sure to clear the vector as well example - frame buffers
+[ - ] Return via parameter only if returning multiple variables
+[ - ] private/public/protected methods are placed appropriately
+[ - ] Clean ups should remove entry from pool
+[ - ] When deleting resources stored in vectors make sure to clear the vector as well example - frame buffers
 [ - ] All vkCmd calls reside in VKCmd
-[ X ] Avoid directly passing in vectors as {}
-[ X ] Use const and/or reference in function params when passing vectors
-[ X ] Use const and/or pointer in function params when passing structs, allows us to pass nullptr
-[ X ] some places we pass infoid, some places we pass in dereferenced info parameter - need uniformity 
-[ X ] getInfo calls ordering based on id ordering
+[ - ] Avoid directly passing in vectors as {}
+[ - ] Use const and/or reference in function params when passing vectors
+[ - ] Use const and/or pointer in function params when passing structs, allows us to pass nullptr
+[ - ] some places we pass infoid, some places we pass in dereferenced info parameter - need uniformity 
+[ - ] getInfo calls ordering based on id ordering
 -------------------------------------------------------------------------------------------------------------------------
 LOG
 -------------------------------------------------------------------------------------------------------------------------
 [ - ] Primary log handle must match class name
 [ - ] Check log configs for every file
-[ X ] log_info, log_error, log_warning used appropriately
+[ - ] log_info, log_error, log_warning used appropriately
 [ - ] log_error followed by runtime error throwing same message
 [ X ] In log statements, make sure we are outputting related ids and vars like resourceid, bufferid, imageid etc.
 [ - ] Check spacing in log statements; no spacing at the end if you are not logging any variables
-[ X ] Dump ordering must match relative member orders
+[ - ] Dump ordering must match relative member orders
 [ X ] Turn off delete empty and go through all log outputs when you run
 -------------------------------------------------------------------------------------------------------------------------
 MISC
@@ -70,12 +70,14 @@ MISC
 [ - ] [^ ] \(\)  	                            search all “space before ()”
 [ - ] [^ ]\([a-z]		                        search all “”no space before (a-z)”
 [ - ] [^ ] \[		                            search all “space before [”
-[ - ] () { 				                        void parameter
 [ - ] [a-z>]&                                   use of references
 [ - ] [a-z]\*			                        use of pointers
 [ - ] \) [a-z]                                  no use of C-style casting
-[ X ] \) &                                      no use of C-style casting
-[ X ] auto          	                        use of auto for vectors, structs etc.
+[ - ] \) &                                      no use of C-style casting
+[ - ] () { 				                        void parameter
+[ - ] auto          	                        use of auto for vectors, structs etc.
+[ - ] = get                                     use of auto
+[ - ] = create                                  use of auto
 [ - ] const char*                               use const char* for string literals
 [ - ] std::string                               use only if you require std::string features like concat, size etc.
 [ - ] .size()                                   make sure it is casted from size_t to required types
