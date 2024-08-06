@@ -65,17 +65,17 @@ LOG
 -------------------------------------------------------------------------------------------------------------------------
 MISC
 -------------------------------------------------------------------------------------------------------------------------
-[ - ] [a-z]< 		                            search all “no space before <”
-[ - ] ->[^ ] 			                        search all “no space after ->”
-[ - ] [^ ] \(\)  	                            search all “space before ()”
-[ - ] [^ ]\([a-z]		                        search all “”no space before (a-z)”
-[ - ] [^ ] \[		                            search all “space before [”
+[ - ] [a-z]<                                    search all “no space before <”
+[ - ] ->[^ ]                                    search all “no space after ->”
+[ - ] [^ ] \(\)                                 search all “space before ()”
+[ - ] [^ ]\([a-z]                               search all “”no space before (a-z)”
+[ - ] [^ ] \[                                   search all “space before [”
 [ - ] [a-z>]&                                   use of references
-[ - ] [a-z]\*			                        use of pointers
+[ - ] [a-z]\*                                   use of pointers
 [ - ] \) [a-z]                                  no use of C-style casting
 [ - ] \) &                                      no use of C-style casting
-[ - ] () { 				                        void parameter
-[ - ] auto          	                        use of auto for vectors, structs etc.
+[ - ] () {                                      void parameter
+[ - ] auto                                      use of auto for vectors, structs etc.
 [ - ] = get                                     use of auto
 [ - ] = create                                  use of auto
 [ - ] const char*                               use const char* for string literals
