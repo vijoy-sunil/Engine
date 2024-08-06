@@ -152,6 +152,10 @@ namespace Renderer {
                     LOG_ERROR (m_VKDescriptorLog) << "Failed to allocate descriptor sets "
                                                   << "[" << modelInfoId << "]"
                                                   << " "
+                                                  << "[" << pipelineInfoId << "]"
+                                                  << " "
+                                                  << "[" << descriptorSetLayoutId << "]"
+                                                  << " "
                                                   << "[" << string_VkResult (result) << "]"
                                                   << std::endl;
                     throw std::runtime_error ("Failed to allocate descriptor sets");

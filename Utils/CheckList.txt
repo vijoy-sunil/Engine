@@ -58,10 +58,10 @@ LOG
 [ - ] Check log configs for every file
 [ - ] log_info, log_error, log_warning used appropriately
 [ - ] log_error followed by runtime error throwing same message
-[ X ] In log statements, make sure we are outputting related ids and vars like resourceid, bufferid, imageid etc.
+[ - ] In log statements, make sure we are outputting related ids and vars like resourceid, bufferid, imageid etc.
 [ - ] Check spacing in log statements; no spacing at the end if you are not logging any variables
 [ - ] Dump ordering must match relative member orders
-[ X ] Turn off delete empty and go through all log outputs when you run
+[ - ] Turn off delete empty and go through all log outputs when you run
 -------------------------------------------------------------------------------------------------------------------------
 MISC
 -------------------------------------------------------------------------------------------------------------------------

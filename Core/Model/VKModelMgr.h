@@ -265,6 +265,8 @@ namespace Renderer {
 
                 if (materials.size() == 0) {
                     LOG_WARNING (m_VKModelMgrLog) << "Failed to find .mtl file "
+                                                  << "[" << modelInfoId << "]"
+                                                  << " "
                                                   << "[" << modelInfo->path.mtlFileDir << "]"
                                                   << std::endl;
                 } 
@@ -278,6 +280,8 @@ namespace Renderer {
                             modelInfo->path.diffuseTextureImages.push_back (material.diffuse_texname);
                         else
                             LOG_WARNING (m_VKModelMgrLog) << "Failed to find diffuse textures "
+                                                          << "[" << modelInfoId << "]"
+                                                          << " "
                                                           << "[" << modelInfo->path.mtlFileDir << "]"
                                                           << std::endl;
                     } 

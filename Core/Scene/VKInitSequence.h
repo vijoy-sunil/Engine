@@ -149,8 +149,7 @@ namespace Renderer {
                  * |------------------------------------------------------------------------------------------------|
                 */
                 pickPhyDevice (resourceId);
-                LOG_INFO (m_VKInitSequenceLog) << "[OK] Phy device " 
-                                               << "[" << resourceId << "]"
+                LOG_INFO (m_VKInitSequenceLog) << "[OK] Phy device" 
                                                << std::endl;
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG LOG DEVICE                                                                              |
@@ -591,9 +590,10 @@ namespace Renderer {
                  * | CONFIG DESCRIPTOR SETS                                                                         |
                  * |------------------------------------------------------------------------------------------------|
                 */
+                uint32_t descriptorSetLayoutId = 0;
                 createDescriptorSets (modelInfoId, 
                                       pipelineInfoId, 
-                                      0, 
+                                      descriptorSetLayoutId, 
                                       g_maxFramesInFlight);
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG DESCRIPTOR SETS UPDATE                                                                  |
@@ -641,6 +641,8 @@ namespace Renderer {
                                                << "[" << modelInfoId << "]"
                                                << " "
                                                << "[" << pipelineInfoId << "]"
+                                               << " "
+                                               << "[" << descriptorSetLayoutId << "]"
                                                << std::endl;
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG MODEL MATRIX                                                                            |

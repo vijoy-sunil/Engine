@@ -307,8 +307,7 @@ namespace Renderer {
                 }
 
                 if (deviceInfo->shared.phyDevice == VK_NULL_HANDLE) {
-                    LOG_ERROR (m_VKPhyDeviceLog) << "GPU doesn't meet required expectations " 
-                                                 << "[" << resourceId << "]"
+                    LOG_ERROR (m_VKPhyDeviceLog) << "GPU doesn't meet required expectations" 
                                                  << std::endl;
                     throw std::runtime_error ("GPU doesn't meet required expectations");
                 }

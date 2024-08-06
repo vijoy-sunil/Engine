@@ -196,6 +196,8 @@ namespace Renderer {
                     LOG_ERROR (m_VKPipelineMgrLog) << "Failed to create graphics pipeline " 
                                                    << "[" << pipelineInfoId << "]"
                                                    << " "
+                                                   << "[" << renderPassInfoId << "]"
+                                                   << " "
                                                    << "[" << string_VkResult (result) << "]" 
                                                    << std::endl;
                     throw std::runtime_error ("Failed to create graphics pipeline");                

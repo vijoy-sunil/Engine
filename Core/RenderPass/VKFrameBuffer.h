@@ -60,6 +60,8 @@ namespace Renderer {
                     LOG_ERROR (m_VKFrameBufferLog) << "Failed to create framebuffer " 
                                                    << "[" << renderPassInfoId << "]"
                                                    << " "
+                                                   << "[" << resourceId << "]"
+                                                   << " "
                                                    << "[" << string_VkResult (result) << "]"
                                                    << std::endl;
                     throw std::runtime_error ("Failed to create framebuffer");

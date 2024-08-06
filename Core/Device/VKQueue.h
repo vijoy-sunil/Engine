@@ -44,8 +44,6 @@ namespace Renderer {
                                                           &queueFamiliesCount, 
                                                           VK_NULL_HANDLE);
                 LOG_INFO (m_VKQueueLog) << "Queue families count "
-                                        << "[" << resourceId << "]"
-                                        << " "
                                         << "[" << queueFamiliesCount << "]" 
                                         << std::endl;
 
