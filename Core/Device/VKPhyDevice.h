@@ -49,7 +49,7 @@ namespace Renderer {
                 /* List of gpu devices have already been queried and is passed into this function one by one, which is 
                  * then checked for support
                 */
-                pickQueueFamilyIndices (resourceId, phyDevice);
+                bool queueFamilyIndicesComplete = pickQueueFamilyIndices (resourceId, phyDevice);
                 /* Check device extension support
                 */
                 bool extensionsSupported = isDeviceExtensionsSupported (phyDevice);
@@ -74,7 +74,7 @@ namespace Renderer {
                 descriptorIndexingFeatures.pNext = VK_NULL_HANDLE;
                 getPhyDeviceFeatures2 (phyDevice, VK_NULL_HANDLE, &descriptorIndexingFeatures);
 
-                return isQueueFamilyIndicesComplete (resourceId) && 
+                return queueFamilyIndicesComplete && 
                        extensionsSupported && 
                        swapChainAdequate   &&
                        supportedFeatures.samplerAnisotropy &&
@@ -282,22 +282,22 @@ namespace Renderer {
                 auto deviceInfo = getDeviceInfo();
                 /* Query all available graphic cards with vulkan support
                 */
-                uint32_t deviceCount = 0;
-                vkEnumeratePhysicalDevices (deviceInfo->shared.instance, &deviceCount, VK_NULL_HANDLE);
-                if (deviceCount == 0) {
+                uint32_t phyDevicesCount = 0;
+                vkEnumeratePhysicalDevices (deviceInfo->shared.instance, &phyDevicesCount, VK_NULL_HANDLE);
+                if (phyDevicesCount == 0) {
                     LOG_ERROR (m_VKPhyDeviceLog) << "Failed to find GPUs with Vulkan support" 
                                                  << std::endl;
                     throw std::runtime_error ("Failed to find GPUs with Vulkan support");
                 }
-                std::vector <VkPhysicalDevice> devices (deviceCount);
-                vkEnumeratePhysicalDevices (deviceInfo->shared.instance, &deviceCount, devices.data());
+                std::vector <VkPhysicalDevice> phyDevices (phyDevicesCount);
+                vkEnumeratePhysicalDevices (deviceInfo->shared.instance, &phyDevicesCount, phyDevices.data());
 
-                for (auto const& device: devices) {
-                    if (isPhyDeviceSupported (resourceId, device)) {
+                for (auto const& phyDevice: phyDevices) {
+                    if (isPhyDeviceSupported (resourceId, phyDevice)) {
                         VkPhysicalDeviceProperties properties;
-                        vkGetPhysicalDeviceProperties (device, &properties);
+                        vkGetPhysicalDeviceProperties (phyDevice, &properties);
 
-                        deviceInfo->shared.phyDevice                = device;
+                        deviceInfo->shared.phyDevice                = phyDevice;
                         deviceInfo->params.maxSampleCount           = getMaxUsableSampleCount();
                         deviceInfo->params.maxPushConstantsSize     = properties.limits.maxPushConstantsSize;
                         deviceInfo->params.maxMemoryAllocationCount = properties.limits.maxMemoryAllocationCount;

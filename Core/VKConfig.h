@@ -4,10 +4,11 @@
 #include <vector>
 
 namespace Renderer {
-    #define ENABLE_LOGGING              (true)
-    #define ENABLE_MODEL_IMPORT         (true)
-    #define ENABLE_CYCLE_TEXTURES       (true)
-    #define ENABLE_IDLE_ROTATION        (true)
+    #define ENABLE_LOGGING                          (true)
+    #define ENABLE_MODEL_IMPORT                     (true)
+    #define ENABLE_CYCLE_TEXTURES                   (true)
+    #define ENABLE_IDLE_ROTATION                    (true)
+    #define ENABLE_AUTO_PICK_QUEUE_FAMILY_INDICES   (true)
 
     struct windowSettings {
         const int width   = 800;
