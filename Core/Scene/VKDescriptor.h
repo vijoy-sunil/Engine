@@ -1,7 +1,7 @@
 #ifndef VK_DESCRIPTOR_H
 #define VK_DESCRIPTOR_H
 
-#include "VKHandOff.h"
+#include "VKSceneMgr.h"
 #include "../Pipeline/VKPipelineMgr.h"
 
 using namespace Collections;
@@ -20,7 +20,7 @@ namespace Renderer {
      * (2) Allocate a descriptor set from a descriptor pool
      * (3) Bind the descriptor set during rendering
     */
-    class VKDescriptor: protected virtual VKHandOff,
+    class VKDescriptor: protected virtual VKSceneMgr,
                         protected virtual VKPipelineMgr {
         private:
             static Log::Record* m_VKDescriptorLog;
@@ -52,13 +52,13 @@ namespace Renderer {
              * allows you to allocate a big heap of types ahead of time so that later on you don't have to ask the gpu to 
              * do expensive allocations
             */
-            void createDescriptorPool (uint32_t handOffInfoId,
+            void createDescriptorPool (uint32_t sceneInfoId,
                                        const std::vector <VkDescriptorPoolSize>& poolSizes,
                                        uint32_t maxDescriptorSets,
                                        VkDescriptorPoolCreateFlags poolCreateFlags) {
 
-                auto handOffInfo = getHandOffInfo (handOffInfoId);
-                auto deviceInfo  = getDeviceInfo();
+                auto sceneInfo  = getSceneInfo (sceneInfoId);
+                auto deviceInfo = getDeviceInfo();
 
                 VkDescriptorPoolCreateInfo createInfo;
                 createInfo.sType         = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
@@ -91,13 +91,13 @@ namespace Renderer {
                                                           &descriptorPool);
                 if (result != VK_SUCCESS) {
                     LOG_ERROR (m_VKDescriptorLog) << "Failed to create descriptor pool "
-                                                  << "[" << handOffInfoId << "]"
+                                                  << "[" << sceneInfoId << "]"
                                                   << " "
                                                   << "[" << string_VkResult (result) << "]"
                                                   << std::endl;
                     throw std::runtime_error ("Failed to create descriptor pool");
                 }
-                handOffInfo->resource.descriptorPool = descriptorPool;
+                sceneInfo->resource.descriptorPool = descriptorPool;
             }
 
             /* A descriptor set specifies the actual buffer or image resources that will be bound to the descriptors, just 
@@ -105,13 +105,13 @@ namespace Renderer {
              * actually bind the resource to the  descriptors so that the shader can access them. The descriptor set is 
              * then bound for the drawing commands just like the vertex buffers and framebuffer
             */
-            void createDescriptorSets (uint32_t handOffInfoId,
+            void createDescriptorSets (uint32_t sceneInfoId,
                                        uint32_t pipelineInfoId,
                                        uint32_t descriptorSetLayoutId,
                                        uint32_t descriptorSetCount) {
 
                 auto pipelineInfo = getPipelineInfo (pipelineInfoId);
-                auto handOffInfo  = getHandOffInfo  (handOffInfoId);
+                auto sceneInfo    = getSceneInfo    (sceneInfoId);
                 auto deviceInfo   = getDeviceInfo();
 
                 /* A descriptor set layout defines the structure of a descriptor set, a template of sorts. Think of a 
@@ -140,7 +140,7 @@ namespace Renderer {
                 VkDescriptorSetAllocateInfo allocInfo;
                 allocInfo.sType              = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
                 allocInfo.pNext              = VK_NULL_HANDLE;
-                allocInfo.descriptorPool     = handOffInfo->resource.descriptorPool;
+                allocInfo.descriptorPool     = sceneInfo->resource.descriptorPool;
                 allocInfo.descriptorSetCount = descriptorSetCount;
                 allocInfo.pSetLayouts        = layouts.data();
 
@@ -150,7 +150,7 @@ namespace Renderer {
                                                             descriptorSets.data());
                 if (result != VK_SUCCESS) {
                     LOG_ERROR (m_VKDescriptorLog) << "Failed to allocate descriptor sets "
-                                                  << "[" << handOffInfoId << "]"
+                                                  << "[" << sceneInfoId << "]"
                                                   << " "
                                                   << "[" << pipelineInfoId << "]"
                                                   << " "
@@ -160,7 +160,7 @@ namespace Renderer {
                                                   << std::endl;
                     throw std::runtime_error ("Failed to allocate descriptor sets");
                 }   
-                handOffInfo->resource.descriptorSets = descriptorSets;
+                sceneInfo->resource.descriptorSets = descriptorSets;
             }
 
             /* Descriptors that refer to buffers, like a uniform buffer descriptor, are configured with a 
@@ -269,14 +269,14 @@ namespace Renderer {
                                         VK_NULL_HANDLE);                
             }
 
-            void cleanUp (uint32_t handOffInfoId) {
-                auto handOffInfo = getHandOffInfo (handOffInfoId);
-                auto deviceInfo  = getDeviceInfo();
+            void cleanUp (uint32_t sceneInfoId) {
+                auto sceneInfo  = getSceneInfo (sceneInfoId);
+                auto deviceInfo = getDeviceInfo();
                 /* You don't need to explicitly clean up descriptor sets, because they will be automatically freed when 
                  * the descriptor pool is destroyed
                 */
                 vkDestroyDescriptorPool (deviceInfo->shared.logDevice, 
-                                         handOffInfo->resource.descriptorPool, 
+                                         sceneInfo->resource.descriptorPool, 
                                          VK_NULL_HANDLE);
             }
     };   

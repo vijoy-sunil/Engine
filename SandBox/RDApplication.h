@@ -28,7 +28,7 @@ namespace Renderer {
             uint32_t m_imageAvailableSemaphoreInfoBase;
             uint32_t m_renderDoneSemaphoreInfoBase;
             uint32_t m_resourceId;
-            uint32_t m_handOffInfoId;
+            uint32_t m_sceneInfoId;
 
             bool m_refreshModelTransform;
             bool m_refreshCameraTransform;
@@ -81,7 +81,7 @@ namespace Renderer {
                  * |------------------------|---------------------------|
                  * | RESOURCE ID            |   0                       |
                  * |------------------------|---------------------------|
-                 * | HAND OFF INFO ID       |   0                       |
+                 * | SCENE INFO ID          |   0                       |
                  * |------------------------|---------------------------|
                 */
                 m_swapChainImageInfoIdBase      = 0;
@@ -99,7 +99,7 @@ namespace Renderer {
                 m_imageAvailableSemaphoreInfoBase = 0;
                 m_renderDoneSemaphoreInfoBase     = 0;
                 m_resourceId                      = 0;                
-                m_handOffInfoId                   = 0;
+                m_sceneInfoId                     = 0;
 
                 m_refreshModelTransform    = false;
                 m_refreshCameraTransform   = false;
@@ -147,7 +147,7 @@ namespace Renderer {
                 cameraInfo->meta.nearPlane = 0.1f;
                 cameraInfo->meta.farPlane  = 10.0f;                
                 /* |------------------------------------------------------------------------------------------------|
-                 * | READY HAND OFF INFO                                                                            |
+                 * | READY SCENE INFO                                                                               |
                  * |------------------------------------------------------------------------------------------------|
                 */
                 auto sceneInfoIds = std::vector {
@@ -159,25 +159,25 @@ namespace Renderer {
                     m_imageAvailableSemaphoreInfoBase,
                     m_renderDoneSemaphoreInfoBase
                 };
-                readyHandOffInfo (m_handOffInfoId, sceneInfoIds);
+                readySceneInfo (m_sceneInfoId, sceneInfoIds);
 
                 VKInitSequence::runSequence (m_modelInfoId, 
                                              m_renderPassInfoId,
                                              m_pipelineInfoId,
                                              m_cameraInfoId,
                                              m_resourceId,
-                                             m_handOffInfoId);
+                                             m_sceneInfoId);
             }
 
             void runScene (void) {
-                auto deviceInfo  = getDeviceInfo();
+                auto deviceInfo = getDeviceInfo();
 
 #if ENABLE_IDLE_ROTATION || ENABLE_CYCLE_TEXTURES
-                auto modelInfo   = getModelInfo   (m_modelInfoId);
+                auto modelInfo  = getModelInfo (m_modelInfoId);
 #endif  // ENABLE_IDLE_ROTATION || ENABLE_CYCLE_TEXTURES
 
 #if ENABLE_CYCLE_TEXTURES
-                auto handOffInfo = getHandOffInfo (m_handOffInfoId);
+                auto sceneInfo  = getSceneInfo (m_sceneInfoId);
                 /* Array of textures that will be used to cycle through using push push constant
                  *                                          V               V               V               V      
                  * |----------------|---------------|---------------|---------------|---------------|---------------|
@@ -190,7 +190,7 @@ namespace Renderer {
                 uint32_t cycleTexturesOffset = static_cast <uint32_t> (modelInfo->path.diffuseTextureImages.size() - 
                                                                        g_pathSettings.cycleTextures.size());
                 uint32_t framesUntilNextDefaultTexture = g_framesPerCycleTexture;
-                handOffInfo->meta.texId                = cycleTexturesOffset;
+                sceneInfo->meta.texId                  = cycleTexturesOffset;
 #endif  // ENABLE_CYCLE_TEXTURES
 
                 /* |------------------------------------------------------------------------------------------------|
@@ -219,7 +219,7 @@ namespace Renderer {
                                                  m_pipelineInfoId,
                                                  m_cameraInfoId,
                                                  m_resourceId,
-                                                 m_handOffInfoId,
+                                                 m_sceneInfoId,
                                                  m_refreshModelTransform, m_refreshCameraTransform);
                     /* Reset flags
                     */
@@ -230,11 +230,11 @@ namespace Renderer {
                     framesUntilNextDefaultTexture--;
                     if (framesUntilNextDefaultTexture == 0) {
                         framesUntilNextDefaultTexture    = g_framesPerCycleTexture;
-                        uint32_t texId                   = handOffInfo->meta.texId;
+                        uint32_t texId                   = sceneInfo->meta.texId;
                         texId                            = (texId + 1) % static_cast <uint32_t> 
                                                            (modelInfo->path.diffuseTextureImages.size());
                         if (texId == 0) texId            = cycleTexturesOffset;
-                        handOffInfo->meta.texId          = texId;
+                        sceneInfo->meta.texId            = texId;
                     }
 #endif  // ENABLE_CYCLE_TEXTURES             
                 }
@@ -252,7 +252,7 @@ namespace Renderer {
                                                m_pipelineInfoId,
                                                m_cameraInfoId,
                                                m_resourceId,
-                                               m_handOffInfoId);
+                                               m_sceneInfoId);
             }
     };
 }   // namespace Renderer

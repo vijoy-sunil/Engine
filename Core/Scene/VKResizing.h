@@ -5,7 +5,7 @@
 #include "../Image/VKDepthImage.h"
 #include "../Image/VKMultiSampleImage.h"
 #include "../RenderPass/VKFrameBuffer.h"
-#include "VKHandOff.h"
+#include "VKSceneMgr.h"
 
 using namespace Collections;
 
@@ -14,7 +14,7 @@ namespace Renderer {
                       protected virtual VKDepthImage,
                       protected virtual VKMultiSampleImage,
                       protected virtual VKFrameBuffer,
-                      protected virtual VKHandOff {
+                      protected virtual VKSceneMgr {
         private:
             static Log::Record* m_VKResizingLog;
             const uint32_t m_instanceId = g_collectionsId++;
@@ -42,12 +42,12 @@ namespace Renderer {
              * range to an high dynamic range monitor. This may require the application to recreate the renderpass to 
              * make sure the change between dynamic ranges is properly reflected
             */
-            void recreateSwapChainDeps (uint32_t handOffInfoId, 
+            void recreateSwapChainDeps (uint32_t sceneInfoId, 
                                         uint32_t renderPassInfoId,
                                         uint32_t resourceId) {
 
-                auto handOffInfo = getHandOffInfo (handOffInfoId);
-                auto deviceInfo  = getDeviceInfo();
+                auto sceneInfo  = getSceneInfo (sceneInfoId);
+                auto deviceInfo = getDeviceInfo();
 
                 /* There is another case where a swap chain may become out of date and that is a special kind of window 
                  * resizing: window minimization. This case is special because it will result in a frame buffer size of 0.
@@ -80,24 +80,24 @@ namespace Renderer {
                  * | DESTROY MULTI SAMPLE RESOURCES                                                                 |
                  * |------------------------------------------------------------------------------------------------|
                 */                                                 
-                VKImageMgr::cleanUp (handOffInfo->id.multiSampleImageInfo, MULTISAMPLE_IMAGE);
+                VKImageMgr::cleanUp (sceneInfo->id.multiSampleImageInfo, MULTISAMPLE_IMAGE);
                 LOG_INFO (m_VKResizingLog) << "[DELETE] Multi sample resources " 
-                                           << "[" << handOffInfo->id.multiSampleImageInfo << "]"
+                                           << "[" << sceneInfo->id.multiSampleImageInfo << "]"
                                            << std::endl; 
                 /* |------------------------------------------------------------------------------------------------|
                  * | DESTROY DEPTH RESOURCES                                                                        |
                  * |------------------------------------------------------------------------------------------------|
                 */                                                 
-                VKImageMgr::cleanUp (handOffInfo->id.depthImageInfo, DEPTH_IMAGE);
+                VKImageMgr::cleanUp (sceneInfo->id.depthImageInfo, DEPTH_IMAGE);
                 LOG_INFO (m_VKResizingLog) << "[DELETE] Depth resources " 
-                                           << "[" << handOffInfo->id.depthImageInfo << "]"
+                                           << "[" << sceneInfo->id.depthImageInfo << "]"
                                            << std::endl;
                 /* |------------------------------------------------------------------------------------------------|
                  * | DESTROY SWAP CHAIN RESOURCES                                                                   |
                  * |------------------------------------------------------------------------------------------------|
                 */                                                 
                 for (uint32_t i = 0; i < deviceInfo->unique[resourceId].swapChain.size; i++) {
-                    uint32_t swapChainImageInfoId = handOffInfo->id.swapChainImageInfoBase + i;
+                    uint32_t swapChainImageInfoId = sceneInfo->id.swapChainImageInfoBase + i;
                     VKImageMgr::cleanUp (swapChainImageInfoId, SWAPCHAIN_IMAGE);
                     LOG_INFO (m_VKResizingLog) << "[DELETE] Swap chain resources " 
                                                << "[" << swapChainImageInfoId << "]"
@@ -119,9 +119,9 @@ namespace Renderer {
                  * | CONFIG SWAP CHAIN RESOURCES                                                                    |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                createSwapChainResources (handOffInfo->id.swapChainImageInfoBase, resourceId);
+                createSwapChainResources (sceneInfo->id.swapChainImageInfoBase, resourceId);
                 LOG_INFO (m_VKResizingLog) << "[OK] Swap chain resources " 
-                                           << "[" << handOffInfo->id.swapChainImageInfoBase << "]"
+                                           << "[" << sceneInfo->id.swapChainImageInfoBase << "]"
                                            << " "
                                            << "[" << resourceId << "]"
                                            << std::endl;
@@ -129,9 +129,9 @@ namespace Renderer {
                  * | CONFIG DEPTH RESOURCES                                                                         |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                createDepthResources (handOffInfo->id.depthImageInfo, resourceId);
+                createDepthResources (sceneInfo->id.depthImageInfo, resourceId);
                 LOG_INFO (m_VKResizingLog) << "[OK] Depth resources " 
-                                           << "[" << handOffInfo->id.depthImageInfo << "]"
+                                           << "[" << sceneInfo->id.depthImageInfo << "]"
                                            << " "
                                            << "[" << resourceId << "]"
                                            << std::endl; 
@@ -139,9 +139,9 @@ namespace Renderer {
                  * | CONFIG MULTI SAMPLE RESOURCES                                                                  |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                createMultiSampleResources (handOffInfo->id.multiSampleImageInfo, resourceId);
+                createMultiSampleResources (sceneInfo->id.multiSampleImageInfo, resourceId);
                 LOG_INFO (m_VKResizingLog) << "[OK] Multi sample resources " 
-                                           << "[" << handOffInfo->id.multiSampleImageInfo << "]"
+                                           << "[" << sceneInfo->id.multiSampleImageInfo << "]"
                                            << " "
                                            << "[" << resourceId << "]"
                                            << std::endl;
@@ -149,11 +149,11 @@ namespace Renderer {
                  * | CONFIG FRAME BUFFERS                                                                           |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                auto multiSampleImageInfo = getImageInfo (handOffInfo->id.multiSampleImageInfo, MULTISAMPLE_IMAGE);
-                auto depthImageInfo       = getImageInfo (handOffInfo->id.depthImageInfo,       DEPTH_IMAGE);
+                auto multiSampleImageInfo = getImageInfo (sceneInfo->id.multiSampleImageInfo, MULTISAMPLE_IMAGE);
+                auto depthImageInfo       = getImageInfo (sceneInfo->id.depthImageInfo,       DEPTH_IMAGE);
 
                 for (uint32_t i = 0; i < deviceInfo->unique[resourceId].swapChain.size; i++) {
-                    uint32_t swapChainImageInfoId = handOffInfo->id.swapChainImageInfoBase + i;
+                    uint32_t swapChainImageInfoId = sceneInfo->id.swapChainImageInfoBase + i;
                     auto swapChainImageInfo       = getImageInfo (swapChainImageInfoId, SWAPCHAIN_IMAGE);
 
                     auto attachments = std::vector {

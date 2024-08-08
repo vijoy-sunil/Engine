@@ -99,11 +99,11 @@ namespace Renderer {
                               uint32_t pipelineInfoId,
                               uint32_t cameraInfoId, 
                               uint32_t resourceId,
-                              uint32_t handOffInfoId) {
+                              uint32_t sceneInfoId) {
 
-                auto modelInfo   = getModelInfo   (modelInfoId);
-                auto handOffInfo = getHandOffInfo (handOffInfoId);
-                auto deviceInfo  = getDeviceInfo();
+                auto modelInfo  = getModelInfo (modelInfoId);
+                auto sceneInfo  = getSceneInfo (sceneInfoId);
+                auto deviceInfo = getDeviceInfo();
 #if ENABLE_LOGGING
                 enableValidationLayers();
 #else
@@ -204,9 +204,9 @@ namespace Renderer {
                  * | CONFIG SWAP CHAIN RESOURCES                                                                    |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                createSwapChainResources (handOffInfo->id.swapChainImageInfoBase, resourceId);
+                createSwapChainResources (sceneInfo->id.swapChainImageInfoBase, resourceId);
                 LOG_INFO (m_VKInitSequenceLog) << "[OK] Swap chain resources " 
-                                               << "[" << handOffInfo->id.swapChainImageInfoBase << "]"
+                                               << "[" << sceneInfo->id.swapChainImageInfoBase << "]"
                                                << " "
                                                << "[" << resourceId << "]"
                                                << std::endl;   
@@ -229,9 +229,9 @@ namespace Renderer {
                  * | CONFIG DEPTH RESOURCES                                                                         |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                createDepthResources (handOffInfo->id.depthImageInfo, resourceId);
+                createDepthResources (sceneInfo->id.depthImageInfo, resourceId);
                 LOG_INFO (m_VKInitSequenceLog) << "[OK] Depth resources " 
-                                               << "[" << handOffInfo->id.depthImageInfo << "]"
+                                               << "[" << sceneInfo->id.depthImageInfo << "]"
                                                << " "
                                                << "[" << resourceId << "]"
                                                << std::endl;  
@@ -239,9 +239,9 @@ namespace Renderer {
                  * | CONFIG MULTI SAMPLE RESOURCES                                                                  |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                createMultiSampleResources (handOffInfo->id.multiSampleImageInfo, resourceId);
+                createMultiSampleResources (sceneInfo->id.multiSampleImageInfo, resourceId);
                 LOG_INFO (m_VKInitSequenceLog) << "[OK] Multi sample resources " 
-                                               << "[" << handOffInfo->id.multiSampleImageInfo << "]"
+                                               << "[" << sceneInfo->id.multiSampleImageInfo << "]"
                                                << " "
                                                << "[" << resourceId << "]"
                                                << std::endl;    
@@ -281,7 +281,7 @@ namespace Renderer {
                  * to a uniform buffer that is not currently being read by the GPU
                 */
                 for (uint32_t i = 0; i < g_maxFramesInFlight; i++) { 
-                    uint32_t uniformBufferInfoId = handOffInfo->id.uniformBufferInfoBase + i;    
+                    uint32_t uniformBufferInfoId = sceneInfo->id.uniformBufferInfoBase + i;    
                     createUniformBuffer (uniformBufferInfoId,
                                          resourceId,
                                          sizeof (PerModelDataUBO));
@@ -298,9 +298,9 @@ namespace Renderer {
                 */
                 readyRenderPassInfo (renderPassInfoId);
 
-                createMultiSampleAttachment  (renderPassInfoId, handOffInfo->id.multiSampleImageInfo);
-                createDepthStencilAttachment (renderPassInfoId, handOffInfo->id.depthImageInfo);
-                createResolveAttachment      (renderPassInfoId, handOffInfo->id.swapChainImageInfoBase);
+                createMultiSampleAttachment  (renderPassInfoId, sceneInfo->id.multiSampleImageInfo);
+                createDepthStencilAttachment (renderPassInfoId, sceneInfo->id.depthImageInfo);
+                createResolveAttachment      (renderPassInfoId, sceneInfo->id.swapChainImageInfoBase);
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG SUB PASS                                                                                |
                  * |------------------------------------------------------------------------------------------------|
@@ -347,13 +347,13 @@ namespace Renderer {
                  * we do not need to change the depth image between frames (in flight), we can just keep clearing and 
                  * reusing the same depth image for every frame (see subpass dependency)
                 */
-                auto multiSampleImageInfo = getImageInfo (handOffInfo->id.multiSampleImageInfo, MULTISAMPLE_IMAGE);
-                auto depthImageInfo       = getImageInfo (handOffInfo->id.depthImageInfo,       DEPTH_IMAGE);
+                auto multiSampleImageInfo = getImageInfo (sceneInfo->id.multiSampleImageInfo, MULTISAMPLE_IMAGE);
+                auto depthImageInfo       = getImageInfo (sceneInfo->id.depthImageInfo,       DEPTH_IMAGE);
                 /* Create a framebuffer for all of the images in the swap chain and use the one that corresponds to the 
                  * retrieved image at drawing time
                 */
                 for (uint32_t i = 0; i < deviceInfo->unique[resourceId].swapChain.size; i++) {
-                    uint32_t swapChainImageInfoId = handOffInfo->id.swapChainImageInfoBase + i;
+                    uint32_t swapChainImageInfoId = sceneInfo->id.swapChainImageInfoBase + i;
                     auto swapChainImageInfo       = getImageInfo (swapChainImageInfoId, SWAPCHAIN_IMAGE);
 
                     auto attachments = std::vector {
@@ -431,7 +431,7 @@ namespace Renderer {
                  * |------------------------------------------------------------------------------------------------|
                 */
                 createMultiSampleState (pipelineInfoId,
-                                        handOffInfo->id.multiSampleImageInfo,
+                                        sceneInfo->id.multiSampleImageInfo,
                                         VK_TRUE, 0.2f);
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG PIPELINE STATE - DEPTH STENCIL                                                          |
@@ -574,14 +574,14 @@ namespace Renderer {
                  * | CONFIG TEXTURE SAMPLER                                                                         |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                createTextureSampler (handOffInfoId, 
+                createTextureSampler (sceneInfoId, 
                                       VK_FILTER_LINEAR,
                                       VK_SAMPLER_ADDRESS_MODE_REPEAT,
                                       VK_TRUE,
                                       VK_SAMPLER_MIPMAP_MODE_LINEAR,
                                       0.0, m_maxLod);
                 LOG_INFO (m_VKInitSequenceLog) << "[OK] Texture sampler " 
-                                               << "[" << handOffInfoId << "]"
+                                               << "[" << sceneInfoId << "]"
                                                << std::endl;  
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG DESCRIPTOR POOL                                                                         |
@@ -593,19 +593,19 @@ namespace Renderer {
                     getPoolSize (VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, static_cast <uint32_t> 
                                 (modelInfo->path.diffuseTextureImages.size()) * g_maxFramesInFlight)
                 };
-                createDescriptorPool (handOffInfoId, 
+                createDescriptorPool (sceneInfoId, 
                                       poolSizes, 
                                       g_maxFramesInFlight, 
                                       0);
                 LOG_INFO (m_VKInitSequenceLog) << "[OK] Descriptor pool " 
-                                               << "[" << handOffInfoId << "]"
+                                               << "[" << sceneInfoId << "]"
                                                << std::endl;  
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG DESCRIPTOR SETS                                                                         |
                  * |------------------------------------------------------------------------------------------------|
                 */
                 uint32_t descriptorSetLayoutId = 0;
-                createDescriptorSets (handOffInfoId, 
+                createDescriptorSets (sceneInfoId, 
                                       pipelineInfoId, 
                                       descriptorSetLayoutId, 
                                       g_maxFramesInFlight);
@@ -614,7 +614,7 @@ namespace Renderer {
                  * |------------------------------------------------------------------------------------------------|
                 */
                 for (uint32_t i = 0; i < g_maxFramesInFlight; i++) {
-                    uint32_t uniformBufferInfoId = handOffInfo->id.uniformBufferInfoBase + i; 
+                    uint32_t uniformBufferInfoId = sceneInfo->id.uniformBufferInfoBase + i; 
                     auto bufferInfo              = getBufferInfo (uniformBufferInfoId, UNIFORM_BUFFER);
                     auto descriptorBufferInfos   = std::vector {
                         getDescriptorBufferInfo (bufferInfo->resource.buffer,
@@ -629,7 +629,7 @@ namespace Renderer {
                         uint32_t textureImageInfoId = modelInfo->id.diffuseTextureImageInfoBase + i;
                         auto imageInfo              = getImageInfo (textureImageInfoId, TEXTURE_IMAGE);
 
-                        descriptorImageInfos[i]     = getDescriptorImageInfo (handOffInfo->resource.textureSampler,
+                        descriptorImageInfos[i]     = getDescriptorImageInfo (sceneInfo->resource.textureSampler,
                                                                               imageInfo->resource.imageView,
                                                                               VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
                     }
@@ -639,12 +639,12 @@ namespace Renderer {
                     */                    
                     auto writeDescriptorSets = std::vector {
                         getWriteBufferDescriptorSetInfo (VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-                                                         handOffInfo->resource.descriptorSets[i],
+                                                         sceneInfo->resource.descriptorSets[i],
                                                          descriptorBufferInfos,
                                                          0, 0, 1),
 
                         getWriteImageDescriptorSetInfo  (VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-                                                         handOffInfo->resource.descriptorSets[i],
+                                                         sceneInfo->resource.descriptorSets[i],
                                                          descriptorImageInfos,
                                                          1, 0, textureCount)
                     };
@@ -652,7 +652,7 @@ namespace Renderer {
                     updateDescriptorSets (writeDescriptorSets);
                 }
                 LOG_INFO (m_VKInitSequenceLog) << "[OK] Descriptor sets " 
-                                               << "[" << handOffInfoId << "]"
+                                               << "[" << sceneInfoId << "]"
                                                << " "
                                                << "[" << pipelineInfoId << "]"
                                                << " "
@@ -908,8 +908,8 @@ namespace Renderer {
                                        VK_COMMAND_BUFFER_LEVEL_PRIMARY)
                 };
 
-                handOffInfo->resource.commandPool    = drawOpsCommandPool;
-                handOffInfo->resource.commandBuffers = drawOpsCommandBuffers;
+                sceneInfo->resource.commandPool    = drawOpsCommandPool;
+                sceneInfo->resource.commandBuffers = drawOpsCommandBuffers;
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG DRAW OPS - FENCE AND SEMAPHORES                                                         |
                  * |------------------------------------------------------------------------------------------------|
@@ -926,19 +926,19 @@ namespace Renderer {
                      * on something which will never happen. To combat this, create the fence in the signaled state, so 
                      * that the first call to vkWaitForFences() returns immediately since the fence is already signaled
                     */
-                    uint32_t drawOpsInFlightFenceInfoId = handOffInfo->id.inFlightFenceInfoBase + i;
+                    uint32_t drawOpsInFlightFenceInfoId = sceneInfo->id.inFlightFenceInfoBase + i;
                     createFence (drawOpsInFlightFenceInfoId, FEN_IN_FLIGHT, VK_FENCE_CREATE_SIGNALED_BIT);
                     LOG_INFO (m_VKInitSequenceLog) << "[OK] Draw ops fence " 
                                                    << "[" << drawOpsInFlightFenceInfoId << "]"
                                                    << std::endl;
 
-                    uint32_t drawOpsImageAvailableSemaphoreInfoId = handOffInfo->id.imageAvailableSemaphoreInfoBase + i;
+                    uint32_t drawOpsImageAvailableSemaphoreInfoId = sceneInfo->id.imageAvailableSemaphoreInfoBase + i;
                     createSemaphore (drawOpsImageAvailableSemaphoreInfoId, SEM_IMAGE_AVAILABLE);
                     LOG_INFO (m_VKInitSequenceLog) << "[OK] Draw ops semaphore " 
                                                    << "[" << drawOpsImageAvailableSemaphoreInfoId << "]"
                                                    << std::endl;
 
-                    uint32_t drawOpsRenderDoneSemaphoreInfoId = handOffInfo->id.renderDoneSemaphoreInfoBase + i;
+                    uint32_t drawOpsRenderDoneSemaphoreInfoId = sceneInfo->id.renderDoneSemaphoreInfoBase + i;
                     createSemaphore (drawOpsRenderDoneSemaphoreInfoId, SEM_RENDER_DONE);
                     LOG_INFO (m_VKInitSequenceLog) << "[OK] Draw ops semaphore " 
                                                    << "[" << drawOpsRenderDoneSemaphoreInfoId << "]"
@@ -956,7 +956,7 @@ namespace Renderer {
                 dumpCameraInfoPool(); 
                 dumpFenceInfoPool();
                 dumpSemaphoreInfoPool();
-                dumpHandOffInfoPool();
+                dumpSceneInfoPool();
                 dumpDeviceInfoPool();
             }
     };

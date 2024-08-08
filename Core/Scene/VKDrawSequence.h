@@ -49,13 +49,13 @@ namespace Renderer {
                               uint32_t pipelineInfoId,
                               uint32_t cameraInfoId,
                               uint32_t resourceId, 
-                              uint32_t handOffInfoId,
+                              uint32_t sceneInfoId,
                               bool refreshModelTransform, bool refreshCameraTransform) {
 
-                auto modelInfo   = getModelInfo   (modelInfoId);
-                auto cameraInfo  = getCameraInfo  (cameraInfoId);
-                auto handOffInfo = getHandOffInfo (handOffInfoId);
-                auto deviceInfo  = getDeviceInfo();
+                auto modelInfo  = getModelInfo  (modelInfoId);
+                auto cameraInfo = getCameraInfo (cameraInfoId);
+                auto sceneInfo  = getSceneInfo  (sceneInfoId);
+                auto deviceInfo = getDeviceInfo();
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG DRAW OPS - WAIT                                                                         |
                  * |------------------------------------------------------------------------------------------------|
@@ -72,7 +72,7 @@ namespace Renderer {
                  * frame's work to the command buffer until the current frame has finished executing, as we don't want to 
                  * overwrite the current contents of the command buffer while the GPU is using it
                 */
-                uint32_t inFlightFenceInfoId = handOffInfo->id.inFlightFenceInfoBase + m_currentFrameInFlight;
+                uint32_t inFlightFenceInfoId = sceneInfo->id.inFlightFenceInfoBase + m_currentFrameInFlight;
                 vkWaitForFences (deviceInfo->shared.logDevice, 
                                  1, 
                                  &getFenceInfo (inFlightFenceInfoId, FEN_IN_FLIGHT)->resource.fence, 
@@ -95,7 +95,7 @@ namespace Renderer {
                  * notified by the semaphore
                 */
                 uint32_t swapChainImageId;
-                uint32_t imageAvailableSemaphoreInfoId = handOffInfo->id.imageAvailableSemaphoreInfoBase +
+                uint32_t imageAvailableSemaphoreInfoId = sceneInfo->id.imageAvailableSemaphoreInfoBase +
                                                          m_currentFrameInFlight;
                 VkResult result = vkAcquireNextImageKHR (deviceInfo->shared.logDevice, 
                                                          deviceInfo->unique[resourceId].swapChain.swapChain, 
@@ -114,7 +114,7 @@ namespace Renderer {
                                                       << " " 
                                                       << "[" << string_VkResult (result) << "]"
                                                       << std::endl; 
-                    recreateSwapChainDeps (handOffInfoId, 
+                    recreateSwapChainDeps (sceneInfoId, 
                                            renderPassInfoId,
                                            resourceId);
                     return;
@@ -165,12 +165,12 @@ namespace Renderer {
                 PerModelDataUBO perModelData;
                 perModelData.model = modelInfo->transform.model;
 
-                updateUniformBuffer (handOffInfo->id.uniformBufferInfoBase + m_currentFrameInFlight,
+                updateUniformBuffer (sceneInfo->id.uniformBufferInfoBase + m_currentFrameInFlight,
                                      sizeof (PerModelDataUBO),
                                      &perModelData);
 
                 SceneDataVertPC sceneDataVert;
-                sceneDataVert.texId      = handOffInfo->meta.texId;
+                sceneDataVert.texId      = sceneInfo->meta.texId;
                 sceneDataVert.view       = cameraInfo->transform.view;
                 sceneDataVert.projection = cameraInfo->transform.projection;
                 /* |------------------------------------------------------------------------------------------------|
@@ -179,8 +179,8 @@ namespace Renderer {
                 */
                 /* First, we call vkResetCommandBuffer on the command buffer to make sure it is able to be recorded
                 */
-                vkResetCommandBuffer (handOffInfo->resource.commandBuffers[m_currentFrameInFlight], 0);
-                beginRecording       (handOffInfo->resource.commandBuffers[m_currentFrameInFlight], 0, VK_NULL_HANDLE);
+                vkResetCommandBuffer (sceneInfo->resource.commandBuffers[m_currentFrameInFlight], 0);
+                beginRecording       (sceneInfo->resource.commandBuffers[m_currentFrameInFlight], 0, VK_NULL_HANDLE);
                 /* Define the clear values to use for VK_ATTACHMENT_LOAD_OP_CLEAR. Note that, the order of clear values 
                  * should be identical to the order of your attachments
                  * 
@@ -204,29 +204,29 @@ namespace Renderer {
                         {{1.0f, 0}}
                     }
                 };
-                beginRenderPass      (handOffInfo->resource.commandBuffers[m_currentFrameInFlight],
+                beginRenderPass      (sceneInfo->resource.commandBuffers[m_currentFrameInFlight],
                                       renderPassInfoId,
                                       swapChainImageId,
                                       resourceId,
                                       clearValues);
 
-                bindPipeline         (handOffInfo->resource.commandBuffers[m_currentFrameInFlight],
+                bindPipeline         (sceneInfo->resource.commandBuffers[m_currentFrameInFlight],
                                       pipelineInfoId,
                                       VK_PIPELINE_BIND_POINT_GRAPHICS);
 
-                updatePushConstants  (handOffInfo->resource.commandBuffers[m_currentFrameInFlight],
+                updatePushConstants  (sceneInfo->resource.commandBuffers[m_currentFrameInFlight],
                                       pipelineInfoId,
                                       VK_SHADER_STAGE_VERTEX_BIT,
                                       0, sizeof (SceneDataVertPC), &sceneDataVert);
 
                 auto secondaryViewPorts = std::vector <VkViewport> {};
-                setViewPorts         (handOffInfo->resource.commandBuffers[m_currentFrameInFlight],
+                setViewPorts         (sceneInfo->resource.commandBuffers[m_currentFrameInFlight],
                                       resourceId,
                                       0,
                                       secondaryViewPorts);
 
                 auto secondaryScissors = std::vector <VkRect2D> {};
-                setScissors          (handOffInfo->resource.commandBuffers[m_currentFrameInFlight],
+                setScissors          (sceneInfo->resource.commandBuffers[m_currentFrameInFlight],
                                       resourceId,
                                       0,
                                       secondaryScissors);
@@ -237,31 +237,31 @@ namespace Renderer {
                 auto vertexBufferOffsets = std::vector <VkDeviceSize> {
                     0
                 };
-                bindVertexBuffers    (handOffInfo->resource.commandBuffers[m_currentFrameInFlight],
+                bindVertexBuffers    (sceneInfo->resource.commandBuffers[m_currentFrameInFlight],
                                       0,
                                       vertexBufferInfoIdsToBind,
                                       vertexBufferOffsets);
 
-                bindIndexBuffer      (handOffInfo->resource.commandBuffers[m_currentFrameInFlight],
+                bindIndexBuffer      (sceneInfo->resource.commandBuffers[m_currentFrameInFlight],
                                       modelInfo->id.indexBufferInfo,
                                       0,
                                       VK_INDEX_TYPE_UINT32);
 
                 auto descriptorSetsToBind = std::vector {
-                    handOffInfo->resource.descriptorSets[m_currentFrameInFlight]
+                    sceneInfo->resource.descriptorSets[m_currentFrameInFlight]
                 };        
-                bindDescriptorSets   (handOffInfo->resource.commandBuffers[m_currentFrameInFlight],
+                bindDescriptorSets   (sceneInfo->resource.commandBuffers[m_currentFrameInFlight],
                                       pipelineInfoId,
                                       VK_PIPELINE_BIND_POINT_GRAPHICS,
                                       0,
                                       descriptorSetsToBind);
 
-                drawIndexed          (handOffInfo->resource.commandBuffers[m_currentFrameInFlight],
+                drawIndexed          (sceneInfo->resource.commandBuffers[m_currentFrameInFlight],
                                       modelInfo->meta.indicesCount,
                                       1, 0, 0, 0);
 
-                endRenderPass        (handOffInfo->resource.commandBuffers[m_currentFrameInFlight]);
-                endRecording         (handOffInfo->resource.commandBuffers[m_currentFrameInFlight]);  
+                endRenderPass        (sceneInfo->resource.commandBuffers[m_currentFrameInFlight]);
+                endRecording         (sceneInfo->resource.commandBuffers[m_currentFrameInFlight]);  
 
                 VkSubmitInfo drawOpsSubmitInfo;
                 drawOpsSubmitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -285,11 +285,11 @@ namespace Renderer {
                 drawOpsSubmitInfo.pWaitSemaphores    = waitSemaphores.data();
                 drawOpsSubmitInfo.pWaitDstStageMask  = waitStages.data();
                 drawOpsSubmitInfo.commandBufferCount = 1;
-                drawOpsSubmitInfo.pCommandBuffers    = &handOffInfo->resource.commandBuffers[m_currentFrameInFlight];
+                drawOpsSubmitInfo.pCommandBuffers    = &sceneInfo->resource.commandBuffers[m_currentFrameInFlight];
                 /* The signalSemaphoreCount and pSignalSemaphores parameters specify which semaphores to signal once the 
                  * command buffer(s) have finished execution
                 */
-                uint32_t renderDoneSemaphoreInfoId = handOffInfo->id.renderDoneSemaphoreInfoBase + m_currentFrameInFlight;
+                uint32_t renderDoneSemaphoreInfoId = sceneInfo->id.renderDoneSemaphoreInfoBase + m_currentFrameInFlight;
                 auto signalSemaphores = std::vector {
                     getSemaphoreInfo (renderDoneSemaphoreInfoId, SEM_RENDER_DONE)->resource.semaphore 
                 };
@@ -374,7 +374,7 @@ namespace Renderer {
                                                       << "[" << string_VkResult (result) << "]" 
                                                       << std::endl; 
                     setFrameBufferResized (false);
-                    recreateSwapChainDeps (handOffInfoId, 
+                    recreateSwapChainDeps (sceneInfoId, 
                                            renderPassInfoId,
                                            resourceId);
                 }

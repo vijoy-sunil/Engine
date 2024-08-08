@@ -157,7 +157,7 @@
     |
     |<----------------------|{VKFrameBuffer}
     |
-    |<----------------------|{VKHandOff}
+    |<----------------------|{VKSceneMgr}
     |
     |
     |Scene/VKResizing
@@ -170,7 +170,7 @@
     |<......................|Log
     |
     |
-    |Scene/VKHandOFF        |{VKDeviceMgr}
+    |{Scene/VKSceneMgr}     |{VKDeviceMgr}
     |                       |
     |                       |
     |---------------------->|VKTextureSampler

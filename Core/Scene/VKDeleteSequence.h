@@ -51,17 +51,17 @@ namespace Renderer {
                               uint32_t pipelineInfoId,
                               uint32_t cameraInfoId,
                               uint32_t resourceId,
-                              uint32_t handOffInfoId) {
+                              uint32_t sceneInfoId) {
 
-                auto modelInfo   = getModelInfo   (modelInfoId);
-                auto handOffInfo = getHandOffInfo (handOffInfoId);
-                auto deviceInfo  = getDeviceInfo();
+                auto modelInfo  = getModelInfo (modelInfoId);
+                auto sceneInfo  = getSceneInfo (sceneInfoId);
+                auto deviceInfo = getDeviceInfo();
                 /* |------------------------------------------------------------------------------------------------|
                  * | DESTROY DRAW OPS - FENCE AND SEMAPHORES                                                        |
                  * |------------------------------------------------------------------------------------------------|
                 */
                 for (uint32_t i = 0; i < g_maxFramesInFlight; i++) {
-                    uint32_t renderDoneSemaphoreInfoId = handOffInfo->id.renderDoneSemaphoreInfoBase + i; 
+                    uint32_t renderDoneSemaphoreInfoId = sceneInfo->id.renderDoneSemaphoreInfoBase + i; 
                     cleanUpSemaphore (renderDoneSemaphoreInfoId, SEM_RENDER_DONE);
                     LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Draw ops semaphore " 
                                                      << "[" << renderDoneSemaphoreInfoId << "]"
@@ -69,7 +69,7 @@ namespace Renderer {
                 }
 
                 for (uint32_t i = 0; i < g_maxFramesInFlight; i++) {
-                    uint32_t imageAvailableSemaphoreInfoId = handOffInfo->id.imageAvailableSemaphoreInfoBase + i;
+                    uint32_t imageAvailableSemaphoreInfoId = sceneInfo->id.imageAvailableSemaphoreInfoBase + i;
                     cleanUpSemaphore (imageAvailableSemaphoreInfoId, SEM_IMAGE_AVAILABLE);
                     LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Draw ops semaphore " 
                                                      << "[" << imageAvailableSemaphoreInfoId << "]"
@@ -77,7 +77,7 @@ namespace Renderer {
                 }
 
                 for (uint32_t i = 0; i < g_maxFramesInFlight; i++) {
-                    uint32_t inFlightFenceInfoId = handOffInfo->id.inFlightFenceInfoBase + i;
+                    uint32_t inFlightFenceInfoId = sceneInfo->id.inFlightFenceInfoBase + i;
                     cleanUpFence (inFlightFenceInfoId, FEN_IN_FLIGHT);
                     LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Draw ops fence " 
                                                      << "[" << inFlightFenceInfoId << "]"
@@ -87,24 +87,24 @@ namespace Renderer {
                  * | DESTROY DRAW OPS - COMMAND POOL                                                                |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                VKCmdBuffer::cleanUp (handOffInfo->resource.commandPool);
+                VKCmdBuffer::cleanUp (sceneInfo->resource.commandPool);
                 LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Draw ops command pool"
                                                  << std::endl; 
                 /* |------------------------------------------------------------------------------------------------|
                  * | DESTROY DESCRIPTOR POOL                                                                        |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                VKDescriptor::cleanUp (handOffInfoId);
+                VKDescriptor::cleanUp (sceneInfoId);
                 LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Descriptor pool " 
-                                                 << "[" << handOffInfoId << "]"
+                                                 << "[" << sceneInfoId << "]"
                                                  << std::endl; 
                 /* |------------------------------------------------------------------------------------------------|
                  * | DESTROY TEXTURE SAMPLER                                                                        |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                VKTextureSampler::cleanUp (handOffInfoId);
+                VKTextureSampler::cleanUp (sceneInfoId);
                 LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Texture sampler " 
-                                                 << "[" << handOffInfoId << "]"
+                                                 << "[" << sceneInfoId << "]"
                                                  << std::endl; 
                 /* |------------------------------------------------------------------------------------------------|
                  * | DESTROY PIPELINE                                                                               |
@@ -135,7 +135,7 @@ namespace Renderer {
                  * |------------------------------------------------------------------------------------------------|
                 */
                 for (uint32_t i = 0; i < g_maxFramesInFlight; i++) {
-                    uint32_t uniformBufferInfoId = handOffInfo->id.uniformBufferInfoBase + i; 
+                    uint32_t uniformBufferInfoId = sceneInfo->id.uniformBufferInfoBase + i; 
                     VKBufferMgr::cleanUp (uniformBufferInfoId, UNIFORM_BUFFER);
                     LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Uniform buffer " 
                                                      << "[" << uniformBufferInfoId << "]"
@@ -161,17 +161,17 @@ namespace Renderer {
                  * | DESTROY MULTI SAMPLE RESOURCES                                                                 |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                VKImageMgr::cleanUp (handOffInfo->id.multiSampleImageInfo, MULTISAMPLE_IMAGE);
+                VKImageMgr::cleanUp (sceneInfo->id.multiSampleImageInfo, MULTISAMPLE_IMAGE);
                 LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Multi sample resources " 
-                                                 << "[" << handOffInfo->id.multiSampleImageInfo << "]"
+                                                 << "[" << sceneInfo->id.multiSampleImageInfo << "]"
                                                  << std::endl; 
                 /* |------------------------------------------------------------------------------------------------|
                  * | DESTROY DEPTH RESOURCES                                                                        |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                VKImageMgr::cleanUp (handOffInfo->id.depthImageInfo, DEPTH_IMAGE);
+                VKImageMgr::cleanUp (sceneInfo->id.depthImageInfo, DEPTH_IMAGE);
                 LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Depth resources " 
-                                                 << "[" << handOffInfo->id.depthImageInfo << "]"
+                                                 << "[" << sceneInfo->id.depthImageInfo << "]"
                                                  << std::endl; 
                 /* |------------------------------------------------------------------------------------------------|
                  * | DESTROY TEXTURE RESOURCES - DIFFUSE TEXTURE                                                    |
@@ -189,7 +189,7 @@ namespace Renderer {
                  * |------------------------------------------------------------------------------------------------|
                 */
                 for (uint32_t i = 0; i < deviceInfo->unique[resourceId].swapChain.size; i++) {
-                    uint32_t swapChainImageInfoId = handOffInfo->id.swapChainImageInfoBase + i;
+                    uint32_t swapChainImageInfoId = sceneInfo->id.swapChainImageInfoBase + i;
                     VKImageMgr::cleanUp (swapChainImageInfoId, SWAPCHAIN_IMAGE);
                     LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Swap chain resources " 
                                                      << "[" << swapChainImageInfoId << "]"
@@ -241,12 +241,12 @@ namespace Renderer {
                                                  << "[" << resourceId << "]"
                                                  << std::endl;   
                 /* |------------------------------------------------------------------------------------------------|
-                 * | DESTROY HAND OFF INFO                                                                          |
+                 * | DESTROY SCENE INFO                                                                             |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                VKHandOff::cleanUp (handOffInfoId);
-                LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Hand off info " 
-                                                 << "[" << handOffInfoId << "]"
+                VKSceneMgr::cleanUp (sceneInfoId);
+                LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Scene info " 
+                                                 << "[" << sceneInfoId << "]"
                                                  << std::endl;
                 /* |------------------------------------------------------------------------------------------------|
                  * | DESTROY CAMERA INFO                                                                            |
@@ -276,7 +276,7 @@ namespace Renderer {
                 dumpCameraInfoPool();
                 dumpFenceInfoPool();
                 dumpSemaphoreInfoPool();
-                dumpHandOffInfoPool();
+                dumpSceneInfoPool();
                 dumpDeviceInfoPool();
             }
     };
