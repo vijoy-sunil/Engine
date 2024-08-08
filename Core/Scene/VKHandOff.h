@@ -4,7 +4,6 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 #include "VKUniform.h"
-#include "VKTransform.h"
 #include "../VKConfig.h"
 #include "../../Collections/Log/Log.h"
 
@@ -13,21 +12,26 @@ using namespace Collections;
 namespace Renderer {
     class VKHandOff {
         private:
-            /* Data to be handed off between sequences are packed into this struct and saved to the pool
-            */
             struct HandOffInfo {
                 struct Meta {
-                    TransformInfo transformInfo;
-                    FragShaderVarsPC fragShaderVars;
+                    uint32_t texId;
                 } meta;
 
                 struct Id {
-                    std::vector <uint32_t> inFlightFenceInfos;
-                    std::vector <uint32_t> imageAvailableSemaphoreInfos;
-                    std::vector <uint32_t> renderDoneSemaphoreInfos;
+                    uint32_t swapChainImageInfoBase;
+                    uint32_t depthImageInfo;
+                    uint32_t multiSampleImageInfo;
+                    uint32_t uniformBufferInfoBase;
+                    uint32_t inFlightFenceInfoBase;
+                    uint32_t imageAvailableSemaphoreInfoBase;
+                    uint32_t renderDoneSemaphoreInfoBase;
                 } id;
 
                 struct Resource {
+                    VkSampler textureSampler;
+                    VkDescriptorPool descriptorPool;
+                    std::vector <VkDescriptorSet> descriptorSets;
+
                     VkCommandPool commandPool;
                     std::vector <VkCommandBuffer> commandBuffers;
                 } resource;
@@ -61,7 +65,9 @@ namespace Renderer {
             }
 
         protected:
-            void readyHandOffInfo (uint32_t handOffInfoId) {
+            void readyHandOffInfo (uint32_t handOffInfoId,
+                                   const std::vector <uint32_t>& infoIds) {
+                
                 if (m_handOffInfoPool.find (handOffInfoId) != m_handOffInfoPool.end()) {
                     LOG_ERROR (m_VKHandOffLog) << "Hand off info id already exists "
                                                << "[" << handOffInfoId << "]"
@@ -70,6 +76,15 @@ namespace Renderer {
                 }
 
                 HandOffInfo info{};
+                info.meta.texId                         = 0;
+                info.id.swapChainImageInfoBase          = infoIds[0];
+                info.id.depthImageInfo                  = infoIds[1];
+                info.id.multiSampleImageInfo            = infoIds[2];
+                info.id.uniformBufferInfoBase           = infoIds[3];
+                info.id.inFlightFenceInfoBase           = infoIds[4];
+                info.id.imageAvailableSemaphoreInfoBase = infoIds[5];
+                info.id.renderDoneSemaphoreInfoBase     = infoIds[6];
+
                 m_handOffInfoPool[handOffInfoId] = info;
             }
 
@@ -92,89 +107,41 @@ namespace Renderer {
                                               << "[" << key << "]"
                                               << std::endl;
 
-                    LOG_INFO (m_VKHandOffLog) << "Model transform info" 
-                                              << std::endl;  
-                    LOG_INFO (m_VKHandOffLog) << "Translate "
-                                              << "[" << val.meta.transformInfo.model.translate.x << ", "
-                                                     << val.meta.transformInfo.model.translate.y << ", "
-                                                     << val.meta.transformInfo.model.translate.z
-                                              << "]"  
-                                              << std::endl;
-
-                    LOG_INFO (m_VKHandOffLog) << "Rotate axis "
-                                              << "[" << val.meta.transformInfo.model.rotateAxis.x << ", "
-                                                     << val.meta.transformInfo.model.rotateAxis.y << ", "
-                                                     << val.meta.transformInfo.model.rotateAxis.z
-                                              << "]"  
-                                              << std::endl;
-
-                    LOG_INFO (m_VKHandOffLog) << "Scale "
-                                              << "[" << val.meta.transformInfo.model.scale.x << ", "
-                                                     << val.meta.transformInfo.model.scale.y << ", "
-                                                     << val.meta.transformInfo.model.scale.z
-                                              << "]"  
-                                              << std::endl;                                                   
-
-                    LOG_INFO (m_VKHandOffLog) << "Rotate angle degrees "
-                                              << "[" << val.meta.transformInfo.model.rotateAngleDeg << "]" 
-                                              << std::endl; 
-
-                    LOG_INFO (m_VKHandOffLog) << "Camera transform info" 
-                                              << std::endl;   
-                    LOG_INFO (m_VKHandOffLog) << "Position "
-                                              << "[" << val.meta.transformInfo.camera.position.x << ", "
-                                                     << val.meta.transformInfo.camera.position.y << ", "
-                                                     << val.meta.transformInfo.camera.position.z
-                                              << "]"  
-                                              << std::endl;
-
-                    LOG_INFO (m_VKHandOffLog) << "Center "
-                                              << "[" << val.meta.transformInfo.camera.center.x << ", "
-                                                     << val.meta.transformInfo.camera.center.y << ", "
-                                                     << val.meta.transformInfo.camera.center.z
-                                              << "]"  
-                                              << std::endl;
-
-                    LOG_INFO (m_VKHandOffLog) << "Up vector "
-                                              << "[" << val.meta.transformInfo.camera.upVector.x << ", "
-                                                     << val.meta.transformInfo.camera.upVector.y << ", "
-                                                     << val.meta.transformInfo.camera.upVector.z
-                                              << "]"  
+                    LOG_INFO (m_VKHandOffLog) << "Cycle texture id "
+                                              << "[" << val.meta.texId << "]" 
                                               << std::endl;  
 
-                    LOG_INFO (m_VKHandOffLog) << "FOV degrees "
-                                              << "[" << val.meta.transformInfo.camera.fovDeg << "]" 
+                    LOG_INFO (m_VKHandOffLog) << "Swap chain image info id base " 
+                                              << "[" << val.id.swapChainImageInfoBase << "]"
                                               << std::endl;
 
-                    LOG_INFO (m_VKHandOffLog) << "Near plane "
-                                              << "[" << val.meta.transformInfo.camera.nearPlane << "]" 
+                    LOG_INFO (m_VKHandOffLog) << "Depth image info id " 
+                                              << "[" << val.id.depthImageInfo << "]"
                                               << std::endl;
 
-                    LOG_INFO (m_VKHandOffLog) << "Far plane "
-                                              << "[" << val.meta.transformInfo.camera.farPlane << "]" 
-                                              << std::endl;  
-
-                    LOG_INFO (m_VKHandOffLog) << "Fragment shader push constant texture id "
-                                              << "[" << val.meta.fragShaderVars.texId << "]" 
-                                              << std::endl;  
-
-                    LOG_INFO (m_VKHandOffLog) << "In flight fence info ids" 
-                                              << std::endl;
-                    for (auto const& infoId: val.id.inFlightFenceInfos) 
-                    LOG_INFO (m_VKHandOffLog) << "[" << infoId << "]"
+                    LOG_INFO (m_VKHandOffLog) << "Multi sample image info id " 
+                                              << "[" << val.id.multiSampleImageInfo << "]"
                                               << std::endl;
 
-                    LOG_INFO (m_VKHandOffLog) << "Image available semaphore info ids" 
-                                              << std::endl;
-                    for (auto const& infoId: val.id.imageAvailableSemaphoreInfos) 
-                    LOG_INFO (m_VKHandOffLog) << "[" << infoId << "]"
+                    LOG_INFO (m_VKHandOffLog) << "Uniform buffer info id base "
+                                              << "[" << val.id.uniformBufferInfoBase << "]"
                                               << std::endl;
 
-                    LOG_INFO (m_VKHandOffLog) << "Render done semaphore info ids" 
+                    LOG_INFO (m_VKHandOffLog) << "In flight fence info id base "
+                                              << "[" << val.id.inFlightFenceInfoBase << "]" 
                                               << std::endl;
-                    for (auto const& infoId: val.id.renderDoneSemaphoreInfos) 
-                    LOG_INFO (m_VKHandOffLog) << "[" << infoId << "]"
-                                              << std::endl;  
+
+                    LOG_INFO (m_VKHandOffLog) << "Image available semaphore info id base " 
+                                              << "[" << val.id.imageAvailableSemaphoreInfoBase << "]" 
+                                              << std::endl;
+
+                    LOG_INFO (m_VKHandOffLog) << "Render done semaphore info id base " 
+                                              << "[" << val.id.renderDoneSemaphoreInfoBase << "]" 
+                                              << std::endl;
+
+                    LOG_INFO (m_VKHandOffLog) << "Descriptor sets count " 
+                                              << "[" << val.resource.descriptorSets.size() << "]"
+                                              << std::endl;
 
                     LOG_INFO (m_VKHandOffLog) << "Command buffers count " 
                                               << "[" << val.resource.commandBuffers.size() << "]"

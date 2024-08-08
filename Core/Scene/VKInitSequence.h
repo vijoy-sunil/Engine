@@ -5,6 +5,7 @@
 #include "../Device/VKInstance.h"
 #include "../Device/VKSurface.h"
 #include "../Device/VKLogDevice.h"
+#include "../Model/VKModelMatrix.h"
 #include "../Image/VKSwapChainImage.h"
 #include "../Image/VKTextureImage.h"
 #include "../Image/VKDepthImage.h"
@@ -27,14 +28,12 @@
 #include "../Pipeline/VKDescriptorSetLayout.h"
 #include "../Pipeline/VKPushConstantRange.h"
 #include "../Pipeline/VKPipelineLayout.h"
-#include "../Model/VKTextureSampler.h"
-#include "../Model/VKDescriptor.h"
-#include "../Model/VKModelMatrix.h"
 #include "../Cmd/VKCmdBuffer.h"
 #include "../Cmd/VKCmd.h"
 #include "VKCameraMgr.h"
+#include "VKTextureSampler.h"
+#include "VKDescriptor.h"
 #include "VKSyncObject.h"
-#include "VKHandOff.h"
 
 using namespace Collections;
 
@@ -43,6 +42,7 @@ namespace Renderer {
                           protected virtual VKInstance,
                           protected virtual VKSurface,
                           protected virtual VKLogDevice,
+                          protected virtual VKModelMatrix,
                           protected virtual VKSwapChainImage,
                           protected VKTextureImage,
                           protected virtual VKDepthImage,
@@ -65,14 +65,12 @@ namespace Renderer {
                           protected VKDescriptorSetLayout,
                           protected VKPushConstantRange,
                           protected VKPipelineLayout,
-                          protected virtual VKTextureSampler,
-                          protected virtual VKDescriptor,
-                          protected virtual VKModelMatrix,
                           protected virtual VKCmdBuffer,
                           protected virtual VKCmd,
                           protected virtual VKCameraMgr,
-                          protected virtual VKSyncObject,
-                          protected virtual VKHandOff {
+                          protected virtual VKTextureSampler,
+                          protected virtual VKDescriptor,
+                          protected virtual VKSyncObject {
         private:
             /* Set upper bound lod for the texture sampler. It is recommended that to sample from the entire mipmap chain, 
              * set min lod to 0.0, and set max lod to a level of detail high enough that the computed level of detail will 
@@ -195,12 +193,20 @@ namespace Renderer {
                     modelInfo->path.diffuseTextureImages.push_back (path);
 #endif  // ENABLE_CYCLE_TEXTURES
                 /* |------------------------------------------------------------------------------------------------|
+                 * | CONFIG MODEL MATRIX                                                                            |
+                 * |------------------------------------------------------------------------------------------------|
+                */                                              
+                createModelMatrix (modelInfoId);
+                LOG_INFO (m_VKInitSequenceLog) << "[OK] Model matrix " 
+                                               << "[" << modelInfoId << "]"
+                                               << std::endl;
+                /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG SWAP CHAIN RESOURCES                                                                    |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                createSwapChainResources (modelInfo->id.swapChainImageInfoBase, resourceId);
+                createSwapChainResources (handOffInfo->id.swapChainImageInfoBase, resourceId);
                 LOG_INFO (m_VKInitSequenceLog) << "[OK] Swap chain resources " 
-                                               << "[" << modelInfo->id.swapChainImageInfoBase << "]"
+                                               << "[" << handOffInfo->id.swapChainImageInfoBase << "]"
                                                << " "
                                                << "[" << resourceId << "]"
                                                << std::endl;   
@@ -223,9 +229,9 @@ namespace Renderer {
                  * | CONFIG DEPTH RESOURCES                                                                         |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                createDepthResources (modelInfo->id.depthImageInfo, resourceId);
+                createDepthResources (handOffInfo->id.depthImageInfo, resourceId);
                 LOG_INFO (m_VKInitSequenceLog) << "[OK] Depth resources " 
-                                               << "[" << modelInfo->id.depthImageInfo << "]"
+                                               << "[" << handOffInfo->id.depthImageInfo << "]"
                                                << " "
                                                << "[" << resourceId << "]"
                                                << std::endl;  
@@ -233,9 +239,9 @@ namespace Renderer {
                  * | CONFIG MULTI SAMPLE RESOURCES                                                                  |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                createMultiSampleResources (modelInfo->id.multiSampleImageInfo, resourceId);
+                createMultiSampleResources (handOffInfo->id.multiSampleImageInfo, resourceId);
                 LOG_INFO (m_VKInitSequenceLog) << "[OK] Multi sample resources " 
-                                               << "[" << modelInfo->id.multiSampleImageInfo << "]"
+                                               << "[" << handOffInfo->id.multiSampleImageInfo << "]"
                                                << " "
                                                << "[" << resourceId << "]"
                                                << std::endl;    
@@ -275,10 +281,10 @@ namespace Renderer {
                  * to a uniform buffer that is not currently being read by the GPU
                 */
                 for (uint32_t i = 0; i < g_maxFramesInFlight; i++) { 
-                    uint32_t uniformBufferInfoId = modelInfo->id.uniformBufferInfoBase + i;    
+                    uint32_t uniformBufferInfoId = handOffInfo->id.uniformBufferInfoBase + i;    
                     createUniformBuffer (uniformBufferInfoId,
                                          resourceId,
-                                         sizeof (MVPMatrixUBO));
+                                         sizeof (PerModelDataUBO));
 
                     LOG_INFO (m_VKInitSequenceLog) << "[OK] Uniform buffer " 
                                                    << "[" << uniformBufferInfoId << "]"
@@ -292,9 +298,9 @@ namespace Renderer {
                 */
                 readyRenderPassInfo (renderPassInfoId);
 
-                createMultiSampleAttachment  (renderPassInfoId, modelInfo->id.multiSampleImageInfo);
-                createDepthStencilAttachment (renderPassInfoId, modelInfo->id.depthImageInfo);
-                createResolveAttachment      (renderPassInfoId, modelInfo->id.swapChainImageInfoBase);
+                createMultiSampleAttachment  (renderPassInfoId, handOffInfo->id.multiSampleImageInfo);
+                createDepthStencilAttachment (renderPassInfoId, handOffInfo->id.depthImageInfo);
+                createResolveAttachment      (renderPassInfoId, handOffInfo->id.swapChainImageInfoBase);
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG SUB PASS                                                                                |
                  * |------------------------------------------------------------------------------------------------|
@@ -341,13 +347,13 @@ namespace Renderer {
                  * we do not need to change the depth image between frames (in flight), we can just keep clearing and 
                  * reusing the same depth image for every frame (see subpass dependency)
                 */
-                auto multiSampleImageInfo = getImageInfo (modelInfo->id.multiSampleImageInfo, MULTISAMPLE_IMAGE);
-                auto depthImageInfo       = getImageInfo (modelInfo->id.depthImageInfo,       DEPTH_IMAGE);
+                auto multiSampleImageInfo = getImageInfo (handOffInfo->id.multiSampleImageInfo, MULTISAMPLE_IMAGE);
+                auto depthImageInfo       = getImageInfo (handOffInfo->id.depthImageInfo,       DEPTH_IMAGE);
                 /* Create a framebuffer for all of the images in the swap chain and use the one that corresponds to the 
                  * retrieved image at drawing time
                 */
                 for (uint32_t i = 0; i < deviceInfo->unique[resourceId].swapChain.size; i++) {
-                    uint32_t swapChainImageInfoId = modelInfo->id.swapChainImageInfoBase + i;
+                    uint32_t swapChainImageInfoId = handOffInfo->id.swapChainImageInfoBase + i;
                     auto swapChainImageInfo       = getImageInfo (swapChainImageInfoId, SWAPCHAIN_IMAGE);
 
                     auto attachments = std::vector {
@@ -401,11 +407,11 @@ namespace Renderer {
                 */
                 auto vertexShaderModule   = createShaderStage (pipelineInfoId, 
                                                                VK_SHADER_STAGE_VERTEX_BIT, 
-                                                               modelInfo->path.vertexShaderBinary, "main");
+                                                               g_pathSettings.vertexShaderBinary, "main");
 
                 auto fragmentShaderModule = createShaderStage (pipelineInfoId, 
                                                                VK_SHADER_STAGE_FRAGMENT_BIT, 
-                                                               modelInfo->path.fragmentShaderBinary, "main");
+                                                               g_pathSettings.fragmentShaderBinary, "main");
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG PIPELINE STATE - VIEW PORT                                                              |
                  * |------------------------------------------------------------------------------------------------|
@@ -425,7 +431,7 @@ namespace Renderer {
                  * |------------------------------------------------------------------------------------------------|
                 */
                 createMultiSampleState (pipelineInfoId,
-                                        modelInfo->id.multiSampleImageInfo,
+                                        handOffInfo->id.multiSampleImageInfo,
                                         VK_TRUE, 0.2f);
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG PIPELINE STATE - DEPTH STENCIL                                                          |
@@ -523,9 +529,9 @@ namespace Renderer {
                  * |------------------------------------------------------------------------------------------------|
                 */
                 createPushConstantRange (pipelineInfoId, 
-                                         VK_SHADER_STAGE_FRAGMENT_BIT,
+                                         VK_SHADER_STAGE_VERTEX_BIT,
                                          0, 
-                                         sizeof (FragShaderVarsPC));
+                                         sizeof (SceneDataVertPC));
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG PIPELINE LAYOUT                                                                         |
                  * |------------------------------------------------------------------------------------------------|
@@ -557,17 +563,25 @@ namespace Renderer {
                 LOG_INFO (m_VKInitSequenceLog) << "[DELETE] Shader modules" 
                                                << std::endl;  
                 /* |------------------------------------------------------------------------------------------------|
+                 * | CONFIG CAMERA MATRIX                                                                           |
+                 * |------------------------------------------------------------------------------------------------|
+                */
+                createCameraMatrix (cameraInfoId, resourceId);
+                LOG_INFO (m_VKInitSequenceLog) << "[OK] Camera matrix " 
+                                               << "[" << cameraInfoId << "]"
+                                               << std::endl;
+                /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG TEXTURE SAMPLER                                                                         |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                createTextureSampler (modelInfoId, 
+                createTextureSampler (handOffInfoId, 
                                       VK_FILTER_LINEAR,
                                       VK_SAMPLER_ADDRESS_MODE_REPEAT,
                                       VK_TRUE,
                                       VK_SAMPLER_MIPMAP_MODE_LINEAR,
                                       0.0, m_maxLod);
                 LOG_INFO (m_VKInitSequenceLog) << "[OK] Texture sampler " 
-                                               << "[" << modelInfoId << "]"
+                                               << "[" << handOffInfoId << "]"
                                                << std::endl;  
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG DESCRIPTOR POOL                                                                         |
@@ -579,19 +593,19 @@ namespace Renderer {
                     getPoolSize (VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, static_cast <uint32_t> 
                                 (modelInfo->path.diffuseTextureImages.size()) * g_maxFramesInFlight)
                 };
-                createDescriptorPool (modelInfoId, 
+                createDescriptorPool (handOffInfoId, 
                                       poolSizes, 
                                       g_maxFramesInFlight, 
                                       0);
                 LOG_INFO (m_VKInitSequenceLog) << "[OK] Descriptor pool " 
-                                               << "[" << modelInfoId << "]"
+                                               << "[" << handOffInfoId << "]"
                                                << std::endl;  
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG DESCRIPTOR SETS                                                                         |
                  * |------------------------------------------------------------------------------------------------|
                 */
                 uint32_t descriptorSetLayoutId = 0;
-                createDescriptorSets (modelInfoId, 
+                createDescriptorSets (handOffInfoId, 
                                       pipelineInfoId, 
                                       descriptorSetLayoutId, 
                                       g_maxFramesInFlight);
@@ -600,7 +614,7 @@ namespace Renderer {
                  * |------------------------------------------------------------------------------------------------|
                 */
                 for (uint32_t i = 0; i < g_maxFramesInFlight; i++) {
-                    uint32_t uniformBufferInfoId = modelInfo->id.uniformBufferInfoBase + i; 
+                    uint32_t uniformBufferInfoId = handOffInfo->id.uniformBufferInfoBase + i; 
                     auto bufferInfo              = getBufferInfo (uniformBufferInfoId, UNIFORM_BUFFER);
                     auto descriptorBufferInfos   = std::vector {
                         getDescriptorBufferInfo (bufferInfo->resource.buffer,
@@ -615,7 +629,7 @@ namespace Renderer {
                         uint32_t textureImageInfoId = modelInfo->id.diffuseTextureImageInfoBase + i;
                         auto imageInfo              = getImageInfo (textureImageInfoId, TEXTURE_IMAGE);
 
-                        descriptorImageInfos[i]     = getDescriptorImageInfo (modelInfo->resource.textureSampler,
+                        descriptorImageInfos[i]     = getDescriptorImageInfo (handOffInfo->resource.textureSampler,
                                                                               imageInfo->resource.imageView,
                                                                               VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
                     }
@@ -625,12 +639,12 @@ namespace Renderer {
                     */                    
                     auto writeDescriptorSets = std::vector {
                         getWriteBufferDescriptorSetInfo (VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-                                                         modelInfo->resource.descriptorSets[i],
+                                                         handOffInfo->resource.descriptorSets[i],
                                                          descriptorBufferInfos,
                                                          0, 0, 1),
 
                         getWriteImageDescriptorSetInfo  (VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-                                                         modelInfo->resource.descriptorSets[i],
+                                                         handOffInfo->resource.descriptorSets[i],
                                                          descriptorImageInfos,
                                                          1, 0, textureCount)
                     };
@@ -638,39 +652,11 @@ namespace Renderer {
                     updateDescriptorSets (writeDescriptorSets);
                 }
                 LOG_INFO (m_VKInitSequenceLog) << "[OK] Descriptor sets " 
-                                               << "[" << modelInfoId << "]"
+                                               << "[" << handOffInfoId << "]"
                                                << " "
                                                << "[" << pipelineInfoId << "]"
                                                << " "
                                                << "[" << descriptorSetLayoutId << "]"
-                                               << std::endl;
-                /* |------------------------------------------------------------------------------------------------|
-                 * | CONFIG MODEL MATRIX                                                                            |
-                 * |------------------------------------------------------------------------------------------------|
-                */                                              
-                createModelMatrix (modelInfoId, 
-                                   handOffInfo->meta.transformInfo.model.translate,
-                                   handOffInfo->meta.transformInfo.model.rotateAxis, 
-                                   handOffInfo->meta.transformInfo.model.rotateAngleDeg,
-                                   handOffInfo->meta.transformInfo.model.scale);
-                LOG_INFO (m_VKInitSequenceLog) << "[OK] Model matrix " 
-                                               << "[" << modelInfoId << "]"
-                                               << std::endl;
-                /* |------------------------------------------------------------------------------------------------|
-                 * | CONFIG CAMERA MATRIX                                                                           |
-                 * |------------------------------------------------------------------------------------------------|
-                */
-                readyCameraInfo    (cameraInfoId);
-                createCameraMatrix (cameraInfoId, 
-                                    resourceId,
-                                    handOffInfo->meta.transformInfo.camera.position,
-                                    handOffInfo->meta.transformInfo.camera.center,
-                                    handOffInfo->meta.transformInfo.camera.upVector,
-                                    handOffInfo->meta.transformInfo.camera.fovDeg, 
-                                    handOffInfo->meta.transformInfo.camera.nearPlane, 
-                                    handOffInfo->meta.transformInfo.camera.farPlane);
-                LOG_INFO (m_VKInitSequenceLog) << "[OK] Camera matrix " 
-                                               << "[" << cameraInfoId << "]"
                                                << std::endl;
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG TRANSFER OPS - COMMAND POOL AND BUFFER                                                  |
@@ -921,6 +907,9 @@ namespace Renderer {
                                        g_maxFramesInFlight, 
                                        VK_COMMAND_BUFFER_LEVEL_PRIMARY)
                 };
+
+                handOffInfo->resource.commandPool    = drawOpsCommandPool;
+                handOffInfo->resource.commandBuffers = drawOpsCommandBuffers;
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG DRAW OPS - FENCE AND SEMAPHORES                                                         |
                  * |------------------------------------------------------------------------------------------------|
@@ -937,38 +926,24 @@ namespace Renderer {
                      * on something which will never happen. To combat this, create the fence in the signaled state, so 
                      * that the first call to vkWaitForFences() returns immediately since the fence is already signaled
                     */
-                    uint32_t drawOpsInFlightFenceInfoId = i;
+                    uint32_t drawOpsInFlightFenceInfoId = handOffInfo->id.inFlightFenceInfoBase + i;
                     createFence (drawOpsInFlightFenceInfoId, FEN_IN_FLIGHT, VK_FENCE_CREATE_SIGNALED_BIT);
                     LOG_INFO (m_VKInitSequenceLog) << "[OK] Draw ops fence " 
                                                    << "[" << drawOpsInFlightFenceInfoId << "]"
                                                    << std::endl;
 
-                    uint32_t drawOpsImageAvailableSemaphoreInfoId = i;
+                    uint32_t drawOpsImageAvailableSemaphoreInfoId = handOffInfo->id.imageAvailableSemaphoreInfoBase + i;
                     createSemaphore (drawOpsImageAvailableSemaphoreInfoId, SEM_IMAGE_AVAILABLE);
                     LOG_INFO (m_VKInitSequenceLog) << "[OK] Draw ops semaphore " 
                                                    << "[" << drawOpsImageAvailableSemaphoreInfoId << "]"
                                                    << std::endl;
 
-                    uint32_t drawOpsRenderDoneSemaphoreInfoId = i;
+                    uint32_t drawOpsRenderDoneSemaphoreInfoId = handOffInfo->id.renderDoneSemaphoreInfoBase + i;
                     createSemaphore (drawOpsRenderDoneSemaphoreInfoId, SEM_RENDER_DONE);
                     LOG_INFO (m_VKInitSequenceLog) << "[OK] Draw ops semaphore " 
                                                    << "[" << drawOpsRenderDoneSemaphoreInfoId << "]"
                                                    << std::endl;
                 }
-                /* |------------------------------------------------------------------------------------------------|
-                 * | CONFIG DRAW OPS - HAND OFF                                                                     |
-                 * |------------------------------------------------------------------------------------------------|
-                */
-                for (uint32_t i = 0; i < g_maxFramesInFlight; i++) {
-                    uint32_t syncObjectId = i;
-
-                    handOffInfo->id.inFlightFenceInfos.push_back           (syncObjectId);
-                    handOffInfo->id.imageAvailableSemaphoreInfos.push_back (syncObjectId);
-                    handOffInfo->id.renderDoneSemaphoreInfos.push_back     (syncObjectId);
-                }
-                
-                handOffInfo->resource.commandPool    = drawOpsCommandPool;
-                handOffInfo->resource.commandBuffers = drawOpsCommandBuffers;
                 /* |------------------------------------------------------------------------------------------------|
                  * | DUMP METHODS                                                                                   |
                  * |------------------------------------------------------------------------------------------------|

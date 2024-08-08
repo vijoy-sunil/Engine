@@ -116,15 +116,6 @@
     |
     |{Model/VKModelMgr}
     |
-    |                       |{VKDeviceMgr}
-    |                       |
-    |                       |
-    |---------------------->|VKTextureSampler
-    |
-    |                       |{VKPipelineMgr}
-    |                       |
-    |                       |
-    |---------------------->|VKDescriptor
     |
     |---------------------->|VKModelMatrix
 
@@ -158,8 +149,6 @@
     |Scene/VKSyncObject
 
 
-    |<----------------------|{VKModelMgr}
-    |
     |<----------------------|{VKSwapChainImage}
     |
     |<----------------------|{VKDepthImage}
@@ -168,20 +157,28 @@
     |
     |<----------------------|{VKFrameBuffer}
     |
+    |<----------------------|{VKHandOff}
+    |
     |
     |Scene/VKResizing
 
 
     |<......................|VKUniform
     |
-    |<......................|VKTransform
-    |
     |<......................|VKConfig
     |
     |<......................|Log
     |
     |
-    |Scene/VKHandOFF
+    |Scene/VKHandOFF        |{VKDeviceMgr}
+    |                       |
+    |                       |
+    |---------------------->|VKTextureSampler
+    |
+    |                       |{VKPipelineMgr}
+    |                       |
+    |                       |
+    |---------------------->|VKDescriptor
 
 
     |<----------------------|{VKWindow}
@@ -191,6 +188,8 @@
     |<----------------------|{VKSurface}
     |
     |<----------------------|{VKLogDevice}
+    |
+    |<----------------------|{VKModelMatrix}
     |
     |<----------------------|{VKSwapChainImage}
     |
@@ -236,21 +235,17 @@
     |
     |<----------------------|VKPipelineLayout
     |
-    |<----------------------|{VKTextureSampler}
-    |
-    |<----------------------|{VKDescriptor}
-    |
-    |<----------------------|{VKModelMatrix}
-    |
     |<----------------------|{VKCmdBuffer}
     |
     |<----------------------|{VKCmd}
     |
     |<----------------------|{VKCameraMgr}
     |
-    |<----------------------|{VKSyncObject}
+    |<----------------------|{VKTextureSampler}
     |
-    |<----------------------|{VKHandOff}
+    |<----------------------|{VKDescriptor}
+    |
+    |<----------------------|{VKSyncObject}
     |
     |
     |Scene/VKInitSequence
@@ -258,9 +253,9 @@
 
     |<----------------------|{VKWindow}
     |
-    |<----------------------|{VKUniformBuffer}
-    |
     |<----------------------|{VKModelMatrix}
+    |
+    |<----------------------|{VKUniformBuffer}
     |
     |<----------------------|{VKCmdBuffer}
     |
@@ -271,8 +266,6 @@
     |<----------------------|{VKSyncObject}
     |
     |<----------------------|VKResizing
-    |
-    |<----------------------|{VKHandOff}
     |
     |
     |Scene/VKDrawSequence
@@ -286,23 +279,23 @@
     |
     |<----------------------|{VKLogDevice}
     |
+    |<----------------------|{VKModelMgr}
+    |
     |<----------------------|{VKImageMgr}
     |
     |<----------------------|{VKBufferMgr}
     |
     |<----------------------|{VKFrameBuffer}
     |
-    |<----------------------|{VKTextureSampler}
-    |
-    |<----------------------|{VKDescriptor}
-    |
     |<----------------------|{VKCmdBuffer}
     |
     |<----------------------|{VKCameraMgr}
     |
-    |<----------------------|{VKSyncObject}
+    |<----------------------|{VKTextureSampler}
     |
-    |<----------------------|{VKHandOff}
+    |<----------------------|{VKDescriptor}
+    |
+    |<----------------------|{VKSyncObject}
     |
     |
     |Scene/VKDeleteSequence

@@ -15,21 +15,6 @@ namespace Renderer {
     */
     class VKSyncObject: protected virtual VKDeviceMgr {
         private:
-            struct SemaphoreInfo {
-                struct Meta {
-                    uint32_t id;
-                } meta;
-                
-                struct Resource {
-                    VkSemaphore semaphore;
-                } resource;
-
-                bool operator == (const SemaphoreInfo& other) const {
-                    return meta.id == other.meta.id;
-                }
-            };
-            std::map <e_syncType, std::vector <SemaphoreInfo>> m_semaphoreInfoPool;
-
             struct FenceInfo {
                 struct Meta {
                     uint32_t id;
@@ -45,25 +30,23 @@ namespace Renderer {
             };
             std::map <e_syncType, std::vector <FenceInfo>> m_fenceInfoPool;
 
+            struct SemaphoreInfo {
+                struct Meta {
+                    uint32_t id;
+                } meta;
+                
+                struct Resource {
+                    VkSemaphore semaphore;
+                } resource;
+
+                bool operator == (const SemaphoreInfo& other) const {
+                    return meta.id == other.meta.id;
+                }
+            };
+            std::map <e_syncType, std::vector <SemaphoreInfo>> m_semaphoreInfoPool;
+
             static Log::Record* m_VKSyncObjectLog;
             const uint32_t m_instanceId = g_collectionsId++;
-
-            void deleteSemaphoreInfo (SemaphoreInfo* semaphoreInfo, e_syncType type) {
-                if (m_semaphoreInfoPool.find (type) != m_semaphoreInfoPool.end()) {
-                    auto& infos = m_semaphoreInfoPool[type];
-
-                    infos.erase (std::remove (infos.begin(), infos.end(), *semaphoreInfo), infos.end());
-                    m_semaphoreInfoPool[type] = infos;
-                    return;
-                }
-
-                LOG_ERROR (m_VKSyncObjectLog) << "Failed to delete semaphore info "
-                                              << "[" << semaphoreInfo->meta.id << "]"
-                                              << " "
-                                              << "[" << Utils::getSyncTypeString (type) << "]"            
-                                              << std::endl;
-                throw std::runtime_error ("Failed to delete semaphore info");              
-            }
 
             void deleteFenceInfo (FenceInfo* fenceInfo, e_syncType type) {
                 if (m_fenceInfoPool.find (type) != m_fenceInfoPool.end()) {
@@ -82,6 +65,23 @@ namespace Renderer {
                 throw std::runtime_error ("Failed to delete fence info");              
             }
 
+            void deleteSemaphoreInfo (SemaphoreInfo* semaphoreInfo, e_syncType type) {
+                if (m_semaphoreInfoPool.find (type) != m_semaphoreInfoPool.end()) {
+                    auto& infos = m_semaphoreInfoPool[type];
+
+                    infos.erase (std::remove (infos.begin(), infos.end(), *semaphoreInfo), infos.end());
+                    m_semaphoreInfoPool[type] = infos;
+                    return;
+                }
+
+                LOG_ERROR (m_VKSyncObjectLog) << "Failed to delete semaphore info "
+                                              << "[" << semaphoreInfo->meta.id << "]"
+                                              << " "
+                                              << "[" << Utils::getSyncTypeString (type) << "]"            
+                                              << std::endl;
+                throw std::runtime_error ("Failed to delete semaphore info");              
+            }
+
         public:
             VKSyncObject (void) {
                 m_VKSyncObjectLog = LOG_INIT (m_instanceId, g_pathSettings.logSaveDir);
@@ -94,59 +94,6 @@ namespace Renderer {
             }
 
         protected:
-            void createSemaphore (uint32_t semaphoreInfoId, e_syncType type) {
-                auto deviceInfo = getDeviceInfo();
-                for (auto const& info: m_semaphoreInfoPool[type]) {
-                    if (info.meta.id == semaphoreInfoId) {
-                        LOG_ERROR (m_VKSyncObjectLog) << "Semaphore info id already exists " 
-                                                      << "[" << semaphoreInfoId << "]"
-                                                      << " "
-                                                      << "[" << Utils::getSyncTypeString (type) << "]"
-                                                      << std::endl;
-                        throw std::runtime_error ("Semaphore info id already exists");
-                    }
-                }
-                /* A semaphore is used to add order between queue operations. Queue operations refer to the work we 
-                 * submit to a queue, either in a command buffer or from within a function. Semaphores are used both to 
-                 * order work inside the same queue and between different queues
-                 * 
-                 * The way we use a semaphore to order queue operations is by providing the same semaphore as a 'signal' 
-                 * semaphore in one queue operation and as a 'wait' semaphore in another queue operation. For example, 
-                 * lets say we have semaphore S and queue operations A and B that we want to execute in order. What we 
-                 * tell Vulkan is that operation A will 'signal' semaphore S when it finishes executing, and operation B 
-                 * will 'wait' on semaphore S before it begins executing. When operation A finishes, semaphore S will be 
-                 * signaled, while operation B wont start until S is signaled. After operation B begins executing, 
-                 * semaphore S is automatically reset back to being unsignaled, allowing it to be used again
-                 * 
-                 * Note that, the waiting only happens on the GPU. The CPU continues running without blocking
-                */
-                VkSemaphoreCreateInfo createInfo;
-                createInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-                createInfo.pNext = VK_NULL_HANDLE;
-                createInfo.flags = 0;
-
-                VkSemaphore semaphore;
-                VkResult result = vkCreateSemaphore (deviceInfo->shared.logDevice, 
-                                                     &createInfo, 
-                                                     VK_NULL_HANDLE, 
-                                                     &semaphore);
-                if (result != VK_SUCCESS) {
-                    LOG_ERROR (m_VKSyncObjectLog) << "Failed to create semaphore " 
-                                                  << "[" << semaphoreInfoId << "]"
-                                                  << " "
-                                                  << "[" << Utils::getSyncTypeString (type) << "]"
-                                                  << " "
-                                                  << "[" << string_VkResult (result) << "]"
-                                                  << std::endl;
-                    throw std::runtime_error ("Failed to create semaphore");
-                }
-
-                SemaphoreInfo info;
-                info.meta.id            = semaphoreInfoId;
-                info.resource.semaphore = semaphore;
-                m_semaphoreInfoPool[type].push_back (info);
-            }
-
             void createFence (uint32_t fenceInfoId, 
                               e_syncType type,
                               VkFenceCreateFlags flags) {
@@ -201,20 +148,57 @@ namespace Renderer {
                 m_fenceInfoPool[type].push_back (info);
             }
 
-            SemaphoreInfo* getSemaphoreInfo (uint32_t semaphoreInfoId, e_syncType type) {
-                if (m_semaphoreInfoPool.find (type) != m_semaphoreInfoPool.end()) {
-                    auto& infos = m_semaphoreInfoPool[type];
-                    for (auto& info: infos) {
-                        if (info.meta.id == semaphoreInfoId) return &info;
+            void createSemaphore (uint32_t semaphoreInfoId, e_syncType type) {
+                auto deviceInfo = getDeviceInfo();
+                for (auto const& info: m_semaphoreInfoPool[type]) {
+                    if (info.meta.id == semaphoreInfoId) {
+                        LOG_ERROR (m_VKSyncObjectLog) << "Semaphore info id already exists " 
+                                                      << "[" << semaphoreInfoId << "]"
+                                                      << " "
+                                                      << "[" << Utils::getSyncTypeString (type) << "]"
+                                                      << std::endl;
+                        throw std::runtime_error ("Semaphore info id already exists");
                     }
                 }
+                /* A semaphore is used to add order between queue operations. Queue operations refer to the work we 
+                 * submit to a queue, either in a command buffer or from within a function. Semaphores are used both to 
+                 * order work inside the same queue and between different queues
+                 * 
+                 * The way we use a semaphore to order queue operations is by providing the same semaphore as a 'signal' 
+                 * semaphore in one queue operation and as a 'wait' semaphore in another queue operation. For example, 
+                 * lets say we have semaphore S and queue operations A and B that we want to execute in order. What we 
+                 * tell Vulkan is that operation A will 'signal' semaphore S when it finishes executing, and operation B 
+                 * will 'wait' on semaphore S before it begins executing. When operation A finishes, semaphore S will be 
+                 * signaled, while operation B wont start until S is signaled. After operation B begins executing, 
+                 * semaphore S is automatically reset back to being unsignaled, allowing it to be used again
+                 * 
+                 * Note that, the waiting only happens on the GPU. The CPU continues running without blocking
+                */
+                VkSemaphoreCreateInfo createInfo;
+                createInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+                createInfo.pNext = VK_NULL_HANDLE;
+                createInfo.flags = 0;
 
-                LOG_ERROR (m_VKSyncObjectLog) << "Failed to find semaphore info "
-                                              << "[" << semaphoreInfoId << "]"
-                                              << " "
-                                              << "[" << Utils::getSyncTypeString (type) << "]"           
-                                              << std::endl;
-                throw std::runtime_error ("Failed to find semaphore info");                
+                VkSemaphore semaphore;
+                VkResult result = vkCreateSemaphore (deviceInfo->shared.logDevice, 
+                                                     &createInfo, 
+                                                     VK_NULL_HANDLE, 
+                                                     &semaphore);
+                if (result != VK_SUCCESS) {
+                    LOG_ERROR (m_VKSyncObjectLog) << "Failed to create semaphore " 
+                                                  << "[" << semaphoreInfoId << "]"
+                                                  << " "
+                                                  << "[" << Utils::getSyncTypeString (type) << "]"
+                                                  << " "
+                                                  << "[" << string_VkResult (result) << "]"
+                                                  << std::endl;
+                    throw std::runtime_error ("Failed to create semaphore");
+                }
+
+                SemaphoreInfo info;
+                info.meta.id            = semaphoreInfoId;
+                info.resource.semaphore = semaphore;
+                m_semaphoreInfoPool[type].push_back (info);
             }
 
             FenceInfo* getFenceInfo (uint32_t fenceInfoId, e_syncType type) {
@@ -233,21 +217,20 @@ namespace Renderer {
                 throw std::runtime_error ("Failed to find fence info"); 
             }
 
-            void dumpSemaphoreInfoPool (void) {
-                LOG_INFO (m_VKSyncObjectLog) << "Dumping semaphore info pool"
-                                             << std::endl;
+            SemaphoreInfo* getSemaphoreInfo (uint32_t semaphoreInfoId, e_syncType type) {
+                if (m_semaphoreInfoPool.find (type) != m_semaphoreInfoPool.end()) {
+                    auto& infos = m_semaphoreInfoPool[type];
+                    for (auto& info: infos) {
+                        if (info.meta.id == semaphoreInfoId) return &info;
+                    }
+                }
 
-                for (auto const& [key, val]: m_semaphoreInfoPool) {
-                    LOG_INFO (m_VKSyncObjectLog) << "Type "
-                                                 << "[" << Utils::getSyncTypeString (key) << "]"
-                                                 << std::endl;
-                    
-                    for (auto const& info: val) {
-                        LOG_INFO (m_VKSyncObjectLog) << "Id "
-                                                     << "[" << info.meta.id << "]"
-                                                     << std::endl; 
-                    }                                                                                                                                                                                                                                                                                    
-                }    
+                LOG_ERROR (m_VKSyncObjectLog) << "Failed to find semaphore info "
+                                              << "[" << semaphoreInfoId << "]"
+                                              << " "
+                                              << "[" << Utils::getSyncTypeString (type) << "]"           
+                                              << std::endl;
+                throw std::runtime_error ("Failed to find semaphore info");                
             }
 
             void dumpFenceInfoPool (void) {
@@ -266,17 +249,24 @@ namespace Renderer {
                     }                                                                                                                                                                                                                                                                                    
                 }  
             }
-            
-            void cleanUpSemaphore (uint32_t semaphoreInfoId, e_syncType type) {
-                auto semaphoreInfo = getSemaphoreInfo (semaphoreInfoId, type);
-                auto deviceInfo    = getDeviceInfo();
 
-                vkDestroySemaphore  (deviceInfo->shared.logDevice, 
-                                     semaphoreInfo->resource.semaphore, 
-                                     VK_NULL_HANDLE);
-                deleteSemaphoreInfo (semaphoreInfo, type);
+            void dumpSemaphoreInfoPool (void) {
+                LOG_INFO (m_VKSyncObjectLog) << "Dumping semaphore info pool"
+                                             << std::endl;
+
+                for (auto const& [key, val]: m_semaphoreInfoPool) {
+                    LOG_INFO (m_VKSyncObjectLog) << "Type "
+                                                 << "[" << Utils::getSyncTypeString (key) << "]"
+                                                 << std::endl;
+                    
+                    for (auto const& info: val) {
+                        LOG_INFO (m_VKSyncObjectLog) << "Id "
+                                                     << "[" << info.meta.id << "]"
+                                                     << std::endl; 
+                    }                                                                                                                                                                                                                                                                                    
+                }    
             }
-
+            
             void cleanUpFence (uint32_t fenceInfoId, e_syncType type) {
                 auto fenceInfo  = getFenceInfo (fenceInfoId, type);
                 auto deviceInfo = getDeviceInfo();
@@ -285,6 +275,16 @@ namespace Renderer {
                                  fenceInfo->resource.fence, 
                                  VK_NULL_HANDLE);
                 deleteFenceInfo (fenceInfo, type); 
+            }
+
+            void cleanUpSemaphore (uint32_t semaphoreInfoId, e_syncType type) {
+                auto semaphoreInfo = getSemaphoreInfo (semaphoreInfoId, type);
+                auto deviceInfo    = getDeviceInfo();
+
+                vkDestroySemaphore  (deviceInfo->shared.logDevice, 
+                                     semaphoreInfo->resource.semaphore, 
+                                     VK_NULL_HANDLE);
+                deleteSemaphoreInfo (semaphoreInfo, type);
             }
     };
 

@@ -1,13 +1,13 @@
 #ifndef VK_TEXTURE_SAMPLER_H
 #define VK_TEXTURE_SAMPLER_H
 
-#include "VKModelMgr.h"
+#include "VKHandOff.h"
 #include "../Device/VKDeviceMgr.h"
 
 using namespace Collections;
 
 namespace Renderer {
-    class VKTextureSampler: protected virtual VKModelMgr,
+    class VKTextureSampler: protected virtual VKHandOff,
                             protected virtual VKDeviceMgr {
         private:
             static Log::Record* m_VKTextureSamplerLog;
@@ -45,7 +45,7 @@ namespace Renderer {
              * Aside from these filters, a sampler can also take care of transformations. It determines what happens when 
              * you try to read texels outside the image through its addressing mode
             */
-            void createTextureSampler (uint32_t modelInfoId, 
+            void createTextureSampler (uint32_t handOffInfoId, 
                                        VkFilter filter,
                                        VkSamplerAddressMode addressMode,
                                        VkBool32 anisotropyEnable,
@@ -53,8 +53,8 @@ namespace Renderer {
                                        float minLod, 
                                        float maxLod) {
 
-                auto modelInfo  = getModelInfo (modelInfoId); 
-                auto deviceInfo = getDeviceInfo();
+                auto handOffInfo = getHandOffInfo (handOffInfoId); 
+                auto deviceInfo  = getDeviceInfo();
                 /* Samplers are configured through a VkSamplerCreateInfo structure, which specifies all filters and 
                  * transformations that it should apply
                 */
@@ -174,21 +174,21 @@ namespace Renderer {
                                                    &textureSampler);
                 if (result != VK_SUCCESS) {
                     LOG_ERROR (m_VKTextureSamplerLog) << "Failed to create texture sampler "
-                                                      << "[" << modelInfoId << "]"
+                                                      << "[" << handOffInfoId << "]"
                                                       << " "
                                                       << "[" << string_VkResult (result) << "]"
                                                       << std::endl;
                     throw std::runtime_error ("Failed to create texture sampler");
                 } 
-                modelInfo->resource.textureSampler = textureSampler;
+                handOffInfo->resource.textureSampler = textureSampler;
             }
 
-            void cleanUp (uint32_t modelInfoId) {
-                auto modelInfo  = getModelInfo (modelInfoId);
-                auto deviceInfo = getDeviceInfo();
+            void cleanUp (uint32_t handOffInfoId) {
+                auto handOffInfo = getHandOffInfo (handOffInfoId);
+                auto deviceInfo  = getDeviceInfo();
 
                 vkDestroySampler (deviceInfo->shared.logDevice, 
-                                  modelInfo->resource.textureSampler, 
+                                  handOffInfo->resource.textureSampler, 
                                   VK_NULL_HANDLE);
             }
     };

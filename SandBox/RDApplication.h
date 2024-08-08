@@ -24,6 +24,9 @@ namespace Renderer {
             uint32_t m_renderPassInfoId;
             uint32_t m_pipelineInfoId;
             uint32_t m_cameraInfoId;
+            uint32_t m_inFlightFenceInfoBase;
+            uint32_t m_imageAvailableSemaphoreInfoBase;
+            uint32_t m_renderDoneSemaphoreInfoBase;
             uint32_t m_resourceId;
             uint32_t m_handOffInfoId;
 
@@ -35,27 +38,51 @@ namespace Renderer {
                 m_deviceResourcesCount            = 1;
                 m_modelInfoId                     = 0;
                 /* Info id overview
-                 * |--------------------|-----------------------|
-                 * | MODEL INFO ID      |   0                   |
-                 * |--------------------|-----------------------|
-                 * | SWAPCHAIN_IMAGE    |   0, 1, 2             |
-                 * |--------------------|                       |
-                 * | TEXTURE_IMAGE      |            2, 3, 4    |
-                 * |--------------------|            :  :  :    |
-                 * | DEPTH_IMAGE        |   0        :  :  :    |
-                 * |--------------------|            :  :  :    |
-                 * | MULTISAMPLE_IMAGE  |   0        :  :  :    |
-                 * |--------------------|            :  :  :    |
-                 * |                                 :  :  :    |
-                 * |--------------------|            :  :  :    |
-                 * | STAGING_BUFFER     |   0, 1,    2, 3, 4    |
-                 * |--------------------|   :  :                |
-                 * | VERTEX_BUFFER      |   0  :                |
-                 * |--------------------|      :                |
-                 * | INDEX_BUFFER       |      1                |
-                 * |--------------------|                       |
-                 * | UNIFORM_BUFFER     |   2, 3                |
-                 * |--------------------|-----------------------|
+                 * |------------------------|---------------------------|
+                 * | MODEL INFO ID          |   0                       |
+                 * |------------------------|---------------------------|
+                 * | SWAPCHAIN_IMAGE        |   0, 1, 2                 |
+                 * |------------------------|                           |
+                 * | TEXTURE_IMAGE          |            2, 3, 4        |
+                 * |------------------------|            :  :  :        |
+                 * | DEPTH_IMAGE            |   0        :  :  :        |
+                 * |------------------------|            :  :  :        |
+                 * | MULTISAMPLE_IMAGE      |   0        :  :  :        |
+                 * |------------------------|            :  :  :        |
+                 * |                                     :  :  :        |
+                 * |------------------------|            :  :  :        |
+                 * | STAGING_BUFFER         |   0, 1,    2, 3, 4        |
+                 * |------------------------|   :  :                    |
+                 * | VERTEX_BUFFER          |   0  :                    |
+                 * |------------------------|      :                    |
+                 * | INDEX_BUFFER           |      1                    |
+                 * |------------------------|                           |
+                 * | UNIFORM_BUFFER         |   2, 3                    |
+                 * |------------------------|---------------------------|
+                 * |                                                    |
+                 * |------------------------|---------------------------|
+                 * | RENDER PASS INFO ID    |   0                       |
+                 * |------------------------|---------------------------|
+                 * | PIPELINE INFO ID       |   0                       |
+                 * |------------------------|---------------------------|
+                 * | CAMERA INFO ID         |   0                       |
+                 * |------------------------|---------------------------|
+                 * | FEN_TRANSFER_DONE      |   0                       |
+                 * |------------------------|---------------------------|
+                 * | FEN_BLIT_DONE          |   0                       |
+                 * |------------------------|---------------------------|
+                 * | FEN_IN_FLIGHT          |   0, 1                    |
+                 * |------------------------|---------------------------|
+                 * | SEM_IMAGE_AVAILABLE    |   0, 1                    |
+                 * |------------------------|---------------------------|
+                 * | SEM_RENDER_DONE        |   0, 1                    |
+                 * |------------------------|---------------------------|
+                 * |                        |                           |
+                 * |------------------------|---------------------------|
+                 * | RESOURCE ID            |   0                       |
+                 * |------------------------|---------------------------|
+                 * | HAND OFF INFO ID       |   0                       |
+                 * |------------------------|---------------------------|
                 */
                 m_swapChainImageInfoIdBase      = 0;
                 m_diffuseTextureImageInfoIdBase = 2;
@@ -65,11 +92,14 @@ namespace Renderer {
                 m_indexBufferInfoId             = 1;
                 m_uniformBufferInfoIdBase       = 2;
 
-                m_renderPassInfoId         = 0;
-                m_pipelineInfoId           = 0;
-                m_cameraInfoId             = 0;
-                m_resourceId               = 0;
-                m_handOffInfoId            = 0;
+                m_renderPassInfoId                = 0;
+                m_pipelineInfoId                  = 0;
+                m_cameraInfoId                    = 0;
+                m_inFlightFenceInfoBase           = 0;
+                m_imageAvailableSemaphoreInfoBase = 0;
+                m_renderDoneSemaphoreInfoBase     = 0;
+                m_resourceId                      = 0;                
+                m_handOffInfoId                   = 0;
 
                 m_refreshModelTransform    = false;
                 m_refreshCameraTransform   = false;
@@ -88,46 +118,48 @@ namespace Renderer {
                  * | READY MODEL INFO                                                                               |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                auto infoIds = std::vector {
-                                                m_swapChainImageInfoIdBase,
-                                                m_diffuseTextureImageInfoIdBase, 
-                                                m_depthImageInfoId, 
-                                                m_multiSampleImageInfoId,
-                                                m_vertexBufferInfoId, 
-                                                m_indexBufferInfoId, 
-                                                m_uniformBufferInfoIdBase
-                                           };
+                auto perModelInfoIds = std::vector {
+                    m_diffuseTextureImageInfoIdBase, 
+                    m_vertexBufferInfoId, 
+                    m_indexBufferInfoId, 
+                };
                 readyModelInfo (m_modelInfoId,
                                 g_pathSettings.testModels[3],
                                 g_pathSettings.mtlFileDir,
-                                g_pathSettings.vertexShaderBinary,
-                                g_pathSettings.fragmentShaderBinary,
-                                infoIds);
+                                perModelInfoIds);
+
+                auto modelInfo = getModelInfo (m_modelInfoId);
+                modelInfo->meta.translate      = {0.0f,  0.0f,  0.0f};
+                modelInfo->meta.rotateAxis     = {0.0f,  1.0f,  0.0f};
+                modelInfo->meta.scale          = {1.0f,  1.0f,  1.0f};
+                modelInfo->meta.rotateAngleDeg = 0.0f; 
+                /* |------------------------------------------------------------------------------------------------|
+                 * | READY CAMERA INFO                                                                              |
+                 * |------------------------------------------------------------------------------------------------|
+                */
+                readyCameraInfo (m_cameraInfoId);
+                auto cameraInfo = getCameraInfo (m_cameraInfoId);
+
+                cameraInfo->meta.position  = {0.0f,  0.0f, -4.0f};
+                cameraInfo->meta.center    = {0.0f,  0.0f,  0.0f};
+                cameraInfo->meta.upVector  = {0.0f, -1.0f,  0.0f};
+                cameraInfo->meta.fovDeg    = 45.0f;
+                cameraInfo->meta.nearPlane = 0.1f;
+                cameraInfo->meta.farPlane  = 10.0f;                
                 /* |------------------------------------------------------------------------------------------------|
                  * | READY HAND OFF INFO                                                                            |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                readyHandOffInfo (m_handOffInfoId);
-                auto handOffInfo = getHandOffInfo (m_handOffInfoId);
-
-                TransformInfo transformInfo;
-                transformInfo.model.translate      = {0.0f,  0.0f,  0.0f};
-                transformInfo.model.rotateAxis     = {0.0f,  1.0f,  0.0f};
-                transformInfo.model.scale          = {1.0f,  1.0f,  1.0f};
-                transformInfo.model.rotateAngleDeg = 0.0f; 
-
-                transformInfo.camera.position  = {0.0f,  0.0f, -4.0f};
-                transformInfo.camera.center    = {0.0f,  0.0f,  0.0f};
-                transformInfo.camera.upVector  = {0.0f, -1.0f,  0.0f};
-                transformInfo.camera.fovDeg    = 45.0f;
-                transformInfo.camera.nearPlane = 0.1f;
-                transformInfo.camera.farPlane  = 10.0f;
-
-                FragShaderVarsPC fragShaderVars;
-                fragShaderVars.texId = 0;
-
-                handOffInfo->meta.transformInfo  = transformInfo;
-                handOffInfo->meta.fragShaderVars = fragShaderVars;
+                auto sceneInfoIds = std::vector {
+                    m_swapChainImageInfoIdBase,
+                    m_depthImageInfoId,
+                    m_multiSampleImageInfoId,
+                    m_uniformBufferInfoIdBase,
+                    m_inFlightFenceInfoBase,
+                    m_imageAvailableSemaphoreInfoBase,
+                    m_renderDoneSemaphoreInfoBase
+                };
+                readyHandOffInfo (m_handOffInfoId, sceneInfoIds);
 
                 VKInitSequence::runSequence (m_modelInfoId, 
                                              m_renderPassInfoId,
@@ -141,11 +173,11 @@ namespace Renderer {
                 auto deviceInfo  = getDeviceInfo();
 
 #if ENABLE_IDLE_ROTATION || ENABLE_CYCLE_TEXTURES
-                auto handOffInfo = getHandOffInfo (m_handOffInfoId);
+                auto modelInfo   = getModelInfo   (m_modelInfoId);
 #endif  // ENABLE_IDLE_ROTATION || ENABLE_CYCLE_TEXTURES
 
 #if ENABLE_CYCLE_TEXTURES
-                auto modelInfo   = getModelInfo   (m_modelInfoId);
+                auto handOffInfo = getHandOffInfo (m_handOffInfoId);
                 /* Array of textures that will be used to cycle through using push push constant
                  *                                          V               V               V               V      
                  * |----------------|---------------|---------------|---------------|---------------|---------------|
@@ -158,7 +190,7 @@ namespace Renderer {
                 uint32_t cycleTexturesOffset = static_cast <uint32_t> (modelInfo->path.diffuseTextureImages.size() - 
                                                                        g_pathSettings.cycleTextures.size());
                 uint32_t framesUntilNextDefaultTexture = g_framesPerCycleTexture;
-                handOffInfo->meta.fragShaderVars.texId = cycleTexturesOffset;
+                handOffInfo->meta.texId                = cycleTexturesOffset;
 #endif  // ENABLE_CYCLE_TEXTURES
 
                 /* |------------------------------------------------------------------------------------------------|
@@ -176,7 +208,7 @@ namespace Renderer {
                     float time            = std::chrono::duration <float, std::chrono::seconds::period> 
                                             (currentTime - startTime).count();  
                     
-                    handOffInfo->meta.transformInfo.model.rotateAngleDeg  = time * 20.0f;
+                    modelInfo->meta.rotateAngleDeg = time * 20.0f;
 
                     m_refreshModelTransform  = true;
                     m_refreshCameraTransform = false;
@@ -198,12 +230,11 @@ namespace Renderer {
                     framesUntilNextDefaultTexture--;
                     if (framesUntilNextDefaultTexture == 0) {
                         framesUntilNextDefaultTexture    = g_framesPerCycleTexture;
-                        auto fragShaderVars              = handOffInfo->meta.fragShaderVars;
-                        fragShaderVars.texId             = (fragShaderVars.texId + 1) % static_cast <uint32_t> 
+                        uint32_t texId                   = handOffInfo->meta.texId;
+                        texId                            = (texId + 1) % static_cast <uint32_t> 
                                                            (modelInfo->path.diffuseTextureImages.size());
-                        if (fragShaderVars.texId == 0)
-                            fragShaderVars.texId         = cycleTexturesOffset;
-                        handOffInfo->meta.fragShaderVars = fragShaderVars;
+                        if (texId == 0) texId            = cycleTexturesOffset;
+                        handOffInfo->meta.texId          = texId;
                     }
 #endif  // ENABLE_CYCLE_TEXTURES             
                 }

@@ -25,32 +25,28 @@ namespace Renderer {
                     uint32_t verticesCount;
                     uint32_t indicesCount;
                     uint32_t parsedDataLogInstanceId;
-                    glm::mat4 modelMatrix;
+
+                    glm::vec3 translate;
+                    glm::vec3 rotateAxis;
+                    glm::vec3 scale;
+                    float rotateAngleDeg;
                 } meta;
 
                 struct Path {
                     const char* model;
                     const char* mtlFileDir; 
                     std::vector <std::string> diffuseTextureImages; 
-                    const char* vertexShaderBinary;
-                    const char* fragmentShaderBinary;
                 } path;
 
                 struct Id {
-                    uint32_t swapChainImageInfoBase;
                     uint32_t diffuseTextureImageInfoBase;
-                    uint32_t depthImageInfo;
-                    uint32_t multiSampleImageInfo;
                     uint32_t vertexBufferInfo;
                     uint32_t indexBufferInfo;
-                    uint32_t uniformBufferInfoBase;
                 } id;
 
-                struct Resource {
-                    VkSampler textureSampler;
-                    VkDescriptorPool descriptorPool;
-                    std::vector <VkDescriptorSet> descriptorSets;
-                } resource;
+                struct Transform {
+                    glm::mat4 model;
+                } transform;
             };
             std::map <uint32_t, ModelInfo> m_modelInfoPool;
             
@@ -123,8 +119,6 @@ namespace Renderer {
             void readyModelInfo (uint32_t modelInfoId,
                                  const char* modelPath,
                                  const char* mtlFileDirPath,
-                                 const char* vertexShaderBinaryPath,
-                                 const char* fragmentShaderBinaryPath,
                                  const std::vector <uint32_t>& infoIds) {
                 
                 if (m_modelInfoPool.find (modelInfoId) != m_modelInfoPool.end()) {
@@ -142,16 +136,10 @@ namespace Renderer {
                  * texture can sample from this default texture
                 */
                 info.path.diffuseTextureImages.push_back (g_pathSettings.defaultDiffuseTexture);
-                info.path.vertexShaderBinary        = vertexShaderBinaryPath;
-                info.path.fragmentShaderBinary      = fragmentShaderBinaryPath;
 
-                info.id.swapChainImageInfoBase      = infoIds[0];
-                info.id.diffuseTextureImageInfoBase = infoIds[1];
-                info.id.depthImageInfo              = infoIds[2];
-                info.id.multiSampleImageInfo        = infoIds[3];
-                info.id.vertexBufferInfo            = infoIds[4];
-                info.id.indexBufferInfo             = infoIds[5];
-                info.id.uniformBufferInfoBase       = infoIds[6];
+                info.id.diffuseTextureImageInfoBase = infoIds[0];
+                info.id.vertexBufferInfo            = infoIds[1];
+                info.id.indexBufferInfo             = infoIds[2];
 
                 m_modelInfoPool[modelInfoId]        = info;
                 /* Config log for parsed data
@@ -271,8 +259,8 @@ namespace Renderer {
                                                   << std::endl;
                 } 
                 /* Extract texture image paths from .mtl file if any
-                 * [O] Diffuse texure
-                 * [X] Other textures like specular, emission etc.
+                 * [ - ] Diffuse texure
+                 * [ X ] Other textures like specular, emission etc.
                 */
                 else {
                     for (auto const& material: materials) {
@@ -425,20 +413,31 @@ namespace Renderer {
                     LOG_INFO (m_VKModelMgrLog) << "Parsed data log instance id " 
                                                << "[" << val.meta.parsedDataLogInstanceId << "]"
                                                << std::endl;
-
-                    LOG_INFO (m_VKModelMgrLog) << "Model matrix" 
+  
+                    LOG_INFO (m_VKModelMgrLog) << "Translate "
+                                               << "[" << val.meta.translate.x << ", "
+                                                      << val.meta.translate.y << ", "
+                                                      << val.meta.translate.z
+                                               << "]"  
                                                << std::endl;
-                    uint32_t rowIdx = 0;
-                    while (rowIdx < 4) {
-                        LOG_INFO (m_VKModelMgrLog) << "["
-                                                   << val.meta.modelMatrix[rowIdx][0] << " "
-                                                   << val.meta.modelMatrix[rowIdx][1] << " "
-                                                   << val.meta.modelMatrix[rowIdx][2] << " "
-                                                   << val.meta.modelMatrix[rowIdx][3]
-                                                   << "]"
-                                                   << std::endl;
-                        rowIdx++;
-                    }
+
+                    LOG_INFO (m_VKModelMgrLog) << "Rotate axis "
+                                               << "[" << val.meta.rotateAxis.x << ", "
+                                                      << val.meta.rotateAxis.y << ", "
+                                                      << val.meta.rotateAxis.z
+                                               << "]"  
+                                               << std::endl;
+
+                    LOG_INFO (m_VKModelMgrLog) << "Scale "
+                                               << "[" << val.meta.scale.x << ", "
+                                                      << val.meta.scale.y << ", "
+                                                      << val.meta.scale.z
+                                               << "]"  
+                                               << std::endl;                                                   
+
+                    LOG_INFO (m_VKModelMgrLog) << "Rotate angle degrees "
+                                               << "[" << val.meta.rotateAngleDeg << "]" 
+                                               << std::endl;
 
                     LOG_INFO (m_VKModelMgrLog) << "Model path " 
                                                << "[" << val.path.model << "]"
@@ -452,30 +451,10 @@ namespace Renderer {
                                                << std::endl;
                     for (auto const& path: val.path.diffuseTextureImages)
                     LOG_INFO (m_VKModelMgrLog) << "[" << path << "]"
-                                               << std::endl;                    
-
-                    LOG_INFO (m_VKModelMgrLog) << "Vertex shader binary path " 
-                                               << "[" << val.path.vertexShaderBinary << "]"
-                                               << std::endl;
-
-                    LOG_INFO (m_VKModelMgrLog) << "Fragment shader binary path " 
-                                               << "[" << val.path.fragmentShaderBinary << "]"
-                                               << std::endl;
-
-                    LOG_INFO (m_VKModelMgrLog) << "Swap chain image info id base " 
-                                               << "[" << val.id.swapChainImageInfoBase << "]"
-                                               << std::endl;
+                                               << std::endl;  
 
                     LOG_INFO (m_VKModelMgrLog) << "Diffuse texture image info id base "
                                                << "[" << val.id.diffuseTextureImageInfoBase << "]"
-                                               << std::endl;
-
-                    LOG_INFO (m_VKModelMgrLog) << "Depth image info id " 
-                                               << "[" << val.id.depthImageInfo << "]"
-                                               << std::endl;
-
-                    LOG_INFO (m_VKModelMgrLog) << "Multi sample image info id " 
-                                               << "[" << val.id.multiSampleImageInfo << "]"
                                                << std::endl;
 
                     LOG_INFO (m_VKModelMgrLog) << "Vettex buffer info id " 
@@ -485,14 +464,20 @@ namespace Renderer {
                     LOG_INFO (m_VKModelMgrLog) << "Index buffer info id " 
                                                << "[" << val.id.indexBufferInfo << "]"
                                                << std::endl;
-
-                    LOG_INFO (m_VKModelMgrLog) << "Uniform buffer info id base "
-                                               << "[" << val.id.uniformBufferInfoBase << "]"
-                                               << std::endl; 
-
-                    LOG_INFO (m_VKModelMgrLog) << "Descriptor sets count " 
-                                               << "[" << val.resource.descriptorSets.size() << "]"
+ 
+                    LOG_INFO (m_VKModelMgrLog) << "Model matrix" 
                                                << std::endl;
+                    uint32_t rowIdx = 0;
+                    while (rowIdx < 4) {
+                        LOG_INFO (m_VKModelMgrLog) << "["
+                                                   << val.transform.model[rowIdx][0] << " "
+                                                   << val.transform.model[rowIdx][1] << " "
+                                                   << val.transform.model[rowIdx][2] << " "
+                                                   << val.transform.model[rowIdx][3]
+                                                   << "]"
+                                                   << std::endl;
+                        rowIdx++;
+                    }
                 }
             }
 

@@ -22,9 +22,19 @@ namespace Renderer {
         private:
             struct CameraInfo {
                 struct Meta {
-                    glm::mat4 viewMatrix;
-                    glm::mat4 projectionMatrix;
+                    glm::vec3 position; 
+                    glm::vec3 center;
+                    glm::vec3 upVector;
+
+                    float fovDeg; 
+                    float nearPlane; 
+                    float farPlane;
                 } meta;
+
+                struct Transform {
+                    glm::mat4 view;
+                    glm::mat4 projection;
+                } transform;
             };
             std::map <uint32_t, CameraInfo> m_cameraInfoPool;
 
@@ -67,28 +77,12 @@ namespace Renderer {
                 m_cameraInfoPool[cameraInfoId] = info;
             }
 
-            void createCameraMatrix (uint32_t cameraInfoId,
-                                     uint32_t resourceId,
-                                     const glm::vec3& cameraPos, 
-                                     const glm::vec3& center,
-                                     const glm::vec3& upVector,
-                                     float fovDeg, 
-                                     float nearPlane, 
-                                     float farPlane) {
-
-                createViewMatrix (cameraInfoId,
-                                  cameraPos, center, upVector);
-
-                createProjectionMatrix (cameraInfoId,
-                                        resourceId,
-                                        fovDeg, nearPlane, farPlane);
+            void createCameraMatrix (uint32_t cameraInfoId, uint32_t resourceId) {
+                createViewMatrix       (cameraInfoId);
+                createProjectionMatrix (cameraInfoId, resourceId);
             }
 
-            void createViewMatrix (uint32_t cameraInfoId,
-                                   const glm::vec3& cameraPos, 
-                                   const glm::vec3& center,
-                                   const glm::vec3& upVector) {
-                
+            void createViewMatrix (uint32_t cameraInfoId) {
                 auto cameraInfo = getCameraInfo (cameraInfoId);
                 /* The glm::lookAt function takes the eye (camera) position, where you want to look at, in world space, 
                  * and up axis as parameters
@@ -100,26 +94,23 @@ namespace Renderer {
                  * order or clockwise order, since it might cause backface culling to kick in and prevent any geometry 
                  * from being drawn
                 */
-                cameraInfo->meta.viewMatrix = glm::lookAt (cameraPos, center, upVector);
+                cameraInfo->transform.view = glm::lookAt (cameraInfo->meta.position, 
+                                                          cameraInfo->meta.center, 
+                                                          cameraInfo->meta.upVector);
             }
 
-            void createProjectionMatrix (uint32_t cameraInfoId,
-                                         uint32_t resourceId,
-                                         float fovDeg, 
-                                         float nearPlane, 
-                                         float farPlane) {
-
+            void createProjectionMatrix (uint32_t cameraInfoId, uint32_t resourceId) {
                 auto cameraInfo = getCameraInfo (cameraInfoId);
                 auto deviceInfo = getDeviceInfo();
                 /* It is important to use the current swap chain extent to calculate the aspect ratio to take into account
                  * the new width and height of the window after a resize
                 */
-                float aspectRatio = deviceInfo->unique[resourceId].swapChain.extent.width / 
+                float aspectRatio = deviceInfo->unique[resourceId].swapChain.extent.width/ 
                                     static_cast <float> (deviceInfo->unique[resourceId].swapChain.extent.height);
-                cameraInfo->meta.projectionMatrix = glm::perspective (glm::radians (fovDeg), 
-                                                                      aspectRatio, 
-                                                                      nearPlane, 
-                                                                      farPlane);
+                cameraInfo->transform.projection = glm::perspective (glm::radians (cameraInfo->meta.fovDeg), 
+                                                                     aspectRatio, 
+                                                                     cameraInfo->meta.nearPlane, 
+                                                                     cameraInfo->meta.farPlane);
                 /* GLM was originally designed for OpenGL, where the Y coordinate of the clip coordinates is inverted. 
                  * The easiest way to compensate for that is to flip the sign on the scaling factor of the Y axis in the 
                  * projection matrix. If you don't do this, then the image will be rendered upside down
@@ -135,7 +126,7 @@ namespace Renderer {
                  *           /                               /
                  *          +Z                              -Z
                 */
-                cameraInfo->meta.projectionMatrix[1][1] *= -1;
+                cameraInfo->transform.projection[1][1] *= -1;
             }
 
             CameraInfo* getCameraInfo (uint32_t cameraInfoId) {
@@ -156,16 +147,49 @@ namespace Renderer {
                     LOG_INFO (m_VKCameraMgrLog) << "Camera info id " 
                                                 << "[" << key << "]"
                                                 << std::endl;
+ 
+                    LOG_INFO (m_VKCameraMgrLog) << "Position "
+                                                << "[" << val.meta.position.x << ", "
+                                                       << val.meta.position.y << ", "
+                                                       << val.meta.position.z
+                                                << "]"  
+                                                << std::endl;
+
+                    LOG_INFO (m_VKCameraMgrLog) << "Center "
+                                                << "[" << val.meta.center.x << ", "
+                                                       << val.meta.center.y << ", "
+                                                       << val.meta.center.z
+                                                << "]"  
+                                                << std::endl;
+
+                    LOG_INFO (m_VKCameraMgrLog) << "Up vector "
+                                                << "[" << val.meta.upVector.x << ", "
+                                                       << val.meta.upVector.y << ", "
+                                                       << val.meta.upVector.z
+                                                << "]"  
+                                                << std::endl;  
+
+                    LOG_INFO (m_VKCameraMgrLog) << "FOV degrees "
+                                                << "[" << val.meta.fovDeg << "]" 
+                                                << std::endl;
+
+                    LOG_INFO (m_VKCameraMgrLog) << "Near plane "
+                                                << "[" << val.meta.nearPlane << "]" 
+                                                << std::endl;
+
+                    LOG_INFO (m_VKCameraMgrLog) << "Far plane "
+                                                << "[" << val.meta.farPlane << "]" 
+                                                << std::endl; 
 
                     LOG_INFO (m_VKCameraMgrLog) << "View matrix" 
                                                 << std::endl; 
                     uint32_t rowIdx = 0;
                     while (rowIdx < 4) {
                         LOG_INFO (m_VKCameraMgrLog) << "["
-                                                    << val.meta.viewMatrix[rowIdx][0] << " "
-                                                    << val.meta.viewMatrix[rowIdx][1] << " "
-                                                    << val.meta.viewMatrix[rowIdx][2] << " "
-                                                    << val.meta.viewMatrix[rowIdx][3]
+                                                    << val.transform.view[rowIdx][0] << " "
+                                                    << val.transform.view[rowIdx][1] << " "
+                                                    << val.transform.view[rowIdx][2] << " "
+                                                    << val.transform.view[rowIdx][3]
                                                     << "]"
                                                     << std::endl;
                         rowIdx++;
@@ -176,10 +200,10 @@ namespace Renderer {
                     rowIdx = 0;
                     while (rowIdx < 4) {
                         LOG_INFO (m_VKCameraMgrLog) << "["
-                                                    << val.meta.projectionMatrix[rowIdx][0] << " "
-                                                    << val.meta.projectionMatrix[rowIdx][1] << " "
-                                                    << val.meta.projectionMatrix[rowIdx][2] << " "
-                                                    << val.meta.projectionMatrix[rowIdx][3]
+                                                    << val.transform.projection[rowIdx][0] << " "
+                                                    << val.transform.projection[rowIdx][1] << " "
+                                                    << val.transform.projection[rowIdx][2] << " "
+                                                    << val.transform.projection[rowIdx][3]
                                                     << "]"
                                                     << std::endl;
                         rowIdx++;

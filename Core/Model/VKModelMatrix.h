@@ -24,11 +24,7 @@ namespace Renderer {
             }
 
         protected:
-            void createModelMatrix (uint32_t modelInfoId,
-                                    const glm::vec3& translate,
-                                    const glm::vec3& rotateAxis, float rotateAngleDeg, 
-                                    const glm::vec3& scale) {
-
+            void createModelMatrix (uint32_t modelInfoId) {
                 auto modelInfo = getModelInfo (modelInfoId);
                 glm::mat4 modelMatrix;
                 /* https://www.opengl-tutorial.org/beginners-tutorials/tutorial-3-matrices/#an-introduction-to-matrices
@@ -52,11 +48,12 @@ namespace Renderer {
                 /* Cumulating transformations, note that we perform scaling FIRST, and THEN the rotation, and THEN the 
                  * translation. This is how matrix multiplication works
                 */
-                modelMatrix = glm::translate (glm::mat4 (1.0f), translate) *
-                              glm::rotate    (glm::mat4 (1.0f), glm::radians (rotateAngleDeg), rotateAxis) *
-                              glm::scale     (glm::mat4 (1.0f), scale);
+                modelMatrix = glm::translate (glm::mat4 (1.0f), modelInfo->meta.translate) *
+                              glm::rotate    (glm::mat4 (1.0f), glm::radians (modelInfo->meta.rotateAngleDeg), 
+                                                                modelInfo->meta.rotateAxis) *
+                              glm::scale     (glm::mat4 (1.0f), modelInfo->meta.scale);
                               
-                modelInfo->meta.modelMatrix = modelMatrix;
+                modelInfo->transform.model = modelMatrix;
             }
     };
 

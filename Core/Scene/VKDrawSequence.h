@@ -2,27 +2,25 @@
 #define VK_DRAW_SEQUENCE_H
 
 #include "../Device/VKWindow.h"
-#include "../Buffer/VKUniformBuffer.h"
 #include "../Model/VKModelMatrix.h"
+#include "../Buffer/VKUniformBuffer.h"
 #include "../Cmd/VKCmdBuffer.h"
 #include "../Cmd/VKCmd.h"
 #include "VKCameraMgr.h"
 #include "VKSyncObject.h"
 #include "VKResizing.h"
-#include "VKHandOff.h"
 
 using namespace Collections;
 
 namespace Renderer {
     class VKDrawSequence: protected virtual VKWindow,
-                          protected virtual VKUniformBuffer,
                           protected virtual VKModelMatrix,
+                          protected virtual VKUniformBuffer,
                           protected virtual VKCmdBuffer,
                           protected virtual VKCmd,
                           protected virtual VKCameraMgr,
                           protected virtual VKSyncObject,
-                          protected VKResizing,
-                          protected virtual VKHandOff {
+                          protected VKResizing {
         private:
             /* To use the right objects (command buffers, sync objects etc.) every frame, keep track of the current frame 
              * in flight
@@ -74,7 +72,7 @@ namespace Renderer {
                  * frame's work to the command buffer until the current frame has finished executing, as we don't want to 
                  * overwrite the current contents of the command buffer while the GPU is using it
                 */
-                uint32_t inFlightFenceInfoId = handOffInfo->id.inFlightFenceInfos[m_currentFrameInFlight];
+                uint32_t inFlightFenceInfoId = handOffInfo->id.inFlightFenceInfoBase + m_currentFrameInFlight;
                 vkWaitForFences (deviceInfo->shared.logDevice, 
                                  1, 
                                  &getFenceInfo (inFlightFenceInfoId, FEN_IN_FLIGHT)->resource.fence, 
@@ -97,8 +95,8 @@ namespace Renderer {
                  * notified by the semaphore
                 */
                 uint32_t swapChainImageId;
-                uint32_t imageAvailableSemaphoreInfoId = handOffInfo->id.imageAvailableSemaphoreInfos
-                                                         [m_currentFrameInFlight];
+                uint32_t imageAvailableSemaphoreInfoId = handOffInfo->id.imageAvailableSemaphoreInfoBase +
+                                                         m_currentFrameInFlight;
                 VkResult result = vkAcquireNextImageKHR (deviceInfo->shared.logDevice, 
                                                          deviceInfo->unique[resourceId].swapChain.swapChain, 
                                                          UINT64_MAX, 
@@ -116,7 +114,7 @@ namespace Renderer {
                                                       << " " 
                                                       << "[" << string_VkResult (result) << "]"
                                                       << std::endl; 
-                    recreateSwapChainDeps (modelInfoId, 
+                    recreateSwapChainDeps (handOffInfoId, 
                                            renderPassInfoId,
                                            resourceId);
                     return;
@@ -152,35 +150,29 @@ namespace Renderer {
                  * | CONFIG DRAW OPS - MODEL TRANSFORM                                                              |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                if (refreshModelTransform == true) {
-                    createModelMatrix (modelInfoId, 
-                                       handOffInfo->meta.transformInfo.model.translate,
-                                       handOffInfo->meta.transformInfo.model.rotateAxis, 
-                                       handOffInfo->meta.transformInfo.model.rotateAngleDeg,
-                                       handOffInfo->meta.transformInfo.model.scale);
-                }
+                if (refreshModelTransform == true)
+                    createModelMatrix (modelInfoId);
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG DRAW OPS - CAMERA TRANSFORM                                                             |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                if (refreshCameraTransform == true) {
-                    createViewMatrix (cameraInfoId, 
-                                      handOffInfo->meta.transformInfo.camera.position,
-                                      handOffInfo->meta.transformInfo.camera.center,
-                                      handOffInfo->meta.transformInfo.camera.upVector);
-                }
+                if (refreshCameraTransform == true)
+                    createViewMatrix (cameraInfoId);
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG DRAW OPS - UPDATE UNIFORMS                                                              |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                MVPMatrixUBO mvpMatrix;
-                mvpMatrix.model      = modelInfo->meta.modelMatrix;
-                mvpMatrix.view       = cameraInfo->meta.viewMatrix;
-                mvpMatrix.projection = cameraInfo->meta.projectionMatrix;
+                PerModelDataUBO perModelData;
+                perModelData.model = modelInfo->transform.model;
 
-                updateUniformBuffer (modelInfo->id.uniformBufferInfoBase + m_currentFrameInFlight,
-                                     sizeof (MVPMatrixUBO),
-                                     &mvpMatrix);
+                updateUniformBuffer (handOffInfo->id.uniformBufferInfoBase + m_currentFrameInFlight,
+                                     sizeof (PerModelDataUBO),
+                                     &perModelData);
+
+                SceneDataVertPC sceneDataVert;
+                sceneDataVert.texId      = handOffInfo->meta.texId;
+                sceneDataVert.view       = cameraInfo->transform.view;
+                sceneDataVert.projection = cameraInfo->transform.projection;
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG DRAW OPS - RECORD AND SUBMIT                                                            |
                  * |------------------------------------------------------------------------------------------------|
@@ -224,8 +216,8 @@ namespace Renderer {
 
                 updatePushConstants  (handOffInfo->resource.commandBuffers[m_currentFrameInFlight],
                                       pipelineInfoId,
-                                      VK_SHADER_STAGE_FRAGMENT_BIT,
-                                      0, sizeof (FragShaderVarsPC), &handOffInfo->meta.fragShaderVars);
+                                      VK_SHADER_STAGE_VERTEX_BIT,
+                                      0, sizeof (SceneDataVertPC), &sceneDataVert);
 
                 auto secondaryViewPorts = std::vector <VkViewport> {};
                 setViewPorts         (handOffInfo->resource.commandBuffers[m_currentFrameInFlight],
@@ -256,7 +248,7 @@ namespace Renderer {
                                       VK_INDEX_TYPE_UINT32);
 
                 auto descriptorSetsToBind = std::vector {
-                    modelInfo->resource.descriptorSets[m_currentFrameInFlight]
+                    handOffInfo->resource.descriptorSets[m_currentFrameInFlight]
                 };        
                 bindDescriptorSets   (handOffInfo->resource.commandBuffers[m_currentFrameInFlight],
                                       pipelineInfoId,
@@ -297,7 +289,7 @@ namespace Renderer {
                 /* The signalSemaphoreCount and pSignalSemaphores parameters specify which semaphores to signal once the 
                  * command buffer(s) have finished execution
                 */
-                uint32_t renderDoneSemaphoreInfoId = handOffInfo->id.renderDoneSemaphoreInfos[m_currentFrameInFlight];
+                uint32_t renderDoneSemaphoreInfoId = handOffInfo->id.renderDoneSemaphoreInfoBase + m_currentFrameInFlight;
                 auto signalSemaphores = std::vector {
                     getSemaphoreInfo (renderDoneSemaphoreInfoId, SEM_RENDER_DONE)->resource.semaphore 
                 };
@@ -382,7 +374,7 @@ namespace Renderer {
                                                       << "[" << string_VkResult (result) << "]" 
                                                       << std::endl; 
                     setFrameBufferResized (false);
-                    recreateSwapChainDeps (modelInfoId, 
+                    recreateSwapChainDeps (handOffInfoId, 
                                            renderPassInfoId,
                                            resourceId);
                 }

@@ -5,15 +5,15 @@
 #include "../Device/VKInstance.h"
 #include "../Device/VKSurface.h"
 #include "../Device/VKLogDevice.h"
+#include "../Model/VKModelMgr.h"
 #include "../Image/VKImageMgr.h"
 #include "../Buffer/VKBufferMgr.h"
 #include "../RenderPass/VKFrameBuffer.h"
-#include "../Model/VKTextureSampler.h"
-#include "../Model/VKDescriptor.h"
 #include "../Cmd/VKCmdBuffer.h"
 #include "VKCameraMgr.h"
+#include "VKTextureSampler.h"
+#include "VKDescriptor.h"
 #include "VKSyncObject.h"
-#include "VKHandOff.h"
 
 using namespace Collections;
 
@@ -22,15 +22,15 @@ namespace Renderer {
                             protected virtual VKInstance,
                             protected virtual VKSurface,
                             protected virtual VKLogDevice,
+                            protected virtual VKModelMgr,
                             protected virtual VKImageMgr,
                             protected virtual VKBufferMgr,
                             protected virtual VKFrameBuffer,
-                            protected virtual VKTextureSampler,
-                            protected virtual VKDescriptor,
                             protected virtual VKCmdBuffer,
                             protected virtual VKCameraMgr,
-                            protected virtual VKSyncObject,
-                            protected virtual VKHandOff {
+                            protected virtual VKTextureSampler,
+                            protected virtual VKDescriptor,
+                            protected virtual VKSyncObject {
         private:
             static Log::Record* m_VKDeleteSequenceLog;
             const uint32_t m_instanceId = g_collectionsId++;
@@ -60,24 +60,27 @@ namespace Renderer {
                  * | DESTROY DRAW OPS - FENCE AND SEMAPHORES                                                        |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                for (auto const& infoId: handOffInfo->id.renderDoneSemaphoreInfos) {
-                    cleanUpSemaphore (infoId, SEM_RENDER_DONE);
+                for (uint32_t i = 0; i < g_maxFramesInFlight; i++) {
+                    uint32_t renderDoneSemaphoreInfoId = handOffInfo->id.renderDoneSemaphoreInfoBase + i; 
+                    cleanUpSemaphore (renderDoneSemaphoreInfoId, SEM_RENDER_DONE);
                     LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Draw ops semaphore " 
-                                                     << "[" << infoId << "]"
+                                                     << "[" << renderDoneSemaphoreInfoId << "]"
                                                      << std::endl;
                 }
 
-                for (auto const& infoId: handOffInfo->id.imageAvailableSemaphoreInfos) {
-                    cleanUpSemaphore (infoId, SEM_IMAGE_AVAILABLE);
+                for (uint32_t i = 0; i < g_maxFramesInFlight; i++) {
+                    uint32_t imageAvailableSemaphoreInfoId = handOffInfo->id.imageAvailableSemaphoreInfoBase + i;
+                    cleanUpSemaphore (imageAvailableSemaphoreInfoId, SEM_IMAGE_AVAILABLE);
                     LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Draw ops semaphore " 
-                                                     << "[" << infoId << "]"
+                                                     << "[" << imageAvailableSemaphoreInfoId << "]"
                                                      << std::endl;
                 }
 
-                for (auto const& infoId: handOffInfo->id.inFlightFenceInfos) {
-                    cleanUpFence (infoId, FEN_IN_FLIGHT);
+                for (uint32_t i = 0; i < g_maxFramesInFlight; i++) {
+                    uint32_t inFlightFenceInfoId = handOffInfo->id.inFlightFenceInfoBase + i;
+                    cleanUpFence (inFlightFenceInfoId, FEN_IN_FLIGHT);
                     LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Draw ops fence " 
-                                                     << "[" << infoId << "]"
+                                                     << "[" << inFlightFenceInfoId << "]"
                                                      << std::endl;
                 }
                 /* |------------------------------------------------------------------------------------------------|
@@ -91,17 +94,17 @@ namespace Renderer {
                  * | DESTROY DESCRIPTOR POOL                                                                        |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                VKDescriptor::cleanUp (modelInfoId);
+                VKDescriptor::cleanUp (handOffInfoId);
                 LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Descriptor pool " 
-                                                 << "[" << modelInfoId << "]"
+                                                 << "[" << handOffInfoId << "]"
                                                  << std::endl; 
                 /* |------------------------------------------------------------------------------------------------|
                  * | DESTROY TEXTURE SAMPLER                                                                        |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                VKTextureSampler::cleanUp (modelInfoId);
+                VKTextureSampler::cleanUp (handOffInfoId);
                 LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Texture sampler " 
-                                                 << "[" << modelInfoId << "]"
+                                                 << "[" << handOffInfoId << "]"
                                                  << std::endl; 
                 /* |------------------------------------------------------------------------------------------------|
                  * | DESTROY PIPELINE                                                                               |
@@ -132,7 +135,7 @@ namespace Renderer {
                  * |------------------------------------------------------------------------------------------------|
                 */
                 for (uint32_t i = 0; i < g_maxFramesInFlight; i++) {
-                    uint32_t uniformBufferInfoId = modelInfo->id.uniformBufferInfoBase + i; 
+                    uint32_t uniformBufferInfoId = handOffInfo->id.uniformBufferInfoBase + i; 
                     VKBufferMgr::cleanUp (uniformBufferInfoId, UNIFORM_BUFFER);
                     LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Uniform buffer " 
                                                      << "[" << uniformBufferInfoId << "]"
@@ -158,17 +161,17 @@ namespace Renderer {
                  * | DESTROY MULTI SAMPLE RESOURCES                                                                 |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                VKImageMgr::cleanUp (modelInfo->id.multiSampleImageInfo, MULTISAMPLE_IMAGE);
+                VKImageMgr::cleanUp (handOffInfo->id.multiSampleImageInfo, MULTISAMPLE_IMAGE);
                 LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Multi sample resources " 
-                                                 << "[" << modelInfo->id.multiSampleImageInfo << "]"
+                                                 << "[" << handOffInfo->id.multiSampleImageInfo << "]"
                                                  << std::endl; 
                 /* |------------------------------------------------------------------------------------------------|
                  * | DESTROY DEPTH RESOURCES                                                                        |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                VKImageMgr::cleanUp (modelInfo->id.depthImageInfo, DEPTH_IMAGE);
+                VKImageMgr::cleanUp (handOffInfo->id.depthImageInfo, DEPTH_IMAGE);
                 LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Depth resources " 
-                                                 << "[" << modelInfo->id.depthImageInfo << "]"
+                                                 << "[" << handOffInfo->id.depthImageInfo << "]"
                                                  << std::endl; 
                 /* |------------------------------------------------------------------------------------------------|
                  * | DESTROY TEXTURE RESOURCES - DIFFUSE TEXTURE                                                    |
@@ -186,7 +189,7 @@ namespace Renderer {
                  * |------------------------------------------------------------------------------------------------|
                 */
                 for (uint32_t i = 0; i < deviceInfo->unique[resourceId].swapChain.size; i++) {
-                    uint32_t swapChainImageInfoId = modelInfo->id.swapChainImageInfoBase + i;
+                    uint32_t swapChainImageInfoId = handOffInfo->id.swapChainImageInfoBase + i;
                     VKImageMgr::cleanUp (swapChainImageInfoId, SWAPCHAIN_IMAGE);
                     LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Swap chain resources " 
                                                      << "[" << swapChainImageInfoId << "]"
@@ -274,6 +277,7 @@ namespace Renderer {
                 dumpFenceInfoPool();
                 dumpSemaphoreInfoPool();
                 dumpHandOffInfoPool();
+                dumpDeviceInfoPool();
             }
     };
 
