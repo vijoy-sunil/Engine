@@ -9,7 +9,7 @@ namespace Renderer {
     #define ENABLE_AUTO_PICK_QUEUE_FAMILY_INDICES   (true)
 
     struct windowSettings {
-        const int width   = 1280;
+        const int width   = 800;
         const int height  = 720;
         const char* title = "WINDOW_";
     } g_windowSettings;
