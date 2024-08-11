@@ -301,6 +301,10 @@ namespace Renderer {
                         deviceInfo->params.maxSampleCount           = getMaxUsableSampleCount();
                         deviceInfo->params.maxPushConstantsSize     = properties.limits.maxPushConstantsSize;
                         deviceInfo->params.maxMemoryAllocationCount = properties.limits.maxMemoryAllocationCount;
+                        deviceInfo->params.
+                        maxDescriptorSetUniformBuffersDynamic = properties.limits.maxDescriptorSetUniformBuffersDynamic;
+                        deviceInfo->params.
+                        minUniformBufferOffsetAlignment       = properties.limits.minUniformBufferOffsetAlignment;
                         deviceInfo->params.maxSamplerAnisotropy     = properties.limits.maxSamplerAnisotropy;
                         break;
                     }

@@ -99,14 +99,13 @@ layout (location = 1) out uint fragTexId;
 /* Note that the order of the uniform, in and out declarations doesn't matter. The binding directive is similar to the 
  * location directive for attributes. We're going to reference this binding in the descriptor layout
 */
-layout (binding = 0) uniform PerModelDataUBO {
-    mat4 model;
-} perModelData;
+layout (binding = 0) uniform DynamicUBO {
+    mat4 modelMatrix;
+} dynamicUBO;
 
 layout (push_constant) uniform SceneDataVertPC {
-    uint texId;
-    mat4 view;
-    mat4 projection;
+    mat4 viewMatrix;
+    mat4 projectionMatrix;
 } sceneDataVert;
 
 /* The main function is invoked for every vertex, the built-in gl_VertexIndex variable contains the index of the current 
@@ -119,10 +118,11 @@ void main (void) {
      * coordinates may not be 1 after model transform calculations, which will result in a division when converted to 
      * the final normalized device coordinates on the screen
     */
-    gl_Position  = sceneDataVert.projection * sceneDataVert.view * perModelData.model * vec4 (inPosition, 1.0);
+    gl_Position  = sceneDataVert.projectionMatrix * 
+                   sceneDataVert.viewMatrix       * 
+                   dynamicUBO.modelMatrix         * 
+                   vec4 (inPosition, 1.0);
+    
     fragTexCoord = inTexCoord;
-    /* Replace texture at this id with another texture whose id is specified via push constants
-    */
-    const uint replaceTexId = 0;
-    inTexId == replaceTexId ? fragTexId = sceneDataVert.texId: fragTexId = inTexId;
+    fragTexId    = inTexId;
 }

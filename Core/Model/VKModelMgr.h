@@ -24,12 +24,15 @@ namespace Renderer {
                     std::vector <uint32_t> indices;
                     uint32_t verticesCount;
                     uint32_t indicesCount;
+                    uint32_t instanceCount;
                     uint32_t parsedDataLogInstanceId;
 
                     glm::vec3 translate;
                     glm::vec3 rotateAxis;
                     glm::vec3 scale;
                     float rotateAngleDeg;
+                    
+                    bool updateModelMatrix;                   
                 } meta;
 
                 struct Path {
@@ -39,7 +42,7 @@ namespace Renderer {
                 } path;
 
                 struct Id {
-                    uint32_t diffuseTextureImageInfoBase;
+                    std::vector <uint32_t> diffuseTextureImageInfos;
                     uint32_t vertexBufferInfo;
                     uint32_t indexBufferInfo;
                 } id;
@@ -48,7 +51,8 @@ namespace Renderer {
                     glm::mat4 model;
                 } transform;
             };
-            std::map <uint32_t, ModelInfo> m_modelInfoPool;
+            std::map <uint32_t, ModelInfo>   m_modelInfoPool;
+            std::map <std::string, uint32_t> m_textureImagePool;
             
             static Log::Record* m_VKModelMgrLog;
             const uint32_t m_instanceId = g_collectionsId++; 
@@ -117,9 +121,9 @@ namespace Renderer {
 
         protected:
             void readyModelInfo (uint32_t modelInfoId,
+                                 uint32_t instanceCount,
                                  const char* modelPath,
-                                 const char* mtlFileDirPath,
-                                 const std::vector <uint32_t>& infoIds) {
+                                 const char* mtlFileDirPath) {
                 
                 if (m_modelInfoPool.find (modelInfoId) != m_modelInfoPool.end()) {
                     LOG_ERROR (m_VKModelMgrLog) << "Model info id already exists "
@@ -129,19 +133,15 @@ namespace Renderer {
                 }
 
                 ModelInfo info{};
-                info.meta.parsedDataLogInstanceId   = g_collectionsId++;
-                info.path.model                     = modelPath;
-                info.path.mtlFileDir                = mtlFileDirPath;
+                info.meta.instanceCount           = instanceCount;
+                info.meta.parsedDataLogInstanceId = g_collectionsId++;
+                info.path.model                   = modelPath;
+                info.path.mtlFileDir              = mtlFileDirPath;
                 /* Add default diffuse texture as the fist entry in the group of textures. This way, faces with no 
                  * texture can sample from this default texture
                 */
                 info.path.diffuseTextureImages.push_back (g_pathSettings.defaultDiffuseTexture);
-
-                info.id.diffuseTextureImageInfoBase = infoIds[0];
-                info.id.vertexBufferInfo            = infoIds[1];
-                info.id.indexBufferInfo             = infoIds[2];
-
-                m_modelInfoPool[modelInfoId]        = info;
+                m_modelInfoPool[modelInfoId]      = info;
                 /* Config log for parsed data
                 */
                 std::string nameExtension = "_PD_" + std::to_string (modelInfoId);
@@ -273,6 +273,18 @@ namespace Renderer {
                                                           << "[" << modelInfo->path.mtlFileDir << "]"
                                                           << std::endl;
                     } 
+                }  
+                /* Populate texture image pool, which contains all the textures used across models along with their
+                 * respective texture image info ids
+                */
+                static uint32_t textureImageInfoIdBase = 0;                    
+                for (auto const& path: modelInfo->path.diffuseTextureImages) {
+                    if (m_textureImagePool.find (path) == m_textureImagePool.end()) {
+                        m_textureImagePool[path] = textureImageInfoIdBase;                           
+                        textureImageInfoIdBase++;
+                    }
+ 
+                    modelInfo->id.diffuseTextureImageInfos.push_back (m_textureImagePool[path]);
                 }           
                 /* Map to take advantage of indices vector (index buffer). Note that, to be able to use std::unordered_map
                  * with a user-defined key-type, you need to define two thing:
@@ -345,10 +357,15 @@ namespace Renderer {
                                             attrib.normals[3 * index.normal_index + 1],
                                             attrib.normals[3 * index.normal_index + 2]
                                           }; 
-                        /* We will handle missing texture faces (material_ids = -1) by adding +1 to all material_id, this
-                         * will allow us to use the default texture whose texture id is 0
+                        /* We will handle missing texture faces (material_ids = -1) by adding +1 to all material_ids, this
+                         * will allow us to use the default texture whose texture id is 0. Note that, this local texture
+                         * id is an index into the current model's texture array obtained after importing the model file.
+                         * What we need is a texture id that can be used to index into the global texture pool, so that
+                         * the shader can sample from the correct texture from the global pool of textures
                         */
-                        vertex.texId = shape.mesh.material_ids[faceIndex] + 1;
+                        uint32_t localTexId = shape.mesh.material_ids[faceIndex] + 1;
+                        auto texturePath    = modelInfo->path.diffuseTextureImages[localTexId]; 
+                        vertex.texId        = m_textureImagePool[texturePath];
                         /* Manual uv mapping of default texture
                         */
                         if (vertex.texId == 0) {
@@ -383,6 +400,10 @@ namespace Renderer {
                 dumpParsedData (modelInfoId);
             }
 
+            std::map <std::string, uint32_t>& getTextureImagePool (void) {
+                return m_textureImagePool;
+            }
+
             ModelInfo* getModelInfo (uint32_t modelInfoId) {
                 if (m_modelInfoPool.find (modelInfoId) != m_modelInfoPool.end())
                     return &m_modelInfoPool[modelInfoId];
@@ -408,6 +429,10 @@ namespace Renderer {
 
                     LOG_INFO (m_VKModelMgrLog) << "Indices count " 
                                                << "[" << val.meta.indicesCount << "]"
+                                               << std::endl;
+
+                    LOG_INFO (m_VKModelMgrLog) << "Instance count " 
+                                               << "[" << val.meta.instanceCount << "]"
                                                << std::endl;
 
                     LOG_INFO (m_VKModelMgrLog) << "Parsed data log instance id " 
@@ -439,6 +464,10 @@ namespace Renderer {
                                                << "[" << val.meta.rotateAngleDeg << "]" 
                                                << std::endl;
 
+                    LOG_INFO (m_VKModelMgrLog) << "Update model matrix " 
+                                               << "[" << Utils::getBoolString (val.meta.updateModelMatrix) << "]"
+                                               << std::endl;
+
                     LOG_INFO (m_VKModelMgrLog) << "Model path " 
                                                << "[" << val.path.model << "]"
                                                << std::endl;
@@ -453,9 +482,11 @@ namespace Renderer {
                     LOG_INFO (m_VKModelMgrLog) << "[" << path << "]"
                                                << std::endl;  
 
-                    LOG_INFO (m_VKModelMgrLog) << "Diffuse texture image info id base "
-                                               << "[" << val.id.diffuseTextureImageInfoBase << "]"
+                    LOG_INFO (m_VKModelMgrLog) << "Diffuse texture image info ids"
                                                << std::endl;
+                    for (auto const& infoId: val.id.diffuseTextureImageInfos)
+                    LOG_INFO (m_VKModelMgrLog) << "[" << infoId << "]"
+                                               << std::endl;                      
 
                     LOG_INFO (m_VKModelMgrLog) << "Vettex buffer info id " 
                                                << "[" << val.id.vertexBufferInfo << "]"
@@ -479,6 +510,14 @@ namespace Renderer {
                         rowIdx++;
                     }
                 }
+
+                LOG_INFO (m_VKModelMgrLog) << "Dumping texture image pool"
+                                           << std::endl;
+                for (auto const& [path, infoId]: m_textureImagePool)
+                LOG_INFO (m_VKModelMgrLog) << "[" << path << "]"
+                                           << " "
+                                           << "[" << infoId << "]"
+                                           << std::endl;  
             }
 
             void cleanUp (uint32_t modelInfoId) {

@@ -24,6 +24,10 @@ namespace Utils {
         return outputStrings;
     }
 
+    const char* getBoolString (bool val) {
+        return val == true ? "TRUE": "FALSE";
+    }
+
     const char* getImageTypeString (e_imageType type) {
         switch (type)
         {
@@ -49,6 +53,8 @@ namespace Utils {
                 return "VOID_BUFFER";
             case STAGING_BUFFER:
                 return "STAGING_BUFFER";
+            case STAGING_BUFFER_TEX:
+                return "STAGING_BUFFER_TEX";
             case VERTEX_BUFFER:
                 return "VERTEX_BUFFER";
             case INDEX_BUFFER:

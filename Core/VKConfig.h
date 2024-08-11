@@ -5,8 +5,6 @@
 
 namespace Renderer {
     #define ENABLE_LOGGING                          (true)
-    #define ENABLE_MODEL_IMPORT                     (true)
-    #define ENABLE_CYCLE_TEXTURES                   (true)
     #define ENABLE_IDLE_ROTATION                    (true)
     #define ENABLE_AUTO_PICK_QUEUE_FAMILY_INDICES   (true)
 
@@ -18,7 +16,7 @@ namespace Renderer {
 
     struct pathSettings {
         const char* logSaveDir            = "Build/Log/";
-        const std::vector <const char*> testModels = {
+        const std::vector <const char*> models = {
             "SandBox/Models/Model_1.obj",
             "SandBox/Models/Model_2.obj",
             "SandBox/Models/Model_3.obj",
@@ -26,12 +24,6 @@ namespace Renderer {
         };
         const char* mtlFileDir            = "SandBox/Models/";
         const char* defaultDiffuseTexture = "SandBox/Textures/tex_16x16_empty.png";
-        const std::vector <const char*> cycleTextures = {
-            "SandBox/Textures/tex_512x512_n0.png",
-            "SandBox/Textures/tex_512x512_n1.png",
-            "SandBox/Textures/tex_512x512_n2.png",
-            "SandBox/Textures/tex_512x512_n3.png"
-        };
         const char* vertexShaderBinary    = "Build/Bin/vert.spv";
         const char* fragmentShaderBinary  = "Build/Bin/frag.spv"; 
     } g_pathSettings;
@@ -55,13 +47,9 @@ namespace Renderer {
     */
     const uint32_t g_maxFramesInFlight = 2;
     /* Statically allocate max number of unique device resources in device mgr ahead of time. The actual number of unique 
-     * device resources used will be set by user
+     * device resources used will be set by the application
     */
     const uint32_t g_maxDeviceResourcesCount = 1;
-    /* This frame count marker is used to cycle textures at specific intervals. For example, the default texture can be  
-     * replaced by a group of textures which will be cycled every 'X' frames
-    */
-    const uint32_t g_framesPerCycleTexture = 60;
     /* Keep track of instance ids for Collections. Note that, we are not taking into account of reserved ids used by
      * Collections which may result in collision
     */

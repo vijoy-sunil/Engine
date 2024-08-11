@@ -94,16 +94,16 @@ namespace Renderer {
             }
 
         protected:
-            void runSequence (uint32_t modelInfoId, 
+            void runSequence (uint32_t modelInfoIdBase, 
                               uint32_t renderPassInfoId,
                               uint32_t pipelineInfoId,
                               uint32_t cameraInfoId, 
                               uint32_t resourceId,
                               uint32_t sceneInfoId) {
 
-                auto modelInfo  = getModelInfo (modelInfoId);
-                auto sceneInfo  = getSceneInfo (sceneInfoId);
-                auto deviceInfo = getDeviceInfo();
+                auto modelInfoBase = getModelInfo (modelInfoIdBase);
+                auto sceneInfo     = getSceneInfo (sceneInfoId);
+                auto deviceInfo    = getDeviceInfo();
 #if ENABLE_LOGGING
                 enableValidationLayers();
 #else
@@ -161,45 +161,24 @@ namespace Renderer {
                  * | IMPORT MODEL                                                                                   |
                  * |------------------------------------------------------------------------------------------------|
                 */
-#if ENABLE_MODEL_IMPORT
-                importOBJModel (modelInfoId);
-#else
-                uint32_t texId = 0;
-                auto vertices = std::vector <Vertex> {
-                    /* pos, textCoord, normal, texId
-                    */
-                    {{-0.5f, -0.5f, 0.0f}, {0.0f, 0.0f}, {1.0f, 0.0f, 0.0f}, texId},
-                    {{ 0.5f, -0.5f, 0.0f}, {1.0f, 0.0f}, {0.0f, 1.0f, 0.0f}, texId},
-                    {{ 0.5f,  0.5f, 0.0f}, {1.0f, 1.0f}, {0.0f, 0.0f, 1.0f}, texId},
-                    {{-0.5f,  0.5f, 0.0f}, {0.0f, 1.0f}, {1.0f, 1.0f, 1.0f}, texId}
-                };
-                
-                auto indices = std::vector <uint32_t> {
-                    0, 1, 2, 2, 3, 0
-                };
-
-                createVertices (modelInfoId, vertices);
-                createIndices  (modelInfoId, indices);
-#endif  // ENABLE_MODEL_IMPORT
-                LOG_INFO (m_VKInitSequenceLog) << "[OK] Import model " 
-                                               << "[" << modelInfoId << "]"
-                                               << std::endl;                                    
-#if ENABLE_CYCLE_TEXTURES
-                /* Add textures to be cycled, in place of another texture, to the end of the array of texture paths. Note 
-                 * that, we will be using the texture coordinates of the default texture for the new textures in the 
-                 * cycle
-                */
-                for (auto const& path: g_pathSettings.cycleTextures)
-                    modelInfo->path.diffuseTextureImages.push_back (path);
-#endif  // ENABLE_CYCLE_TEXTURES
+                for (size_t i = 0; i < g_pathSettings.models.size(); i++) {
+                    uint32_t modelInfoId = modelInfoIdBase + static_cast <uint32_t> (i);
+                    importOBJModel (modelInfoId);
+                    LOG_INFO (m_VKInitSequenceLog) << "[OK] Import model " 
+                                                   << "[" << modelInfoId << "]"
+                                                   << std::endl;
+                }
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG MODEL MATRIX                                                                            |
                  * |------------------------------------------------------------------------------------------------|
-                */                                              
-                createModelMatrix (modelInfoId);
-                LOG_INFO (m_VKInitSequenceLog) << "[OK] Model matrix " 
-                                               << "[" << modelInfoId << "]"
-                                               << std::endl;
+                */  
+                for (size_t i = 0; i < g_pathSettings.models.size(); i++) {
+                    uint32_t modelInfoId = modelInfoIdBase + static_cast <uint32_t> (i);                                            
+                    createModelMatrix (modelInfoId);
+                    LOG_INFO (m_VKInitSequenceLog) << "[OK] Model matrix " 
+                                                   << "[" << modelInfoId << "]"
+                                                   << std::endl;
+                }
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG SWAP CHAIN RESOURCES                                                                    |
                  * |------------------------------------------------------------------------------------------------|
@@ -214,13 +193,13 @@ namespace Renderer {
                  * | CONFIG TEXTURE RESOURCES - DIFFUSE TEXTURE                                                     |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                for (size_t i = 0; i < modelInfo->path.diffuseTextureImages.size(); i++) {
-                    uint32_t textureImageInfoId = modelInfo->id.diffuseTextureImageInfoBase + static_cast <uint32_t> (i);
-                    createTextureResources (textureImageInfoId, 
-                                            resourceId, 
-                                            modelInfo->path.diffuseTextureImages[i].c_str());
+                /* Create texture resources from the texture image pool, this is to ensure that duplicate texture images 
+                 * across models are not loaded again
+                */
+                for (auto const& [path, infoId]: getTextureImagePool()) {
+                    createTextureResources (infoId, resourceId, path.c_str());
                     LOG_INFO (m_VKInitSequenceLog) << "[OK] Texture resources " 
-                                                   << "[" << textureImageInfoId << "]"
+                                                   << "[" << infoId << "]"
                                                    << " "
                                                    << "[" << resourceId << "]"
                                                    << std::endl; 
@@ -249,12 +228,33 @@ namespace Renderer {
                  * | CONFIG VERTEX BUFFER                                                                           |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                createVertexBuffer (modelInfo->id.vertexBufferInfo, 
+                std::vector <Vertex> combinedVertices;
+                size_t combinedVerticesCount = 0;
+                uint32_t vertexBufferInfoId  = getNextInfoIdFromBufferType (STAGING_BUFFER);
+                /* Combine all vertex buffers to a single buffer. Note that, only the first model will have access to 
+                 * the vertex buffer info id, and the remaining models will have it set to UINT32_MAX to indicate that 
+                 * their vertex buffers are owned by another model
+                */
+                for (size_t i = 0; i < g_pathSettings.models.size(); i++) {
+                    uint32_t modelInfoId   = modelInfoIdBase + static_cast <uint32_t> (i);
+                    auto modelInfo         = getModelInfo (modelInfoId);
+
+                    combinedVerticesCount += modelInfo->meta.verticesCount;
+                    combinedVertices.reserve (combinedVerticesCount);
+                    combinedVertices.insert  (combinedVertices.end(), modelInfo->meta.vertices.begin(),
+                                                                      modelInfo->meta.vertices.end());
+                    
+                    i == 0 ? modelInfo->id.vertexBufferInfo = vertexBufferInfoId:
+                             modelInfo->id.vertexBufferInfo = UINT32_MAX;
+                }
+                
+                createVertexBuffer (vertexBufferInfoId, 
                                     resourceId,
-                                    modelInfo->meta.verticesCount * sizeof (modelInfo->meta.vertices[0]),
-                                    modelInfo->meta.vertices.data());
+                                    combinedVerticesCount * sizeof (Vertex),
+                                    combinedVertices.data());
+
                 LOG_INFO (m_VKInitSequenceLog) << "[OK] Vertex buffer " 
-                                               << "[" << modelInfo->id.vertexBufferInfo << "]"
+                                               << "[" << vertexBufferInfoId << "]"
                                                << " "
                                                << "[" << resourceId << "]"
                                                << std::endl; 
@@ -262,12 +262,30 @@ namespace Renderer {
                  * | CONFIG INDEX BUFFER                                                                            |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                createIndexBuffer (modelInfo->id.indexBufferInfo, 
+                std::vector <uint32_t> combinedIndices;
+                size_t combinedIndicesCount = 0;
+                uint32_t indexBufferInfoId  = getNextInfoIdFromBufferType (STAGING_BUFFER);
+
+                for (size_t i = 0; i < g_pathSettings.models.size(); i++) {
+                    uint32_t modelInfoId   = modelInfoIdBase + static_cast <uint32_t> (i);
+                    auto modelInfo         = getModelInfo (modelInfoId);
+
+                    combinedIndicesCount  += modelInfo->meta.indicesCount;
+                    combinedIndices.reserve (combinedIndicesCount);
+                    combinedIndices.insert  (combinedIndices.end(), modelInfo->meta.indices.begin(),
+                                                                    modelInfo->meta.indices.end());
+                    
+                    i == 0 ? modelInfo->id.indexBufferInfo = indexBufferInfoId:
+                             modelInfo->id.indexBufferInfo = UINT32_MAX;
+                }
+
+                createIndexBuffer (indexBufferInfoId, 
                                    resourceId,
-                                   modelInfo->meta.indicesCount * sizeof (modelInfo->meta.indices[0]),
-                                   modelInfo->meta.indices.data());
+                                   combinedIndicesCount * sizeof (uint32_t),
+                                   combinedIndices.data());
+                
                 LOG_INFO (m_VKInitSequenceLog) << "[OK] Index buffer " 
-                                               << "[" << modelInfo->id.indexBufferInfo << "]"
+                                               << "[" << indexBufferInfoId << "]"
                                                << " "
                                                << "[" << resourceId << "]"
                                                << std::endl; 
@@ -275,6 +293,40 @@ namespace Renderer {
                  * | CONFIG UNIFORM BUFFERS                                                                         |
                  * |------------------------------------------------------------------------------------------------|
                 */
+                /* Instead of using one uniform buffer descriptor per model, we allocate one big uniform buffer, with 
+                 * respect to the alignment reported by the device, that contains all the uniform data for the models in 
+                 * the scene. The descriptor type VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC allows to set a dynamic 
+                 * offset to pass data from the single uniform buffer to the connected shader binding point. Note that, 
+                 * we need to manually allocate the data to cope for GPU-specific uniform buffer offset alignments
+                 * 
+                 * An example to depict the uniform buffer for 4 models each with 64 bytes of model matrix data with a 
+                 * min offset alignment of 16 will look like this,
+                 * |----------------|---------------|---------------|---------------|
+                 * |    {mat4}      |   {mat4}      |   {mat4}      |   {mat4}      |
+                 * |    64 bytes    |   64 bytes    |   64 bytes    |   64 bytes    |
+                 * |----------------|---------------|---------------|---------------|
+                 * 0                64              128             192             256   
+                 * Total buffer size = 256 bytes
+                */
+                sceneInfo->meta.dynamicUBOOffsetAlignment          = getDynamicUBOOffsetAlignment 
+                (deviceInfo->params.minUniformBufferOffsetAlignment, sizeof (ModelData::DynamicUBO));
+                sceneInfo->meta.dynamicUBOSize                     = g_pathSettings.models.size() * 
+                                                                     sceneInfo->meta.dynamicUBOOffsetAlignment;
+                /* Note that, passing a size which is not an integral multiple of alignment or an alignment which is not
+                 * valid or not supported by the implementation causes the allocation function to fail and return a null
+                 * pointer
+                */
+                sceneInfo->meta.modelData.dynamicUBO = (ModelData::DynamicUBO*) aligned_alloc 
+                (sceneInfo->meta.dynamicUBOOffsetAlignment, sceneInfo->meta.dynamicUBOSize);
+
+                if (sceneInfo->meta.modelData.dynamicUBO == nullptr) {
+                    LOG_ERROR (m_VKInitSequenceLog) << "Failed to allocate aligned buffer memory " 
+                                                    << "[" << sceneInfo->meta.dynamicUBOOffsetAlignment << "]"
+                                                    << " "
+                                                    << "[" << sceneInfo->meta.dynamicUBOSize << "]"
+                                                    << std::endl; 
+                    throw std::runtime_error ("Failed to allocate aligned buffer memory");
+                }
                 /* We should have multiple uniform buffers, because multiple frames may be in flight at the same time and
                  * we don't want to update the buffer in preparation of the next frame while a previous one is still 
                  * reading from it. Thus, we need to have as many uniform buffers as we have frames in flight, and write 
@@ -284,7 +336,7 @@ namespace Renderer {
                     uint32_t uniformBufferInfoId = sceneInfo->id.uniformBufferInfoBase + i;    
                     createUniformBuffer (uniformBufferInfoId,
                                          resourceId,
-                                         sizeof (PerModelDataUBO));
+                                         sceneInfo->meta.dynamicUBOSize);
 
                     LOG_INFO (m_VKInitSequenceLog) << "[OK] Uniform buffer " 
                                                    << "[" << uniformBufferInfoId << "]"
@@ -474,7 +526,7 @@ namespace Renderer {
                 auto layoutBindings = std::vector {
                     getLayoutBinding (0, 
                                       1,
-                                      VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+                                      VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC,
                                       VK_SHADER_STAGE_VERTEX_BIT,
                                       VK_NULL_HANDLE),
 
@@ -485,7 +537,7 @@ namespace Renderer {
                      * heightmap
                     */
                     getLayoutBinding (1,
-                                      static_cast <uint32_t> (modelInfo->path.diffuseTextureImages.size()),
+                                      static_cast <uint32_t> (getTextureImagePool().size()),
                                       VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
                                       VK_SHADER_STAGE_FRAGMENT_BIT,
                                       VK_NULL_HANDLE)
@@ -588,10 +640,10 @@ namespace Renderer {
                  * |------------------------------------------------------------------------------------------------|
                 */
                 auto poolSizes = std::vector {
-                    getPoolSize (VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, g_maxFramesInFlight),
+                    getPoolSize (VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, g_maxFramesInFlight),
 
                     getPoolSize (VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, static_cast <uint32_t> 
-                                (modelInfo->path.diffuseTextureImages.size()) * g_maxFramesInFlight)
+                                (getTextureImagePool().size()) * g_maxFramesInFlight)
                 };
                 createDescriptorPool (sceneInfoId, 
                                       poolSizes, 
@@ -619,26 +671,23 @@ namespace Renderer {
                     auto descriptorBufferInfos   = std::vector {
                         getDescriptorBufferInfo (bufferInfo->resource.buffer,
                                                  0,
-                                                 bufferInfo->meta.size)
+                                                 sceneInfo->meta.dynamicUBOOffsetAlignment)
                     };
 
-                    uint32_t textureCount = static_cast <uint32_t> (modelInfo->path.diffuseTextureImages.size());
+                    uint32_t textureCount = static_cast <uint32_t> (getTextureImagePool().size());
                     std::vector <VkDescriptorImageInfo> descriptorImageInfos (textureCount);
-
-                    for (uint32_t i = 0; i < textureCount; i++) {
-                        uint32_t textureImageInfoId = modelInfo->id.diffuseTextureImageInfoBase + i;
-                        auto imageInfo              = getImageInfo (textureImageInfoId, TEXTURE_IMAGE);
-
-                        descriptorImageInfos[i]     = getDescriptorImageInfo (sceneInfo->resource.textureSampler,
-                                                                              imageInfo->resource.imageView,
-                                                                              VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+                    for (auto const& [path, infoId]: getTextureImagePool()) {
+                        auto imageInfo               = getImageInfo (infoId, TEXTURE_IMAGE);
+                        descriptorImageInfos[infoId] = getDescriptorImageInfo (sceneInfo->resource.textureSampler,
+                                                                               imageInfo->resource.imageView,
+                                                                               VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
                     }
 
                     /* The configuration of descriptors is updated using the vkUpdateDescriptorSets function, which takes 
                      * an array of VkWriteDescriptorSet structs as parameter
                     */                    
                     auto writeDescriptorSets = std::vector {
-                        getWriteBufferDescriptorSetInfo (VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+                        getWriteBufferDescriptorSetInfo (VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC,
                                                          sceneInfo->resource.descriptorSets[i],
                                                          descriptorBufferInfos,
                                                          0, 0, 1),
@@ -699,22 +748,22 @@ namespace Renderer {
                                 VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
                                 VK_NULL_HANDLE);
 
-                for (size_t i = 0; i < modelInfo->path.diffuseTextureImages.size(); i++) {
-                    uint32_t textureImageInfoId = modelInfo->id.diffuseTextureImageInfoBase + static_cast <uint32_t> (i);
+                for (auto const& [path, infoId]: getTextureImagePool()) {
                     copyBufferToImage (transferOpsCommandBuffers[0],
-                                       textureImageInfoId, STAGING_BUFFER, 0,
-                                       textureImageInfoId, TEXTURE_IMAGE,  VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+                                       infoId, STAGING_BUFFER_TEX, 0,
+                                       infoId, TEXTURE_IMAGE,      
+                                       VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
                 }
 
                 copyBufferToBuffer (transferOpsCommandBuffers[0],
-                                    modelInfo->id.vertexBufferInfo, STAGING_BUFFER, 0,
-                                    modelInfo->id.vertexBufferInfo, VERTEX_BUFFER,  0);
+                                    modelInfoBase->id.vertexBufferInfo, STAGING_BUFFER, 0,
+                                    modelInfoBase->id.vertexBufferInfo, VERTEX_BUFFER,  0);
 
                 copyBufferToBuffer (transferOpsCommandBuffers[0],
-                                    modelInfo->id.indexBufferInfo, STAGING_BUFFER, 0,
-                                    modelInfo->id.indexBufferInfo, INDEX_BUFFER,   0);
+                                    modelInfoBase->id.indexBufferInfo, STAGING_BUFFER, 0,
+                                    modelInfoBase->id.indexBufferInfo, INDEX_BUFFER,   0);
 
-                endRecording       (transferOpsCommandBuffers[0]);
+                endRecording (transferOpsCommandBuffers[0]);
 
                 VkSubmitInfo transferOpsSubmitInfo{};
                 transferOpsSubmitInfo.sType              = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -766,21 +815,20 @@ namespace Renderer {
                  * | DESTROY STAGING BUFFERS                                                                        |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                VKBufferMgr::cleanUp (modelInfo->id.indexBufferInfo, STAGING_BUFFER);
+                VKBufferMgr::cleanUp (modelInfoBase->id.indexBufferInfo, STAGING_BUFFER);
                 LOG_INFO (m_VKInitSequenceLog) << "[DELETE] Staging buffer " 
-                                               << "[" << modelInfo->id.indexBufferInfo << "]"
+                                               << "[" << modelInfoBase->id.indexBufferInfo << "]"
                                                << std::endl;  
 
-                VKBufferMgr::cleanUp (modelInfo->id.vertexBufferInfo, STAGING_BUFFER);
+                VKBufferMgr::cleanUp (modelInfoBase->id.vertexBufferInfo, STAGING_BUFFER);
                 LOG_INFO (m_VKInitSequenceLog) << "[DELETE] Staging buffer " 
-                                               << "[" << modelInfo->id.vertexBufferInfo << "]"
-                                               << std::endl; 
+                                               << "[" << modelInfoBase->id.vertexBufferInfo << "]"
+                                               << std::endl;
 
-                for (size_t i = 0; i < modelInfo->path.diffuseTextureImages.size(); i++) {
-                    uint32_t textureImageInfoId = modelInfo->id.diffuseTextureImageInfoBase + static_cast <uint32_t> (i);
-                    VKBufferMgr::cleanUp (textureImageInfoId, STAGING_BUFFER);
-                    LOG_INFO (m_VKInitSequenceLog) << "[DELETE] Staging buffer " 
-                                                   << "[" << textureImageInfoId << "]"
+                for (auto const& [path, infoId]: getTextureImagePool()) {
+                    VKBufferMgr::cleanUp (infoId, STAGING_BUFFER_TEX);
+                    LOG_INFO (m_VKInitSequenceLog) << "[DELETE] Staging buffer (Tex) " 
+                                                   << "[" << infoId << "]"
                                                    << std::endl;
                 }              
                 /* |------------------------------------------------------------------------------------------------|
@@ -828,10 +876,8 @@ namespace Renderer {
                                 VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
                                 VK_NULL_HANDLE);
 
-                for (size_t i = 0; i < modelInfo->path.diffuseTextureImages.size(); i++) {
-                    uint32_t textureImageInfoId = modelInfo->id.diffuseTextureImageInfoBase + static_cast <uint32_t> (i);
-                    blitImageToMipMaps (blitOpsCommandBuffers[0],
-                                        textureImageInfoId, TEXTURE_IMAGE);
+                for (auto const& [path, infoId]: getTextureImagePool()) {
+                    blitImageToMipMaps (blitOpsCommandBuffers[0], infoId, TEXTURE_IMAGE);
                 }
 
                 endRecording (blitOpsCommandBuffers[0]);

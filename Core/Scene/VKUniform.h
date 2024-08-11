@@ -82,21 +82,15 @@ namespace Renderer {
      * These gotchas are a good reason to always be explicit about alignment. That way you won't be caught offguard by 
      * the strange symptoms of alignment error
     */
-    struct PerModelDataUBO {
-        glm::mat4 model;
+    struct ModelData {
+        struct DynamicUBO {
+            glm::mat4 modelMatrices;
+        } *dynamicUBO;
     };
 
     struct SceneDataVertPC {
-        /* The texture id variable cycles through an array of texture ids at certain interval and the shader replaces a 
-         * texture (for example, the default diffuse texture) by sampling from an array of textures indexed by this 
-         * variable
-        */
-        uint32_t texId;
-        alignas (16) glm::mat4 view;
-        alignas (16) glm::mat4 projection;  
-    };
-
-    struct SceneDataFragPC {
+        glm::mat4 viewMatrix;
+        alignas (16) glm::mat4 projectionMatrix;  
     };
 }   // namespace Renderer
 #endif  // VK_UNIFORM_H

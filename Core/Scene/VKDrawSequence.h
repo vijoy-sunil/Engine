@@ -44,18 +44,17 @@ namespace Renderer {
             }
 
         protected:
-            void runSequence (uint32_t modelInfoId, 
+            void runSequence (uint32_t modelInfoIdBase, 
                               uint32_t renderPassInfoId,
                               uint32_t pipelineInfoId,
                               uint32_t cameraInfoId,
                               uint32_t resourceId, 
-                              uint32_t sceneInfoId,
-                              bool refreshModelTransform, bool refreshCameraTransform) {
+                              uint32_t sceneInfoId) {
 
-                auto modelInfo  = getModelInfo  (modelInfoId);
-                auto cameraInfo = getCameraInfo (cameraInfoId);
-                auto sceneInfo  = getSceneInfo  (sceneInfoId);
-                auto deviceInfo = getDeviceInfo();
+                auto modelInfoBase = getModelInfo  (modelInfoIdBase);
+                auto cameraInfo    = getCameraInfo (cameraInfoId);
+                auto sceneInfo     = getSceneInfo  (sceneInfoId);
+                auto deviceInfo    = getDeviceInfo();
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG DRAW OPS - WAIT                                                                         |
                  * |------------------------------------------------------------------------------------------------|
@@ -150,29 +149,49 @@ namespace Renderer {
                  * | CONFIG DRAW OPS - MODEL TRANSFORM                                                              |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                if (refreshModelTransform == true)
-                    createModelMatrix (modelInfoId);
+                for (size_t i = 0; i < g_pathSettings.models.size(); i++) {
+                    uint32_t modelInfoId = modelInfoIdBase + static_cast <uint32_t> (i);
+                    auto modelInfo       = getModelInfo (modelInfoId);
+
+                    if (modelInfo->meta.updateModelMatrix) {
+                        createModelMatrix (modelInfoId);
+                        modelInfo->meta.updateModelMatrix = false;
+                    }
+                }
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG DRAW OPS - CAMERA TRANSFORM                                                             |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                if (refreshCameraTransform == true)
+                if (cameraInfo->meta.updateViewMatrix) {
                     createViewMatrix (cameraInfoId);
+                    cameraInfo->meta.updateViewMatrix = false;
+                }
+
+                if (cameraInfo->meta.updateProjectionMatrix) {
+                    createProjectionMatrix (cameraInfoId, resourceId);
+                    cameraInfo->meta.updateProjectionMatrix = false;
+                }
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG DRAW OPS - UPDATE UNIFORMS                                                              |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                PerModelDataUBO perModelData;
-                perModelData.model = modelInfo->transform.model;
-
+                for (size_t i = 0; i < g_pathSettings.models.size(); i++) {
+                    uint32_t modelInfoId = modelInfoIdBase + static_cast <uint32_t> (i);
+                    auto modelInfo       = getModelInfo (modelInfoId);                    
+                    /* Offset into the buffer to populate uniform data for all models
+                    */
+                    auto dynamicUBO           = (ModelData::DynamicUBO*) 
+                                                (((VkDeviceSize) sceneInfo->meta.modelData.dynamicUBO + 
+                                                (i * sceneInfo->meta.dynamicUBOOffsetAlignment)));
+                    dynamicUBO->modelMatrices = modelInfo->transform.model;
+                }
                 updateUniformBuffer (sceneInfo->id.uniformBufferInfoBase + m_currentFrameInFlight,
-                                     sizeof (PerModelDataUBO),
-                                     &perModelData);
+                                     sceneInfo->meta.dynamicUBOSize,
+                                     sceneInfo->meta.modelData.dynamicUBO);
 
                 SceneDataVertPC sceneDataVert;
-                sceneDataVert.texId      = sceneInfo->meta.texId;
-                sceneDataVert.view       = cameraInfo->transform.view;
-                sceneDataVert.projection = cameraInfo->transform.projection;
+                sceneDataVert.viewMatrix       = cameraInfo->transform.view;
+                sceneDataVert.projectionMatrix = cameraInfo->transform.projection;
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG DRAW OPS - RECORD AND SUBMIT                                                            |
                  * |------------------------------------------------------------------------------------------------|
@@ -232,7 +251,7 @@ namespace Renderer {
                                       secondaryScissors);
 
                 auto vertexBufferInfoIdsToBind = std::vector {
-                    modelInfo->id.vertexBufferInfo
+                    modelInfoBase->id.vertexBufferInfo
                 };
                 auto vertexBufferOffsets = std::vector <VkDeviceSize> {
                     0
@@ -243,25 +262,56 @@ namespace Renderer {
                                       vertexBufferOffsets);
 
                 bindIndexBuffer      (sceneInfo->resource.commandBuffers[m_currentFrameInFlight],
-                                      modelInfo->id.indexBufferInfo,
+                                      modelInfoBase->id.indexBufferInfo,
                                       0,
                                       VK_INDEX_TYPE_UINT32);
 
-                auto descriptorSetsToBind = std::vector {
-                    sceneInfo->resource.descriptorSets[m_currentFrameInFlight]
-                };        
-                bindDescriptorSets   (sceneInfo->resource.commandBuffers[m_currentFrameInFlight],
-                                      pipelineInfoId,
-                                      VK_PIPELINE_BIND_POINT_GRAPHICS,
-                                      0,
-                                      descriptorSetsToBind);
+                /* |------------|-----------|-----------|
+                 * |    VB0     |   VB1     |   VB2     |   vertex buffers 
+                 * |------------|-----------|-----------|
+                 * ^            ^           ^
+                 *              |
+                 *              vertexOffset
+                 * 
+                 * |------------|-----------|-----------|
+                 * |    IB0     |   IB1     |   IB2     |   index buffers
+                 * |------------|-----------|-----------|
+                 * ^            ^           ^
+                 *              |
+                 *              firstIndex
+                */
+                uint32_t firstIndex   = 0;
+                int32_t  vertexOffset = 0;
+                for (size_t i = 0; i < g_pathSettings.models.size(); i++) {
+                    uint32_t modelInfoId = modelInfoIdBase + static_cast <uint32_t> (i);
+                    auto modelInfo       = getModelInfo (modelInfoId);
+                    
+                    /* Render multiple models each having it's own uniform data (model matrices, etc. for example) by 
+                     * dynamically offsetting into one uniform buffer
+                    */
+                    auto descriptorSetsToBind = std::vector {
+                        sceneInfo->resource.descriptorSets[m_currentFrameInFlight]
+                    };
+                    auto dynamicOffsets = std::vector <uint32_t> {
+                        static_cast <uint32_t> (i * sceneInfo->meta.dynamicUBOOffsetAlignment)
+                    };     
+                    bindDescriptorSets (sceneInfo->resource.commandBuffers[m_currentFrameInFlight],
+                                        pipelineInfoId,
+                                        VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                        0,
+                                        descriptorSetsToBind,
+                                        dynamicOffsets);
 
-                drawIndexed          (sceneInfo->resource.commandBuffers[m_currentFrameInFlight],
-                                      modelInfo->meta.indicesCount,
-                                      1, 0, 0, 0);
+                    drawIndexed        (sceneInfo->resource.commandBuffers[m_currentFrameInFlight],
+                                        modelInfo->meta.indicesCount,
+                                        modelInfo->meta.instanceCount, firstIndex, vertexOffset, 0);
 
-                endRenderPass        (sceneInfo->resource.commandBuffers[m_currentFrameInFlight]);
-                endRecording         (sceneInfo->resource.commandBuffers[m_currentFrameInFlight]);  
+                    firstIndex   += modelInfo->meta.indicesCount;
+                    vertexOffset += modelInfo->meta.verticesCount;
+                }
+
+                endRenderPass (sceneInfo->resource.commandBuffers[m_currentFrameInFlight]);
+                endRecording  (sceneInfo->resource.commandBuffers[m_currentFrameInFlight]);  
 
                 VkSubmitInfo drawOpsSubmitInfo;
                 drawOpsSubmitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;

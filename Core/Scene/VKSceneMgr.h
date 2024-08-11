@@ -14,7 +14,9 @@ namespace Renderer {
         private:
             struct SceneInfo {
                 struct Meta {
-                    uint32_t texId;
+                    ModelData modelData;
+                    VkDeviceSize dynamicUBOOffsetAlignment;
+                    VkDeviceSize dynamicUBOSize;
                 } meta;
 
                 struct Id {
@@ -43,6 +45,9 @@ namespace Renderer {
 
             void deleteSceneInfo (uint32_t sceneInfoId) {
                 if (m_sceneInfoPool.find (sceneInfoId) != m_sceneInfoPool.end()) {
+                    /* Free up memory allocated for dynamic uniform buffer
+                    */
+                    free (m_sceneInfoPool[sceneInfoId].meta.modelData.dynamicUBO);
                     m_sceneInfoPool.erase (sceneInfoId);
                     return;
                 }
@@ -74,14 +79,9 @@ namespace Renderer {
                 }
 
                 SceneInfo info{};
-                info.meta.texId                         = 0;
-                info.id.swapChainImageInfoBase          = infoIds[0];
-                info.id.depthImageInfo                  = infoIds[1];
-                info.id.multiSampleImageInfo            = infoIds[2];
-                info.id.uniformBufferInfoBase           = infoIds[3];
-                info.id.inFlightFenceInfoBase           = infoIds[4];
-                info.id.imageAvailableSemaphoreInfoBase = infoIds[5];
-                info.id.renderDoneSemaphoreInfoBase     = infoIds[6];
+                info.id.inFlightFenceInfoBase           = infoIds[0];
+                info.id.imageAvailableSemaphoreInfoBase = infoIds[1];
+                info.id.renderDoneSemaphoreInfoBase     = infoIds[2];
 
                 m_sceneInfoPool[sceneInfoId] = info;
             }
@@ -105,9 +105,13 @@ namespace Renderer {
                                                << "[" << key << "]"
                                                << std::endl;
 
-                    LOG_INFO (m_VKSceneMgrLog) << "Cycle texture id "
-                                               << "[" << val.meta.texId << "]" 
+                    LOG_INFO (m_VKSceneMgrLog) << "Dynamic uniform buffer offset alignment "
+                                               << "[" << val.meta.dynamicUBOOffsetAlignment << "]" 
                                                << std::endl;  
+
+                    LOG_INFO (m_VKSceneMgrLog) << "Dynamic uniform buffer size "
+                                               << "[" << val.meta.dynamicUBOSize << "]" 
+                                               << std::endl; 
 
                     LOG_INFO (m_VKSceneMgrLog) << "Swap chain image info id base " 
                                                << "[" << val.id.swapChainImageInfoBase << "]"

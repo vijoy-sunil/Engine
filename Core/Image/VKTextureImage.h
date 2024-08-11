@@ -109,7 +109,7 @@ namespace Renderer {
                  * should be usable as a transfer source so that we can copy it to an image later on
                 */
                 createBuffer (imageInfoId, 
-                              STAGING_BUFFER,
+                              STAGING_BUFFER_TEX,
                               size,
                               VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
                               VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | 
@@ -118,7 +118,7 @@ namespace Renderer {
 
                 /* Now, we can directly copy the pixel values that we got from the image loading library to the buffer
                 */
-                auto bufferInfo = getBufferInfo (imageInfoId, STAGING_BUFFER);
+                auto bufferInfo = getBufferInfo (imageInfoId, STAGING_BUFFER_TEX);
                 vkMapMemory (deviceInfo->shared.logDevice, 
                              bufferInfo->resource.bufferMemory, 
                              0, 

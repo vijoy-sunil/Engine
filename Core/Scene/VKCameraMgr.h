@@ -29,6 +29,9 @@ namespace Renderer {
                     float fovDeg; 
                     float nearPlane; 
                     float farPlane;
+
+                    bool updateViewMatrix;
+                    bool updateProjectionMatrix;
                 } meta;
 
                 struct Transform {
@@ -180,6 +183,14 @@ namespace Renderer {
                     LOG_INFO (m_VKCameraMgrLog) << "Far plane "
                                                 << "[" << val.meta.farPlane << "]" 
                                                 << std::endl; 
+
+                    LOG_INFO (m_VKCameraMgrLog) << "Update view matrix " 
+                                                << "[" << Utils::getBoolString (val.meta.updateViewMatrix) << "]"
+                                                << std::endl;
+
+                    LOG_INFO (m_VKCameraMgrLog) << "Update projection matrix " 
+                                                << "[" << Utils::getBoolString (val.meta.updateProjectionMatrix) << "]"
+                                                << std::endl;                                               
 
                     LOG_INFO (m_VKCameraMgrLog) << "View matrix" 
                                                 << std::endl; 

@@ -46,16 +46,16 @@ namespace Renderer {
             }
 
         protected:
-            void runSequence (uint32_t modelInfoId, 
+            void runSequence (uint32_t modelInfoIdBase, 
                               uint32_t renderPassInfoId, 
                               uint32_t pipelineInfoId,
                               uint32_t cameraInfoId,
                               uint32_t resourceId,
                               uint32_t sceneInfoId) {
 
-                auto modelInfo  = getModelInfo (modelInfoId);
-                auto sceneInfo  = getSceneInfo (sceneInfoId);
-                auto deviceInfo = getDeviceInfo();
+                auto modelInfoBase = getModelInfo (modelInfoIdBase);
+                auto sceneInfo     = getSceneInfo (sceneInfoId);
+                auto deviceInfo    = getDeviceInfo();
                 /* |------------------------------------------------------------------------------------------------|
                  * | DESTROY DRAW OPS - FENCE AND SEMAPHORES                                                        |
                  * |------------------------------------------------------------------------------------------------|
@@ -145,17 +145,20 @@ namespace Renderer {
                  * | DESTROY INDEX BUFFER                                                                           |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                VKBufferMgr::cleanUp (modelInfo->id.indexBufferInfo, INDEX_BUFFER);
+                /* Note that, we are only deleting the index buffer belonging to base id model, since the rest of the
+                 * statically loaded models' index buffers are owned by the base id model
+                */
+                VKBufferMgr::cleanUp (modelInfoBase->id.indexBufferInfo, INDEX_BUFFER);
                 LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Index buffer " 
-                                                 << "[" << modelInfo->id.indexBufferInfo << "]"
+                                                 << "[" << modelInfoBase->id.indexBufferInfo << "]"
                                                  << std::endl; 
                 /* |------------------------------------------------------------------------------------------------|
                  * | DESTROY VERTEX BUFFER                                                                          |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                VKBufferMgr::cleanUp (modelInfo->id.vertexBufferInfo, VERTEX_BUFFER);
+                VKBufferMgr::cleanUp (modelInfoBase->id.vertexBufferInfo, VERTEX_BUFFER);
                 LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Vertex buffer " 
-                                                 << "[" << modelInfo->id.vertexBufferInfo << "]"
+                                                 << "[" << modelInfoBase->id.vertexBufferInfo << "]"
                                                  << std::endl; 
                 /* |------------------------------------------------------------------------------------------------|
                  * | DESTROY MULTI SAMPLE RESOURCES                                                                 |
@@ -177,11 +180,10 @@ namespace Renderer {
                  * | DESTROY TEXTURE RESOURCES - DIFFUSE TEXTURE                                                    |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                for (size_t i = 0; i < modelInfo->path.diffuseTextureImages.size(); i++) {
-                    uint32_t textureImageInfoId = modelInfo->id.diffuseTextureImageInfoBase + static_cast <uint32_t> (i);
-                    VKImageMgr::cleanUp (textureImageInfoId, TEXTURE_IMAGE);
+                for (auto const& [path, infoId]: getTextureImagePool()) {
+                    VKImageMgr::cleanUp (infoId, TEXTURE_IMAGE);
                     LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Texture resources " 
-                                                     << "[" << textureImageInfoId << "]"
+                                                     << "[" << infoId << "]"
                                                      << std::endl; 
                 }
                 /* |------------------------------------------------------------------------------------------------|
@@ -260,10 +262,14 @@ namespace Renderer {
                  * | DESTROY MODEL INFO                                                                             |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                VKModelMgr::cleanUp (modelInfoId);
-                LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Model info " 
-                                                 << "[" << modelInfoId << "]"
-                                                 << std::endl; 
+                for (size_t i = 0; i < g_pathSettings.models.size(); i++) {
+                    uint32_t modelInfoId = modelInfoIdBase + static_cast <uint32_t> (i);
+                    
+                    VKModelMgr::cleanUp (modelInfoId);
+                    LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Model info " 
+                                                     << "[" << modelInfoId << "]"
+                                                     << std::endl; 
+                }
                 /* |------------------------------------------------------------------------------------------------|
                  * | DUMP METHODS                                                                                   |
                  * |------------------------------------------------------------------------------------------------|

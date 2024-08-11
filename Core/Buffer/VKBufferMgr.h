@@ -204,6 +204,17 @@ namespace Renderer {
                 m_bufferInfoPool[type].push_back (info);
             }            
 
+            uint32_t getNextInfoIdFromBufferType (e_bufferType type) {
+                uint32_t nextInfoId = 0;
+                if (m_bufferInfoPool.find (type) != m_bufferInfoPool.end()) {
+                    auto& infos = m_bufferInfoPool[type];
+                    for (auto const& info: infos) {
+                        if (info.meta.id >= nextInfoId)  nextInfoId = info.meta.id + 1;
+                    }
+                }
+                return nextInfoId;
+            }
+
             BufferInfo* getBufferInfo (uint32_t bufferInfoId, e_bufferType type) {
                 if (m_bufferInfoPool.find (type) != m_bufferInfoPool.end()) {
                     auto& infos = m_bufferInfoPool[type];

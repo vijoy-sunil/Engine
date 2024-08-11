@@ -472,7 +472,8 @@ namespace Renderer {
                                      uint32_t pipelineInfoId,
                                      VkPipelineBindPoint bindPoint,
                                      uint32_t firstSet,
-                                     const std::vector <VkDescriptorSet>& descriptorSets) {
+                                     const std::vector <VkDescriptorSet>& descriptorSets,
+                                     const std::vector <uint32_t>& dynamicOffsets) {
                 
                 auto pipelineInfo = getPipelineInfo (pipelineInfoId);
                 /* Unlike vertex and index buffers, descriptor sets are not unique to graphics pipelines. Therefore we 
@@ -480,7 +481,7 @@ namespace Renderer {
                  * parameter is the pipeline layout that the descriptors are based on
                  * 
                  * The next three parameters specify the index of the first descriptor set, the number of sets to bind, 
-                 * and the array of sets to bind.
+                 * and the array of sets to bind
                  * 
                  * The last two parameters specify an array of offsets that are used for dynamic descriptors
                 */
@@ -490,8 +491,8 @@ namespace Renderer {
                                          firstSet, 
                                          static_cast <uint32_t> (descriptorSets.size()), 
                                          descriptorSets.data(), 
-                                         0, 
-                                         VK_NULL_HANDLE);
+                                         static_cast <uint32_t> (dynamicOffsets.size()), 
+                                         dynamicOffsets.data());
             }
 
             void drawIndexed (VkCommandBuffer commandBuffer,

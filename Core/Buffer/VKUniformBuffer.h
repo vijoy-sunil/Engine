@@ -21,6 +21,16 @@ namespace Renderer {
             }
 
         protected:  
+            /* Source: https://github.com/SaschaWillems/Vulkan/tree/master/examples/dynamicuniformbuffer
+            */ 
+            VkDeviceSize getDynamicUBOOffsetAlignment (VkDeviceSize minOffsetAlignment, VkDeviceSize size) {
+                VkDeviceSize dynamicUBOOffsetAlignment = size;
+                if (minOffsetAlignment > 0)
+                    dynamicUBOOffsetAlignment = (dynamicUBOOffsetAlignment + minOffsetAlignment - 1) & 
+                                                                           ~(minOffsetAlignment - 1);
+                return dynamicUBOOffsetAlignment;
+            }
+
             void createUniformBuffer (uint32_t bufferInfoId, 
                                       uint32_t resourceId, 
                                       VkDeviceSize size, 
