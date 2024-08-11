@@ -98,12 +98,12 @@ namespace Renderer {
                 */
                 for (size_t i = 0; i < g_pathSettings.models.size(); i++) {
                     uint32_t modelInfoId = m_modelInfoIdBase + static_cast <uint32_t> (i);
-                    auto modelInfo       = getModelInfo (modelInfoId);
 
                     readyModelInfo (modelInfoId, 1,
                                     g_pathSettings.models[i],
                                     g_pathSettings.mtlFileDir);
-                    
+                                    
+                    auto modelInfo                 = getModelInfo (modelInfoId);
                     modelInfo->meta.translate      = {0.0f,  0.0f,  0.0f};
                     modelInfo->meta.rotateAxis     = {0.0f,  1.0f,  0.0f};
                     modelInfo->meta.scale          = {1.0f,  1.0f,  1.0f};
