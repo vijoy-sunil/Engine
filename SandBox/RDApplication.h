@@ -160,7 +160,9 @@ namespace Renderer {
 
                     /* Pick a model to run transform operation
                     */
-                    auto modelInfo                    = getModelInfo (g_pathSettings.models.size()/2);
+                    uint32_t modelInfoId              = m_modelInfoIdBase + static_cast <uint32_t> 
+                                                        (g_pathSettings.models.size()/2);
+                    auto modelInfo                    = getModelInfo (modelInfoId);
                     modelInfo->meta.rotateAxis        = {0.0f,  0.0f,  1.0f};
                     modelInfo->meta.rotateAngleDeg    = time * 30.0f;
                     modelInfo->meta.updateModelMatrix = true;

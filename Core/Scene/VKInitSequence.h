@@ -305,7 +305,7 @@ namespace Renderer {
                  * |    {mat4}      |   {mat4}      |   {mat4}      |   {mat4}      |
                  * |    64 bytes    |   64 bytes    |   64 bytes    |   64 bytes    |
                  * |----------------|---------------|---------------|---------------|
-                 * 0                64              128             192             256   
+                 * 0                64              128             192             256
                  * Total buffer size = 256 bytes
                 */
                 sceneInfo->meta.dynamicUBOOffsetAlignment          = getDynamicUBOOffsetAlignment 

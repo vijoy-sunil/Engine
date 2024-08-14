@@ -87,7 +87,7 @@ namespace Renderer {
                     deviceInfo->unique[resourceId].indices.graphicsFamily = 0;
                     deviceInfo->unique[resourceId].indices.presentFamily  = 1;
                     deviceInfo->unique[resourceId].indices.transferFamily = 2;
-#endif
+#endif  // ENABLE_AUTO_PICK_QUEUE_FAMILY_INDICES
                     queueFamilyIndex++;
                 }
                 return isQueueFamilyIndicesComplete (resourceId);

@@ -209,7 +209,7 @@ namespace Renderer {
                 if (m_bufferInfoPool.find (type) != m_bufferInfoPool.end()) {
                     auto& infos = m_bufferInfoPool[type];
                     for (auto const& info: infos) {
-                        if (info.meta.id >= nextInfoId)  nextInfoId = info.meta.id + 1;
+                        if (info.meta.id >= nextInfoId) nextInfoId = info.meta.id + 1;
                     }
                 }
                 return nextInfoId;

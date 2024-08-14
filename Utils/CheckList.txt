@@ -32,9 +32,16 @@ VARIABLES
                    renderPass,
                    pipeline,
                    camera,
+                   fence,
+                   semaphore,
                    resource,
-                   handOff,
+                   scene,
                    device}
+[ - ] Struct info ordering {meta,
+                            path,
+                            id,
+                            resource,
+                            transform}
 -------------------------------------------------------------------------------------------------------------------------
 METHODS
 -------------------------------------------------------------------------------------------------------------------------
@@ -84,6 +91,6 @@ MISC
 [ - ] c_str()                                   when passing it to const char* parameter
 [ - ] size_t                                    only used for size of an object and in fns that accept size_t
 [ - ] std::endl                                 in new line
-[ - ] #endif                                    all endifs should have comment
+[ - ] #endif  //                                all endifs should have comment
 [ - ] " [", "[ ", " ]", "] ", " [ ", " ] "      spacing around log brackets
 -------------------------------------------------------------------------------------------------------------------------
