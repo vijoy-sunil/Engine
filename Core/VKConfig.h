@@ -17,13 +17,13 @@ namespace Renderer {
     struct pathSettings {
         const char* logSaveDir            = "Build/Log/";
         const std::vector <const char*> models = {
-            "SandBox/Models/Model_1.obj",
-            "SandBox/Models/Model_2.obj",
-            "SandBox/Models/Model_3.obj",
-            "SandBox/Models/Model_4.obj"
+            "SandBox/Models/Sample/Model_1.obj",
+            "SandBox/Models/Sample/Model_2.obj",
+            "SandBox/Models/Sample/Model_3.obj",
+            "SandBox/Models/Sample/Model_4.obj"
         };
-        const char* mtlFileDir            = "SandBox/Models/";
-        const char* defaultDiffuseTexture = "SandBox/Textures/tex_16x16_empty.png";
+        const char* mtlFileDir            = "SandBox/Models/Sample/";
+        const char* defaultDiffuseTexture = "SandBox/Textures/Sample/tex_16x16_empty.png";
         const char* vertexShaderBinary    = "Build/Bin/vert.spv";
         const char* fragmentShaderBinary  = "Build/Bin/frag.spv"; 
     } g_pathSettings;
