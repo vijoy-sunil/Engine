@@ -299,17 +299,4 @@
     |
     |
     |Scene/VKDeleteSequence
-
-
-    |<----------------------|VKInitSequence
-    |
-    |<----------------------|VKDrawSequence
-    |
-    |<----------------------|VKDeleteSequence
-    |
-    |
-    |SandBox/RDApplication
-    :
-    :
-    |main
 </pre>

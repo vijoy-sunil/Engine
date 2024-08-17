@@ -46,14 +46,14 @@ namespace Core {
             }
 
         protected:
-            void runSequence (uint32_t modelInfoIdBase, 
+            void runSequence (std::vector <uint32_t> modelInfoIds, 
                               uint32_t renderPassInfoId, 
                               uint32_t pipelineInfoId,
                               uint32_t cameraInfoId,
                               uint32_t resourceId,
                               uint32_t sceneInfoId) {
 
-                auto modelInfoBase = getModelInfo (modelInfoIdBase);
+                auto modelInfoBase = getModelInfo (*modelInfoIds.begin());
                 auto sceneInfo     = getSceneInfo (sceneInfoId);
                 auto deviceInfo    = getDeviceInfo();
                 /* |------------------------------------------------------------------------------------------------|
@@ -262,12 +262,10 @@ namespace Core {
                  * | DESTROY MODEL INFO                                                                             |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                for (size_t i = 0; i < g_pathSettings.models.size(); i++) {
-                    uint32_t modelInfoId = modelInfoIdBase + static_cast <uint32_t> (i);
-                    
-                    VKModelMgr::cleanUp (modelInfoId);
+                for (auto const& infoId: modelInfoIds) {
+                    VKModelMgr::cleanUp (infoId);
                     LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Model info " 
-                                                     << "[" << modelInfoId << "]"
+                                                     << "[" << infoId << "]"
                                                      << std::endl; 
                 }
                 /* |------------------------------------------------------------------------------------------------|

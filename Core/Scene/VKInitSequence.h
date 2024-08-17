@@ -94,14 +94,14 @@ namespace Core {
             }
 
         protected:
-            void runSequence (uint32_t modelInfoIdBase, 
+            void runSequence (std::vector <uint32_t> modelInfoIds,
                               uint32_t renderPassInfoId,
                               uint32_t pipelineInfoId,
                               uint32_t cameraInfoId, 
                               uint32_t resourceId,
                               uint32_t sceneInfoId) {
 
-                auto modelInfoBase = getModelInfo (modelInfoIdBase);
+                auto modelInfoBase = getModelInfo (*modelInfoIds.begin());
                 auto sceneInfo     = getSceneInfo (sceneInfoId);
                 auto deviceInfo    = getDeviceInfo();
 #if ENABLE_LOGGING
@@ -161,22 +161,20 @@ namespace Core {
                  * | IMPORT MODEL                                                                                   |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                for (size_t i = 0; i < g_pathSettings.models.size(); i++) {
-                    uint32_t modelInfoId = modelInfoIdBase + static_cast <uint32_t> (i);
-                    importOBJModel (modelInfoId);
+                for (auto const& infoId: modelInfoIds) {
+                    importOBJModel (infoId);
                     LOG_INFO (m_VKInitSequenceLog) << "[OK] Import model " 
-                                                   << "[" << modelInfoId << "]"
+                                                   << "[" << infoId << "]"
                                                    << std::endl;
                 }
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG MODEL MATRIX                                                                            |
                  * |------------------------------------------------------------------------------------------------|
                 */  
-                for (size_t i = 0; i < g_pathSettings.models.size(); i++) {
-                    uint32_t modelInfoId = modelInfoIdBase + static_cast <uint32_t> (i);                                            
-                    createModelMatrix (modelInfoId);
+                for (auto const& infoId: modelInfoIds) {                                           
+                    createModelMatrix (infoId);
                     LOG_INFO (m_VKInitSequenceLog) << "[OK] Model matrix " 
-                                                   << "[" << modelInfoId << "]"
+                                                   << "[" << infoId << "]"
                                                    << std::endl;
                 }
                 /* |------------------------------------------------------------------------------------------------|
@@ -235,17 +233,16 @@ namespace Core {
                  * the vertex buffer info id, and the remaining models will have it set to UINT32_MAX to indicate that 
                  * their vertex buffers are owned by another model
                 */
-                for (size_t i = 0; i < g_pathSettings.models.size(); i++) {
-                    uint32_t modelInfoId   = modelInfoIdBase + static_cast <uint32_t> (i);
-                    auto modelInfo         = getModelInfo (modelInfoId);
-
+                for (auto const& infoId: modelInfoIds) {
+                    auto modelInfo         = getModelInfo (infoId);
                     combinedVerticesCount += modelInfo->meta.verticesCount;
+
                     combinedVertices.reserve (combinedVerticesCount);
                     combinedVertices.insert  (combinedVertices.end(), modelInfo->meta.vertices.begin(),
                                                                       modelInfo->meta.vertices.end());
-                    
-                    i == 0 ? modelInfo->id.vertexBufferInfo = vertexBufferInfoId:
-                             modelInfo->id.vertexBufferInfo = UINT32_MAX;
+   
+                    infoId == *modelInfoIds.begin() ? modelInfo->id.vertexBufferInfo = vertexBufferInfoId:
+                                                      modelInfo->id.vertexBufferInfo = UINT32_MAX;
                 }
                 
                 createVertexBuffer (vertexBufferInfoId, 
@@ -266,17 +263,16 @@ namespace Core {
                 size_t combinedIndicesCount = 0;
                 uint32_t indexBufferInfoId  = getNextInfoIdFromBufferType (STAGING_BUFFER);
 
-                for (size_t i = 0; i < g_pathSettings.models.size(); i++) {
-                    uint32_t modelInfoId   = modelInfoIdBase + static_cast <uint32_t> (i);
-                    auto modelInfo         = getModelInfo (modelInfoId);
+                for (auto const& infoId: modelInfoIds) {
+                    auto modelInfo        = getModelInfo (infoId);
+                    combinedIndicesCount += modelInfo->meta.indicesCount;
 
-                    combinedIndicesCount  += modelInfo->meta.indicesCount;
                     combinedIndices.reserve (combinedIndicesCount);
                     combinedIndices.insert  (combinedIndices.end(), modelInfo->meta.indices.begin(),
                                                                     modelInfo->meta.indices.end());
                     
-                    i == 0 ? modelInfo->id.indexBufferInfo = indexBufferInfoId:
-                             modelInfo->id.indexBufferInfo = UINT32_MAX;
+                    infoId == *modelInfoIds.begin() ? modelInfo->id.indexBufferInfo = indexBufferInfoId:
+                                                      modelInfo->id.indexBufferInfo = UINT32_MAX;
                 }
 
                 createIndexBuffer (indexBufferInfoId, 
@@ -310,7 +306,7 @@ namespace Core {
                 */
                 sceneInfo->meta.dynamicUBOOffsetAlignment          = getDynamicUBOOffsetAlignment 
                 (deviceInfo->params.minUniformBufferOffsetAlignment, sizeof (ModelData::DynamicUBO));
-                sceneInfo->meta.dynamicUBOSize                     = g_pathSettings.models.size() * 
+                sceneInfo->meta.dynamicUBOSize                     = modelInfoIds.size() * 
                                                                      sceneInfo->meta.dynamicUBOOffsetAlignment;
                 /* Note that, passing a size which is not an integral multiple of alignment or an alignment which is not
                  * valid or not supported by the implementation causes the allocation function to fail and return a null

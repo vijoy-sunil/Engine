@@ -8,22 +8,15 @@ namespace Core {
     #define ENABLE_IDLE_ROTATION                    (true)
     #define ENABLE_AUTO_PICK_QUEUE_FAMILY_INDICES   (true)
 
-    struct windowSettings {
+    struct WindowSettings {
         const int width   = 800;
         const int height  = 720;
         const char* title = "WINDOW_";
     } g_windowSettings;
 
-    struct pathSettings {
+    struct PathSettings {
         const char* logSaveDir            = "Build/Log/";
-        const std::vector <const char*> models = {
-            "SandBox/Models/Sample/Model_1.obj",
-            "SandBox/Models/Sample/Model_2.obj",
-            "SandBox/Models/Sample/Model_3.obj",
-            "SandBox/Models/Sample/Model_4.obj"
-        };
-        const char* mtlFileDir            = "SandBox/Models/Sample/";
-        const char* defaultDiffuseTexture = "SandBox/Textures/Sample/tex_16x16_empty.png";
+        const char* defaultDiffuseTexture = "SandBox/Textures/tex_16x16_empty.png";
         const char* vertexShaderBinary    = "Build/Bin/vert.spv";
         const char* fragmentShaderBinary  = "Build/Bin/frag.spv"; 
     } g_pathSettings;

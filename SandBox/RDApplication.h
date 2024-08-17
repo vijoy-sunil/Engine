@@ -4,6 +4,7 @@
 #include "../Core/Scene/VKInitSequence.h"
 #include "../Core/Scene/VKDrawSequence.h"
 #include "../Core/Scene/VKDeleteSequence.h"
+#include "RDConfig.h"
 
 using namespace Core;
 
@@ -12,9 +13,7 @@ namespace SandBox {
                          protected VKDrawSequence,
                          protected VKDeleteSequence {
         private:
-            uint32_t m_deviceResourcesCount;
-            uint32_t m_modelInfoIdBase;
-
+            std::vector <uint32_t> m_modelInfoIds;
             uint32_t m_renderPassInfoId;
             uint32_t m_pipelineInfoId;
             uint32_t m_cameraInfoId;
@@ -23,11 +22,10 @@ namespace SandBox {
             uint32_t m_renderDoneSemaphoreInfoBase;
             uint32_t m_resourceId;
             uint32_t m_sceneInfoId;
+            uint32_t m_deviceResourcesCount;
 
         public:
             RDApplication (void) {
-                m_deviceResourcesCount            = 1;
-                m_modelInfoIdBase                 = 0;
                 /* Info id overview
                  * |------------------------|-------------------|---------------|---------------|
                  * | MODEL INFO ID          |   0               |   1           |   ...         |
@@ -83,6 +81,7 @@ namespace SandBox {
                 m_renderDoneSemaphoreInfoBase     = 0;
                 m_resourceId                      = 0;
                 m_sceneInfoId                     = 0;
+                m_deviceResourcesCount            = 1;
             }
 
             ~RDApplication (void) {
@@ -98,18 +97,19 @@ namespace SandBox {
                  * | READY MODEL INFO                                                                               |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                for (size_t i = 0; i < g_pathSettings.models.size(); i++) {
-                    uint32_t modelInfoId = m_modelInfoIdBase + static_cast <uint32_t> (i);
-
-                    readyModelInfo (modelInfoId, 1,
-                                    g_pathSettings.models[i],
-                                    g_pathSettings.mtlFileDir);
+                for (auto const& [infoId, info]: g_modelImportInfoPool) {
+                    readyModelInfo (infoId, 
+                                    info.instanceCount,
+                                    info.modelPath,
+                                    info.mtlFileDirPath);
                                     
-                    auto modelInfo                 = getModelInfo (modelInfoId);
+                    auto modelInfo                 = getModelInfo (infoId);
                     modelInfo->meta.translate      = {0.0f,  0.0f,  0.0f};
                     modelInfo->meta.rotateAxis     = {0.0f,  1.0f,  0.0f};
                     modelInfo->meta.scale          = {1.0f,  1.0f,  1.0f};
                     modelInfo->meta.rotateAngleDeg = 0.0f; 
+
+                    m_modelInfoIds.push_back (infoId);
                 }
                 /* |------------------------------------------------------------------------------------------------|
                  * | READY CAMERA INFO                                                                              |
@@ -135,7 +135,7 @@ namespace SandBox {
                 };
                 readySceneInfo (m_sceneInfoId, sceneInfoIds);
 
-                VKInitSequence::runSequence (m_modelInfoIdBase, 
+                VKInitSequence::runSequence (m_modelInfoIds, 
                                              m_renderPassInfoId,
                                              m_pipelineInfoId,
                                              m_cameraInfoId,
@@ -162,15 +162,14 @@ namespace SandBox {
 
                     /* Pick a model to run transform operation
                     */
-                    uint32_t modelInfoId              = m_modelInfoIdBase + static_cast <uint32_t> 
-                                                        (g_pathSettings.models.size()/2);
+                    uint32_t modelInfoId              = 2;
                     auto modelInfo                    = getModelInfo (modelInfoId);
                     modelInfo->meta.rotateAxis        = {0.0f,  0.0f,  1.0f};
                     modelInfo->meta.rotateAngleDeg    = time * 30.0f;
                     modelInfo->meta.updateModelMatrix = true;
 #endif  // ENABLE_IDLE_ROTATION
 
-                    VKDrawSequence::runSequence (m_modelInfoIdBase, 
+                    VKDrawSequence::runSequence (m_modelInfoIds, 
                                                  m_renderPassInfoId,
                                                  m_pipelineInfoId,
                                                  m_cameraInfoId,
@@ -186,7 +185,7 @@ namespace SandBox {
             }
 
             void deleteScene (void) {
-                VKDeleteSequence::runSequence (m_modelInfoIdBase, 
+                VKDeleteSequence::runSequence (m_modelInfoIds, 
                                                m_renderPassInfoId,
                                                m_pipelineInfoId,
                                                m_cameraInfoId,

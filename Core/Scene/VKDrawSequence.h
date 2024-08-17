@@ -44,14 +44,14 @@ namespace Core {
             }
 
         protected:
-            void runSequence (uint32_t modelInfoIdBase, 
+            void runSequence (std::vector <uint32_t> modelInfoIds,
                               uint32_t renderPassInfoId,
                               uint32_t pipelineInfoId,
                               uint32_t cameraInfoId,
                               uint32_t resourceId, 
                               uint32_t sceneInfoId) {
 
-                auto modelInfoBase = getModelInfo  (modelInfoIdBase);
+                auto modelInfoBase = getModelInfo  (*modelInfoIds.begin());
                 auto cameraInfo    = getCameraInfo (cameraInfoId);
                 auto sceneInfo     = getSceneInfo  (sceneInfoId);
                 auto deviceInfo    = getDeviceInfo();
@@ -149,12 +149,11 @@ namespace Core {
                  * | CONFIG DRAW OPS - MODEL TRANSFORM                                                              |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                for (size_t i = 0; i < g_pathSettings.models.size(); i++) {
-                    uint32_t modelInfoId = modelInfoIdBase + static_cast <uint32_t> (i);
-                    auto modelInfo       = getModelInfo (modelInfoId);
+                for (auto const& infoId: modelInfoIds) {
+                    auto modelInfo = getModelInfo (infoId);
 
                     if (modelInfo->meta.updateModelMatrix) {
-                        createModelMatrix (modelInfoId);
+                        createModelMatrix (infoId);
                         modelInfo->meta.updateModelMatrix = false;
                     }
                 }
@@ -175,15 +174,16 @@ namespace Core {
                  * | CONFIG DRAW OPS - UPDATE UNIFORMS                                                              |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                for (size_t i = 0; i < g_pathSettings.models.size(); i++) {
-                    uint32_t modelInfoId = modelInfoIdBase + static_cast <uint32_t> (i);
-                    auto modelInfo       = getModelInfo (modelInfoId);                    
+                uint32_t loopIdx = 0;
+                for (auto const& infoId: modelInfoIds) {
+                    auto modelInfo = getModelInfo (infoId);
                     /* Offset into the buffer to populate uniform data for all models
                     */
                     auto dynamicUBO           = (ModelData::DynamicUBO*) 
                                                 (((VkDeviceSize) sceneInfo->meta.modelData.dynamicUBO + 
-                                                (i * sceneInfo->meta.dynamicUBOOffsetAlignment)));
+                                                (loopIdx * sceneInfo->meta.dynamicUBOOffsetAlignment)));
                     dynamicUBO->modelMatrices = modelInfo->transform.model;
+                    loopIdx++;
                 }
                 updateUniformBuffer (sceneInfo->id.uniformBufferInfoBase + m_currentFrameInFlight,
                                      sceneInfo->meta.dynamicUBOSize,
@@ -282,10 +282,10 @@ namespace Core {
                 */
                 uint32_t firstIndex   = 0;
                 int32_t  vertexOffset = 0;
-                for (size_t i = 0; i < g_pathSettings.models.size(); i++) {
-                    uint32_t modelInfoId = modelInfoIdBase + static_cast <uint32_t> (i);
-                    auto modelInfo       = getModelInfo (modelInfoId);
-                    
+
+                loopIdx = 0;
+                for (auto const& infoId: modelInfoIds) {
+                    auto modelInfo = getModelInfo (infoId);
                     /* Render multiple models each having it's own uniform data (model matrices, etc. for example) by 
                      * dynamically offsetting into one uniform buffer
                     */
@@ -293,7 +293,7 @@ namespace Core {
                         sceneInfo->resource.descriptorSets[m_currentFrameInFlight]
                     };
                     auto dynamicOffsets = std::vector <uint32_t> {
-                        static_cast <uint32_t> (i * sceneInfo->meta.dynamicUBOOffsetAlignment)
+                        static_cast <uint32_t> (loopIdx * sceneInfo->meta.dynamicUBOOffsetAlignment)
                     };     
                     bindDescriptorSets (sceneInfo->resource.commandBuffers[m_currentFrameInFlight],
                                         pipelineInfoId,
@@ -308,6 +308,7 @@ namespace Core {
 
                     firstIndex   += modelInfo->meta.indicesCount;
                     vertexOffset += modelInfo->meta.verticesCount;
+                    loopIdx++;
                 }
 
                 endRenderPass (sceneInfo->resource.commandBuffers[m_currentFrameInFlight]);
