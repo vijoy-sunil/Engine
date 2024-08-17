@@ -5,7 +5,7 @@
 
 using namespace Collections;
 
-namespace Renderer {
+namespace Core {
     class VKSwapChainImage: protected virtual VKImageMgr {
         private:
             static Log::Record* m_VKSwapChainImageLog;
@@ -309,5 +309,5 @@ namespace Renderer {
     };
 
     Log::Record* VKSwapChainImage::m_VKSwapChainImageLog;
-}   // namespace Renderer
+}   // namespace Core
 #endif  // VK_SWAP_CHAIN_IMAGE_H

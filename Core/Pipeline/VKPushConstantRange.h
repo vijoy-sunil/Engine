@@ -5,7 +5,7 @@
 
 using namespace Collections;
 
-namespace Renderer {
+namespace Core {
     class VKPushConstantRange: protected virtual VKPipelineMgr {
         private:
             static Log::Record* m_VKPushConstantRangeLog;
@@ -50,5 +50,5 @@ namespace Renderer {
     };
 
     Log::Record* VKPushConstantRange::m_VKPushConstantRangeLog;
-}   // namespace Renderer
+}   // namespace Core
 #endif  // VK_PUSH_CONSTANT_RANGE_H

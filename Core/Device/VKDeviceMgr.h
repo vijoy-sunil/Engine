@@ -10,7 +10,7 @@
 
 using namespace Collections;
 
-namespace Renderer {
+namespace Core {
     class VKDeviceMgr {
         private:
             /* It's not really possible to use a magic value to indicate the nonexistence of a queue family, since any 
@@ -238,5 +238,5 @@ namespace Renderer {
     };
 
     Log::Record* VKDeviceMgr::m_VKDeviceMgrLog;
-}   // namespace Renderer
+}   // namespace Core
 #endif  // VK_DEVICE_MGR_H

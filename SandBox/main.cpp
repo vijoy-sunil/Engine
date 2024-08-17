@@ -1,7 +1,7 @@
 #include "RDApplication.h"
 
 int main (void) {
-    Renderer::RDApplication app;
+    SandBox::RDApplication app;
     app.createScene();
     app.runScene();
     app.deleteScene();

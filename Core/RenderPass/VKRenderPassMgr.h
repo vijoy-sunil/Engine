@@ -5,7 +5,7 @@
 
 using namespace Collections;
 
-namespace Renderer {
+namespace Core {
     class VKRenderPassMgr: protected virtual VKDeviceMgr {
         private:
             struct RenderPassInfo {
@@ -137,5 +137,5 @@ namespace Renderer {
     };
 
     Log::Record* VKRenderPassMgr::m_VKRenderPassMgrLog;
-}   // namespace Renderer
+}   // namespace Core
 #endif  // VK_RENDER_PASS_MGR_H

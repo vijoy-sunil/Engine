@@ -5,7 +5,7 @@
 
 using namespace Collections;
 
-namespace Renderer {
+namespace Core {
     class VKInputAssembly: protected virtual VKPipelineMgr {
         private:
             static Log::Record* m_VKInputAssemblyLog;
@@ -58,5 +58,5 @@ namespace Renderer {
     };
 
     Log::Record* VKInputAssembly::m_VKInputAssemblyLog;
-}   // namespace Renderer
+}   // namespace Core
 #endif  // VK_INPUT_ASSEMBLY_H

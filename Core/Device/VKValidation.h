@@ -6,7 +6,7 @@
 
 using namespace Collections;
 
-namespace Renderer {
+namespace Core {
     class VKValidation: protected virtual VKDeviceMgr {
         private:
             /* You can simply enable validation layers for debug builds and completely disable them for release builds
@@ -228,5 +228,5 @@ namespace Renderer {
     };
 
     Log::Record* VKValidation::m_VKValidationLog;
-}   // namespace Renderer
+}   // namespace Core
 #endif  // VK_VALIDATION_H

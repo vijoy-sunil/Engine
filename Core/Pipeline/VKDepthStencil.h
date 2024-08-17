@@ -5,7 +5,7 @@
 
 using namespace Collections;
 
-namespace Renderer {
+namespace Core {
     class VKDepthStencil: protected virtual VKPipelineMgr {
         private:
             static Log::Record* m_VKDepthStencilLog;
@@ -67,5 +67,5 @@ namespace Renderer {
     };
 
     Log::Record* VKDepthStencil::m_VKDepthStencilLog;
-}   // namespace Renderer
+}   // namespace Core
 #endif  // VK_DEPTH_STENCIL_H

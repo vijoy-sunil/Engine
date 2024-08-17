@@ -5,7 +5,7 @@
 
 using namespace Collections;
 
-namespace Renderer {
+namespace Core {
     class VKSurface: protected virtual VKDeviceMgr {
         private:
             static Log::Record* m_VKSurfaceLog;
@@ -51,5 +51,5 @@ namespace Renderer {
     };
     
     Log::Record* VKSurface::m_VKSurfaceLog;
-}   // namespace Renderer
+}   // namespace Core
 #endif  // VK_SURFACE_H

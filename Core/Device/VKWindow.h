@@ -5,7 +5,7 @@
 
 using namespace Collections;
 
-namespace Renderer {
+namespace Core {
     class VKWindow: protected virtual VKDeviceMgr {
         private:
             static Log::Record* m_VKWindowLog;
@@ -90,5 +90,5 @@ namespace Renderer {
     };
     
     Log::Record* VKWindow::m_VKWindowLog;
-}   // namespace Renderer
+}   // namespace Core
 #endif  // VK_WINDOW_H

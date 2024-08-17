@@ -5,7 +5,7 @@
 
 using namespace Collections;
 
-namespace Renderer {
+namespace Core {
     /* An overview of the pipeline
      * Vertex/Index Buffer
      *      |
@@ -258,5 +258,5 @@ namespace Renderer {
     };
 
     Log::Record* VKPipelineMgr::m_VKPipelineMgrLog;
-}   // namespace Renderer
+}   // namespace Core
 #endif  // VK_PIPELINE_MGR_H

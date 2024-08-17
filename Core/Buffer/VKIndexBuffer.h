@@ -5,7 +5,7 @@
 
 using namespace Collections;
 
-namespace Renderer {
+namespace Core {
     class VKIndexBuffer: protected virtual VKBufferMgr {
         private:
             static Log::Record* m_VKIndexBufferLog;
@@ -66,5 +66,5 @@ namespace Renderer {
     };
 
     Log::Record* VKIndexBuffer::m_VKIndexBufferLog;
-}   // namespace Renderer
+}   // namespace Core
 #endif  // VK_INDEX_BUFFER_H

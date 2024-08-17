@@ -6,7 +6,7 @@
 
 using namespace Collections;
 
-namespace Renderer {
+namespace Core {
     class VKTextureSampler: protected virtual VKSceneMgr,
                             protected virtual VKDeviceMgr {
         private:
@@ -194,5 +194,5 @@ namespace Renderer {
     };
 
     Log::Record* VKTextureSampler::m_VKTextureSamplerLog;
-}   // namespace Renderer
+}   // namespace Core
 #endif  // VK_TEXTURE_SAMPLER_H

@@ -6,7 +6,7 @@
 
 using namespace Collections;
 
-namespace Renderer {
+namespace Core {
     class VKLogDevice: protected virtual VKValidation,
                        protected virtual VKPhyDevice {
         private:
@@ -188,5 +188,5 @@ namespace Renderer {
     };
 
     Log::Record* VKLogDevice::m_VKLogDeviceLog;
-}   // namespace Renderer
+}   // namespace Core
 #endif  // VK_LOG_DEVICE_H

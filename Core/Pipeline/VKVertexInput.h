@@ -5,7 +5,7 @@
 
 using namespace Collections;
 
-namespace Renderer {
+namespace Core {
     class VKVertexInput: protected virtual VKPipelineMgr {
         private:
             static Log::Record* m_VKVertexInputLog;
@@ -51,5 +51,5 @@ namespace Renderer {
     };
 
     Log::Record* VKVertexInput::m_VKVertexInputLog;
-}   // namespace Renderer
+}   // namespace Core
 #endif  // VK_VERTEX_INPUT_H

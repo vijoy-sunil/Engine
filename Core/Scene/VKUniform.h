@@ -3,7 +3,7 @@
 
 #include <glm/glm.hpp>
 
-namespace Renderer {
+namespace Core {
     /* Define the data we want the vertex shader to have in a struct like below. This data will be copied to a VkBuffer
      * and accessible through a uniform buffer object descriptor from the vertex shader. We can exactly match the 
      * definition in the shader using data types in GLM. The data in the matrices is binary compatible with the way the 
@@ -92,5 +92,5 @@ namespace Renderer {
         glm::mat4 viewMatrix;
         alignas (16) glm::mat4 projectionMatrix;  
     };
-}   // namespace Renderer
+}   // namespace Core
 #endif  // VK_UNIFORM_H

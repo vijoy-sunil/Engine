@@ -5,7 +5,7 @@
 
 using namespace Collections;
 
-namespace Renderer {
+namespace Core {
     class VKViewPort: protected virtual VKPipelineMgr {
         private:
             static Log::Record* m_VKViewPortLog;
@@ -43,5 +43,5 @@ namespace Renderer {
     };
 
     Log::Record* VKViewPort::m_VKViewPortLog;
-}   // namespace Renderer
+}   // namespace Core
 #endif  // VK_VIEW_PORT_H

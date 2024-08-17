@@ -3,7 +3,7 @@
 
 #include <vector>
 
-namespace Renderer {
+namespace Core {
     #define ENABLE_LOGGING                          (true)
     #define ENABLE_IDLE_ROTATION                    (true)
     #define ENABLE_AUTO_PICK_QUEUE_FAMILY_INDICES   (true)
@@ -54,5 +54,5 @@ namespace Renderer {
      * Collections which may result in collision
     */
     uint32_t g_collectionsId = 0;
-}   // namespace Renderer
+}   // namespace Core
 #endif  // VK_CONFIG_H

@@ -5,7 +5,7 @@
 
 using namespace Collections;
 
-namespace Renderer {
+namespace Core {
     class VKVertexBuffer: protected virtual VKBufferMgr {
         private:
             static Log::Record* m_VKVertexBufferLog;
@@ -113,5 +113,5 @@ namespace Renderer {
     };
 
     Log::Record* VKVertexBuffer::m_VKVertexBufferLog;
-}   // namespace Renderer
+}   // namespace Core
 #endif  // VK_VERTEX_BUFFER_H

@@ -9,7 +9,7 @@
 
 using namespace Collections;
 
-namespace Renderer {
+namespace Core {
     class VKSceneMgr {
         private:
             struct SceneInfo {
@@ -157,5 +157,5 @@ namespace Renderer {
     };
 
     Log::Record* VKSceneMgr::m_VKSceneMgrLog;
-}   // namespace Renderer
+}   // namespace Core
 #endif  // VK_SCENE_MGR_H

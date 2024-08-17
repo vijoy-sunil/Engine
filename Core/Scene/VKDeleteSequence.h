@@ -17,7 +17,7 @@
 
 using namespace Collections;
 
-namespace Renderer {
+namespace Core {
     class VKDeleteSequence: protected virtual VKWindow,
                             protected virtual VKInstance,
                             protected virtual VKSurface,
@@ -288,5 +288,5 @@ namespace Renderer {
     };
 
     Log::Record* VKDeleteSequence::m_VKDeleteSequenceLog;
-}   // namespace Renderer
+}   // namespace Core
 #endif  // VK_DELETE_SEQUENCE_H

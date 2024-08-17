@@ -5,7 +5,7 @@
 
 using namespace Collections;
 
-namespace Renderer {
+namespace Core {
     class VKBufferMgr: protected virtual VKPhyDevice {
         private:
             struct BufferInfo {
@@ -296,5 +296,5 @@ namespace Renderer {
     };
 
     Log::Record* VKBufferMgr::m_VKBufferMgrLog;
-}   // namespace Renderer
+}   // namespace Core
 #endif  // VK_BUFFER_MGR_H

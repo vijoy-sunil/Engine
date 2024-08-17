@@ -6,7 +6,7 @@
 
 using namespace Collections;
 
-namespace Renderer {
+namespace Core {
     class VKMultiSample: protected virtual VKPipelineMgr,
                          protected virtual VKImageMgr {
         private:
@@ -60,5 +60,5 @@ namespace Renderer {
     };
 
     Log::Record* VKMultiSample::m_VKMultiSampleLog;
-}   // namespace Renderer
+}   // namespace Core
 #endif  // VK_MULTI_SAMPLE_H

@@ -5,7 +5,7 @@
 
 using namespace Collections;
 
-namespace Renderer {
+namespace Core {
     class VKCmdBuffer: protected virtual VKDeviceMgr {
         private:
             static Log::Record* m_VKCmdBufferLog;
@@ -160,5 +160,5 @@ namespace Renderer {
     };
 
     Log::Record* VKCmdBuffer::m_VKCmdBufferLog;
-}   // namespace Renderer
+}   // namespace Core
 #endif  // VK_CMD_BUFFER_H

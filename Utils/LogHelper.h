@@ -4,7 +4,8 @@
 #include <vector>
 #include "../Core/VKEnum.h"
 
-namespace Renderer {
+using namespace Core;
+
 namespace Utils {
     /* Split strings into smaller strings using delimiter. For example, supported flags of a queue family represented by
      * "VK_QUEUE_GRAPHICS_BIT|VK_QUEUE_COMPUTE_BIT|VK_QUEUE_TRANSFER_BIT" will be split into individual flags for better
@@ -84,5 +85,4 @@ namespace Utils {
         }
     }
 }   // namespace Utils
-}   // namespace Renderer
 #endif  // LOG_HELPER_H

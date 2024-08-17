@@ -5,7 +5,7 @@
 
 using namespace Collections;
 
-namespace Renderer {
+namespace Core {
     class VKPipelineLayout: protected virtual VKPipelineMgr {
         private:
             static Log::Record* m_VKPipelineLayoutLog;
@@ -70,5 +70,5 @@ namespace Renderer {
     };
 
     Log::Record* VKPipelineLayout::m_VKPipelineLayoutLog;
-}   // namespace Renderer
+}   // namespace Core
 #endif  // VK_PIPELINE_LAYOUT_H

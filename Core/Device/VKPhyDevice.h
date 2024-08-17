@@ -5,7 +5,7 @@
 
 using namespace Collections;
 
-namespace Renderer {
+namespace Core {
     class VKPhyDevice: protected VKQueue {
         private:
             static Log::Record* m_VKPhyDeviceLog;
@@ -319,5 +319,5 @@ namespace Renderer {
     };
 
     Log::Record* VKPhyDevice::m_VKPhyDeviceLog;
-}   // namespace Renderer
+}   // namespace Core
 #endif  // VK_PHY_DEVICE_H

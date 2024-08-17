@@ -12,7 +12,7 @@
 
 using namespace Collections;
 
-namespace Renderer {
+namespace Core {
     class VKDrawSequence: protected virtual VKWindow,
                           protected virtual VKModelMatrix,
                           protected virtual VKUniformBuffer,
@@ -445,5 +445,5 @@ namespace Renderer {
     };
 
     Log::Record* VKDrawSequence::m_VKDrawSequenceLog;
-}   // namespace Renderer
+}   // namespace Core
 #endif  // VK_DRAW_SEQUENCE_H

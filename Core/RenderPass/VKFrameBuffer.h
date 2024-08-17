@@ -5,7 +5,7 @@
 
 using namespace Collections;
 
-namespace Renderer {
+namespace Core {
     class VKFrameBuffer: protected virtual VKRenderPassMgr {
         private:
             static Log::Record* m_VKFrameBufferLog;
@@ -82,5 +82,5 @@ namespace Renderer {
     };
 
     Log::Record* VKFrameBuffer::m_VKFrameBufferLog;
-}   // namespace Renderer
+}   // namespace Core
 #endif  // VK_FRAME_BUFFER_H

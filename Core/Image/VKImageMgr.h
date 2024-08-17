@@ -5,7 +5,7 @@
 
 using namespace Collections;
 
-namespace Renderer {
+namespace Core {
     class VKImageMgr: protected virtual VKPhyDevice {
         private:
             struct ImageInfo {
@@ -550,5 +550,5 @@ namespace Renderer {
     };
 
     Log::Record* VKImageMgr::m_VKImageMgrLog;
-}   // namespace Renderer
+}   // namespace Core
 #endif  // VK_IMAGE_MGR_H

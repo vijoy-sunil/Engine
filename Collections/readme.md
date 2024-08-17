@@ -15,9 +15,9 @@ using namespace Collections;
 ## Namespaces
 <pre>
     <i>Collections</i>
-        |-- <i>Admin</i>
-        |-- <i>Buffer</i>
-        |-- <i>Log</i>
+    |-- <i>Admin</i>
+    |-- <i>Buffer</i>
+    |-- <i>Log</i>
 </pre>
 
 ### Buffer

@@ -5,7 +5,7 @@
 
 using namespace Collections;
 
-namespace Renderer {
+namespace Core {
     /* The idea of sub passes is that you have multiple operations in a sequence that operate on the same pixels in the 
      * frame buffer, which is mainly useful for things like deferred rendering
      * 
@@ -230,5 +230,5 @@ namespace Renderer {
     };
 
     Log::Record* VKSubPass::m_VKSubPassLog;
-}   // namespace Renderer
+}   // namespace Core
 #endif  // VK_SUB_PASS_H

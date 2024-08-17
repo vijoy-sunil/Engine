@@ -37,7 +37,7 @@
 
 using namespace Collections;
 
-namespace Renderer {
+namespace Core {
     class VKInitSequence: protected virtual VKWindow,
                           protected virtual VKInstance,
                           protected virtual VKSurface,
@@ -1008,5 +1008,5 @@ namespace Renderer {
     };
 
     Log::Record* VKInitSequence::m_VKInitSequenceLog;
-}   // namespace Renderer
+}   // namespace Core
 #endif  // VK_INIT_SEQUENCE_H

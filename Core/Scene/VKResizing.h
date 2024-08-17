@@ -9,7 +9,7 @@
 
 using namespace Collections;
 
-namespace Renderer {
+namespace Core {
     class VKResizing: protected virtual VKSwapChainImage,
                       protected virtual VKDepthImage,
                       protected virtual VKMultiSampleImage,
@@ -192,5 +192,5 @@ namespace Renderer {
     };
 
     Log::Record* VKResizing::m_VKResizingLog;
-}   // namespace Renderer
+}   // namespace Core
 #endif  // VK_RESIZING_H

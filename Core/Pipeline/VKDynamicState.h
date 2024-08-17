@@ -5,7 +5,7 @@
 
 using namespace Collections;
 
-namespace Renderer {
+namespace Core {
     class VKDynamicState: protected virtual VKPipelineMgr {
         private:
             static Log::Record* m_VKDynamicStateLog;
@@ -68,5 +68,5 @@ namespace Renderer {
     };
 
     Log::Record* VKDynamicState::m_VKDynamicStateLog;
-}   // namespace Renderer
+}   // namespace Core
 #endif  // VK_DYNAMIC_STATE_H

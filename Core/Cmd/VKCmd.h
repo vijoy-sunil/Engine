@@ -7,7 +7,7 @@
 
 using namespace Collections;
 
-namespace Renderer {
+namespace Core {
     class VKCmd: protected virtual VKImageMgr,
                  protected virtual VKBufferMgr,
                  protected virtual VKPipelineMgr {
@@ -518,5 +518,5 @@ namespace Renderer {
     };
 
     Log::Record* VKCmd::m_VKCmdLog;
-}   // namespace Renderer
+}   // namespace Core
 #endif  // VK_CMD_H

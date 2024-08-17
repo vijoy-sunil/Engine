@@ -6,7 +6,7 @@
 
 using namespace Collections;
 
-namespace Renderer {
+namespace Core {
     /* We're now able to pass arbitrary attributes to the vertex shader for each vertex, but what about global variables?
      * (for example, the transformation matrix). We could include it as vertex data, but that's a waste of memory and it 
      * would require us to update the vertex buffer whenever the transformation changes. The transformation could easily 
@@ -282,5 +282,5 @@ namespace Renderer {
     };   
 
     Log::Record* VKDescriptor::m_VKDescriptorLog; 
-}   // namespace Renderer
+}   // namespace Core
 #endif  // VK_DESCRIPTOR_H

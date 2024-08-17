@@ -5,7 +5,7 @@
 
 using namespace Collections;
 
-namespace Renderer {
+namespace Core {
     class VKDescriptorSetLayout: protected virtual VKPipelineMgr {
         private:
             static Log::Record* m_VKDescriptorSetLayoutLog;
@@ -104,5 +104,5 @@ namespace Renderer {
     };
 
     Log::Record* VKDescriptorSetLayout::m_VKDescriptorSetLayoutLog;
-}   // namespace Renderer
+}   // namespace Core
 #endif  // VK_DESCRIPTOR_SET_LAYOUT_H

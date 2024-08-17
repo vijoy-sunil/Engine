@@ -7,7 +7,7 @@
 
 using namespace Collections;
 
-namespace Renderer {
+namespace Core {
     class VKQueue: protected virtual VKDeviceMgr {
         private:
             static Log::Record* m_VKQueueLog;
@@ -109,5 +109,5 @@ namespace Renderer {
     };
 
     Log::Record* VKQueue::m_VKQueueLog;
-}   // namespace Renderer
+}   // namespace Core
 #endif  // VK_QUEUE_H

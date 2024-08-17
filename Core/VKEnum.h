@@ -1,7 +1,7 @@
 #ifndef VK_ENUM_H
 #define VK_ENUM_H
 
-namespace Renderer {
+namespace Core {
     typedef enum {
         VOID_IMAGE          = 0,
         SWAPCHAIN_IMAGE     = 1,
@@ -26,5 +26,5 @@ namespace Renderer {
         SEM_IMAGE_AVAILABLE = 3,
         SEM_RENDER_DONE     = 4
     } e_syncType;
-}   // namespace Renderer
+}   // namespace Core
 #endif  // VK_ENUM_H

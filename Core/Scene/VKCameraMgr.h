@@ -17,7 +17,7 @@
 
 using namespace Collections;
 
-namespace Renderer {
+namespace Core {
     class VKCameraMgr: protected virtual VKDeviceMgr {
         private:
             struct CameraInfo {
@@ -228,5 +228,5 @@ namespace Renderer {
     };
 
     Log::Record* VKCameraMgr::m_VKCameraMgrLog;
-}   // namespace Renderer
+}   // namespace Core
 #endif  // VK_CAMERA_MGR_H

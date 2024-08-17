@@ -6,7 +6,7 @@
 
 using namespace Collections;
 
-namespace Renderer {
+namespace Core {
     /* A core design philosophy in Vulkan is that synchronization of execution on the GPU is explicit. The order of 
      * operations is up to us to define using various synchronization primitives which tell the driver the order we want 
      * things to run in. This means that many Vulkan API calls which start executing work on the GPU are asynchronous, 
@@ -289,5 +289,5 @@ namespace Renderer {
     };
 
     Log::Record* VKSyncObject::m_VKSyncObjectLog;
-}   // namespace Renderer
+}   // namespace Core
 #endif  // VK_SYNC_OBJECT_H

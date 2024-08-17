@@ -5,7 +5,9 @@
 #include "../Core/Scene/VKDrawSequence.h"
 #include "../Core/Scene/VKDeleteSequence.h"
 
-namespace Renderer {
+using namespace Core;
+
+namespace SandBox {
     class RDApplication: protected VKInitSequence,
                          protected VKDrawSequence,
                          protected VKDeleteSequence {
@@ -192,5 +194,5 @@ namespace Renderer {
                                                m_sceneInfoId);
             }
     };
-}   // namespace Renderer
+}   // namespace SandBox
 #endif  // RD_APPLICATION_H

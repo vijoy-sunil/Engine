@@ -8,7 +8,7 @@
 
 using namespace Collections;
 
-namespace Renderer {
+namespace Core {
     class VKModelMatrix: protected virtual VKModelMgr {
         private:
             static Log::Record* m_VKModelMatrixLog;
@@ -58,5 +58,5 @@ namespace Renderer {
     };
 
     Log::Record* VKModelMatrix::m_VKModelMatrixLog;
-}   // namespace Renderer
+}   // namespace Core
 #endif  // VK_MODEL_MATRIX_H

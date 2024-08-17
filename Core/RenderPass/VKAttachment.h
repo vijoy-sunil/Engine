@@ -6,7 +6,7 @@
 
 using namespace Collections;
 
-namespace Renderer {
+namespace Core {
     class VKAttachment: protected virtual VKRenderPassMgr,
                         protected virtual VKImageMgr {
         private:
@@ -117,5 +117,5 @@ namespace Renderer {
     };
 
     Log::Record* VKAttachment::m_VKAttachmentLog;
-}   // namespace Renderer
+}   // namespace Core
 #endif  // VK_ATTACHMENT_H

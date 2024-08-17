@@ -5,7 +5,7 @@
 
 using namespace Collections;
 
-namespace Renderer {
+namespace Core {
     class VKInstance: protected virtual VKValidation {
         private:
             static Log::Record* m_VKInstanceLog;
@@ -194,5 +194,5 @@ namespace Renderer {
      * be defined in exactly one source file
     */
     Log::Record* VKInstance::m_VKInstanceLog;
-}   // namespace Renderer
+}   // namespace Core
 #endif  // VK_INSTANCE_H

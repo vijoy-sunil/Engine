@@ -5,7 +5,7 @@
 
 using namespace Collections;
 
-namespace Renderer {
+namespace Core {
     class VKRasterization: protected virtual VKPipelineMgr {
         private:
             static Log::Record* m_VKRasterizationLog;
@@ -90,5 +90,5 @@ namespace Renderer {
     };
 
     Log::Record* VKRasterization::m_VKRasterizationLog;
-}   // namespace Renderer
+}   // namespace Core
 #endif  // VK_RASTERIZATION_H

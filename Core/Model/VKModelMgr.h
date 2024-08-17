@@ -8,7 +8,7 @@
 
 using namespace Collections;
 
-namespace Renderer {
+namespace Core {
     class VKModelMgr: protected VKVertexData {
         private:
             struct ModelInfo {
@@ -526,5 +526,5 @@ namespace Renderer {
     };
 
     Log::Record* VKModelMgr::m_VKModelMgrLog;
-}   // namespace Renderer
+}   // namespace Core
 #endif  // VK_MODEL_MGR_H

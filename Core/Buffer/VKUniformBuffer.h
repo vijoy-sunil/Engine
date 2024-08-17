@@ -5,7 +5,7 @@
 
 using namespace Collections;
 
-namespace Renderer {
+namespace Core {
     class VKUniformBuffer: protected virtual VKBufferMgr {
         private:
             static Log::Record* m_VKUniformBufferLog;
@@ -87,5 +87,5 @@ namespace Renderer {
     };
 
     Log::Record* VKUniformBuffer::m_VKUniformBufferLog;
-}   // namespace Renderer
+}   // namespace Core
 #endif  // VK_UNIFORM_BUFFER_H

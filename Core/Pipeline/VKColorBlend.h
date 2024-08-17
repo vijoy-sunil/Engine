@@ -5,7 +5,7 @@
 
 using namespace Collections;
 
-namespace Renderer {
+namespace Core {
     class VKColorBlend: protected virtual VKPipelineMgr {
         private:
             static Log::Record* m_VKColorBlendLog;
@@ -112,5 +112,5 @@ namespace Renderer {
     };
 
     Log::Record* VKColorBlend::m_VKColorBlendLog;
-}   // namespace Renderer
+}   // namespace Core
 #endif  // VK_COLOR_BLEND_H

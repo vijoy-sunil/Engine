@@ -11,7 +11,7 @@
 
 using namespace Collections;
 
-namespace Renderer {
+namespace Core {
     class VKTextureImage: protected virtual VKImageMgr,
                           protected virtual VKBufferMgr {
         private:
@@ -193,5 +193,5 @@ namespace Renderer {
     };
 
     Log::Record* VKTextureImage::m_VKTextureImageLog;
-}   // namespace Renderer
+}   // namespace Core
 #endif  // VK_TEXTURE_IMAGE_H

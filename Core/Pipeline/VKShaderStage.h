@@ -5,7 +5,7 @@
 
 using namespace Collections;
 
-namespace Renderer {
+namespace Core {
     class VKShaderStage: protected virtual VKPipelineMgr {
         private:
             static Log::Record* m_VKShaderStageLog;
@@ -134,5 +134,5 @@ namespace Renderer {
     };
 
     Log::Record* VKShaderStage::m_VKShaderStageLog;
-}   // namespace Renderer
+}   // namespace Core
 #endif  // VK_SHADER_STAGE_H
