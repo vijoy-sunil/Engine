@@ -5,6 +5,7 @@
 #define TINYOBJLOADER_IMPLEMENTATION
 #include <tiny_obj_loader.h>
 #include "VKVertexData.h"
+#include "../Scene/VKUniform.h"
 
 using namespace Collections;
 
@@ -22,17 +23,11 @@ namespace Core {
                      * buffer
                     */
                     std::vector <uint32_t> indices;
+                    std::vector <InstanceDataSSBO> instances;
                     uint32_t verticesCount;
                     uint32_t indicesCount;
-                    uint32_t instanceCount;
+                    uint32_t instancesCount;
                     uint32_t parsedDataLogInstanceId;
-
-                    glm::vec3 translate;
-                    glm::vec3 rotateAxis;
-                    glm::vec3 scale;
-                    float rotateAngleDeg;
-                    
-                    bool updateModelMatrix;                   
                 } meta;
 
                 struct Path {
@@ -43,13 +38,9 @@ namespace Core {
 
                 struct Id {
                     std::vector <uint32_t> diffuseTextureImageInfos;
-                    uint32_t vertexBufferInfo;
+                    std::vector <uint32_t> vertexBufferInfos;
                     uint32_t indexBufferInfo;
                 } id;
-
-                struct Transform {
-                    glm::mat4 model;
-                } transform;
             };
             std::map <uint32_t, ModelInfo>   m_modelInfoPool;
             std::map <std::string, uint32_t> m_textureImagePool;
@@ -121,7 +112,6 @@ namespace Core {
 
         protected:
             void readyModelInfo (uint32_t modelInfoId,
-                                 uint32_t instanceCount,
                                  const char* modelPath,
                                  const char* mtlFileDirPath) {
                 
@@ -133,7 +123,6 @@ namespace Core {
                 }
 
                 ModelInfo info{};
-                info.meta.instanceCount           = instanceCount;
                 info.meta.parsedDataLogInstanceId = g_collectionsId++;
                 info.path.model                   = modelPath;
                 info.path.mtlFileDir              = mtlFileDirPath;
@@ -423,6 +412,27 @@ namespace Core {
                                                << "[" << key << "]"
                                                << std::endl;
 
+                    LOG_INFO (m_VKModelMgrLog) << "Model matrices" 
+                                               << std::endl;
+                    uint32_t modelInstanceId = 0;
+                    for (auto const& instance: val.meta.instances) {
+                        LOG_INFO (m_VKModelMgrLog) << "Model instance id "
+                                                   << "[" << modelInstanceId << "]"
+                                                   << std::endl;
+                        uint32_t rowIdx = 0;
+                        while (rowIdx < 4) {
+                            LOG_INFO (m_VKModelMgrLog) << "["
+                                                       << instance.modelMatrix[rowIdx][0] << " "
+                                                       << instance.modelMatrix[rowIdx][1] << " "
+                                                       << instance.modelMatrix[rowIdx][2] << " "
+                                                       << instance.modelMatrix[rowIdx][3]
+                                                       << "]"
+                                                       << std::endl;
+                            rowIdx++;
+                        }
+                        modelInstanceId++;
+                    }
+
                     LOG_INFO (m_VKModelMgrLog) << "Vertices count " 
                                                << "[" << val.meta.verticesCount << "]"
                                                << std::endl;
@@ -431,41 +441,12 @@ namespace Core {
                                                << "[" << val.meta.indicesCount << "]"
                                                << std::endl;
 
-                    LOG_INFO (m_VKModelMgrLog) << "Instance count " 
-                                               << "[" << val.meta.instanceCount << "]"
+                    LOG_INFO (m_VKModelMgrLog) << "Instances count " 
+                                               << "[" << val.meta.instancesCount << "]"
                                                << std::endl;
 
                     LOG_INFO (m_VKModelMgrLog) << "Parsed data log instance id " 
                                                << "[" << val.meta.parsedDataLogInstanceId << "]"
-                                               << std::endl;
-  
-                    LOG_INFO (m_VKModelMgrLog) << "Translate "
-                                               << "[" << val.meta.translate.x << ", "
-                                                      << val.meta.translate.y << ", "
-                                                      << val.meta.translate.z
-                                               << "]"  
-                                               << std::endl;
-
-                    LOG_INFO (m_VKModelMgrLog) << "Rotate axis "
-                                               << "[" << val.meta.rotateAxis.x << ", "
-                                                      << val.meta.rotateAxis.y << ", "
-                                                      << val.meta.rotateAxis.z
-                                               << "]"  
-                                               << std::endl;
-
-                    LOG_INFO (m_VKModelMgrLog) << "Scale "
-                                               << "[" << val.meta.scale.x << ", "
-                                                      << val.meta.scale.y << ", "
-                                                      << val.meta.scale.z
-                                               << "]"  
-                                               << std::endl;                                                   
-
-                    LOG_INFO (m_VKModelMgrLog) << "Rotate angle degrees "
-                                               << "[" << val.meta.rotateAngleDeg << "]" 
-                                               << std::endl;
-
-                    LOG_INFO (m_VKModelMgrLog) << "Update model matrix " 
-                                               << "[" << Utils::getBoolString (val.meta.updateModelMatrix) << "]"
                                                << std::endl;
 
                     LOG_INFO (m_VKModelMgrLog) << "Model path " 
@@ -486,29 +467,17 @@ namespace Core {
                                                << std::endl;
                     for (auto const& infoId: val.id.diffuseTextureImageInfos)
                     LOG_INFO (m_VKModelMgrLog) << "[" << infoId << "]"
-                                               << std::endl;                      
+                                               << std::endl;
 
-                    LOG_INFO (m_VKModelMgrLog) << "Vettex buffer info id " 
-                                               << "[" << val.id.vertexBufferInfo << "]"
+                    LOG_INFO (m_VKModelMgrLog) << "Vettex buffer info ids"
+                                               << std::endl;
+                    for (auto const& infoId: val.id.vertexBufferInfos)
+                    LOG_INFO (m_VKModelMgrLog) << "[" << infoId << "]"
                                                << std::endl;
 
                     LOG_INFO (m_VKModelMgrLog) << "Index buffer info id " 
                                                << "[" << val.id.indexBufferInfo << "]"
                                                << std::endl;
- 
-                    LOG_INFO (m_VKModelMgrLog) << "Model matrix" 
-                                               << std::endl;
-                    uint32_t rowIdx = 0;
-                    while (rowIdx < 4) {
-                        LOG_INFO (m_VKModelMgrLog) << "["
-                                                   << val.transform.model[rowIdx][0] << " "
-                                                   << val.transform.model[rowIdx][1] << " "
-                                                   << val.transform.model[rowIdx][2] << " "
-                                                   << val.transform.model[rowIdx][3]
-                                                   << "]"
-                                                   << std::endl;
-                        rowIdx++;
-                    }
                 }
 
                 LOG_INFO (m_VKModelMgrLog) << "Dumping texture image pool"

@@ -4,13 +4,11 @@
 #include <glm/glm.hpp>
 
 namespace Core {
-    /* Define the data we want the vertex shader to have in a struct like below. This data will be copied to a VkBuffer
-     * and accessible through a uniform buffer object descriptor from the vertex shader. We can exactly match the 
-     * definition in the shader using data types in GLM. The data in the matrices is binary compatible with the way the 
-     * shader expects it, so we can later just memcpy this data structure to a VkBuffer
-     * 
-     * Alignment requirements specifies how exactly the data in the C++ structure should match with the uniform definition
-     * in the shader. Vulkan expects the data in your structure to be aligned in memory in a specific way, for example:
+    /* Alignment requirements specifies how exactly the data in the C++ structure should match with the uniform definition
+     * in the shader. We can exactly match the definition in the shader using data types in GLM. The data in the matrices,
+     * for example is binary compatible with the way the shader expects it, so we can later just memcpy this data 
+     * structure to a VkBuffer. Vulkan expects the data in your structure to be aligned in memory in a specific way, 
+     * for example:
      * 
      * (1) Scalars have to be aligned by N (= 4 bytes given 32 bit floats)
      * (2) A vec2 must be aligned by 2N (= 8 bytes)
@@ -82,10 +80,8 @@ namespace Core {
      * These gotchas are a good reason to always be explicit about alignment. That way you won't be caught offguard by 
      * the strange symptoms of alignment error
     */
-    struct ModelData {
-        struct DynamicUBO {
-            glm::mat4 modelMatrices;
-        } *dynamicUBO;
+    struct InstanceDataSSBO {
+        glm::mat4 modelMatrix;
     };
 
     struct SceneDataVertPC {

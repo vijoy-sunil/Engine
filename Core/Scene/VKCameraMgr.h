@@ -35,8 +35,8 @@ namespace Core {
                 } meta;
 
                 struct Transform {
-                    glm::mat4 view;
-                    glm::mat4 projection;
+                    glm::mat4 viewMatrix;
+                    glm::mat4 projectionMatrix;
                 } transform;
             };
             std::map <uint32_t, CameraInfo> m_cameraInfoPool;
@@ -97,9 +97,9 @@ namespace Core {
                  * order or clockwise order, since it might cause backface culling to kick in and prevent any geometry 
                  * from being drawn
                 */
-                cameraInfo->transform.view = glm::lookAt (cameraInfo->meta.position, 
-                                                          cameraInfo->meta.center, 
-                                                          cameraInfo->meta.upVector);
+                cameraInfo->transform.viewMatrix = glm::lookAt (cameraInfo->meta.position, 
+                                                                cameraInfo->meta.center, 
+                                                                cameraInfo->meta.upVector);
             }
 
             void createProjectionMatrix (uint32_t cameraInfoId, uint32_t resourceId) {
@@ -110,10 +110,10 @@ namespace Core {
                 */
                 float aspectRatio = deviceInfo->unique[resourceId].swapChain.extent.width/ 
                                     static_cast <float> (deviceInfo->unique[resourceId].swapChain.extent.height);
-                cameraInfo->transform.projection = glm::perspective (glm::radians (cameraInfo->meta.fovDeg), 
-                                                                     aspectRatio, 
-                                                                     cameraInfo->meta.nearPlane, 
-                                                                     cameraInfo->meta.farPlane);
+                cameraInfo->transform.projectionMatrix = glm::perspective (glm::radians (cameraInfo->meta.fovDeg), 
+                                                                           aspectRatio, 
+                                                                           cameraInfo->meta.nearPlane, 
+                                                                           cameraInfo->meta.farPlane);
                 /* GLM was originally designed for OpenGL, where the Y coordinate of the clip coordinates is inverted. 
                  * The easiest way to compensate for that is to flip the sign on the scaling factor of the Y axis in the 
                  * projection matrix. If you don't do this, then the image will be rendered upside down
@@ -129,7 +129,7 @@ namespace Core {
                  *           /                               /
                  *          +Z                              -Z
                 */
-                cameraInfo->transform.projection[1][1] *= -1;
+                cameraInfo->transform.projectionMatrix[1][1] *= -1;
             }
 
             CameraInfo* getCameraInfo (uint32_t cameraInfoId) {
@@ -197,10 +197,10 @@ namespace Core {
                     uint32_t rowIdx = 0;
                     while (rowIdx < 4) {
                         LOG_INFO (m_VKCameraMgrLog) << "["
-                                                    << val.transform.view[rowIdx][0] << " "
-                                                    << val.transform.view[rowIdx][1] << " "
-                                                    << val.transform.view[rowIdx][2] << " "
-                                                    << val.transform.view[rowIdx][3]
+                                                    << val.transform.viewMatrix[rowIdx][0] << " "
+                                                    << val.transform.viewMatrix[rowIdx][1] << " "
+                                                    << val.transform.viewMatrix[rowIdx][2] << " "
+                                                    << val.transform.viewMatrix[rowIdx][3]
                                                     << "]"
                                                     << std::endl;
                         rowIdx++;
@@ -211,14 +211,14 @@ namespace Core {
                     rowIdx = 0;
                     while (rowIdx < 4) {
                         LOG_INFO (m_VKCameraMgrLog) << "["
-                                                    << val.transform.projection[rowIdx][0] << " "
-                                                    << val.transform.projection[rowIdx][1] << " "
-                                                    << val.transform.projection[rowIdx][2] << " "
-                                                    << val.transform.projection[rowIdx][3]
+                                                    << val.transform.projectionMatrix[rowIdx][0] << " "
+                                                    << val.transform.projectionMatrix[rowIdx][1] << " "
+                                                    << val.transform.projectionMatrix[rowIdx][2] << " "
+                                                    << val.transform.projectionMatrix[rowIdx][3]
                                                     << "]"
                                                     << std::endl;
                         rowIdx++;
-                    }                                                                                                   
+                    }
                 }
             }
 

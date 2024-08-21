@@ -62,6 +62,8 @@ namespace Utils {
                 return "INDEX_BUFFER";
             case UNIFORM_BUFFER:
                 return "UNIFORM_BUFFER";
+            case STORAGE_BUFFER:
+                return "STORAGE_BUFFER";
             default:
                 return "Unhandled e_bufferType";
         }

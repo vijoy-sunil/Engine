@@ -3,6 +3,7 @@ GLM_INCDIR			= /opt/homebrew/Cellar/glm/1.0.1
 GLFW_INCDIR			= /opt/homebrew/Cellar/glfw/3.4
 STB_INCDIR			= /opt/homebrew/Cellar/stb-master
 OBJLOADER_INCDIR	= /opt/homebrew/Cellar/tinyobjloader-release
+JSONPARSER_INCDIR   = /opt/homebrew/Cellar/json-develop
 
 # Setup directories and file paths
 SRCDIR     			= ./SandBox
@@ -35,7 +36,8 @@ INCLUDES			:= -I$(VULKAN_SDK)/include				\
 				   	   -I$(GLM_INCDIR)/include				\
 				   	   -I$(GLFW_INCDIR)/include				\
 					   -I$(STB_INCDIR)						\
-					   -I$(OBJLOADER_INCDIR)
+					   -I$(OBJLOADER_INCDIR)				\
+					   -I$(JSONPARSER_INCDIR)/single_include
 # setup glslc compiler path
 # This compiler (by Google) is designed to verify that your shader code is fully standards compliant (across GPU vendors) 
 # and produces one  SPIR-V binary that you can ship with your program

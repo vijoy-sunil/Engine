@@ -96,12 +96,12 @@ namespace Core {
                     /* Sample points for MSAA (multi sample anit aliasing)
                     */
                     VkSampleCountFlagBits maxSampleCount;
+                    /* The maximum value that can be specified in the range member of a VkDescriptorBufferInfo structure 
+                     * for storage buffer/dynamic descriptors
+                    */
+                    uint32_t maxStorageBufferRange;
                     uint32_t maxPushConstantsSize;
                     uint32_t maxMemoryAllocationCount;
-                    /* Maximum number of dynamic uniform buffers that can be included in a pipeline layout
-                    */
-                    uint32_t maxDescriptorSetUniformBuffersDynamic;
-                    VkDeviceSize minUniformBufferOffsetAlignment;
                     /* maxAnisotropy is the anisotropy value clamp used by the sampler, it limits the amount of texel 
                      * samples that can be used to calculate the final color
                     */
@@ -208,6 +208,10 @@ namespace Core {
                                                       (deviceInfo->params.maxSampleCount) << "]"
                                             << std::endl; 
 
+                LOG_INFO (m_VKDeviceMgrLog) << "Max storage buffer range "
+                                            << "[" << deviceInfo->params.maxStorageBufferRange << "]"
+                                            << std::endl;
+
                 LOG_INFO (m_VKDeviceMgrLog) << "Max push constants size "
                                             << "[" << deviceInfo->params.maxPushConstantsSize << "]"
                                             << std::endl;
@@ -215,14 +219,6 @@ namespace Core {
                 LOG_INFO (m_VKDeviceMgrLog) << "Max memory allocation count "
                                             << "[" << deviceInfo->params.maxMemoryAllocationCount << "]"
                                             << std::endl;   
-
-                LOG_INFO (m_VKDeviceMgrLog) << "Max descriptor set uniform buffers dynamic "
-                                            << "[" << deviceInfo->params.maxDescriptorSetUniformBuffersDynamic << "]"
-                                            << std::endl;
-
-                LOG_INFO (m_VKDeviceMgrLog) << "Min uniform buffer offset alignment "
-                                            << "[" << deviceInfo->params.minUniformBufferOffsetAlignment << "]"
-                                            << std::endl;                                            
 
                 LOG_INFO (m_VKDeviceMgrLog) << "Max sampler anisotropy "
                                             << "[" << deviceInfo->params.maxSamplerAnisotropy << "]"

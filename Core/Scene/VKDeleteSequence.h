@@ -131,14 +131,14 @@ namespace Core {
                                                  << "[" << renderPassInfoId << "]"
                                                  << std::endl; 
                 /* |------------------------------------------------------------------------------------------------|
-                 * | DESTROY UNIFORM BUFFERS                                                                        |
+                 * | DESTROY STORAGE BUFFERS                                                                        |
                  * |------------------------------------------------------------------------------------------------|
                 */
                 for (uint32_t i = 0; i < g_maxFramesInFlight; i++) {
-                    uint32_t uniformBufferInfoId = sceneInfo->id.uniformBufferInfoBase + i; 
-                    VKBufferMgr::cleanUp (uniformBufferInfoId, UNIFORM_BUFFER);
-                    LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Uniform buffer " 
-                                                     << "[" << uniformBufferInfoId << "]"
+                    uint32_t storageBufferInfoId = sceneInfo->id.storageBufferInfoBase + i; 
+                    VKBufferMgr::cleanUp (storageBufferInfoId, STORAGE_BUFFER);
+                    LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Storage buffer " 
+                                                     << "[" << storageBufferInfoId << "]"
                                                      << std::endl; 
                 }
                 /* |------------------------------------------------------------------------------------------------|
@@ -153,13 +153,15 @@ namespace Core {
                                                  << "[" << modelInfoBase->id.indexBufferInfo << "]"
                                                  << std::endl; 
                 /* |------------------------------------------------------------------------------------------------|
-                 * | DESTROY VERTEX BUFFER                                                                          |
+                 * | DESTROY VERTEX BUFFERS                                                                         |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                VKBufferMgr::cleanUp (modelInfoBase->id.vertexBufferInfo, VERTEX_BUFFER);
-                LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Vertex buffer " 
-                                                 << "[" << modelInfoBase->id.vertexBufferInfo << "]"
-                                                 << std::endl; 
+                for (auto const& infoId: modelInfoBase->id.vertexBufferInfos) {
+                    VKBufferMgr::cleanUp (infoId, VERTEX_BUFFER);
+                    LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Vertex buffer " 
+                                                     << "[" << infoId << "]"
+                                                     << std::endl; 
+                }
                 /* |------------------------------------------------------------------------------------------------|
                  * | DESTROY MULTI SAMPLE RESOURCES                                                                 |
                  * |------------------------------------------------------------------------------------------------|

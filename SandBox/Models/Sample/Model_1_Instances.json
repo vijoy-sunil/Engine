@@ -1,0 +1,19 @@
+{
+    "instancesCount": 2,
+    "instances": [
+        {
+            "id":         0,
+            "translate":  [0.0, 0.0, 0.0],
+            "rotateAxis": [0.0, 1.0, 0.0],
+            "scale":      [1.0, 1.0, 1.0],
+            "rotateAngleDeg": 0.0
+        },
+        {
+            "id":         1,
+            "translate":  [2.0, 0.0, 0.0],
+            "rotateAxis": [0.0, 1.0, 0.0],
+            "scale":      [1.0, 1.0, 1.0],
+            "rotateAngleDeg": 0.0
+        }
+    ]
+}

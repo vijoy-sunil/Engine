@@ -16,7 +16,8 @@ namespace Core {
         STAGING_BUFFER_TEX  = 2,
         VERTEX_BUFFER       = 3,
         INDEX_BUFFER        = 4,
-        UNIFORM_BUFFER      = 5
+        UNIFORM_BUFFER      = 5,
+        STORAGE_BUFFER      = 6
     } e_bufferType;
 
     typedef enum {

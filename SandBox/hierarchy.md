@@ -2,16 +2,18 @@
 <i>Classes within {} are virtual inheritance</i>
 
 <pre>
+    |<----------------------|VKInstanceData
+    |
     |<----------------------|VKInitSequence
     |
     |<----------------------|VKDrawSequence
     |
     |<----------------------|VKDeleteSequence
     |
-    |<......................|RDConfig
+    |<......................|ENConfig
     |
     |
-    |SandBox/RDApplication
+    |SandBox/ENApplication
     :
     :
     |main

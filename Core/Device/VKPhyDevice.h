@@ -299,12 +299,9 @@ namespace Core {
 
                         deviceInfo->shared.phyDevice                = phyDevice;
                         deviceInfo->params.maxSampleCount           = getMaxUsableSampleCount();
+                        deviceInfo->params.maxStorageBufferRange    = properties.limits.maxStorageBufferRange;
                         deviceInfo->params.maxPushConstantsSize     = properties.limits.maxPushConstantsSize;
                         deviceInfo->params.maxMemoryAllocationCount = properties.limits.maxMemoryAllocationCount;
-                        deviceInfo->params.
-                        maxDescriptorSetUniformBuffersDynamic = properties.limits.maxDescriptorSetUniformBuffersDynamic;
-                        deviceInfo->params.
-                        minUniformBufferOffsetAlignment       = properties.limits.minUniformBufferOffsetAlignment;
                         deviceInfo->params.maxSamplerAnisotropy     = properties.limits.maxSamplerAnisotropy;
                         break;
                     }

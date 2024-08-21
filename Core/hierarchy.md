@@ -58,6 +58,8 @@
     |---------------------->|VKIndexBuffer
     |
     |---------------------->|VKUniformBuffer
+    |
+    |---------------------->|VKStorageBuffer
 
 
     |{VKDeviceMgr}
@@ -113,11 +115,14 @@
     :
     |VKVertexData
     |
+    |<......................|VKUniform
     |
     |{Model/VKModelMgr}
     |
     |
-    |---------------------->|VKModelMatrix
+    |VKModelMatrix
+    |
+    |---------------------->|VKInstanceData
 
 
     |<----------------------|{VKDeviceMgr}
@@ -163,8 +168,6 @@
     |Scene/VKResizing
 
 
-    |<......................|VKUniform
-    |
     |<......................|VKConfig
     |
     |<......................|Log
@@ -189,7 +192,7 @@
     |
     |<----------------------|{VKLogDevice}
     |
-    |<----------------------|{VKModelMatrix}
+    |<----------------------|{VKModelMgr}
     |
     |<----------------------|{VKSwapChainImage}
     |
@@ -203,7 +206,7 @@
     |
     |<----------------------|VKIndexBuffer
     |
-    |<----------------------|{VKUniformBuffer}
+    |<----------------------|{VKStorageBuffer}
     |
     |<----------------------|VKAttachment
     |
@@ -253,9 +256,9 @@
 
     |<----------------------|{VKWindow}
     |
-    |<----------------------|{VKModelMatrix}
+    |<----------------------|{VKModelMgr}
     |
-    |<----------------------|{VKUniformBuffer}
+    |<----------------------|{VKStorageBuffer}
     |
     |<----------------------|{VKCmdBuffer}
     |

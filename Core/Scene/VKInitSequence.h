@@ -5,14 +5,14 @@
 #include "../Device/VKInstance.h"
 #include "../Device/VKSurface.h"
 #include "../Device/VKLogDevice.h"
-#include "../Model/VKModelMatrix.h"
+#include "../Model/VKModelMgr.h"
 #include "../Image/VKSwapChainImage.h"
 #include "../Image/VKTextureImage.h"
 #include "../Image/VKDepthImage.h"
 #include "../Image/VKMultiSampleImage.h"
 #include "../Buffer/VKVertexBuffer.h"
 #include "../Buffer/VKIndexBuffer.h"
-#include "../Buffer/VKUniformBuffer.h"
+#include "../Buffer/VKStorageBuffer.h"
 #include "../RenderPass/VKAttachment.h"
 #include "../RenderPass/VKSubPass.h"
 #include "../RenderPass/VKFrameBuffer.h"
@@ -42,14 +42,14 @@ namespace Core {
                           protected virtual VKInstance,
                           protected virtual VKSurface,
                           protected virtual VKLogDevice,
-                          protected virtual VKModelMatrix,
+                          protected virtual VKModelMgr,
                           protected virtual VKSwapChainImage,
                           protected VKTextureImage,
                           protected virtual VKDepthImage,
-                          protected virtual VKMultiSampleImage,                   
+                          protected virtual VKMultiSampleImage,
                           protected VKVertexBuffer,
                           protected VKIndexBuffer,
-                          protected virtual VKUniformBuffer,
+                          protected virtual VKStorageBuffer,
                           protected VKAttachment,
                           protected VKSubPass,
                           protected virtual VKFrameBuffer,
@@ -168,16 +168,6 @@ namespace Core {
                                                    << std::endl;
                 }
                 /* |------------------------------------------------------------------------------------------------|
-                 * | CONFIG MODEL MATRIX                                                                            |
-                 * |------------------------------------------------------------------------------------------------|
-                */  
-                for (auto const& infoId: modelInfoIds) {                                           
-                    createModelMatrix (infoId);
-                    LOG_INFO (m_VKInitSequenceLog) << "[OK] Model matrix " 
-                                                   << "[" << infoId << "]"
-                                                   << std::endl;
-                }
-                /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG SWAP CHAIN RESOURCES                                                                    |
                  * |------------------------------------------------------------------------------------------------|
                 */
@@ -223,7 +213,7 @@ namespace Core {
                                                << "[" << resourceId << "]"
                                                << std::endl;    
                 /* |------------------------------------------------------------------------------------------------|
-                 * | CONFIG VERTEX BUFFER                                                                           |
+                 * | CONFIG VERTEX BUFFERS                                                                          |
                  * |------------------------------------------------------------------------------------------------|
                 */
                 std::vector <Vertex> combinedVertices;
@@ -241,8 +231,8 @@ namespace Core {
                     combinedVertices.insert  (combinedVertices.end(), modelInfo->meta.vertices.begin(),
                                                                       modelInfo->meta.vertices.end());
    
-                    infoId == *modelInfoIds.begin() ? modelInfo->id.vertexBufferInfo = vertexBufferInfoId:
-                                                      modelInfo->id.vertexBufferInfo = UINT32_MAX;
+                    infoId == *modelInfoIds.begin() ? modelInfo->id.vertexBufferInfos.push_back (vertexBufferInfoId):
+                                                      modelInfo->id.vertexBufferInfos.push_back (UINT32_MAX);
                 }
                 
                 createVertexBuffer (vertexBufferInfoId, 
@@ -286,56 +276,31 @@ namespace Core {
                                                << "[" << resourceId << "]"
                                                << std::endl; 
                 /* |------------------------------------------------------------------------------------------------|
-                 * | CONFIG UNIFORM BUFFERS                                                                         |
+                 * | CONFIG STORAGE BUFFERS                                                                         |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                /* Instead of using one uniform buffer descriptor per model, we allocate one big uniform buffer, with 
-                 * respect to the alignment reported by the device, that contains all the uniform data for the models in 
-                 * the scene. The descriptor type VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC allows to set a dynamic 
-                 * offset to pass data from the single uniform buffer to the connected shader binding point. Note that, 
-                 * we need to manually allocate the data to cope for GPU-specific uniform buffer offset alignments
-                 * 
-                 * An example to depict the uniform buffer for 4 models each with 64 bytes of model matrix data with a 
-                 * min offset alignment of 16 will look like this,
-                 * |----------------|---------------|---------------|---------------|
-                 * |    {mat4}      |   {mat4}      |   {mat4}      |   {mat4}      |
-                 * |    64 bytes    |   64 bytes    |   64 bytes    |   64 bytes    |
-                 * |----------------|---------------|---------------|---------------|
-                 * 0                64              128             192             256
-                 * Total buffer size = 256 bytes
+                /* Uniform buffers are great for small, read only data. But what if you want data you don’t know the 
+                 * size of in the shader? Or data that can be writeable. You use storage buffers for that. Storage 
+                 * buffers are usually slightly slower than uniform buffers, but they can be much, much bigger. With 
+                 * storage buffers, you can have an unsized array in a shader with whatever data you want. A common use 
+                 * for them is to store the transformation data of all the models in the scene. Shader storage buffers 
+                 * are created in the same way as uniform buffers. They also work in mostly the same way, they just have 
+                 * different properties like increased maximum size, and being writeable in shaders
                 */
-                sceneInfo->meta.dynamicUBOOffsetAlignment          = getDynamicUBOOffsetAlignment 
-                (deviceInfo->params.minUniformBufferOffsetAlignment, sizeof (ModelData::DynamicUBO));
-                sceneInfo->meta.dynamicUBOSize                     = modelInfoIds.size() * 
-                                                                     sceneInfo->meta.dynamicUBOOffsetAlignment;
-                /* Note that, passing a size which is not an integral multiple of alignment or an alignment which is not
-                 * valid or not supported by the implementation causes the allocation function to fail and return a null
-                 * pointer
-                */
-                sceneInfo->meta.modelData.dynamicUBO = (ModelData::DynamicUBO*) aligned_alloc 
-                (sceneInfo->meta.dynamicUBOOffsetAlignment, sceneInfo->meta.dynamicUBOSize);
 
-                if (sceneInfo->meta.modelData.dynamicUBO == nullptr) {
-                    LOG_ERROR (m_VKInitSequenceLog) << "Failed to allocate aligned buffer memory " 
-                                                    << "[" << sceneInfo->meta.dynamicUBOOffsetAlignment << "]"
-                                                    << " "
-                                                    << "[" << sceneInfo->meta.dynamicUBOSize << "]"
-                                                    << std::endl; 
-                    throw std::runtime_error ("Failed to allocate aligned buffer memory");
-                }
-                /* We should have multiple uniform buffers, because multiple frames may be in flight at the same time and
-                 * we don't want to update the buffer in preparation of the next frame while a previous one is still 
-                 * reading from it. Thus, we need to have as many uniform buffers as we have frames in flight, and write 
-                 * to a uniform buffer that is not currently being read by the GPU
+                /* We should have multiple buffers, because multiple frames may be in flight at the same time and we 
+                 * don't want to update the buffer in preparation of the next frame while a previous one is still reading
+                 * from it. Thus, we need to have as many buffers as we have frames in flight, and write to a buffer that
+                 * is not currently being read by the GPU
                 */
                 for (uint32_t i = 0; i < g_maxFramesInFlight; i++) { 
-                    uint32_t uniformBufferInfoId = sceneInfo->id.uniformBufferInfoBase + i;    
-                    createUniformBuffer (uniformBufferInfoId,
+                    uint32_t storageBufferInfoId = sceneInfo->id.storageBufferInfoBase + i;    
+                    createStorageBuffer (storageBufferInfoId,
                                          resourceId,
-                                         sceneInfo->meta.dynamicUBOSize);
+                                         sceneInfo->meta.totalInstancesCount * sizeof (InstanceDataSSBO));
 
-                    LOG_INFO (m_VKInitSequenceLog) << "[OK] Uniform buffer " 
-                                                   << "[" << uniformBufferInfoId << "]"
+                    LOG_INFO (m_VKInitSequenceLog) << "[OK] Storage buffer " 
+                                                   << "[" << storageBufferInfoId << "]"
                                                    << " "
                                                    << "[" << resourceId << "]"
                                                    << std::endl; 
@@ -522,7 +487,7 @@ namespace Core {
                 auto layoutBindings = std::vector {
                     getLayoutBinding (0, 
                                       1,
-                                      VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC,
+                                      VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
                                       VK_SHADER_STAGE_VERTEX_BIT,
                                       VK_NULL_HANDLE),
 
@@ -627,7 +592,7 @@ namespace Core {
                                       VK_SAMPLER_ADDRESS_MODE_REPEAT,
                                       VK_TRUE,
                                       VK_SAMPLER_MIPMAP_MODE_LINEAR,
-                                      0.0, m_maxLod);
+                                      0.0f, m_maxLod);
                 LOG_INFO (m_VKInitSequenceLog) << "[OK] Texture sampler " 
                                                << "[" << sceneInfoId << "]"
                                                << std::endl;  
@@ -636,7 +601,7 @@ namespace Core {
                  * |------------------------------------------------------------------------------------------------|
                 */
                 auto poolSizes = std::vector {
-                    getPoolSize (VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, g_maxFramesInFlight),
+                    getPoolSize (VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, g_maxFramesInFlight),
 
                     getPoolSize (VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, static_cast <uint32_t> 
                                 (getTextureImagePool().size()) * g_maxFramesInFlight)
@@ -662,12 +627,12 @@ namespace Core {
                  * |------------------------------------------------------------------------------------------------|
                 */
                 for (uint32_t i = 0; i < g_maxFramesInFlight; i++) {
-                    uint32_t uniformBufferInfoId = sceneInfo->id.uniformBufferInfoBase + i; 
-                    auto bufferInfo              = getBufferInfo (uniformBufferInfoId, UNIFORM_BUFFER);
+                    uint32_t storageBufferInfoId = sceneInfo->id.storageBufferInfoBase + i; 
+                    auto bufferInfo              = getBufferInfo (storageBufferInfoId, STORAGE_BUFFER);
                     auto descriptorBufferInfos   = std::vector {
                         getDescriptorBufferInfo (bufferInfo->resource.buffer,
                                                  0,
-                                                 sceneInfo->meta.dynamicUBOOffsetAlignment)
+                                                 sceneInfo->meta.totalInstancesCount * sizeof (InstanceDataSSBO))
                     };
 
                     uint32_t textureCount = static_cast <uint32_t> (getTextureImagePool().size());
@@ -683,7 +648,7 @@ namespace Core {
                      * an array of VkWriteDescriptorSet structs as parameter
                     */                    
                     auto writeDescriptorSets = std::vector {
-                        getWriteBufferDescriptorSetInfo (VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC,
+                        getWriteBufferDescriptorSetInfo (VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
                                                          sceneInfo->resource.descriptorSets[i],
                                                          descriptorBufferInfos,
                                                          0, 0, 1),
@@ -751,9 +716,11 @@ namespace Core {
                                        VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
                 }
 
-                copyBufferToBuffer (transferOpsCommandBuffers[0],
-                                    modelInfoBase->id.vertexBufferInfo, STAGING_BUFFER, 0,
-                                    modelInfoBase->id.vertexBufferInfo, VERTEX_BUFFER,  0);
+                for (auto const& infoId: modelInfoBase->id.vertexBufferInfos) {
+                    copyBufferToBuffer (transferOpsCommandBuffers[0],
+                                        infoId, STAGING_BUFFER, 0,
+                                        infoId, VERTEX_BUFFER,  0);
+                }
 
                 copyBufferToBuffer (transferOpsCommandBuffers[0],
                                     modelInfoBase->id.indexBufferInfo, STAGING_BUFFER, 0,
@@ -816,10 +783,12 @@ namespace Core {
                                                << "[" << modelInfoBase->id.indexBufferInfo << "]"
                                                << std::endl;  
 
-                VKBufferMgr::cleanUp (modelInfoBase->id.vertexBufferInfo, STAGING_BUFFER);
-                LOG_INFO (m_VKInitSequenceLog) << "[DELETE] Staging buffer " 
-                                               << "[" << modelInfoBase->id.vertexBufferInfo << "]"
-                                               << std::endl;
+                for (auto const& infoId: modelInfoBase->id.vertexBufferInfos) {
+                    VKBufferMgr::cleanUp (infoId, STAGING_BUFFER);
+                    LOG_INFO (m_VKInitSequenceLog) << "[DELETE] Staging buffer "
+                                                   << "[" << infoId << "]"
+                                                   << std::endl;
+                }
 
                 for (auto const& [path, infoId]: getTextureImagePool()) {
                     VKBufferMgr::cleanUp (infoId, STAGING_BUFFER_TEX);

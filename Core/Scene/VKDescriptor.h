@@ -114,6 +114,14 @@ namespace Core {
                 auto sceneInfo    = getSceneInfo    (sceneInfoId);
                 auto deviceInfo   = getDeviceInfo();
 
+                if (descriptorSetLayoutId >= pipelineInfo->resource.descriptorSetLayouts.size()) {
+                    LOG_ERROR (m_VKDescriptorLog) << "Invalid descriptor set layout id " 
+                                                  << "[" << descriptorSetLayoutId << "]"
+                                                  << "->"
+                                                  << "[" << pipelineInfo->resource.descriptorSetLayouts.size() << "]"
+                                                  << std::endl; 
+                    throw std::runtime_error ("Invalid descriptor set layout id");
+                }
                 /* A descriptor set layout defines the structure of a descriptor set, a template of sorts. Think of a 
                  * class or struct in C or C++, it says "I am made out of, 3 UBOs, a texture sampler, etc". It's analogous
                  * to going

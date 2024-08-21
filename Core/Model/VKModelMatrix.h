@@ -17,6 +17,7 @@ namespace Core {
         public:
             VKModelMatrix (void) {
                 m_VKModelMatrixLog = LOG_INIT (m_instanceId, g_pathSettings.logSaveDir);
+                LOG_ADD_CONFIG (m_instanceId, Log::ERROR, Log::TO_FILE_IMMEDIATE | Log::TO_CONSOLE);
             }
 
             ~VKModelMatrix (void) { 
@@ -24,8 +25,23 @@ namespace Core {
             }
 
         protected:
-            void createModelMatrix (uint32_t modelInfoId) {
+            void createModelMatrix (uint32_t modelInfoId,
+                                    uint32_t modelInstanceId,
+                                    glm::vec3 translate,
+                                    glm::vec3 rotateAxis,
+                                    glm::vec3 scale,
+                                    float rotateAngleDeg) {
+
                 auto modelInfo = getModelInfo (modelInfoId);
+                if (modelInstanceId >= modelInfo->meta.instancesCount) {
+                    LOG_ERROR (m_VKModelMatrixLog) << "Invalid model instance id " 
+                                                   << "[" << modelInstanceId << "]"
+                                                   << "->"
+                                                   << "[" << modelInfo->meta.instancesCount << "]"
+                                                   << std::endl; 
+                    throw std::runtime_error ("Invalid model instance id");
+                }
+
                 glm::mat4 modelMatrix;
                 /* https://www.opengl-tutorial.org/beginners-tutorials/tutorial-3-matrices/#an-introduction-to-matrices
                  * Translation matrix looks like this
@@ -48,12 +64,11 @@ namespace Core {
                 /* Cumulating transformations, note that we perform scaling FIRST, and THEN the rotation, and THEN the 
                  * translation. This is how matrix multiplication works
                 */
-                modelMatrix = glm::translate (glm::mat4 (1.0f), modelInfo->meta.translate) *
-                              glm::rotate    (glm::mat4 (1.0f), glm::radians (modelInfo->meta.rotateAngleDeg), 
-                                                                modelInfo->meta.rotateAxis) *
-                              glm::scale     (glm::mat4 (1.0f), modelInfo->meta.scale);
+                modelMatrix = glm::translate (glm::mat4 (1.0f), translate) *
+                              glm::rotate    (glm::mat4 (1.0f), glm::radians (rotateAngleDeg), rotateAxis) *
+                              glm::scale     (glm::mat4 (1.0f), scale);
                               
-                modelInfo->transform.model = modelMatrix;
+                modelInfo->meta.instances[modelInstanceId] = {modelMatrix};
             }
     };
 

@@ -3,7 +3,6 @@
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
-#include "VKUniform.h"
 #include "../VKConfig.h"
 #include "../../Collections/Log/Log.h"
 
@@ -14,16 +13,14 @@ namespace Core {
         private:
             struct SceneInfo {
                 struct Meta {
-                    ModelData modelData;
-                    VkDeviceSize dynamicUBOOffsetAlignment;
-                    VkDeviceSize dynamicUBOSize;
+                    uint32_t totalInstancesCount;
                 } meta;
 
                 struct Id {
                     uint32_t swapChainImageInfoBase;
                     uint32_t depthImageInfo;
                     uint32_t multiSampleImageInfo;
-                    uint32_t uniformBufferInfoBase;
+                    uint32_t storageBufferInfoBase;
                     uint32_t inFlightFenceInfoBase;
                     uint32_t imageAvailableSemaphoreInfoBase;
                     uint32_t renderDoneSemaphoreInfoBase;
@@ -45,9 +42,6 @@ namespace Core {
 
             void deleteSceneInfo (uint32_t sceneInfoId) {
                 if (m_sceneInfoPool.find (sceneInfoId) != m_sceneInfoPool.end()) {
-                    /* Free up memory allocated for dynamic uniform buffer
-                    */
-                    free (m_sceneInfoPool[sceneInfoId].meta.modelData.dynamicUBO);
                     m_sceneInfoPool.erase (sceneInfoId);
                     return;
                 }
@@ -70,7 +64,10 @@ namespace Core {
             }
 
         protected:
-            void readySceneInfo (uint32_t sceneInfoId, const std::vector <uint32_t>& infoIds) {
+            void readySceneInfo (uint32_t sceneInfoId, 
+                                 uint32_t totatInstancesCount,
+                                 const std::vector <uint32_t>& infoIds) {
+
                 if (m_sceneInfoPool.find (sceneInfoId) != m_sceneInfoPool.end()) {
                     LOG_ERROR (m_VKSceneMgrLog) << "Scene info id already exists "
                                                 << "[" << sceneInfoId << "]"
@@ -79,6 +76,7 @@ namespace Core {
                 }
 
                 SceneInfo info{};
+                info.meta.totalInstancesCount           = totatInstancesCount;
                 info.id.inFlightFenceInfoBase           = infoIds[0];
                 info.id.imageAvailableSemaphoreInfoBase = infoIds[1];
                 info.id.renderDoneSemaphoreInfoBase     = infoIds[2];
@@ -105,12 +103,8 @@ namespace Core {
                                                << "[" << key << "]"
                                                << std::endl;
 
-                    LOG_INFO (m_VKSceneMgrLog) << "Dynamic uniform buffer offset alignment "
-                                               << "[" << val.meta.dynamicUBOOffsetAlignment << "]" 
-                                               << std::endl;  
-
-                    LOG_INFO (m_VKSceneMgrLog) << "Dynamic uniform buffer size "
-                                               << "[" << val.meta.dynamicUBOSize << "]" 
+                    LOG_INFO (m_VKSceneMgrLog) << "Total instances count "
+                                               << "[" << val.meta.totalInstancesCount << "]" 
                                                << std::endl; 
 
                     LOG_INFO (m_VKSceneMgrLog) << "Swap chain image info id base " 
@@ -125,8 +119,8 @@ namespace Core {
                                                << "[" << val.id.multiSampleImageInfo << "]"
                                                << std::endl;
 
-                    LOG_INFO (m_VKSceneMgrLog) << "Uniform buffer info id base "
-                                               << "[" << val.id.uniformBufferInfoBase << "]"
+                    LOG_INFO (m_VKSceneMgrLog) << "Storage buffer info id base "
+                                               << "[" << val.id.storageBufferInfoBase << "]"
                                                << std::endl;
 
                     LOG_INFO (m_VKSceneMgrLog) << "In flight fence info id base "

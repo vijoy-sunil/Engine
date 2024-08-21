@@ -1,7 +1,7 @@
-#include "RDApplication.h"
+#include "ENApplication.h"
 
 int main (void) {
-    SandBox::RDApplication app;
+    SandBox::ENApplication app;
     app.createScene();
     app.runScene();
     app.deleteScene();

@@ -2,8 +2,8 @@
 #define VK_DRAW_SEQUENCE_H
 
 #include "../Device/VKWindow.h"
-#include "../Model/VKModelMatrix.h"
-#include "../Buffer/VKUniformBuffer.h"
+#include "../Model/VKModelMgr.h"
+#include "../Buffer/VKStorageBuffer.h"
 #include "../Cmd/VKCmdBuffer.h"
 #include "../Cmd/VKCmd.h"
 #include "VKCameraMgr.h"
@@ -14,8 +14,8 @@ using namespace Collections;
 
 namespace Core {
     class VKDrawSequence: protected virtual VKWindow,
-                          protected virtual VKModelMatrix,
-                          protected virtual VKUniformBuffer,
+                          protected virtual VKModelMgr,
+                          protected virtual VKStorageBuffer,
                           protected virtual VKCmdBuffer,
                           protected virtual VKCmd,
                           protected virtual VKCameraMgr,
@@ -146,52 +146,37 @@ namespace Core {
                                1, 
                                &getFenceInfo (inFlightFenceInfoId, FEN_IN_FLIGHT)->resource.fence);
                 /* |------------------------------------------------------------------------------------------------|
-                 * | CONFIG DRAW OPS - MODEL TRANSFORM                                                              |
-                 * |------------------------------------------------------------------------------------------------|
-                */
-                for (auto const& infoId: modelInfoIds) {
-                    auto modelInfo = getModelInfo (infoId);
-
-                    if (modelInfo->meta.updateModelMatrix) {
-                        createModelMatrix (infoId);
-                        modelInfo->meta.updateModelMatrix = false;
-                    }
-                }
-                /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG DRAW OPS - CAMERA TRANSFORM                                                             |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                if (cameraInfo->meta.updateViewMatrix) {
-                    createViewMatrix (cameraInfoId);
-                    cameraInfo->meta.updateViewMatrix = false;
-                }
-
-                if (cameraInfo->meta.updateProjectionMatrix) {
-                    createProjectionMatrix (cameraInfoId, resourceId);
-                    cameraInfo->meta.updateProjectionMatrix = false;
-                }
+                if (cameraInfo->meta.updateViewMatrix)       createViewMatrix       (cameraInfoId);
+                if (cameraInfo->meta.updateProjectionMatrix) createProjectionMatrix (cameraInfoId, resourceId);
+                /* Do not recreate camera matrices unless the booleans are set
+                */
+                cameraInfo->meta.updateViewMatrix       = false;
+                cameraInfo->meta.updateProjectionMatrix = false;
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG DRAW OPS - UPDATE UNIFORMS                                                              |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                uint32_t loopIdx = 0;
+                std::vector <InstanceDataSSBO> combinedInstances;
+                size_t combinedInstancesCount = 0;
+
                 for (auto const& infoId: modelInfoIds) {
-                    auto modelInfo = getModelInfo (infoId);
-                    /* Offset into the buffer to populate uniform data for all models
-                    */
-                    auto dynamicUBO           = (ModelData::DynamicUBO*) 
-                                                (((VkDeviceSize) sceneInfo->meta.modelData.dynamicUBO + 
-                                                (loopIdx * sceneInfo->meta.dynamicUBOOffsetAlignment)));
-                    dynamicUBO->modelMatrices = modelInfo->transform.model;
-                    loopIdx++;
+                    auto modelInfo          = getModelInfo (infoId);
+                    combinedInstancesCount += modelInfo->meta.instancesCount;
+
+                    combinedInstances.reserve (combinedInstancesCount);
+                    combinedInstances.insert  (combinedInstances.end(), modelInfo->meta.instances.begin(),
+                                                                        modelInfo->meta.instances.end());
                 }
-                updateUniformBuffer (sceneInfo->id.uniformBufferInfoBase + m_currentFrameInFlight,
-                                     sceneInfo->meta.dynamicUBOSize,
-                                     sceneInfo->meta.modelData.dynamicUBO);
+                updateStorageBuffer (sceneInfo->id.storageBufferInfoBase + m_currentFrameInFlight,
+                                     sceneInfo->meta.totalInstancesCount * sizeof (InstanceDataSSBO),
+                                     combinedInstances.data());
 
                 SceneDataVertPC sceneDataVert;
-                sceneDataVert.viewMatrix       = cameraInfo->transform.view;
-                sceneDataVert.projectionMatrix = cameraInfo->transform.projection;
+                sceneDataVert.viewMatrix       = cameraInfo->transform.viewMatrix;
+                sceneDataVert.projectionMatrix = cameraInfo->transform.projectionMatrix;
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG DRAW OPS - RECORD AND SUBMIT                                                            |
                  * |------------------------------------------------------------------------------------------------|
@@ -250,10 +235,8 @@ namespace Core {
                                       0,
                                       secondaryScissors);
 
-                auto vertexBufferInfoIdsToBind = std::vector {
-                    modelInfoBase->id.vertexBufferInfo
-                };
-                auto vertexBufferOffsets = std::vector <VkDeviceSize> {
+                auto vertexBufferInfoIdsToBind = modelInfoBase->id.vertexBufferInfos;
+                auto vertexBufferOffsets       = std::vector <VkDeviceSize> {
                     0
                 };
                 bindVertexBuffers    (sceneInfo->resource.commandBuffers[m_currentFrameInFlight],
@@ -266,6 +249,17 @@ namespace Core {
                                       0,
                                       VK_INDEX_TYPE_UINT32);
 
+                auto descriptorSetsToBind = std::vector {
+                    sceneInfo->resource.descriptorSets[m_currentFrameInFlight]
+                };
+                auto dynamicOffsets       = std::vector <uint32_t> {
+                };     
+                bindDescriptorSets   (sceneInfo->resource.commandBuffers[m_currentFrameInFlight],
+                                      pipelineInfoId,
+                                      VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                      0,
+                                      descriptorSetsToBind,
+                                      dynamicOffsets);
                 /* |------------|-----------|-----------|
                  * |    VB0     |   VB1     |   VB2     |   vertex buffers 
                  * |------------|-----------|-----------|
@@ -280,35 +274,20 @@ namespace Core {
                  *              |
                  *              firstIndex
                 */
-                uint32_t firstIndex   = 0;
-                int32_t  vertexOffset = 0;
+                uint32_t firstIndex    = 0;
+                int32_t  vertexOffset  = 0;
+                uint32_t firstInstance = 0;
 
-                loopIdx = 0;
                 for (auto const& infoId: modelInfoIds) {
                     auto modelInfo = getModelInfo (infoId);
-                    /* Render multiple models each having it's own uniform data (model matrices, etc. for example) by 
-                     * dynamically offsetting into one uniform buffer
-                    */
-                    auto descriptorSetsToBind = std::vector {
-                        sceneInfo->resource.descriptorSets[m_currentFrameInFlight]
-                    };
-                    auto dynamicOffsets = std::vector <uint32_t> {
-                        static_cast <uint32_t> (loopIdx * sceneInfo->meta.dynamicUBOOffsetAlignment)
-                    };     
-                    bindDescriptorSets (sceneInfo->resource.commandBuffers[m_currentFrameInFlight],
-                                        pipelineInfoId,
-                                        VK_PIPELINE_BIND_POINT_GRAPHICS,
-                                        0,
-                                        descriptorSetsToBind,
-                                        dynamicOffsets);
+ 
+                    drawIndexed (sceneInfo->resource.commandBuffers[m_currentFrameInFlight],
+                                 modelInfo->meta.indicesCount,
+                                 modelInfo->meta.instancesCount, firstIndex, vertexOffset, firstInstance);
 
-                    drawIndexed        (sceneInfo->resource.commandBuffers[m_currentFrameInFlight],
-                                        modelInfo->meta.indicesCount,
-                                        modelInfo->meta.instanceCount, firstIndex, vertexOffset, 0);
-
-                    firstIndex   += modelInfo->meta.indicesCount;
-                    vertexOffset += modelInfo->meta.verticesCount;
-                    loopIdx++;
+                    firstIndex    += modelInfo->meta.indicesCount;
+                    vertexOffset  += modelInfo->meta.verticesCount;
+                    firstInstance += modelInfo->meta.instancesCount;
                 }
 
                 endRenderPass (sceneInfo->resource.commandBuffers[m_currentFrameInFlight]);
