@@ -1,8 +1,6 @@
 #ifndef VK_CONFIG_H
 #define VK_CONFIG_H
 
-#include <vector>
-
 namespace Core {
     #define ENABLE_LOGGING                          (true)
     #define ENABLE_AUTO_PICK_QUEUE_FAMILY_INDICES   (true)

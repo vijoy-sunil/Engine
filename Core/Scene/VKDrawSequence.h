@@ -44,7 +44,7 @@ namespace Core {
             }
 
         protected:
-            void runSequence (std::vector <uint32_t> modelInfoIds,
+            void runSequence (const std::vector <uint32_t>& modelInfoIds,
                               uint32_t renderPassInfoId,
                               uint32_t pipelineInfoId,
                               uint32_t cameraInfoId,

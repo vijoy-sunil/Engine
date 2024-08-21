@@ -34,8 +34,8 @@ namespace SandBox {
 		     "SandBox/Models/Sample/", 
 		     "SandBox/Models/Sample/Model_4_Instances.json"}},
 		/* |------------------------------------------------------------------------------------------------|
-	     * | TRACK                                                                                          |
-	     * |------------------------------------------------------------------------------------------------|
+		 * | TRACK                                                                                          |
+		 * |------------------------------------------------------------------------------------------------|
 		*/
 #else
 		{4, {"SandBox/Models/Track/T0_Generic_NoCap.obj", 
@@ -66,8 +66,8 @@ namespace SandBox {
 		      "SandBox/Models/Track/", 
 		      "SandBox/Models/Track/T0_Curve_R10_D90_Instances.json"}},
 		/* |------------------------------------------------------------------------------------------------|
-	     * | VEHICLE                                                                                        |
-	     * |------------------------------------------------------------------------------------------------|
+		 * | VEHICLE                                                                                        |
+		 * |------------------------------------------------------------------------------------------------|
 		*/
 		{11, {"SandBox/Models/Vehicle/Vehicle_Base.obj", 
 		      "SandBox/Models/Vehicle/", 
@@ -76,7 +76,7 @@ namespace SandBox {
 		{12, {"SandBox/Models/Vehicle/Tyre.obj", 
 		      "SandBox/Models/Vehicle/", 
 		      "SandBox/Models/Vehicle/Tyre_Instances.json"}}
-#endif  // ENABLE_SAMPLE_MODELS_IMPORT
+#endif	// ENABLE_SAMPLE_MODELS_IMPORT
 	};
-}   // namespace SandBox
-#endif  // EN_CONFIG_H
+}	// namespace SandBox
+#endif	// EN_CONFIG_H
