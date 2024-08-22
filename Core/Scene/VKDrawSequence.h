@@ -116,6 +116,8 @@ namespace Core {
                     recreateSwapChainDeps (sceneInfoId, 
                                            renderPassInfoId,
                                            resourceId);
+
+                    cameraInfo->meta.updateProjectionMatrix = true;
                     return;
                 }
                 /* You could also decide to recreate and return if the swap chain is suboptimal, but we've chosen to 
@@ -407,6 +409,8 @@ namespace Core {
                     recreateSwapChainDeps (sceneInfoId, 
                                            renderPassInfoId,
                                            resourceId);
+                    
+                    cameraInfo->meta.updateProjectionMatrix = true;
                 }
                 else if (result != VK_SUCCESS) {
                     LOG_ERROR (m_VKDrawSequenceLog) << "Failed to present swap chain image "
