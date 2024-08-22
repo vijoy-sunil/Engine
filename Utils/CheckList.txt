@@ -17,6 +17,7 @@ VARIABLES
 [ - ] enums indicated by e_
 [ - ] private member vars indicated by m_
 [ - ] vector names end with s
+[ - ] struct names begin with upper case
 [ - ] Reduce use of macros, use const instead
 [ - ] use nullptr for null pointers instead of NULL
 [ - ] use VK_NULL_HANDLE instead of nullptr for Vulkan objects
@@ -49,6 +50,7 @@ METHODS
 [ - ] Return objects/literals methods start with get
 [ - ] Return boolean methods start with is
 [ - ] Return via parameter only if returning multiple variables
+[ - ] Verify id validity
 [ - ] private/public/protected methods are placed appropriately
 [ - ] Clean ups should remove entry from pool
 [ - ] When deleting resources stored in vectors make sure to clear the vector as well example - frame buffers
@@ -81,6 +83,7 @@ MISC
 [ - ] [a-z]\*                                   use of pointers
 [ - ] \) [a-z]                                  no use of C-style casting
 [ - ] \) &                                      no use of C-style casting
+[ - ] [0-9]\.[0-9]                              float values end with f
 [ - ] () {                                      void parameter
 [ - ] auto                                      use of auto for vectors, structs etc.
 [ - ] = get                                     use of auto
