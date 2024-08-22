@@ -135,6 +135,16 @@ namespace Core {
                                   VkImage image) {
 
                 auto deviceInfo = getDeviceInfo();
+                for (auto const& info: m_imageInfoPool[type]) {
+                    if (info.meta.id == imageInfo->meta.id) {
+                        LOG_ERROR (m_VKImageMgrLog) << "Image info id already exists " 
+                                                    << "[" << imageInfo->meta.id << "]"
+                                                    << " "
+                                                    << "[" << Utils::getImageTypeString (type) << "]"
+                                                    << std::endl;
+                        throw std::runtime_error ("Image info id already exists");
+                    }
+                }
 
                 VkImageViewCreateInfo createInfo;
                 createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
