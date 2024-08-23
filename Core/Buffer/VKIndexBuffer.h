@@ -25,15 +25,16 @@ namespace Core {
              * vertex data, reuse existing data for multiple vertices and thus saving memory when loading complex models
             */
             void createIndexBuffer (uint32_t bufferInfoId,
-                                    uint32_t resourceId,
+                                    uint32_t deviceInfoId,
                                     VkDeviceSize size, 
                                     const void* data) {
                                         
-                auto deviceInfo = getDeviceInfo();
+                auto deviceInfo = getDeviceInfo (deviceInfoId);
                 auto stagingBufferShareQueueFamilyIndices = std::vector {
-                    deviceInfo->unique[resourceId].indices.transferFamily.value()
+                    deviceInfo->meta.transferFamilyIndex.value()
                 };
                 createBuffer (bufferInfoId, 
+                              deviceInfoId,
                               STAGING_BUFFER,
                               size,
                               VK_BUFFER_USAGE_TRANSFER_SRC_BIT, 
@@ -42,20 +43,21 @@ namespace Core {
                               stagingBufferShareQueueFamilyIndices);
 
                 auto bufferInfo = getBufferInfo (bufferInfoId, STAGING_BUFFER);
-                vkMapMemory (deviceInfo->shared.logDevice, 
+                vkMapMemory (deviceInfo->resource.logDevice, 
                              bufferInfo->resource.bufferMemory, 
                              0, 
                              size, 
                              0, 
                              &bufferInfo->meta.bufferMapped);
                 memcpy (bufferInfo->meta.bufferMapped, data, static_cast <size_t> (size));
-                vkUnmapMemory (deviceInfo->shared.logDevice, bufferInfo->resource.bufferMemory);
+                vkUnmapMemory (deviceInfo->resource.logDevice, bufferInfo->resource.bufferMemory);
 
                 auto bufferShareQueueFamilyIndices = std::vector {
-                    deviceInfo->unique[resourceId].indices.graphicsFamily.value(), 
-                    deviceInfo->unique[resourceId].indices.transferFamily.value()
+                    deviceInfo->meta.graphicsFamilyIndex.value(), 
+                    deviceInfo->meta.transferFamilyIndex.value()
                 };
                 createBuffer (bufferInfoId, 
+                              deviceInfoId,
                               INDEX_BUFFER,
                               size, 
                               VK_BUFFER_USAGE_TRANSFER_DST_BIT | 

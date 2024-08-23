@@ -22,26 +22,27 @@ namespace Core {
 
         protected:  
             void createStorageBuffer (uint32_t bufferInfoId, 
-                                      uint32_t resourceId, 
+                                      uint32_t deviceInfoId, 
                                       VkDeviceSize size, 
                                       const void* data) {
                 // TO DO
                 static_cast <void> (bufferInfoId);
-                static_cast <void> (resourceId);
+                static_cast <void> (deviceInfoId);
                 static_cast <void> (size);
                 static_cast <void> (data);
             }
 
             void createStorageBuffer (uint32_t bufferInfoId, 
-                                      uint32_t resourceId, 
+                                      uint32_t deviceInfoId, 
                                       VkDeviceSize size) {
 
-                auto deviceInfo = getDeviceInfo();
+                auto deviceInfo = getDeviceInfo (deviceInfoId);
                 auto bufferShareQueueFamilyIndices = std::vector {
-                    deviceInfo->unique[resourceId].indices.graphicsFamily.value()
+                    deviceInfo->meta.graphicsFamilyIndex.value()
                 };
 
-                createBuffer (bufferInfoId, 
+                createBuffer (bufferInfoId,
+                              deviceInfoId, 
                               STORAGE_BUFFER,
                               size,
                               VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, 
@@ -50,7 +51,7 @@ namespace Core {
                               bufferShareQueueFamilyIndices);
 
                 auto bufferInfo = getBufferInfo (bufferInfoId, STORAGE_BUFFER);
-                vkMapMemory (deviceInfo->shared.logDevice, 
+                vkMapMemory (deviceInfo->resource.logDevice, 
                              bufferInfo->resource.bufferMemory, 
                              0, 
                              size, 

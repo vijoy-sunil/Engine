@@ -35,16 +35,16 @@ namespace Core {
              * buffer to the actual vertex buffer by recording a copy command on the transfer queue
             */
             void createVertexBuffer (uint32_t bufferInfoId, 
-                                     uint32_t resourceId, 
+                                     uint32_t deviceInfoId, 
                                      VkDeviceSize size, 
                                      const void* data) {
 
-                auto deviceInfo = getDeviceInfo();
+                auto deviceInfo = getDeviceInfo (deviceInfoId);
                 /* Images/buffers can be owned by a specific queue family or be shared between multiple at the same time. 
                  * The vector holds the queue family indices that will share/own this buffer
                 */
                 auto stagingBufferShareQueueFamilyIndices = std::vector {
-                    deviceInfo->unique[resourceId].indices.transferFamily.value()
+                    deviceInfo->meta.transferFamilyIndex.value()
                 };
                 /* The buffer usage bit is set to VK_BUFFER_USAGE_TRANSFER_SRC_BIT, this means the buffer can be used as 
                  * source in a memory transfer operation
@@ -68,6 +68,7 @@ namespace Core {
                  * flushing
                 */
                 createBuffer (bufferInfoId, 
+                              deviceInfoId,
                               STAGING_BUFFER,
                               size,
                               VK_BUFFER_USAGE_TRANSFER_SRC_BIT, 
@@ -79,7 +80,7 @@ namespace Core {
                  * memory resource defined by an offset and size
                 */
                 auto bufferInfo = getBufferInfo (bufferInfoId, STAGING_BUFFER);
-                vkMapMemory (deviceInfo->shared.logDevice, 
+                vkMapMemory (deviceInfo->resource.logDevice, 
                              bufferInfo->resource.bufferMemory, 
                              0, 
                              size, 
@@ -90,11 +91,11 @@ namespace Core {
                 memcpy (bufferInfo->meta.bufferMapped, data, static_cast <size_t> (size));
                 /* Unmap the memory object once host access to it is no longer needed by the application
                 */
-                vkUnmapMemory (deviceInfo->shared.logDevice, bufferInfo->resource.bufferMemory);
+                vkUnmapMemory (deviceInfo->resource.logDevice, bufferInfo->resource.bufferMemory);
 
                 auto bufferShareQueueFamilyIndices = std::vector {
-                    deviceInfo->unique[resourceId].indices.graphicsFamily.value(), 
-                    deviceInfo->unique[resourceId].indices.transferFamily.value()
+                    deviceInfo->meta.graphicsFamilyIndex.value(), 
+                    deviceInfo->meta.transferFamilyIndex.value()
                 };
                 /* The vertex buffer can now be allocated from a memory type that is device local, which generally means 
                  * that we're not able to use vkMapMemory. However, we can copy data from the stagingBuffer to the 
@@ -103,6 +104,7 @@ namespace Core {
                  * buffer usage flag
                 */
                 createBuffer (bufferInfoId, 
+                              deviceInfoId,
                               VERTEX_BUFFER,
                               size, 
                               VK_BUFFER_USAGE_TRANSFER_DST_BIT | 

@@ -22,30 +22,31 @@ namespace Core {
 
         protected:  
             void createUniformBuffer (uint32_t bufferInfoId, 
-                                      uint32_t resourceId, 
+                                      uint32_t deviceInfoId, 
                                       VkDeviceSize size, 
                                       const void* data) {
                 // TO DO
                 static_cast <void> (bufferInfoId);
-                static_cast <void> (resourceId);
+                static_cast <void> (deviceInfoId);
                 static_cast <void> (size);
                 static_cast <void> (data);
             }
 
             void createUniformBuffer (uint32_t bufferInfoId, 
-                                      uint32_t resourceId, 
+                                      uint32_t deviceInfoId, 
                                       VkDeviceSize size) {
                 /* Note that, this method doesn't accept a data pointer. This is because we're going to copy new data to 
                  * the uniform buffer every time we call the update function. In addition, it doesn't really make any 
                  * sense to have a staging buffer since it would just add extra overhead in this case and likely degrade 
                  * performance instead of improving it
                 */
-                auto deviceInfo = getDeviceInfo();
+                auto deviceInfo = getDeviceInfo (deviceInfoId);
                 auto bufferShareQueueFamilyIndices = std::vector {
-                    deviceInfo->unique[resourceId].indices.graphicsFamily.value()
+                    deviceInfo->meta.graphicsFamilyIndex.value()
                 };
 
                 createBuffer (bufferInfoId, 
+                              deviceInfoId,
                               UNIFORM_BUFFER,
                               size,
                               VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, 
@@ -59,7 +60,7 @@ namespace Core {
                  * technique is called "persistent mapping" and works on all Vulkan implementations. Not having to map 
                  * the buffer every time we need to update it increases performances, as mapping is not free
                 */
-                vkMapMemory (deviceInfo->shared.logDevice, 
+                vkMapMemory (deviceInfo->resource.logDevice, 
                              bufferInfo->resource.bufferMemory, 
                              0, 
                              size, 

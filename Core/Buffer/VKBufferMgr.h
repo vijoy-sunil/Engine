@@ -71,13 +71,14 @@ namespace Core {
             
         protected:
             void createBuffer (uint32_t bufferInfoId,
+                               uint32_t deviceInfoId,
                                e_bufferType type,
                                VkDeviceSize size, 
                                VkBufferUsageFlags usage, 
                                VkMemoryPropertyFlags property, 
                                const std::vector <uint32_t>& queueFamilyIndices) {
 
-                auto deviceInfo = getDeviceInfo();
+                auto deviceInfo = getDeviceInfo (deviceInfoId);
                 for (auto const& info: m_bufferInfoPool[type]) {
                     if (info.meta.id == bufferInfoId) {
                         LOG_ERROR (m_VKBufferMgrLog) << "Buffer info id already exists " 
@@ -116,7 +117,7 @@ namespace Core {
                 }
 
                 VkBuffer buffer;
-                VkResult result = vkCreateBuffer (deviceInfo->shared.logDevice, &createInfo, VK_NULL_HANDLE, &buffer);
+                VkResult result = vkCreateBuffer (deviceInfo->resource.logDevice, &createInfo, VK_NULL_HANDLE, &buffer);
                 if (result != VK_SUCCESS) {
                     LOG_ERROR (m_VKBufferMgrLog) << "Failed to create buffer " 
                                                  << "[" << bufferInfoId << "]"
@@ -141,7 +142,7 @@ namespace Core {
                  * structure for the physical device is supported for the resource
                 */
                 VkMemoryRequirements memRequirements;
-                vkGetBufferMemoryRequirements (deviceInfo->shared.logDevice, buffer, &memRequirements);
+                vkGetBufferMemoryRequirements (deviceInfo->resource.logDevice, buffer, &memRequirements);
                 /* Next, we can allocate the memory by filling in the VkMemoryAllocateInfo structure
                 */
                 VkMemoryAllocateInfo allocInfo;
@@ -153,7 +154,7 @@ namespace Core {
                 allocInfo.allocationSize = memRequirements.size;                                                                                           
                 /* Find suitable memory type
                 */
-                allocInfo.memoryTypeIndex = getMemoryTypeIndex (memRequirements.memoryTypeBits, property);
+                allocInfo.memoryTypeIndex = getMemoryTypeIndex (deviceInfoId, memRequirements.memoryTypeBits, property);
 
                 /* It should be noted that in a real world application, you're not supposed to actually call 
                  * vkAllocateMemory for every individual buffer. The maximum number of simultaneous memory allocations 
@@ -170,7 +171,7 @@ namespace Core {
                 deviceInfo->meta.memoryAllocationCount++;
 
                 VkDeviceMemory bufferMemory;
-                result = vkAllocateMemory (deviceInfo->shared.logDevice, &allocInfo, VK_NULL_HANDLE, &bufferMemory);
+                result = vkAllocateMemory (deviceInfo->resource.logDevice, &allocInfo, VK_NULL_HANDLE, &bufferMemory);
                 if (result != VK_SUCCESS) {
                     LOG_ERROR (m_VKBufferMgrLog) << "Failed to allocate buffer memory " 
                                                  << "[" << bufferInfoId << "]"
@@ -186,7 +187,7 @@ namespace Core {
                  * parameter is the offset within the region of memory that is to be bound to the buffer. If the offset 
                  * is non-zero, then it is required to be divisible by memRequirements.alignment
                 */
-                vkBindBufferMemory (deviceInfo->shared.logDevice, buffer, bufferMemory, 0);
+                vkBindBufferMemory (deviceInfo->resource.logDevice, buffer, bufferMemory, 0);
 
                 BufferInfo info;
                 info.meta.id                    = bufferInfoId;
@@ -282,15 +283,15 @@ namespace Core {
                 }
             }
 
-            void cleanUp (uint32_t bufferInfoId, e_bufferType type) {
+            void cleanUp (uint32_t bufferInfoId, uint32_t deviceInfoId, e_bufferType type) {
                 auto bufferInfo = getBufferInfo (bufferInfoId, type);
-                auto deviceInfo = getDeviceInfo();
+                auto deviceInfo = getDeviceInfo (deviceInfoId);
 
-                vkDestroyBuffer  (deviceInfo->shared.logDevice, bufferInfo->resource.buffer,       VK_NULL_HANDLE);
+                vkDestroyBuffer  (deviceInfo->resource.logDevice, bufferInfo->resource.buffer,       VK_NULL_HANDLE);
                 /* Memory that is bound to a buffer object may be freed once the buffer is no longer used, so let's free 
                  * it after the buffer has been destroyed
                 */
-                vkFreeMemory     (deviceInfo->shared.logDevice, bufferInfo->resource.bufferMemory, VK_NULL_HANDLE);
+                vkFreeMemory     (deviceInfo->resource.logDevice, bufferInfo->resource.bufferMemory, VK_NULL_HANDLE);
                 deleteBufferInfo (bufferInfo, type);
             } 
     };
