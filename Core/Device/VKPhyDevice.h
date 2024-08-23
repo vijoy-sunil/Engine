@@ -11,8 +11,8 @@ namespace Core {
             static Log::Record* m_VKPhyDeviceLog;
             const uint32_t m_instanceId = g_collectionsId++;
 
-            bool isDeviceExtensionsSupported (VkPhysicalDevice phyDevice) {
-                auto deviceInfo = getDeviceInfo();
+            bool isDeviceExtensionsSupported (VkPhysicalDevice phyDevice, 
+                                              const std::vector <const char*>& deviceExtensions) {
                 /* Query all available extensions
                 */
                 uint32_t extensionCount;
@@ -34,32 +34,39 @@ namespace Core {
                                                 << "[" << extension.specVersion   << "]"
                                                 << std::endl;
 
+                LOG_INFO (m_VKPhyDeviceLog) << "Required device extensions" 
+                                            << std::endl;
+                for (auto const& extension: deviceExtensions)
+                    LOG_INFO (m_VKPhyDeviceLog) << "[" << extension << "]"
+                                                << std::endl;
+
                 /* Use a set of strings here to represent the unconfirmed required extensions. That way we can easily 
                  * tick them off while enumerating the sequence of available extensions
                 */
-                std::set <std::string> requiredExtensions (deviceInfo->meta.deviceExtensions.begin(), 
-                                                           deviceInfo->meta.deviceExtensions.end());
+                std::set <std::string> requiredExtensions (deviceExtensions.begin(), deviceExtensions.end());
                 for (auto const& extension: availableExtensions)
                     requiredExtensions.erase (extension.extensionName);
 
                 return requiredExtensions.empty();
             }
 
-            bool isPhyDeviceSupported (uint32_t resourceId, VkPhysicalDevice phyDevice) {
+            bool isPhyDeviceSupported (uint32_t deviceInfoId, 
+                                       VkPhysicalDevice phyDevice,
+                                       const std::vector <const char*>& deviceExtensions) {
                 /* List of gpu devices have already been queried and is passed into this function one by one, which is 
                  * then checked for support
                 */
-                bool queueFamilyIndicesComplete = pickQueueFamilyIndices (resourceId, phyDevice);
+                bool queueFamilyIndicesComplete = pickQueueFamilyIndices (deviceInfoId, phyDevice);
                 /* Check device extension support
                 */
-                bool extensionsSupported = isDeviceExtensionsSupported (phyDevice);
+                bool extensionsSupported = isDeviceExtensionsSupported (phyDevice, deviceExtensions);
                 /* It should be noted that the availability of a presentation queue, implies that the swap chain 
                  * extension must be supported. However, it's still good to be explicit about things, and the extension 
                  * does have to be explicitly enabled
                 */
                 bool swapChainAdequate = false;
                 if (extensionsSupported) {
-                    auto swapChainSupport = getSwapChainSupportDetails (resourceId, phyDevice);
+                    auto swapChainSupport = getSwapChainSupportDetails (deviceInfoId, phyDevice);
                     /* Swap chain support is sufficient for now if there is at least one supported image format and one 
                      * supported presentation mode given the window surface we have
                     */
@@ -89,10 +96,11 @@ namespace Core {
              * the sample count for both color and depth. The highest sample count that is supported by both (&) will be 
              * the maximum we can support
             */
-            VkSampleCountFlagBits getMaxUsableSampleCount (void) {
-                auto deviceInfo = getDeviceInfo();
+            VkSampleCountFlagBits getMaxUsableSampleCount (uint32_t deviceInfoId) {
+                auto deviceInfo = getDeviceInfo (deviceInfoId);
+
                 VkPhysicalDeviceProperties properties;
-                vkGetPhysicalDeviceProperties (deviceInfo->shared.phyDevice, &properties);
+                vkGetPhysicalDeviceProperties (deviceInfo->resource.phyDevice, &properties);
 
                 VkSampleCountFlags counts = properties.limits.framebufferColorSampleCounts & 
                                             properties.limits.framebufferDepthSampleCounts;
@@ -134,25 +142,25 @@ namespace Core {
                 std::vector <VkPresentModeKHR> presentModes;
             };
 
-            SwapChainSupportDetails getSwapChainSupportDetails (uint32_t resourceId, VkPhysicalDevice phyDevice) {
-                auto deviceInfo = getDeviceInfo();
+            SwapChainSupportDetails getSwapChainSupportDetails (uint32_t deviceInfoId, VkPhysicalDevice phyDevice) {
+                auto deviceInfo = getDeviceInfo (deviceInfoId);
                 SwapChainSupportDetails details;
                 /* (1)
                 */
                 vkGetPhysicalDeviceSurfaceCapabilitiesKHR (phyDevice, 
-                                                           deviceInfo->unique[resourceId].surface, 
+                                                           deviceInfo->resource.surface, 
                                                            &details.capabilities);
                 /* (2)
                 */
                 uint32_t formatCount;
                 vkGetPhysicalDeviceSurfaceFormatsKHR (phyDevice, 
-                                                      deviceInfo->unique[resourceId].surface, 
+                                                      deviceInfo->resource.surface, 
                                                       &formatCount, 
                                                       VK_NULL_HANDLE);
                 if (formatCount != 0) {
                     details.formats.resize (formatCount);
                     vkGetPhysicalDeviceSurfaceFormatsKHR (phyDevice, 
-                                                          deviceInfo->unique[resourceId].surface, 
+                                                          deviceInfo->resource.surface, 
                                                           &formatCount, 
                                                           details.formats.data());
                 }
@@ -160,13 +168,13 @@ namespace Core {
                 */
                 uint32_t presentModeCount;
                 vkGetPhysicalDeviceSurfacePresentModesKHR (phyDevice, 
-                                                           deviceInfo->unique[resourceId].surface, 
+                                                           deviceInfo->resource.surface, 
                                                            &presentModeCount, 
                                                            VK_NULL_HANDLE);
                 if (presentModeCount != 0) {
                     details.presentModes.resize (presentModeCount);
                     vkGetPhysicalDeviceSurfacePresentModesKHR (phyDevice, 
-                                                               deviceInfo->unique[resourceId].surface, 
+                                                               deviceInfo->resource.surface, 
                                                                &presentModeCount, 
                                                                details.presentModes.data());
                 }
@@ -177,8 +185,11 @@ namespace Core {
              * of allowed operations and performance characteristics. We need to combine the requirements of the resource
              * (image, buffer etc.) and our own application requirements to find the right type of memory to use
             */
-            uint32_t getMemoryTypeIndex (uint32_t typeFilter, VkMemoryPropertyFlags properties) {
-                auto deviceInfo = getDeviceInfo();
+            uint32_t getMemoryTypeIndex (uint32_t deviceInfoId,
+                                         uint32_t typeFilter, 
+                                         VkMemoryPropertyFlags properties) {
+
+                auto deviceInfo = getDeviceInfo (deviceInfoId);
                 /* First we need to query info about the available types of memory
                  *
                  * The VkPhysicalDeviceMemoryProperties structure has two arrays memoryTypes and memoryHeaps
@@ -195,7 +206,7 @@ namespace Core {
                  * you can imagine that this can affect performance
                 */
                 VkPhysicalDeviceMemoryProperties memProperties;
-                vkGetPhysicalDeviceMemoryProperties (deviceInfo->shared.phyDevice, &memProperties);
+                vkGetPhysicalDeviceMemoryProperties (deviceInfo->resource.phyDevice, &memProperties);
 
                 LOG_INFO (m_VKPhyDeviceLog) << "Physical device memory types" 
                                             << std::endl;               
@@ -252,7 +263,8 @@ namespace Core {
                         }
                 }
 
-                LOG_ERROR (m_VKPhyDeviceLog) << "Failed to find suitable memory type" 
+                LOG_ERROR (m_VKPhyDeviceLog) << "Failed to find suitable memory type "
+                                             << "[" << deviceInfoId << "]" 
                                              << std::endl;
                 throw std::runtime_error ("Failed to find suitable memory type");
             }
@@ -278,27 +290,29 @@ namespace Core {
                 return supportedFeatures2;
             }
 
-            void pickPhyDevice (uint32_t resourceId) {
-                auto deviceInfo = getDeviceInfo();
+            void pickPhyDevice (uint32_t deviceInfoId) {
+                auto deviceInfo       = getDeviceInfo (deviceInfoId);
+                auto deviceExtensions = getDeviceExtensions();
                 /* Query all available graphic cards with vulkan support
                 */
                 uint32_t phyDevicesCount = 0;
-                vkEnumeratePhysicalDevices (deviceInfo->shared.instance, &phyDevicesCount, VK_NULL_HANDLE);
+                vkEnumeratePhysicalDevices (deviceInfo->resource.instance, &phyDevicesCount, VK_NULL_HANDLE);
                 if (phyDevicesCount == 0) {
-                    LOG_ERROR (m_VKPhyDeviceLog) << "Failed to find GPUs with Vulkan support" 
+                    LOG_ERROR (m_VKPhyDeviceLog) << "Failed to find GPUs with Vulkan support "
+                                                 << "[" << deviceInfoId << "]" 
                                                  << std::endl;
                     throw std::runtime_error ("Failed to find GPUs with Vulkan support");
                 }
                 std::vector <VkPhysicalDevice> phyDevices (phyDevicesCount);
-                vkEnumeratePhysicalDevices (deviceInfo->shared.instance, &phyDevicesCount, phyDevices.data());
+                vkEnumeratePhysicalDevices (deviceInfo->resource.instance, &phyDevicesCount, phyDevices.data());
 
                 for (auto const& phyDevice: phyDevices) {
-                    if (isPhyDeviceSupported (resourceId, phyDevice)) {
+                    if (isPhyDeviceSupported (deviceInfoId, phyDevice, deviceExtensions)) {
                         VkPhysicalDeviceProperties properties;
                         vkGetPhysicalDeviceProperties (phyDevice, &properties);
 
-                        deviceInfo->shared.phyDevice                = phyDevice;
-                        deviceInfo->params.maxSampleCount           = getMaxUsableSampleCount();
+                        deviceInfo->resource.phyDevice              = phyDevice;
+                        deviceInfo->params.maxSampleCount           = getMaxUsableSampleCount (deviceInfoId);
                         deviceInfo->params.maxStorageBufferRange    = properties.limits.maxStorageBufferRange;
                         deviceInfo->params.maxPushConstantsSize     = properties.limits.maxPushConstantsSize;
                         deviceInfo->params.maxMemoryAllocationCount = properties.limits.maxMemoryAllocationCount;
@@ -307,8 +321,9 @@ namespace Core {
                     }
                 }
 
-                if (deviceInfo->shared.phyDevice == VK_NULL_HANDLE) {
-                    LOG_ERROR (m_VKPhyDeviceLog) << "GPU doesn't meet required expectations" 
+                if (deviceInfo->resource.phyDevice == VK_NULL_HANDLE) {
+                    LOG_ERROR (m_VKPhyDeviceLog) << "GPU doesn't meet required expectations "
+                                                 << "[" << deviceInfoId << "]" 
                                                  << std::endl;
                     throw std::runtime_error ("GPU doesn't meet required expectations");
                 }

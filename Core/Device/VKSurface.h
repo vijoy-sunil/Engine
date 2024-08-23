@@ -22,30 +22,30 @@ namespace Core {
             }
 
         protected:
-            void createSurface (uint32_t resourceId) {
-                auto deviceInfo = getDeviceInfo();
+            void createSurface (uint32_t deviceInfoId) {
+                auto deviceInfo = getDeviceInfo (deviceInfoId);
 
                 VkSurfaceKHR surface;
-                VkResult result = glfwCreateWindowSurface (deviceInfo->shared.instance, 
-                                                           deviceInfo->unique[resourceId].window, 
+                VkResult result = glfwCreateWindowSurface (deviceInfo->resource.instance, 
+                                                           deviceInfo->resource.window, 
                                                            VK_NULL_HANDLE, 
                                                            &surface);
                 if (result != VK_SUCCESS) {
                     LOG_ERROR (m_VKSurfaceLog) << "Failed to create surface "
-                                               << "[" << resourceId << "]"
+                                               << "[" << deviceInfoId << "]"
                                                << " " 
                                                << "[" << string_VkResult (result) << "]" 
                                                << std::endl;
                     throw std::runtime_error ("Failed to create surface");
                 }
                 
-                deviceInfo->unique[resourceId].surface = surface;
+                deviceInfo->resource.surface = surface;
             }
 
-            void cleanUp (uint32_t resourceId) {
-                auto deviceInfo = getDeviceInfo();
-                vkDestroySurfaceKHR (deviceInfo->shared.instance, 
-                                     deviceInfo->unique[resourceId].surface, 
+            void cleanUp (uint32_t deviceInfoId) {
+                auto deviceInfo = getDeviceInfo (deviceInfoId);
+                vkDestroySurfaceKHR (deviceInfo->resource.instance, 
+                                     deviceInfo->resource.surface, 
                                      VK_NULL_HANDLE);               
             }
     };

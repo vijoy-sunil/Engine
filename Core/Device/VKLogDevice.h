@@ -25,8 +25,8 @@ namespace Core {
             }
 
         protected:
-            void createLogDevice (uint32_t resourceId) {
-                auto deviceInfo = getDeviceInfo();
+            void createLogDevice (uint32_t deviceInfoId) {
+                auto deviceInfo = getDeviceInfo (deviceInfoId);
                 /* The creation of a logical device involves specifying a bunch of details in structs again, of which 
                  * the first one will be VkDeviceQueueCreateInfo. This structure describes the number of queues we want 
                  * for a single queue family. We need to have multiple VkDeviceQueueCreateInfo structs to create a queue 
@@ -37,9 +37,9 @@ namespace Core {
                  * if they were separate queues for a uniform approach
                 */
                 std::set <uint32_t> uniqueQueueFamilies = {
-                    deviceInfo->unique[resourceId].indices.graphicsFamily.value(),
-                    deviceInfo->unique[resourceId].indices.presentFamily.value(),
-                    deviceInfo->unique[resourceId].indices.transferFamily.value()
+                    deviceInfo->meta.graphicsFamilyIndex.value(),
+                    deviceInfo->meta.presentFamilyIndex. value(),
+                    deviceInfo->meta.transferFamilyIndex.value()
                 };
                 /* Assign priorities to queues to influence the scheduling of command buffer execution using floating 
                  * point numbers between 0.0 and 1.0. This is required even if there is only a single queue
@@ -91,8 +91,8 @@ namespace Core {
 
                 /* Setup device extensions
                 */
-                createInfo.enabledExtensionCount   = static_cast <uint32_t> (deviceInfo->meta.deviceExtensions.size());
-                createInfo.ppEnabledExtensionNames = deviceInfo->meta.deviceExtensions.data();
+                createInfo.enabledExtensionCount   = static_cast <uint32_t> (getDeviceExtensions().size());
+                createInfo.ppEnabledExtensionNames = getDeviceExtensions().data();
 
                 /* The next information to specify is the set of device features that we'll be using
                  * (1) Core 1.0 features
@@ -134,7 +134,7 @@ namespace Core {
                 */
                 descriptorIndexingFeatures.runtimeDescriptorArray = VK_TRUE;
 
-                auto requiredFeatures2 = getPhyDeviceFeatures2 (deviceInfo->shared.phyDevice,
+                auto requiredFeatures2 = getPhyDeviceFeatures2 (deviceInfo->resource.phyDevice,
                                                                 &requiredFeatures,
                                                                 &descriptorIndexingFeatures,
                                                                 false);
@@ -144,13 +144,13 @@ namespace Core {
                  * parameter while creating or destroying it
                 */
                 VkDevice logDevice;
-                VkResult result = vkCreateDevice (deviceInfo->shared.phyDevice, 
+                VkResult result = vkCreateDevice (deviceInfo->resource.phyDevice, 
                                                   &createInfo, 
                                                   VK_NULL_HANDLE, 
                                                   &logDevice);
                 if (result != VK_SUCCESS) {
                     LOG_ERROR (m_VKLogDeviceLog) << "Failed to create logic device " 
-                                                 << "[" << resourceId << "]"
+                                                 << "[" << deviceInfoId << "]"
                                                  << " "
                                                  << "[" << string_VkResult (result) << "]" 
                                                  << std::endl;
@@ -162,28 +162,19 @@ namespace Core {
                  * queue index and a pointer to the variable to store the queue handle in. Because we're only creating a 
                  * single queue from this family, we'll simply use index 0.
                 */
-                vkGetDeviceQueue (logDevice, 
-                                  deviceInfo->unique[resourceId].indices.graphicsFamily.value(), 0, 
-                                  &graphicsQueue);
+                vkGetDeviceQueue (logDevice, deviceInfo->meta.graphicsFamilyIndex.value(), 0, &graphicsQueue);
+                vkGetDeviceQueue (logDevice, deviceInfo->meta.presentFamilyIndex. value(), 0, &presentQueue);
+                vkGetDeviceQueue (logDevice, deviceInfo->meta.transferFamilyIndex.value(), 0, &transferQueue);
 
-                vkGetDeviceQueue (logDevice, 
-                                  deviceInfo->unique[resourceId].indices.presentFamily.value(), 0, 
-                                  &presentQueue);
-
-                vkGetDeviceQueue (logDevice, 
-                                  deviceInfo->unique[resourceId].indices.transferFamily.value(), 0, 
-                                  &transferQueue);
-
-                deviceInfo->shared.logDevice                 = logDevice;
-                deviceInfo->unique[resourceId].graphicsQueue = graphicsQueue;
-                deviceInfo->unique[resourceId].presentQueue  = presentQueue;
-                deviceInfo->unique[resourceId].transferQueue = transferQueue;
-
+                deviceInfo->resource.logDevice     = logDevice;
+                deviceInfo->resource.graphicsQueue = graphicsQueue;
+                deviceInfo->resource.presentQueue  = presentQueue;
+                deviceInfo->resource.transferQueue = transferQueue;
             }
 
-            void cleanUp (void) {
-                auto deviceInfo = getDeviceInfo();
-                vkDestroyDevice (deviceInfo->shared.logDevice, VK_NULL_HANDLE);
+            void cleanUp (uint32_t deviceInfoId) {
+                auto deviceInfo = getDeviceInfo (deviceInfoId);
+                vkDestroyDevice (deviceInfo->resource.logDevice, VK_NULL_HANDLE);
             }
     };
 

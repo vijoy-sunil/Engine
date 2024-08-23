@@ -50,8 +50,8 @@ namespace Core {
                 return m_frameBufferResized;
             }
 
-            void createWindow (uint32_t resourceId, int width, int height, bool enResizing = true) {
-                auto deviceInfo = getDeviceInfo();
+            void createWindow (uint32_t deviceInfoId, int width, int height, bool enResizing = true) {
+                auto deviceInfo = getDeviceInfo (deviceInfoId);
                 /* First, initialize the GLFW library. Because GLFW was originally designed to create an OpenGL context, 
                  * we need to tell it to not create an OpenGL context with a subsequent call
                 */
@@ -63,7 +63,7 @@ namespace Core {
                 /* Create window, note that the fourth parameter allows you to optionally specify a monitor to open the 
                  * window on and the last parameter is only relevant to OpenGL
                 */
-                std::string windowTitle = g_windowSettings.title + std::to_string (resourceId);
+                std::string windowTitle = g_windowSettings.title + std::to_string (deviceInfoId);
                 GLFWwindow *window = glfwCreateWindow (width, 
                                                        height, 
                                                        windowTitle.c_str(), 
@@ -77,14 +77,14 @@ namespace Core {
                 */
                 glfwSetFramebufferSizeCallback (window, frameBufferResizeCallback);
 
-                deviceInfo->unique[resourceId].window = window;
+                deviceInfo->resource.window = window;
             }
 
-            void cleanUp (uint32_t resourceId) {
-                auto deviceInfo = getDeviceInfo();
+            void cleanUp (uint32_t deviceInfoId) {
+                auto deviceInfo = getDeviceInfo (deviceInfoId);
                 /* Once the window is closed, we need to clean up resources by destroying it and terminating GLFW itself
                 */
-                glfwDestroyWindow (deviceInfo->unique[resourceId].window);
+                glfwDestroyWindow (deviceInfo->resource.window);
                 glfwTerminate();                
             }
     };

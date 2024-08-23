@@ -92,8 +92,8 @@ namespace Core {
             }
             
         protected:
-            void createInstance (void) {
-                auto deviceInfo         = getDeviceInfo();
+            void createInstance (uint32_t deviceInfoId) {
+                auto deviceInfo         = getDeviceInfo (deviceInfoId);
                 auto instanceExtensions = getInstanceExtensions();
 
                 /* This data is technically optional when creating an instance, but it may provide some useful 
@@ -173,20 +173,22 @@ namespace Core {
                 VkResult result = vkCreateInstance (&createInfo, VK_NULL_HANDLE, &instance);
                 if (result != VK_SUCCESS) {
                     LOG_ERROR (m_VKInstanceLog) << "Failed to create instance " 
+                                                << "[" << deviceInfoId << "]"
+                                                << " "
                                                 << "[" << string_VkResult (result) << "]"
                                                 << std::endl;
                     throw std::runtime_error ("Failed to create instance");
                 }
                 
-                deviceInfo->shared.instance = instance;
+                deviceInfo->resource.instance = instance;
             }
 
-            void cleanUp (void) {
-                auto deviceInfo = getDeviceInfo();
+            void cleanUp (uint32_t deviceInfoId) {
+                auto deviceInfo = getDeviceInfo (deviceInfoId);
                 /* The VkInstance should be only destroyed right before the program exits, all of the other Vulkan 
                  * resources that we create should be cleaned up before the instance is destroyed
                 */
-                vkDestroyInstance (deviceInfo->shared.instance, VK_NULL_HANDLE);
+                vkDestroyInstance (deviceInfo->resource.instance, VK_NULL_HANDLE);
             }
     };
 

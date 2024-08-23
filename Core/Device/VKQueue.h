@@ -13,11 +13,11 @@ namespace Core {
             static Log::Record* m_VKQueueLog;
             const uint32_t m_instanceId = g_collectionsId++;
 
-            bool isQueueFamilyIndicesComplete (uint32_t resourceId) {
-                auto deviceInfo = getDeviceInfo();
-                return deviceInfo->unique[resourceId].indices.graphicsFamily.has_value() && 
-                       deviceInfo->unique[resourceId].indices.presentFamily. has_value() &&
-                       deviceInfo->unique[resourceId].indices.transferFamily.has_value();
+            bool isQueueFamilyIndicesComplete (uint32_t deviceInfoId) {
+                auto deviceInfo = getDeviceInfo (deviceInfoId);
+                return deviceInfo->meta.graphicsFamilyIndex.has_value() && 
+                       deviceInfo->meta.presentFamilyIndex. has_value() &&
+                       deviceInfo->meta.transferFamilyIndex.has_value();
             }
 
         public:
@@ -35,8 +35,8 @@ namespace Core {
              * submitted to a queue. There are different types of queues that originate from different queue families 
              * and each family of queues allows only a subset of commands
             */
-            bool pickQueueFamilyIndices (uint32_t resourceId, VkPhysicalDevice phyDevice) {
-                auto deviceInfo = getDeviceInfo();
+            bool pickQueueFamilyIndices (uint32_t deviceInfoId, VkPhysicalDevice phyDevice) {
+                auto deviceInfo = getDeviceInfo (deviceInfoId);
                 /* Query list of available queue families
                 */
                 uint32_t queueFamiliesCount = 0;
@@ -50,6 +50,8 @@ namespace Core {
                                                           queueFamilies.data());
 
                 LOG_INFO (m_VKQueueLog) << "Queue families count "
+                                        << "[" << deviceInfoId << "]"
+                                        << " "
                                         << "[" << queueFamiliesCount << "]" 
                                         << std::endl;
 
@@ -68,29 +70,29 @@ namespace Core {
 
 #if ENABLE_AUTO_PICK_QUEUE_FAMILY_INDICES
                     if ((queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) && 
-                       !deviceInfo->unique[resourceId].indices.graphicsFamily.has_value())
-                        deviceInfo->unique[resourceId].indices.graphicsFamily = queueFamilyIndex;
+                       !deviceInfo->meta.graphicsFamilyIndex.has_value())
+                        deviceInfo->meta.graphicsFamilyIndex = queueFamilyIndex;
 
                     VkBool32 presentSupport = false;
                     vkGetPhysicalDeviceSurfaceSupportKHR (phyDevice, 
                                                           queueFamilyIndex, 
-                                                          deviceInfo->unique[resourceId].surface, 
+                                                          deviceInfo->resource.surface, 
                                                           &presentSupport);
                     if (presentSupport &&
-                        !deviceInfo->unique[resourceId].indices.presentFamily.has_value())
-                         deviceInfo->unique[resourceId].indices.presentFamily = queueFamilyIndex;
+                        !deviceInfo->meta.presentFamilyIndex.has_value())
+                         deviceInfo->meta.presentFamilyIndex = queueFamilyIndex;
 
                     if ((queueFamily.queueFlags & VK_QUEUE_TRANSFER_BIT) && 
-                       !deviceInfo->unique[resourceId].indices.transferFamily.has_value())
-                        deviceInfo->unique[resourceId].indices.transferFamily = queueFamilyIndex;
+                       !deviceInfo->meta.transferFamilyIndex.has_value())
+                        deviceInfo->meta.transferFamilyIndex = queueFamilyIndex;
 #else
-                    deviceInfo->unique[resourceId].indices.graphicsFamily = 0;
-                    deviceInfo->unique[resourceId].indices.presentFamily  = 1;
-                    deviceInfo->unique[resourceId].indices.transferFamily = 2;
+                    deviceInfo->meta.graphicsFamilyIndex = 0;
+                    deviceInfo->meta.presentFamilyIndex  = 1;
+                    deviceInfo->meta.transferFamilyIndex = 2;
 #endif  // ENABLE_AUTO_PICK_QUEUE_FAMILY_INDICES
                     queueFamilyIndex++;
                 }
-                return isQueueFamilyIndicesComplete (resourceId);
+                return isQueueFamilyIndicesComplete (deviceInfoId);
             }
 
             bool isQueueFamiliesUnique (const std::vector <uint32_t>& queueFamilyIndices) {

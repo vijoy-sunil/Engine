@@ -195,33 +195,35 @@ namespace Core {
                 createInfo->flags           = 0;
             }
             
-            void createDebugMessenger (void) {
+            void createDebugMessenger (uint32_t deviceInfoId) {
                 if (!isValidationLayersEnabled())
                     return;
 
-                auto deviceInfo = getDeviceInfo();
+                auto deviceInfo = getDeviceInfo (deviceInfoId);
                 VkDebugUtilsMessengerCreateInfoEXT createInfo;
                 populateDebugMessengerCreateInfo (&createInfo);
 
                 /* Next, we need to pass this struct to vkCreateDebugUtilsMessengerEXT function to create the handle to 
                  * the debug messenger object (VkDebugUtilsMessengerEXT object) and associate it with our instance
                 */
-                VkResult result = CreateDebugUtilsMessengerEXT (deviceInfo->shared.instance, 
+                VkResult result = CreateDebugUtilsMessengerEXT (deviceInfo->resource.instance, 
                                                                 &createInfo, 
                                                                 VK_NULL_HANDLE, 
                                                                 &m_debugMessenger);
                 if (result != VK_SUCCESS) {
                     LOG_ERROR (m_VKValidationLog) << "Failed to set up debug messenger " 
+                                                  << "[" << deviceInfoId << "]"
+                                                  << " "
                                                   << "[" << string_VkResult (result) << "]"
                                                   << std::endl;
                     throw std::runtime_error ("Failed to set up debug messenger");
                 }
             }
 
-            void cleanUp (void) {
-                auto deviceInfo = getDeviceInfo();
+            void cleanUp (uint32_t deviceInfoId) {
+                auto deviceInfo = getDeviceInfo (deviceInfoId);
                 if (isValidationLayersEnabled())
-                    DestroyDebugUtilsMessengerEXT (deviceInfo->shared.instance, 
+                    DestroyDebugUtilsMessengerEXT (deviceInfo->resource.instance, 
                                                    &m_debugMessenger, 
                                                    VK_NULL_HANDLE);            
             }
