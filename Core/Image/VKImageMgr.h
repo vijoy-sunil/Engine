@@ -95,10 +95,12 @@ namespace Core {
             /* The below function takes a list of candidate formats in order from most desirable to least desirable, and 
              * checks which is the first one that supports desired tiling mode and format features
             */
-            VkFormat getSupportedFormat (const std::vector <VkFormat>& formatCandidates, 
+            VkFormat getSupportedFormat (uint32_t deviceInfoId,
+                                         const std::vector <VkFormat>& formatCandidates, 
                                          VkImageTiling tiling, 
                                          VkFormatFeatureFlags features) {
-                auto deviceInfo = getDeviceInfo();
+
+                auto deviceInfo = getDeviceInfo (deviceInfoId);
 
                 LOG_INFO (m_VKImageMgrLog) << "Required features"
                                            << std::endl;   
@@ -109,7 +111,7 @@ namespace Core {
 
                 for (auto const& format: formatCandidates) {
                     VkFormatProperties properties;
-                    vkGetPhysicalDeviceFormatProperties (deviceInfo->shared.phyDevice, format, &properties);
+                    vkGetPhysicalDeviceFormatProperties (deviceInfo->resource.phyDevice, format, &properties);
 
                     if (tiling == VK_IMAGE_TILING_LINEAR && 
                        (properties.linearTilingFeatures & features) == features)                   
@@ -120,7 +122,8 @@ namespace Core {
                         return format;
                 }
                 
-                LOG_ERROR (m_VKImageMgrLog) << "Failed to find supported format" 
+                LOG_ERROR (m_VKImageMgrLog) << "Failed to find supported format "
+                                            << "[" << deviceInfoId << "]" 
                                             << std::endl;
                 throw std::runtime_error ("Failed to find supported format");
             }
@@ -130,11 +133,12 @@ namespace Core {
              * image and which part of the image to access
             */
             void createImageView (ImageInfo* imageInfo,
+                                  uint32_t deviceInfoId,
                                   e_imageType type, 
                                   uint32_t baseMipLevel,
                                   VkImage image) {
 
-                auto deviceInfo = getDeviceInfo();
+                auto deviceInfo = getDeviceInfo (deviceInfoId);
                 for (auto const& info: m_imageInfoPool[type]) {
                     if (info.meta.id == imageInfo->meta.id) {
                         LOG_ERROR (m_VKImageMgrLog) << "Image info id already exists " 
@@ -170,7 +174,7 @@ namespace Core {
                 createInfo.subresourceRange.layerCount     = 1;
 
                 VkImageView imageView;
-                VkResult result = vkCreateImageView (deviceInfo->shared.logDevice, 
+                VkResult result = vkCreateImageView (deviceInfo->resource.logDevice, 
                                                      &createInfo, 
                                                      VK_NULL_HANDLE,
                                                      &imageView);
@@ -191,6 +195,7 @@ namespace Core {
             }
 
             void createImageResources (uint32_t imageInfoId,
+                                       uint32_t deviceInfoId,
                                        e_imageType type,
                                        uint32_t width, 
                                        uint32_t height,
@@ -204,7 +209,7 @@ namespace Core {
                                        const std::vector <uint32_t>& queueFamilyIndices,
                                        VkImageAspectFlags aspect) {
 
-                auto deviceInfo = getDeviceInfo();
+                auto deviceInfo = getDeviceInfo (deviceInfoId);
                 for (auto const& info: m_imageInfoPool[type]) {
                     if (info.meta.id == imageInfoId) {
                         LOG_ERROR (m_VKImageMgrLog) << "Image info id already exists " 
@@ -285,7 +290,7 @@ namespace Core {
                 }
 
                 VkImage image;
-                VkResult result = vkCreateImage (deviceInfo->shared.logDevice, &createInfo, VK_NULL_HANDLE, &image);
+                VkResult result = vkCreateImage (deviceInfo->resource.logDevice, &createInfo, VK_NULL_HANDLE, &image);
                 if (result != VK_SUCCESS) {
                     LOG_ERROR (m_VKImageMgrLog) << "Failed to create image " 
                                                 << "[" << imageInfoId << "]"
@@ -302,18 +307,18 @@ namespace Core {
                  * instead of vkBindBufferMemory
                 */
                 VkMemoryRequirements memRequirements;
-                vkGetImageMemoryRequirements (deviceInfo->shared.logDevice, image, &memRequirements);
+                vkGetImageMemoryRequirements (deviceInfo->resource.logDevice, image, &memRequirements);
 
                 VkMemoryAllocateInfo allocInfo;
                 allocInfo.sType           = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
                 allocInfo.pNext           = VK_NULL_HANDLE;
                 allocInfo.allocationSize  = memRequirements.size;
-                allocInfo.memoryTypeIndex = getMemoryTypeIndex (memRequirements.memoryTypeBits, property);
+                allocInfo.memoryTypeIndex = getMemoryTypeIndex (deviceInfoId, memRequirements.memoryTypeBits, property);
 
                 deviceInfo->meta.memoryAllocationCount++;
 
                 VkDeviceMemory imageMemory;
-                result = vkAllocateMemory (deviceInfo->shared.logDevice, &allocInfo, VK_NULL_HANDLE, &imageMemory);
+                result = vkAllocateMemory (deviceInfo->resource.logDevice, &allocInfo, VK_NULL_HANDLE, &imageMemory);
                 if (result != VK_SUCCESS) {
                     LOG_ERROR (m_VKImageMgrLog) << "Failed to allocate image memory " 
                                                 << "[" << imageInfoId << "]"
@@ -325,7 +330,7 @@ namespace Core {
                     throw std::runtime_error ("Failed to allocate image memory");
                 }
 
-                vkBindImageMemory (deviceInfo->shared.logDevice, image, imageMemory, 0);
+                vkBindImageMemory (deviceInfo->resource.logDevice, image, imageMemory, 0);
 
                 ImageInfo info;
                 info.meta.id                    = imageInfoId;
@@ -347,9 +352,10 @@ namespace Core {
                 /* Create image view
                 */
                 createImageView (&info, 
+                                 deviceInfoId,
                                  type, 
                                  0,
-                                 image);              
+                                 image);
             }            
 
             /* One of the most common ways to perform layout transitions is using an image memory barrier. A pipeline 
@@ -543,17 +549,17 @@ namespace Core {
                 }
             }
 
-            void cleanUp (uint32_t imageInfoId, e_imageType type) {
-                auto imageInfo  = getImageInfo (imageInfoId, type);
-                auto deviceInfo = getDeviceInfo(); 
+            void cleanUp (uint32_t imageInfoId, uint32_t deviceInfoId, e_imageType type) {
+                auto imageInfo  = getImageInfo  (imageInfoId, type);
+                auto deviceInfo = getDeviceInfo (deviceInfoId); 
                 /* If we are cleaning up swap chain resources, we are only going to delete the associated image view. The
                  * destroy swap chain method will take care of the rest
                 */
-                vkDestroyImageView (deviceInfo->shared.logDevice, imageInfo->resource.imageView,   VK_NULL_HANDLE);
+                vkDestroyImageView (deviceInfo->resource.logDevice, imageInfo->resource.imageView,   VK_NULL_HANDLE);
 
                 if (type != SWAPCHAIN_IMAGE) {
-                vkDestroyImage     (deviceInfo->shared.logDevice, imageInfo->resource.image,       VK_NULL_HANDLE);
-                vkFreeMemory       (deviceInfo->shared.logDevice, imageInfo->resource.imageMemory, VK_NULL_HANDLE);
+                vkDestroyImage     (deviceInfo->resource.logDevice, imageInfo->resource.image,       VK_NULL_HANDLE);
+                vkFreeMemory       (deviceInfo->resource.logDevice, imageInfo->resource.imageMemory, VK_NULL_HANDLE);
                 }
                 deleteImageInfo    (imageInfo, type);
             }

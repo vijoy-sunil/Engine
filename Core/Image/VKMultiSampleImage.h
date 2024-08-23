@@ -37,10 +37,10 @@ namespace Core {
              * As one might expect, more samples lead to better results, however it is also more computationally 
              * expensive
             */
-            void createMultiSampleResources (uint32_t imageInfoId, uint32_t resourceId) {
-                auto deviceInfo = getDeviceInfo();
+            void createMultiSampleResources (uint32_t imageInfoId, uint32_t deviceInfoId) {
+                auto deviceInfo = getDeviceInfo (deviceInfoId);
                 auto imageShareQueueFamilyIndices = std::vector {
-                    deviceInfo->unique[resourceId].indices.graphicsFamily.value()
+                    deviceInfo->meta.graphicsFamilyIndex.value()
                 };
                 /* Note that, we're also using only one mip level, since this is enforced by the Vulkan specification in 
                  * case of images with more than one sample per pixel. Also, this color buffer doesn't need mipmaps since 
@@ -72,12 +72,13 @@ namespace Core {
                  * VK_MEMORY_PROPERTY_LAZILY_ALLOCATED_BIT and VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT set
                 */
                 createImageResources (imageInfoId, 
+                                      deviceInfoId,
                                       MULTISAMPLE_IMAGE,
-                                      deviceInfo->unique[resourceId].swapChain.extent.width,
-                                      deviceInfo->unique[resourceId].swapChain.extent.height,
+                                      deviceInfo->params.swapChainExtent.width,
+                                      deviceInfo->params.swapChainExtent.height,
                                       1,
                                       VK_IMAGE_LAYOUT_UNDEFINED,
-                                      deviceInfo->unique[resourceId].swapChain.format,
+                                      deviceInfo->params.swapChainFormat,
                                       VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | 
                                       VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, 
                                       deviceInfo->params.maxSampleCount,

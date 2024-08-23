@@ -55,8 +55,8 @@ namespace Core {
              * attachment, defined by the swap chain extent, an image usage appropriate for a depth attachment and optimal 
              * tiling
             */
-            void createDepthResources (uint32_t imageInfoId, uint32_t resourceId) {
-                auto deviceInfo = getDeviceInfo();
+            void createDepthResources (uint32_t imageInfoId, uint32_t deviceInfoId) {
+                auto deviceInfo = getDeviceInfo (deviceInfoId);
                 /* What is the right format for a depth image?
                  * Unlike the texture image, we don't necessarily need a specific format, because we won't be directly 
                  * accessing the texels from the program. It just needs to have a reasonable accuracy, at least 24 bits
@@ -79,17 +79,19 @@ namespace Core {
                     VK_FORMAT_D32_SFLOAT_S8_UINT, 
                     VK_FORMAT_D24_UNORM_S8_UINT
                 };
-                auto format = getSupportedFormat (formatCandidates,
+                auto format = getSupportedFormat (deviceInfoId,
+                                                  formatCandidates,
                                                   VK_IMAGE_TILING_OPTIMAL,
                                                   VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);
 
                 auto imageShareQueueFamilyIndices = std::vector {
-                    deviceInfo->unique[resourceId].indices.graphicsFamily.value()
+                    deviceInfo->meta.graphicsFamilyIndex.value()
                 };
                 createImageResources (imageInfoId, 
+                                      deviceInfoId,
                                       DEPTH_IMAGE,
-                                      deviceInfo->unique[resourceId].swapChain.extent.width,
-                                      deviceInfo->unique[resourceId].swapChain.extent.height,
+                                      deviceInfo->params.swapChainExtent.width,
+                                      deviceInfo->params.swapChainExtent.height,
                                       1,
                                       VK_IMAGE_LAYOUT_UNDEFINED,
                                       format,

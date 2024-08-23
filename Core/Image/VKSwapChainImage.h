@@ -104,14 +104,14 @@ namespace Core {
              * use the original {width, height}. Instead, we must use glfwGetFramebufferSize to query the resolution of 
              * the window in pixel before matching it against the minimum and maximum image extent
             */
-            VkExtent2D getSwapExtent (uint32_t resourceId, const VkSurfaceCapabilitiesKHR* capabilities) {
-                auto deviceInfo = getDeviceInfo();
+            VkExtent2D getSwapExtent (uint32_t deviceInfoId, const VkSurfaceCapabilitiesKHR* capabilities) {
+                auto deviceInfo = getDeviceInfo (deviceInfoId);
                 if (capabilities->currentExtent.width != std::numeric_limits <uint32_t> ::max())
                     return capabilities->currentExtent;
                     
                 else {
                     int width, height;
-                    glfwGetFramebufferSize (deviceInfo->unique[resourceId].window, &width, &height);
+                    glfwGetFramebufferSize (deviceInfo->resource.window, &width, &height);
 
                     VkExtent2D actualExtent = {
                         static_cast <uint32_t> (width),
@@ -150,13 +150,13 @@ namespace Core {
              * up, but the general purpose of the swap chain is to synchronize the presentation of images with the 
              * refresh rate of the screen
             */
-            void createSwapChainResources (uint32_t imageInfoId, uint32_t resourceId) {
-                auto deviceInfo       = getDeviceInfo();
-                auto swapChainSupport = getSwapChainSupportDetails (resourceId, deviceInfo->shared.phyDevice);
+            void createSwapChainResources (uint32_t imageInfoId, uint32_t deviceInfoId) {
+                auto deviceInfo       = getDeviceInfo (deviceInfoId);
+                auto swapChainSupport = getSwapChainSupportDetails (deviceInfoId, deviceInfo->resource.phyDevice);
 
                 auto surfaceFormat    = getSwapSurfaceFormat (swapChainSupport.formats);
                 auto presentMode      = getSwapPresentMode   (swapChainSupport.presentModes);
-                auto extent           = getSwapExtent        (resourceId, &swapChainSupport.capabilities); 
+                auto extent           = getSwapExtent        (deviceInfoId, &swapChainSupport.capabilities); 
 
                 /* Aside from the above properties we also have to decide how many images we would like to have in the 
                  * swap chain. The implementation specifies the minimum number that it requires to function
@@ -184,7 +184,7 @@ namespace Core {
                 createInfo.flags = 0;
                 /* Specify which surface the swap chain should be tied to
                 */
-                createInfo.surface         = deviceInfo->unique[resourceId].surface;
+                createInfo.surface         = deviceInfo->resource.surface;
                 createInfo.imageFormat     = surfaceFormat.format;
                 createInfo.imageColorSpace = surfaceFormat.colorSpace;
                 createInfo.presentMode     = presentMode;                
@@ -207,8 +207,8 @@ namespace Core {
                  * presentation queue
                 */
                 auto queueFamilyIndices = std::vector { 
-                    deviceInfo->unique[resourceId].indices.graphicsFamily.value(),
-                    deviceInfo->unique[resourceId].indices.presentFamily.value()
+                    deviceInfo->meta.graphicsFamilyIndex.value(),
+                    deviceInfo->meta.presentFamilyIndex. value()
                 };
 
                 if (isQueueFamiliesUnique (queueFamilyIndices)) {
@@ -247,7 +247,7 @@ namespace Core {
                 createInfo.oldSwapchain = VK_NULL_HANDLE;
 
                 VkSwapchainKHR swapChain;
-                VkResult result = vkCreateSwapchainKHR (deviceInfo->shared.logDevice, 
+                VkResult result = vkCreateSwapchainKHR (deviceInfo->resource.logDevice, 
                                                         &createInfo, 
                                                         VK_NULL_HANDLE, 
                                                         &swapChain);
@@ -255,7 +255,7 @@ namespace Core {
                     LOG_ERROR (m_VKSwapChainImageLog) << "Failed to create swap chain "
                                                       << "[" << imageInfoId << "]"
                                                       << " "
-                                                      << "[" << resourceId  << "]"
+                                                      << "[" << deviceInfoId  << "]"
                                                       << " "
                                                       << "[" << string_VkResult (result) << "]" 
                                                       << std::endl;
@@ -263,13 +263,13 @@ namespace Core {
                 }
 
                 uint32_t swapChainSize;
-                vkGetSwapchainImagesKHR (deviceInfo->shared.logDevice, 
+                vkGetSwapchainImagesKHR (deviceInfo->resource.logDevice, 
                                          swapChain, 
                                          &swapChainSize, 
                                          VK_NULL_HANDLE);
 
                 std::vector <VkImage> swapChainImages (swapChainSize);
-                vkGetSwapchainImagesKHR (deviceInfo->shared.logDevice, 
+                vkGetSwapchainImagesKHR (deviceInfo->resource.logDevice, 
                                          swapChain, 
                                          &swapChainSize, 
                                          swapChainImages.data());
@@ -290,6 +290,7 @@ namespace Core {
                 for (uint32_t i = 0; i < swapChainSize; i++) {
                     imageInfo->meta.id = imageInfoId + i;
                     createImageView (imageInfo, 
+                                     deviceInfoId,
                                      SWAPCHAIN_IMAGE,
                                      0,
                                      swapChainImages[i]);
@@ -297,11 +298,11 @@ namespace Core {
 
                 /* Save swap chain info to device info
                 */
-                deviceInfo->unique[resourceId].swapChain.format      = createInfo.imageFormat;
-                deviceInfo->unique[resourceId].swapChain.presentMode = createInfo.presentMode;
-                deviceInfo->unique[resourceId].swapChain.extent      = createInfo.imageExtent;
-                deviceInfo->unique[resourceId].swapChain.swapChain   = swapChain;
-                deviceInfo->unique[resourceId].swapChain.size        = swapChainSize;
+                deviceInfo->meta.swapChainSize          = swapChainSize;
+                deviceInfo->resource.swapChain          = swapChain;
+                deviceInfo->params.swapChainFormat      = createInfo.imageFormat;
+                deviceInfo->params.swapChainPresentMode = createInfo.presentMode;
+                deviceInfo->params.swapChainExtent      = createInfo.imageExtent;
                 /* Restore id of void image since we will need it for subsequent calls to create swap chain resources
                 */
                 imageInfo->meta.id = 0;

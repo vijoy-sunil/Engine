@@ -63,10 +63,10 @@ namespace Core {
              * Optimal for sampling from a shader
             */
             void createTextureResources (uint32_t imageInfoId, 
-                                         uint32_t resourceId, 
+                                         uint32_t deviceInfoId, 
                                          const char* imageFilePath) {
                                             
-                auto deviceInfo = getDeviceInfo();
+                auto deviceInfo = getDeviceInfo (deviceInfoId);
                 int width, height, channels;
                 /* The stbi_load function takes the file path and number of channels to load as arguments. The 
                  * STBI_rgb_alpha value forces the image to be loaded with an alpha channel, even if it doesn't have one, 
@@ -103,12 +103,13 @@ namespace Core {
                 */
                 VkDeviceSize size = static_cast <VkDeviceSize> (width * height * 4);
                 auto stagingBufferShareQueueFamilyIndices = std::vector {
-                    deviceInfo->unique[resourceId].indices.transferFamily.value()
+                    deviceInfo->meta.transferFamilyIndex.value()
                 };
                 /* Create staging buffer, the buffer should be in host visible memory so that we can map it and it 
                  * should be usable as a transfer source so that we can copy it to an image later on
                 */
                 createBuffer (imageInfoId, 
+                              deviceInfoId,
                               STAGING_BUFFER_TEX,
                               size,
                               VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
@@ -119,14 +120,14 @@ namespace Core {
                 /* Now, we can directly copy the pixel values that we got from the image loading library to the buffer
                 */
                 auto bufferInfo = getBufferInfo (imageInfoId, STAGING_BUFFER_TEX);
-                vkMapMemory (deviceInfo->shared.logDevice, 
+                vkMapMemory (deviceInfo->resource.logDevice, 
                              bufferInfo->resource.bufferMemory, 
                              0, 
                              size, 
                              0, 
                              &bufferInfo->meta.bufferMapped);
                 memcpy (bufferInfo->meta.bufferMapped, pixels, static_cast <size_t> (size));
-                vkUnmapMemory (deviceInfo->shared.logDevice, bufferInfo->resource.bufferMemory);
+                vkUnmapMemory (deviceInfo->resource.logDevice, bufferInfo->resource.bufferMemory);
 
                 /* Clean up the original pixel array
                 */
@@ -166,15 +167,17 @@ namespace Core {
                 auto formatCandidates = std::vector {
                     VK_FORMAT_R8G8B8A8_SRGB
                 };
-                auto format = getSupportedFormat (formatCandidates,
+                auto format = getSupportedFormat (deviceInfoId,
+                                                  formatCandidates,
                                                   VK_IMAGE_TILING_OPTIMAL,
                                                   VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT);
 
                 auto imageShareQueueFamilyIndices = std::vector {
-                    deviceInfo->unique[resourceId].indices.graphicsFamily.value(),
-                    deviceInfo->unique[resourceId].indices.transferFamily.value()
+                    deviceInfo->meta.graphicsFamilyIndex.value(),
+                    deviceInfo->meta.transferFamilyIndex.value()
                 };
                 createImageResources (imageInfoId, 
+                                      deviceInfoId,
                                       TEXTURE_IMAGE,
                                       static_cast <uint32_t> (width),
                                       static_cast <uint32_t> (height),
