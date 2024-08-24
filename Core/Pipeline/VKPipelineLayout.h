@@ -22,9 +22,9 @@ namespace Core {
             }
 
         protected:
-            void createPipelineLayout (uint32_t pipelineInfoId) {      
+            void createPipelineLayout (uint32_t pipelineInfoId, uint32_t deviceInfoId) {
                 auto pipelineInfo = getPipelineInfo (pipelineInfoId);
-                auto deviceInfo   = getDeviceInfo();
+                auto deviceInfo   = getDeviceInfo   (deviceInfoId);
                 /* You can use uniform values in shaders, which are globals similar to dynamic state variables that can be 
                  * changed at drawing time to alter the behavior of your shaders without having to recreate them. They are 
                  * commonly used to pass the transformation matrix to the vertex shader, or to create texture samplers in 
@@ -53,7 +53,7 @@ namespace Core {
                 createInfo.pPushConstantRanges    = pipelineInfo->resource.pushConstantRanges.data();
 
                 VkPipelineLayout layout;
-                VkResult result =  vkCreatePipelineLayout (deviceInfo->shared.logDevice, 
+                VkResult result =  vkCreatePipelineLayout (deviceInfo->resource.logDevice, 
                                                            &createInfo, 
                                                            VK_NULL_HANDLE, 
                                                            &layout);

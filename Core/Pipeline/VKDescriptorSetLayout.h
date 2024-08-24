@@ -60,12 +60,13 @@ namespace Core {
              * vertex attribute and its location index, through a VkDescriptorSetLayoutBinding struct
             */
             void createDescriptorSetLayout (uint32_t pipelineInfoId,
+                                            uint32_t deviceInfoId,
                                             const std::vector <VkDescriptorSetLayoutBinding>& layoutBindings,
                                             const std::vector <VkDescriptorBindingFlags>& bindingFlags,
                                             VkDescriptorSetLayoutCreateFlags layoutCreateFlags) {
 
                 auto pipelineInfo = getPipelineInfo (pipelineInfoId);
-                auto deviceInfo   = getDeviceInfo();
+                auto deviceInfo   = getDeviceInfo   (deviceInfoId);
                 /* Specify descriptor set layout binding properties
                 */
                 VkDescriptorSetLayoutBindingFlagsCreateInfo bindingFlagsCreateInfo;
@@ -82,7 +83,7 @@ namespace Core {
                 createInfo.pBindings    = layoutBindings.data();
 
                 VkDescriptorSetLayout descriptorSetLayout;
-                VkResult result = vkCreateDescriptorSetLayout (deviceInfo->shared.logDevice, 
+                VkResult result = vkCreateDescriptorSetLayout (deviceInfo->resource.logDevice, 
                                                                &createInfo, 
                                                                VK_NULL_HANDLE, 
                                                                &descriptorSetLayout);

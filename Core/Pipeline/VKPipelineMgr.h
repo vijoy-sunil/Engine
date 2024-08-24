@@ -120,13 +120,14 @@ namespace Core {
 
             void createGraphicsPipeline (uint32_t pipelineInfoId,
                                          uint32_t renderPassInfoId,
+                                         uint32_t deviceInfoId,
                                          uint32_t subPassIndex,
                                          int32_t basePipelineIndex,
                                          VkPipeline basePipeline) {
 
                 auto renderPassInfo = getRenderPassInfo (renderPassInfoId);
                 auto pipelineInfo   = getPipelineInfo   (pipelineInfoId);
-                auto deviceInfo     = getDeviceInfo();
+                auto deviceInfo     = getDeviceInfo     (deviceInfoId);
 
                 pipelineInfo->meta.subPassIndex      = subPassIndex;
                 pipelineInfo->meta.basePipelineIndex = basePipelineIndex;
@@ -186,7 +187,7 @@ namespace Core {
                  * later time
                 */
                 VkPipeline pipeline;
-                VkResult result = vkCreateGraphicsPipelines (deviceInfo->shared.logDevice, 
+                VkResult result = vkCreateGraphicsPipelines (deviceInfo->resource.logDevice, 
                                                              VK_NULL_HANDLE,
                                                              1,
                                                              &createInfo,
@@ -242,15 +243,15 @@ namespace Core {
                 }
             }
 
-            void cleanUp (uint32_t pipelineInfoId) {
+            void cleanUp (uint32_t pipelineInfoId, uint32_t deviceInfoId) {
                 auto pipelineInfo = getPipelineInfo (pipelineInfoId);
-                auto deviceInfo   = getDeviceInfo();
+                auto deviceInfo   = getDeviceInfo   (deviceInfoId);
 
-                vkDestroyPipeline       (deviceInfo->shared.logDevice, pipelineInfo->resource.pipeline, VK_NULL_HANDLE);
-                vkDestroyPipelineLayout (deviceInfo->shared.logDevice, pipelineInfo->resource.layout,   VK_NULL_HANDLE);
+                vkDestroyPipeline       (deviceInfo->resource.logDevice, pipelineInfo->resource.pipeline, VK_NULL_HANDLE);
+                vkDestroyPipelineLayout (deviceInfo->resource.logDevice, pipelineInfo->resource.layout,   VK_NULL_HANDLE);
 
                 for (auto const& descriptorSetLayout: pipelineInfo->resource.descriptorSetLayouts)
-                    vkDestroyDescriptorSetLayout (deviceInfo->shared.logDevice, descriptorSetLayout, VK_NULL_HANDLE);
+                    vkDestroyDescriptorSetLayout (deviceInfo->resource.logDevice, descriptorSetLayout, VK_NULL_HANDLE);
                 pipelineInfo->resource.descriptorSetLayouts.clear();
 
                 deletePipelineInfo (pipelineInfoId);

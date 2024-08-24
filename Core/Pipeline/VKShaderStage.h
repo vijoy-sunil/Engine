@@ -43,8 +43,8 @@ namespace Core {
             /* Before we can pass the shader code to the pipeline, we have to wrap it in a VkShaderModule object. Shader 
              * modules are just a thin wrapper around the shader byte code that we've previously loaded from a file
             */
-            VkShaderModule getShaderModule (const std::vector <char>& shaderCode) {
-                auto deviceInfo = getDeviceInfo();
+            VkShaderModule getShaderModule (uint32_t deviceInfoId, const std::vector <char>& shaderCode) {
+                auto deviceInfo = getDeviceInfo (deviceInfoId);
 
                 VkShaderModuleCreateInfo createInfo;
                 createInfo.sType    = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
@@ -57,7 +57,7 @@ namespace Core {
                 createInfo.pCode = reinterpret_cast <const uint32_t*> (shaderCode.data());
 
                 VkShaderModule shaderModule;
-                VkResult result = vkCreateShaderModule (deviceInfo->shared.logDevice, 
+                VkResult result = vkCreateShaderModule (deviceInfo->resource.logDevice, 
                                                         &createInfo, 
                                                         VK_NULL_HANDLE, 
                                                         &shaderModule);
@@ -83,6 +83,7 @@ namespace Core {
 
         protected:  
             VkShaderModule createShaderStage (uint32_t pipelineInfoId,
+                                              uint32_t deviceInfoId,
                                               VkShaderStageFlagBits stage,
                                               const char* shaderBinaryPath,
                                               const char* entryPoint) {
@@ -99,7 +100,7 @@ namespace Core {
                     throw std::runtime_error ("Invalid file size for shader file");
                 }
 
-                auto module = getShaderModule (shaderCode);
+                auto module = getShaderModule (deviceInfoId, shaderCode);
                 if (module == VK_NULL_HANDLE) {
                     LOG_ERROR (m_VKShaderStageLog) << "Invalid shader module "
                                                    << "[" << pipelineInfoId << "]"
