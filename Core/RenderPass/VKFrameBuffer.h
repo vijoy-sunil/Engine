@@ -27,11 +27,11 @@ namespace Core {
              * with an attachment, and the frame buffer together with the render pass defines the render target 
             */
             void createFrameBuffer (uint32_t renderPassInfoId, 
-                                    uint32_t resourceId,
+                                    uint32_t deviceInfoId,
                                     const std::vector <VkImageView>& attachments) {
 
                 auto renderPassInfo = getRenderPassInfo (renderPassInfoId);
-                auto deviceInfo     = getDeviceInfo();
+                auto deviceInfo     = getDeviceInfo     (deviceInfoId);
 
                 VkFramebufferCreateInfo createInfo;
                 createInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
@@ -47,12 +47,12 @@ namespace Core {
                 */
                 createInfo.attachmentCount = static_cast <uint32_t> (attachments.size());
                 createInfo.pAttachments    = attachments.data();
-                createInfo.width           = deviceInfo->unique[resourceId].swapChain.extent.width;
-                createInfo.height          = deviceInfo->unique[resourceId].swapChain.extent.height;
+                createInfo.width           = deviceInfo->params.swapChainExtent.width;
+                createInfo.height          = deviceInfo->params.swapChainExtent.height;
                 createInfo.layers          = 1;
 
                 VkFramebuffer frameBuffer;
-                VkResult result = vkCreateFramebuffer (deviceInfo->shared.logDevice, 
+                VkResult result = vkCreateFramebuffer (deviceInfo->resource.logDevice, 
                                                        &createInfo, 
                                                        VK_NULL_HANDLE, 
                                                        &frameBuffer);
@@ -60,7 +60,7 @@ namespace Core {
                     LOG_ERROR (m_VKFrameBufferLog) << "Failed to create framebuffer " 
                                                    << "[" << renderPassInfoId << "]"
                                                    << " "
-                                                   << "[" << resourceId << "]"
+                                                   << "[" << deviceInfoId << "]"
                                                    << " "
                                                    << "[" << string_VkResult (result) << "]"
                                                    << std::endl;
@@ -70,13 +70,13 @@ namespace Core {
                 renderPassInfo->resource.frameBuffers.push_back (frameBuffer);
             }
 
-            void cleanUp (uint32_t renderPassInfoId) {
+            void cleanUp (uint32_t renderPassInfoId, uint32_t deviceInfoId) {
                 auto renderPassInfo = getRenderPassInfo (renderPassInfoId);
-                auto deviceInfo     = getDeviceInfo();
+                auto deviceInfo     = getDeviceInfo     (deviceInfoId);
                 /* Destroy the framebuffers before the image views and render pass that they are based on
                 */
                 for (auto const& frameBuffer: renderPassInfo->resource.frameBuffers)
-                    vkDestroyFramebuffer (deviceInfo->shared.logDevice, frameBuffer, VK_NULL_HANDLE);           
+                    vkDestroyFramebuffer (deviceInfo->resource.logDevice, frameBuffer, VK_NULL_HANDLE);           
                 renderPassInfo->resource.frameBuffers.clear();               
             }
     };
