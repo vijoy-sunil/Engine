@@ -31,8 +31,11 @@ namespace Core {
              * We have to create a command pool before we can create command buffers. Command pools manage the memory 
              * that is used to store the buffers and command buffers are allocated from them
             */
-            VkCommandPool getCommandPool (VkCommandPoolCreateFlags flags, uint32_t queueFamilyIndex) {
-                auto deviceInfo = getDeviceInfo();
+            VkCommandPool getCommandPool (uint32_t deviceInfoId, 
+                                          VkCommandPoolCreateFlags flags, 
+                                          uint32_t queueFamilyIndex) {
+
+                auto deviceInfo = getDeviceInfo (deviceInfoId);
 
                 VkCommandPoolCreateInfo createInfo;
                 createInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
@@ -52,7 +55,7 @@ namespace Core {
                 createInfo.queueFamilyIndex = queueFamilyIndex;
 
                 VkCommandPool commandPool;
-                VkResult result = vkCreateCommandPool (deviceInfo->shared.logDevice, 
+                VkResult result = vkCreateCommandPool (deviceInfo->resource.logDevice, 
                                                        &createInfo, 
                                                        VK_NULL_HANDLE, 
                                                        &commandPool);
@@ -66,11 +69,12 @@ namespace Core {
                 return commandPool;
             }
 
-            std::vector <VkCommandBuffer> getCommandBuffers (VkCommandPool commandPool, 
+            std::vector <VkCommandBuffer> getCommandBuffers (uint32_t deviceInfoId,
+                                                             VkCommandPool commandPool, 
                                                              uint32_t bufferCount,
                                                              VkCommandBufferLevel bufferLevel) {
 
-                auto deviceInfo = getDeviceInfo();
+                auto deviceInfo = getDeviceInfo (deviceInfoId);
 
                 VkCommandBufferAllocateInfo allocInfo;
                 allocInfo.sType              = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
@@ -87,7 +91,7 @@ namespace Core {
                 allocInfo.level = bufferLevel;
 
                 std::vector <VkCommandBuffer> commandBuffers (bufferCount);                
-                VkResult result = vkAllocateCommandBuffers (deviceInfo->shared.logDevice, 
+                VkResult result = vkAllocateCommandBuffers (deviceInfo->resource.logDevice, 
                                                             &allocInfo, 
                                                             commandBuffers.data());
                 if (result != VK_SUCCESS) {
@@ -150,12 +154,12 @@ namespace Core {
                 } 
             }
 
-            void cleanUp (VkCommandPool commandPool) {
-                auto deviceInfo = getDeviceInfo();
+            void cleanUp (uint32_t deviceInfoId, VkCommandPool commandPool) {
+                auto deviceInfo = getDeviceInfo (deviceInfoId);
                 /* Destroy command pool, note that command buffers will be automatically freed when their command pool 
                  * is destroyed, so we don't need explicit cleanup
                 */
-                vkDestroyCommandPool (deviceInfo->shared.logDevice, commandPool, VK_NULL_HANDLE);
+                vkDestroyCommandPool (deviceInfo->resource.logDevice, commandPool, VK_NULL_HANDLE);
             }
     };
 

@@ -26,11 +26,11 @@ namespace Core {
 
         protected:
             void setViewPorts (VkCommandBuffer commandBuffer,
-                               uint32_t resourceId,
+                               uint32_t deviceInfoId,
                                uint32_t firstViewPort,
                                std::vector <VkViewport>& viewPorts) {
                 
-                auto deviceInfo = getDeviceInfo();
+                auto deviceInfo = getDeviceInfo (deviceInfoId);
                 /* We've told Vulkan which operations to execute in the graphics pipeline and specified viewport and 
                  * scissor state for the pipeline to be dynamic. So we need to set them in the command buffer before 
                  * issuing our draw command
@@ -38,8 +38,8 @@ namespace Core {
                 VkViewport defaultViewPort;
                 defaultViewPort.x        = 0.0f;
                 defaultViewPort.y        = 0.0f;
-                defaultViewPort.width    = static_cast <float> (deviceInfo->unique[resourceId].swapChain.extent.width);
-                defaultViewPort.height   = static_cast <float> (deviceInfo->unique[resourceId].swapChain.extent.height);
+                defaultViewPort.width    = static_cast <float> (deviceInfo->params.swapChainExtent.width);
+                defaultViewPort.height   = static_cast <float> (deviceInfo->params.swapChainExtent.height);
                 defaultViewPort.minDepth = 0.0f;
                 defaultViewPort.maxDepth = 1.0f;
                 /* Add default view port to list of custom view ports (if any)
@@ -53,15 +53,15 @@ namespace Core {
             }
 
             void setScissors (VkCommandBuffer commandBuffer,
-                              uint32_t resourceId,
+                              uint32_t deviceInfoId,
                               uint32_t firstScissor,
                               std::vector <VkRect2D>& scissors) {
 
-                auto deviceInfo = getDeviceInfo();
+                auto deviceInfo = getDeviceInfo (deviceInfoId);
 
                 VkRect2D defaultScissor;
                 defaultScissor.offset = {0, 0};
-                defaultScissor.extent = deviceInfo->unique[resourceId].swapChain.extent;
+                defaultScissor.extent = deviceInfo->params.swapChainExtent;
 
                 scissors.push_back (defaultScissor);
                 vkCmdSetScissor (commandBuffer, 
@@ -361,11 +361,11 @@ namespace Core {
             void beginRenderPass (VkCommandBuffer commandBuffer,
                                   uint32_t renderPassInfoId,
                                   uint32_t swapChainImageId,
-                                  uint32_t resourceId,
+                                  uint32_t deviceInfoId,
                                   const std::vector <VkClearValue>& clearValues) {
                 
                 auto renderPassInfo = getRenderPassInfo (renderPassInfoId);
-                auto deviceInfo     = getDeviceInfo();
+                auto deviceInfo     = getDeviceInfo     (deviceInfoId);
                 /* Drawing starts by beginning the render pass with vkCmdBeginRenderPass. The render pass is configured 
                  * using some parameters in a VkRenderPassBeginInfo struct
                 */
@@ -384,7 +384,7 @@ namespace Core {
                  * the size of the attachments for best performance
                 */
                 beginInfo.renderArea.offset = {0, 0};
-                beginInfo.renderArea.extent = deviceInfo->unique[resourceId].swapChain.extent;
+                beginInfo.renderArea.extent = deviceInfo->params.swapChainExtent;
                 beginInfo.clearValueCount   = static_cast <uint32_t> (clearValues.size());
                 beginInfo.pClearValues      = clearValues.data();
 
