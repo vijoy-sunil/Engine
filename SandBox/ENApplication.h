@@ -22,9 +22,8 @@ namespace SandBox {
             uint32_t m_inFlightFenceInfoBase;
             uint32_t m_imageAvailableSemaphoreInfoBase;
             uint32_t m_renderDoneSemaphoreInfoBase;
-            uint32_t m_resourceId;
             uint32_t m_sceneInfoId;
-            uint32_t m_deviceResourcesCount;
+            uint32_t m_deviceInfoId;
 
         public:
             ENApplication (void) {
@@ -72,9 +71,9 @@ namespace SandBox {
                  * |------------------------|-------------------------------------------------------------------|
                  * | SEM_RENDER_DONE        |   0, 1, ...                                                       |
                  * |------------------------|-------------------------------------------------------------------|
-                 * | RESOURCE ID            |   0                                                               |
-                 * |------------------------|-------------------------------------------------------------------|
                  * | SCENE INFO ID          |   0                                                               |
+                 * |------------------------|-------------------------------------------------------------------|
+                 * | DEVICE INFO ID         |   0                                                               |
                  * |------------------------|-------------------------------------------------------------------|
                 */
                 m_renderPassInfoId                = 0;
@@ -83,9 +82,8 @@ namespace SandBox {
                 m_inFlightFenceInfoBase           = 0;
                 m_imageAvailableSemaphoreInfoBase = 0;
                 m_renderDoneSemaphoreInfoBase     = 0;
-                m_resourceId                      = 0;
                 m_sceneInfoId                     = 0;
-                m_deviceResourcesCount            = 1;
+                m_deviceInfoId                    = 0;
             }
 
             ~ENApplication (void) {
@@ -96,7 +94,7 @@ namespace SandBox {
                  * | READY DEVICE INFO                                                                              |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                readyDeviceInfo (m_deviceResourcesCount);
+                readyDeviceInfo (m_deviceInfoId);
                 /* |------------------------------------------------------------------------------------------------|
                  * | READY MODEL INFO                                                                               |
                  * |------------------------------------------------------------------------------------------------|
@@ -138,32 +136,32 @@ namespace SandBox {
                                              m_renderPassInfoId,
                                              m_pipelineInfoId,
                                              m_cameraInfoId,
-                                             m_resourceId,
-                                             m_sceneInfoId);
+                                             m_sceneInfoId,
+                                             m_deviceInfoId);
             }
 
             void runScene (void) {
-                auto deviceInfo = getDeviceInfo();
+                auto deviceInfo = getDeviceInfo (m_deviceInfoId);
                 /* |------------------------------------------------------------------------------------------------|
                  * | EVENT LOOP                                                                                     |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                while (!glfwWindowShouldClose (deviceInfo->unique[m_resourceId].window)) {
+                while (!glfwWindowShouldClose (deviceInfo->resource.window)) {
                     glfwPollEvents();
 
                     VKDrawSequence::runSequence (m_modelInfoIds, 
                                                  m_renderPassInfoId,
                                                  m_pipelineInfoId,
                                                  m_cameraInfoId,
-                                                 m_resourceId,
-                                                 m_sceneInfoId);
+                                                 m_sceneInfoId,
+                                                 m_deviceInfoId);
                 }
                 /* Remember that all of the operations in the above render method are asynchronous. That means that when
                  * we exit the render loop, drawing and presentation operations may still be going on. Cleaning up
                  * resources while that is happening is a bad idea. To fix that problem, we should wait for the logical 
                  * device to finish operations before exiting mainLoop and destroying the window
                 */
-                vkDeviceWaitIdle (deviceInfo->shared.logDevice);
+                vkDeviceWaitIdle (deviceInfo->resource.logDevice);
             }
 
             void deleteScene (void) {
@@ -171,8 +169,8 @@ namespace SandBox {
                                                m_renderPassInfoId,
                                                m_pipelineInfoId,
                                                m_cameraInfoId,
-                                               m_resourceId,
-                                               m_sceneInfoId);
+                                               m_sceneInfoId,
+                                               m_deviceInfoId);
             }
     };
 }   // namespace SandBox

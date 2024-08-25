@@ -37,10 +37,6 @@ namespace Core {
      * chain yet 
     */
     const uint32_t g_maxFramesInFlight = 2;
-    /* Statically allocate max number of unique device resources in device mgr ahead of time. The actual number of unique 
-     * device resources used will be set by the application
-    */
-    const uint32_t g_maxDeviceResourcesCount = 1;
     /* Keep track of instance ids for Collections. Note that, we are not taking into account of reserved ids used by
      * Collections which may result in collision
     */
