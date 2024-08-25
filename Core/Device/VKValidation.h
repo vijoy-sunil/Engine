@@ -229,6 +229,9 @@ namespace Core {
             }
     };
 
+    /* Static variables are essentially syntactic sugar around global variables. Just like global variables, they must 
+     * be defined in exactly one source file
+    */
     Log::Record* VKValidation::m_VKValidationLog;
 }   // namespace Core
 #endif  // VK_VALIDATION_H

@@ -41,7 +41,7 @@ namespace Core {
             };
             std::map <uint32_t, CameraInfo> m_cameraInfoPool;
 
-            static Log::Record* m_VKCameraMgrLog;
+            Log::Record* m_VKCameraMgrLog;
             const uint32_t m_instanceId = g_collectionsId++;
 
             void deleteCameraInfo (uint32_t cameraInfoId) {
@@ -226,7 +226,5 @@ namespace Core {
                 deleteCameraInfo (cameraInfoId);
             }
     };
-
-    Log::Record* VKCameraMgr::m_VKCameraMgrLog;
 }   // namespace Core
 #endif  // VK_CAMERA_MGR_H

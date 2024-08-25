@@ -8,7 +8,7 @@ using namespace Collections;
 namespace Core {
     class VKDepthStencil: protected virtual VKPipelineMgr {
         private:
-            static Log::Record* m_VKDepthStencilLog;
+            Log::Record* m_VKDepthStencilLog;
             const uint32_t m_instanceId = g_collectionsId++;
             
         public:
@@ -65,7 +65,5 @@ namespace Core {
                 pipelineInfo->state.depthStencil = createInfo;
             }
     };
-
-    Log::Record* VKDepthStencil::m_VKDepthStencilLog;
 }   // namespace Core
 #endif  // VK_DEPTH_STENCIL_H

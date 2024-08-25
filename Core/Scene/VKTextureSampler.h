@@ -10,7 +10,7 @@ namespace Core {
     class VKTextureSampler: protected virtual VKSceneMgr,
                             protected virtual VKDeviceMgr {
         private:
-            static Log::Record* m_VKTextureSamplerLog;
+            Log::Record* m_VKTextureSamplerLog;
             const uint32_t m_instanceId = g_collectionsId++;
             
         public:
@@ -193,7 +193,5 @@ namespace Core {
                                   VK_NULL_HANDLE);
             }
     };
-
-    Log::Record* VKTextureSampler::m_VKTextureSamplerLog;
 }   // namespace Core
 #endif  // VK_TEXTURE_SAMPLER_H

@@ -10,7 +10,7 @@ namespace Core {
     class VKLogDevice: protected virtual VKValidation,
                        protected virtual VKPhyDevice {
         private:
-            static Log::Record* m_VKLogDeviceLog;
+            Log::Record* m_VKLogDeviceLog;
             const uint32_t m_instanceId = g_collectionsId++;
 
         public:
@@ -177,7 +177,5 @@ namespace Core {
                 vkDestroyDevice (deviceInfo->resource.logDevice, VK_NULL_HANDLE);
             }
     };
-
-    Log::Record* VKLogDevice::m_VKLogDeviceLog;
 }   // namespace Core
 #endif  // VK_LOG_DEVICE_H

@@ -45,7 +45,7 @@ namespace Core {
             std::map <uint32_t, ModelInfo>   m_modelInfoPool;
             std::map <std::string, uint32_t> m_textureImagePool;
             
-            static Log::Record* m_VKModelMgrLog;
+            Log::Record* m_VKModelMgrLog;
             const uint32_t m_instanceId = g_collectionsId++; 
 
             void deleteModelInfo (uint32_t modelInfoId) {
@@ -493,7 +493,5 @@ namespace Core {
                 deleteModelInfo (modelInfoId);
             }
     };
-
-    Log::Record* VKModelMgr::m_VKModelMgrLog;
 }   // namespace Core
 #endif  // VK_MODEL_MGR_H

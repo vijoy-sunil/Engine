@@ -7,7 +7,7 @@
 namespace Core {
     class VKInstanceData: protected VKModelMatrix {
         private:
-            static Log::Record* m_VKInstanceDataLog;
+            Log::Record* m_VKInstanceDataLog;
             const uint32_t m_instanceId = g_collectionsId++; 
 
         public:
@@ -105,7 +105,5 @@ namespace Core {
                 return modelInfo->meta.instancesCount;
             }
     };
-
-    Log::Record* VKInstanceData::m_VKInstanceDataLog;
 }   // namespace Core
 #endif  // VK_INSTANCE_DATA_H

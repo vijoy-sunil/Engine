@@ -15,7 +15,7 @@ namespace Core {
     class VKTextureImage: protected virtual VKImageMgr,
                           protected virtual VKBufferMgr {
         private:
-            static Log::Record* m_VKTextureImageLog;
+            Log::Record* m_VKTextureImageLog;
             const uint32_t m_instanceId = g_collectionsId++; 
 
         public:
@@ -194,7 +194,5 @@ namespace Core {
                                       VK_IMAGE_ASPECT_COLOR_BIT);
             }
     };
-
-    Log::Record* VKTextureImage::m_VKTextureImageLog;
 }   // namespace Core
 #endif  // VK_TEXTURE_IMAGE_H

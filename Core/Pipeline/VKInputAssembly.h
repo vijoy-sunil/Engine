@@ -8,7 +8,7 @@ using namespace Collections;
 namespace Core {
     class VKInputAssembly: protected virtual VKPipelineMgr {
         private:
-            static Log::Record* m_VKInputAssemblyLog;
+            Log::Record* m_VKInputAssemblyLog;
             const uint32_t m_instanceId = g_collectionsId++;
             
         public:
@@ -56,7 +56,5 @@ namespace Core {
                 pipelineInfo->state.inputAssembly = createInfo;
             } 
     };
-
-    Log::Record* VKInputAssembly::m_VKInputAssemblyLog;
 }   // namespace Core
 #endif  // VK_INPUT_ASSEMBLY_H

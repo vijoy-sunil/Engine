@@ -8,7 +8,7 @@ using namespace Collections;
 namespace Core {
     class VKPushConstantRange: protected virtual VKPipelineMgr {
         private:
-            static Log::Record* m_VKPushConstantRangeLog;
+            Log::Record* m_VKPushConstantRangeLog;
             const uint32_t m_instanceId = g_collectionsId++;
             
         public:
@@ -48,7 +48,5 @@ namespace Core {
                 pipelineInfo->resource.pushConstantRanges.push_back (range);
             }
     };
-
-    Log::Record* VKPushConstantRange::m_VKPushConstantRangeLog;
 }   // namespace Core
 #endif  // VK_PUSH_CONSTANT_RANGE_H

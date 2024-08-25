@@ -23,7 +23,7 @@ namespace Core {
     class VKDescriptor: protected virtual VKSceneMgr,
                         protected virtual VKPipelineMgr {
         private:
-            static Log::Record* m_VKDescriptorLog;
+            Log::Record* m_VKDescriptorLog;
             const uint32_t m_instanceId = g_collectionsId++; 
 
         public:
@@ -291,8 +291,6 @@ namespace Core {
                                          sceneInfo->resource.descriptorPool, 
                                          VK_NULL_HANDLE);
             }
-    };   
-
-    Log::Record* VKDescriptor::m_VKDescriptorLog; 
+    };
 }   // namespace Core
 #endif  // VK_DESCRIPTOR_H

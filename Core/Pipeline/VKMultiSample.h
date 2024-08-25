@@ -10,7 +10,7 @@ namespace Core {
     class VKMultiSample: protected virtual VKPipelineMgr,
                          protected virtual VKImageMgr {
         private:
-            static Log::Record* m_VKMultiSampleLog;
+            Log::Record* m_VKMultiSampleLog;
             const uint32_t m_instanceId = g_collectionsId++;
             
         public:
@@ -58,7 +58,5 @@ namespace Core {
                 pipelineInfo->state.multiSample  = createInfo;
             }
     };
-
-    Log::Record* VKMultiSample::m_VKMultiSampleLog;
 }   // namespace Core
 #endif  // VK_MULTI_SAMPLE_H

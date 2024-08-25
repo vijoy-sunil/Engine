@@ -8,7 +8,7 @@ using namespace Collections;
 namespace Core {
     class VKSurface: protected virtual VKDeviceMgr {
         private:
-            static Log::Record* m_VKSurfaceLog;
+            Log::Record* m_VKSurfaceLog;
             const uint32_t m_instanceId = g_collectionsId++;
 
         public:
@@ -49,7 +49,5 @@ namespace Core {
                                      VK_NULL_HANDLE);               
             }
     };
-    
-    Log::Record* VKSurface::m_VKSurfaceLog;
 }   // namespace Core
 #endif  // VK_SURFACE_H

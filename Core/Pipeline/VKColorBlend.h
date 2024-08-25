@@ -8,7 +8,7 @@ using namespace Collections;
 namespace Core {
     class VKColorBlend: protected virtual VKPipelineMgr {
         private:
-            static Log::Record* m_VKColorBlendLog;
+            Log::Record* m_VKColorBlendLog;
             const uint32_t m_instanceId = g_collectionsId++;
             
         public:
@@ -110,7 +110,5 @@ namespace Core {
                 pipelineInfo->state.colorBlend = createInfo;
             }
     };
-
-    Log::Record* VKColorBlend::m_VKColorBlendLog;
 }   // namespace Core
 #endif  // VK_COLOR_BLEND_H

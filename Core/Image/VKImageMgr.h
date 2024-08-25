@@ -49,7 +49,7 @@ namespace Core {
             };
             std::map <e_imageType, std::vector <ImageInfo>> m_imageInfoPool;
 
-            static Log::Record* m_VKImageMgrLog;
+            Log::Record* m_VKImageMgrLog;
             const uint32_t m_instanceId = g_collectionsId++;
 
             /* Helper function that tells us if the format contains a stencil component
@@ -564,7 +564,5 @@ namespace Core {
                 deleteImageInfo    (imageInfo, type);
             }
     };
-
-    Log::Record* VKImageMgr::m_VKImageMgrLog;
 }   // namespace Core
 #endif  // VK_IMAGE_MGR_H

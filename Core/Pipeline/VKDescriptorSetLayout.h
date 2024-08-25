@@ -8,7 +8,7 @@ using namespace Collections;
 namespace Core {
     class VKDescriptorSetLayout: protected virtual VKPipelineMgr {
         private:
-            static Log::Record* m_VKDescriptorSetLayoutLog;
+            Log::Record* m_VKDescriptorSetLayoutLog;
             const uint32_t m_instanceId = g_collectionsId++;
             
         public:
@@ -103,7 +103,5 @@ namespace Core {
                 */
             }
     };
-
-    Log::Record* VKDescriptorSetLayout::m_VKDescriptorSetLayoutLog;
 }   // namespace Core
 #endif  // VK_DESCRIPTOR_SET_LAYOUT_H

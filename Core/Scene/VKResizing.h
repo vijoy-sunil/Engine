@@ -16,7 +16,7 @@ namespace Core {
                       protected virtual VKFrameBuffer,
                       protected virtual VKSceneMgr {
         private:
-            static Log::Record* m_VKResizingLog;
+            Log::Record* m_VKResizingLog;
             const uint32_t m_instanceId = g_collectionsId++;
 
         public:
@@ -190,7 +190,5 @@ namespace Core {
                 */
             }
     };
-
-    Log::Record* VKResizing::m_VKResizingLog;
 }   // namespace Core
 #endif  // VK_RESIZING_H

@@ -8,7 +8,7 @@ using namespace Collections;
 namespace Core {
     class VKIndexBuffer: protected virtual VKBufferMgr {
         private:
-            static Log::Record* m_VKIndexBufferLog;
+            Log::Record* m_VKIndexBufferLog;
             const uint32_t m_instanceId = g_collectionsId++; 
 
         public:
@@ -66,7 +66,5 @@ namespace Core {
                               bufferShareQueueFamilyIndices);
             }
     };
-
-    Log::Record* VKIndexBuffer::m_VKIndexBufferLog;
 }   // namespace Core
 #endif  // VK_INDEX_BUFFER_H

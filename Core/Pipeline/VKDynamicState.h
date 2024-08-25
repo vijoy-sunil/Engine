@@ -8,7 +8,7 @@ using namespace Collections;
 namespace Core {
     class VKDynamicState: protected virtual VKPipelineMgr {
         private:
-            static Log::Record* m_VKDynamicStateLog;
+            Log::Record* m_VKDynamicStateLog;
             const uint32_t m_instanceId = g_collectionsId++;
             
         public:
@@ -66,7 +66,5 @@ namespace Core {
                 pipelineInfo->state.dynamicState = createInfo;
             }
     };
-
-    Log::Record* VKDynamicState::m_VKDynamicStateLog;
 }   // namespace Core
 #endif  // VK_DYNAMIC_STATE_H

@@ -8,7 +8,7 @@ using namespace Collections;
 namespace Core {
     class VKViewPort: protected virtual VKPipelineMgr {
         private:
-            static Log::Record* m_VKViewPortLog;
+            Log::Record* m_VKViewPortLog;
             const uint32_t m_instanceId = g_collectionsId++;
             
         public:
@@ -41,7 +41,5 @@ namespace Core {
                 pipelineInfo->state.viewPort = createInfo;
             }
     };
-
-    Log::Record* VKViewPort::m_VKViewPortLog;
 }   // namespace Core
 #endif  // VK_VIEW_PORT_H

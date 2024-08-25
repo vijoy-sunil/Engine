@@ -8,7 +8,7 @@ using namespace Collections;
 namespace Core {
     class VKPhyDevice: protected VKQueue {
         private:
-            static Log::Record* m_VKPhyDeviceLog;
+            Log::Record* m_VKPhyDeviceLog;
             const uint32_t m_instanceId = g_collectionsId++;
 
             bool isDeviceExtensionsSupported (VkPhysicalDevice phyDevice, 
@@ -329,7 +329,5 @@ namespace Core {
                 }
             }
     };
-
-    Log::Record* VKPhyDevice::m_VKPhyDeviceLog;
 }   // namespace Core
 #endif  // VK_PHY_DEVICE_H

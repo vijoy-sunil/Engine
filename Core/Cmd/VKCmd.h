@@ -12,7 +12,7 @@ namespace Core {
                  protected virtual VKBufferMgr,
                  protected virtual VKPipelineMgr {
         private:
-            static Log::Record* m_VKCmdLog;
+            Log::Record* m_VKCmdLog;
             const uint32_t m_instanceId = g_collectionsId++;
 
         public:
@@ -516,7 +516,5 @@ namespace Core {
                                   firstInstance);
             }
     };
-
-    Log::Record* VKCmd::m_VKCmdLog;
 }   // namespace Core
 #endif  // VK_CMD_H

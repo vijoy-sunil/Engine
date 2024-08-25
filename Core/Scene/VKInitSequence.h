@@ -79,7 +79,7 @@ namespace Core {
             */
             const float m_maxLod = 13.0f;
 
-            static Log::Record* m_VKInitSequenceLog;
+            Log::Record* m_VKInitSequenceLog;
             const uint32_t m_instanceId = g_collectionsId++;
 
         public:
@@ -973,7 +973,5 @@ namespace Core {
                 dumpDeviceInfoPool();
             }
     };
-
-    Log::Record* VKInitSequence::m_VKInitSequenceLog;
 }   // namespace Core
 #endif  // VK_INIT_SEQUENCE_H

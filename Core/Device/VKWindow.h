@@ -8,7 +8,7 @@ using namespace Collections;
 namespace Core {
     class VKWindow: protected virtual VKDeviceMgr {
         private:
-            static Log::Record* m_VKWindowLog;
+            Log::Record* m_VKWindowLog;
             const uint32_t m_instanceId = g_collectionsId++;
             /* Although many drivers and platforms trigger VK_ERROR_OUT_OF_DATE_KHR automatically after a window resize, 
              * it is not guaranteed to happen. That's why we'll add some extra code to also handle resizes explicitly
@@ -88,7 +88,5 @@ namespace Core {
                 glfwTerminate();                
             }
     };
-    
-    Log::Record* VKWindow::m_VKWindowLog;
 }   // namespace Core
 #endif  // VK_WINDOW_H

@@ -52,7 +52,7 @@ namespace Core {
     */
     class VKSubPass: protected virtual VKRenderPassMgr {
         private:
-            static Log::Record* m_VKSubPassLog;
+            Log::Record* m_VKSubPassLog;
             const uint32_t m_instanceId = g_collectionsId++;
             
         public:
@@ -228,7 +228,5 @@ namespace Core {
                 renderPassInfo->resource.subPasses.push_back (subPass);
             }
     };
-
-    Log::Record* VKSubPass::m_VKSubPassLog;
 }   // namespace Core
 #endif  // VK_SUB_PASS_H

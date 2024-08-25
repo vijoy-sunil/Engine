@@ -38,7 +38,7 @@ namespace Core {
             };
             std::map <e_bufferType, std::vector <BufferInfo>> m_bufferInfoPool;
 
-            static Log::Record* m_VKBufferMgrLog;
+            Log::Record* m_VKBufferMgrLog;
             const uint32_t m_instanceId = g_collectionsId++;
 
             void deleteBufferInfo (BufferInfo* bufferInfo, e_bufferType type) {
@@ -295,7 +295,5 @@ namespace Core {
                 deleteBufferInfo (bufferInfo, type);
             } 
     };
-
-    Log::Record* VKBufferMgr::m_VKBufferMgrLog;
 }   // namespace Core
 #endif  // VK_BUFFER_MGR_H

@@ -37,7 +37,7 @@ namespace Core {
             };
             std::map <uint32_t, SceneInfo> m_sceneInfoPool;
 
-            static Log::Record* m_VKSceneMgrLog;
+            Log::Record* m_VKSceneMgrLog;
             const uint32_t m_instanceId = g_collectionsId++;
 
             void deleteSceneInfo (uint32_t sceneInfoId) {
@@ -149,7 +149,5 @@ namespace Core {
                 deleteSceneInfo (sceneInfoId);
             }
     };
-
-    Log::Record* VKSceneMgr::m_VKSceneMgrLog;
 }   // namespace Core
 #endif  // VK_SCENE_MGR_H

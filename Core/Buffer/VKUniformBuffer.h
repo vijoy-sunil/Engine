@@ -8,7 +8,7 @@ using namespace Collections;
 namespace Core {
     class VKUniformBuffer: protected virtual VKBufferMgr {
         private:
-            static Log::Record* m_VKUniformBufferLog;
+            Log::Record* m_VKUniformBufferLog;
             const uint32_t m_instanceId = g_collectionsId++;
 
         public:
@@ -76,7 +76,5 @@ namespace Core {
                 memcpy (bufferInfo->meta.bufferMapped, data, static_cast <size_t> (size));
             }
     };
-
-    Log::Record* VKUniformBuffer::m_VKUniformBufferLog;
 }   // namespace Core
 #endif  // VK_UNIFORM_BUFFER_H

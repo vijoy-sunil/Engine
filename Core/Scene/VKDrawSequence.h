@@ -27,7 +27,7 @@ namespace Core {
             */
             uint32_t m_currentFrameInFlight;
 
-            static Log::Record* m_VKDrawSequenceLog;
+            Log::Record* m_VKDrawSequenceLog;
             const uint32_t m_instanceId = g_collectionsId++;
 
         public:
@@ -427,7 +427,5 @@ namespace Core {
                 m_currentFrameInFlight = (m_currentFrameInFlight + 1) % g_maxFramesInFlight;        
             }
     };
-
-    Log::Record* VKDrawSequence::m_VKDrawSequenceLog;
 }   // namespace Core
 #endif  // VK_DRAW_SEQUENCE_H

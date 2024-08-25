@@ -8,7 +8,7 @@ using namespace Collections;
 namespace Core {
     class VKShaderStage: protected virtual VKPipelineMgr {
         private:
-            static Log::Record* m_VKShaderStageLog;
+            Log::Record* m_VKShaderStageLog;
             const uint32_t m_instanceId = g_collectionsId++;
 
             /* Read all of the bytes from the specified file and return them in a byte array managed by std::vector. This 
@@ -133,7 +133,5 @@ namespace Core {
                 return module;
             }
     };
-
-    Log::Record* VKShaderStage::m_VKShaderStageLog;
 }   // namespace Core
 #endif  // VK_SHADER_STAGE_H

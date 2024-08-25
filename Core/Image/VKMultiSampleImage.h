@@ -8,7 +8,7 @@ using namespace Collections;
 namespace Core {
     class VKMultiSampleImage: protected virtual VKImageMgr {
         private:
-            static Log::Record* m_VKMultiSampleImageLog;
+            Log::Record* m_VKMultiSampleImageLog;
             const uint32_t m_instanceId = g_collectionsId++; 
 
         public:
@@ -88,7 +88,5 @@ namespace Core {
                                       VK_IMAGE_ASPECT_COLOR_BIT);
             }
     };
-
-    Log::Record* VKMultiSampleImage::m_VKMultiSampleImageLog;
 }   // namespace Core
 #endif  // VK_MULTI_SAMPLE_IMAGE_H

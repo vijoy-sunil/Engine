@@ -10,7 +10,7 @@ namespace Core {
     class VKAttachment: protected virtual VKRenderPassMgr,
                         protected virtual VKImageMgr {
         private:
-            static Log::Record* m_VKAttachmentLog;
+            Log::Record* m_VKAttachmentLog;
             const uint32_t m_instanceId = g_collectionsId++;
             
         public:
@@ -115,7 +115,5 @@ namespace Core {
                 renderPassInfo->resource.attachments.push_back (attachment);         
             }            
     };
-
-    Log::Record* VKAttachment::m_VKAttachmentLog;
 }   // namespace Core
 #endif  // VK_ATTACHMENT_H

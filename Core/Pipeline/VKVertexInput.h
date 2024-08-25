@@ -8,7 +8,7 @@ using namespace Collections;
 namespace Core {
     class VKVertexInput: protected virtual VKPipelineMgr {
         private:
-            static Log::Record* m_VKVertexInputLog;
+            Log::Record* m_VKVertexInputLog;
             const uint32_t m_instanceId = g_collectionsId++;
             
         public:
@@ -49,7 +49,5 @@ namespace Core {
                 pipelineInfo->state.vertexInput = createInfo;
             }
     };
-
-    Log::Record* VKVertexInput::m_VKVertexInputLog;
 }   // namespace Core
 #endif  // VK_VERTEX_INPUT_H

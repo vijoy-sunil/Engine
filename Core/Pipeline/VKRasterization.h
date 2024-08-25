@@ -8,7 +8,7 @@ using namespace Collections;
 namespace Core {
     class VKRasterization: protected virtual VKPipelineMgr {
         private:
-            static Log::Record* m_VKRasterizationLog;
+            Log::Record* m_VKRasterizationLog;
             const uint32_t m_instanceId = g_collectionsId++;
             
         public:
@@ -88,7 +88,5 @@ namespace Core {
                 pipelineInfo->state.rasterization  = createInfo;
             }
     };
-
-    Log::Record* VKRasterization::m_VKRasterizationLog;
 }   // namespace Core
 #endif  // VK_RASTERIZATION_H

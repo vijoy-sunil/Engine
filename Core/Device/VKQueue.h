@@ -10,7 +10,7 @@ using namespace Collections;
 namespace Core {
     class VKQueue: protected virtual VKDeviceMgr {
         private:
-            static Log::Record* m_VKQueueLog;
+            Log::Record* m_VKQueueLog;
             const uint32_t m_instanceId = g_collectionsId++;
 
             bool isQueueFamilyIndicesComplete (uint32_t deviceInfoId) {
@@ -109,7 +109,5 @@ namespace Core {
                 return vectorContainer.size() != 1;
             }
     };
-
-    Log::Record* VKQueue::m_VKQueueLog;
 }   // namespace Core
 #endif  // VK_QUEUE_H

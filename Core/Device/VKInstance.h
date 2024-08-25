@@ -8,7 +8,7 @@ using namespace Collections;
 namespace Core {
     class VKInstance: protected virtual VKValidation {
         private:
-            static Log::Record* m_VKInstanceLog;
+            Log::Record* m_VKInstanceLog;
             const uint32_t m_instanceId = g_collectionsId++;
 
             std::vector <const char*> getInstanceExtensions (void) {
@@ -191,10 +191,5 @@ namespace Core {
                 vkDestroyInstance (deviceInfo->resource.instance, VK_NULL_HANDLE);
             }
     };
-
-    /* Static variables are essentially syntactic sugar around global variables. Just like global variables, they must 
-     * be defined in exactly one source file
-    */
-    Log::Record* VKInstance::m_VKInstanceLog;
 }   // namespace Core
 #endif  // VK_INSTANCE_H

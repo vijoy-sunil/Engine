@@ -32,7 +32,7 @@ namespace Core {
                             protected virtual VKDescriptor,
                             protected virtual VKSyncObject {
         private:
-            static Log::Record* m_VKDeleteSequenceLog;
+            Log::Record* m_VKDeleteSequenceLog;
             const uint32_t m_instanceId = g_collectionsId++;
 
         public:
@@ -302,7 +302,5 @@ namespace Core {
                 dumpDeviceInfoPool();
             }
     };
-
-    Log::Record* VKDeleteSequence::m_VKDeleteSequenceLog;
 }   // namespace Core
 #endif  // VK_DELETE_SEQUENCE_H

@@ -45,7 +45,7 @@ namespace Core {
             };
             std::map <e_syncType, std::vector <SemaphoreInfo>> m_semaphoreInfoPool;
 
-            static Log::Record* m_VKSyncObjectLog;
+            Log::Record* m_VKSyncObjectLog;
             const uint32_t m_instanceId = g_collectionsId++;
 
             void deleteFenceInfo (FenceInfo* fenceInfo, e_syncType type) {
@@ -288,7 +288,5 @@ namespace Core {
                 deleteSemaphoreInfo (semaphoreInfo, type);
             }
     };
-
-    Log::Record* VKSyncObject::m_VKSyncObjectLog;
 }   // namespace Core
 #endif  // VK_SYNC_OBJECT_H

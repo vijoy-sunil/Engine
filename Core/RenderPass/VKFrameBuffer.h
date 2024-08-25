@@ -8,7 +8,7 @@ using namespace Collections;
 namespace Core {
     class VKFrameBuffer: protected virtual VKRenderPassMgr {
         private:
-            static Log::Record* m_VKFrameBufferLog;
+            Log::Record* m_VKFrameBufferLog;
             const uint32_t m_instanceId = g_collectionsId++;
             
         public:
@@ -80,7 +80,5 @@ namespace Core {
                 renderPassInfo->resource.frameBuffers.clear();               
             }
     };
-
-    Log::Record* VKFrameBuffer::m_VKFrameBufferLog;
 }   // namespace Core
 #endif  // VK_FRAME_BUFFER_H

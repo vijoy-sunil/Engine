@@ -8,7 +8,7 @@ using namespace Collections;
 namespace Core {
     class VKVertexBuffer: protected virtual VKBufferMgr {
         private:
-            static Log::Record* m_VKVertexBufferLog;
+            Log::Record* m_VKVertexBufferLog;
             const uint32_t m_instanceId = g_collectionsId++; 
 
         public:
@@ -113,7 +113,5 @@ namespace Core {
                               bufferShareQueueFamilyIndices);
             }
     };
-
-    Log::Record* VKVertexBuffer::m_VKVertexBufferLog;
 }   // namespace Core
 #endif  // VK_VERTEX_BUFFER_H

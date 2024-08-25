@@ -11,7 +11,7 @@ using namespace Collections;
 namespace Core {
     class VKModelMatrix: protected virtual VKModelMgr {
         private:
-            static Log::Record* m_VKModelMatrixLog;
+            Log::Record* m_VKModelMatrixLog;
             const uint32_t m_instanceId = g_collectionsId++;
             
         public:
@@ -71,7 +71,5 @@ namespace Core {
                 modelInfo->meta.instances[modelInstanceId] = {modelMatrix};
             }
     };
-
-    Log::Record* VKModelMatrix::m_VKModelMatrixLog;
 }   // namespace Core
 #endif  // VK_MODEL_MATRIX_H

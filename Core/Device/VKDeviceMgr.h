@@ -101,7 +101,7 @@ namespace Core {
                 VK_KHR_MAINTENANCE_3_EXTENSION_NAME
             }; 
             
-            static Log::Record* m_VKDeviceMgrLog;
+            Log::Record* m_VKDeviceMgrLog;
             const uint32_t m_instanceId = g_collectionsId++;
 
             void deleteDeviceInfo (uint32_t deviceInfoId) {
@@ -229,7 +229,5 @@ namespace Core {
                 deleteDeviceInfo (deviceInfoId);
             }
     };
-
-    Log::Record* VKDeviceMgr::m_VKDeviceMgrLog;
 }   // namespace Core
 #endif  // VK_DEVICE_MGR_H

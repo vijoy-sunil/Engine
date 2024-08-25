@@ -8,7 +8,7 @@ using namespace Collections;
 namespace Core {
     class VKCmdBuffer: protected virtual VKDeviceMgr {
         private:
-            static Log::Record* m_VKCmdBufferLog;
+            Log::Record* m_VKCmdBufferLog;
             const uint32_t m_instanceId = g_collectionsId++;
 
         public:
@@ -162,7 +162,5 @@ namespace Core {
                 vkDestroyCommandPool (deviceInfo->resource.logDevice, commandPool, VK_NULL_HANDLE);
             }
     };
-
-    Log::Record* VKCmdBuffer::m_VKCmdBufferLog;
 }   // namespace Core
 #endif  // VK_CMD_BUFFER_H

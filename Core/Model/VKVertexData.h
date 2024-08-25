@@ -63,7 +63,7 @@ namespace std {
 namespace Core {
     class VKVertexData {
         private:
-            static Log::Record* m_VKVertexDataLog;
+            Log::Record* m_VKVertexDataLog;
             const uint32_t m_instanceId = g_collectionsId++;          
 
         public:
@@ -146,7 +146,5 @@ namespace Core {
                 return attributeDescription;
             }
     };
-
-    Log::Record* VKVertexData::m_VKVertexDataLog;
 }   // namespace Core
 #endif  // VK_VERTEX_DATA_H

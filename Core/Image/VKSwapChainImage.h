@@ -8,7 +8,7 @@ using namespace Collections;
 namespace Core {
     class VKSwapChainImage: protected virtual VKImageMgr {
         private:
-            static Log::Record* m_VKSwapChainImageLog;
+            Log::Record* m_VKSwapChainImageLog;
             const uint32_t m_instanceId = g_collectionsId++; 
 
             /* If the swap chain adequate conditions were met (see physical device support function) then the support is 
@@ -308,7 +308,5 @@ namespace Core {
                 imageInfo->meta.id = 0;
             }
     };
-
-    Log::Record* VKSwapChainImage::m_VKSwapChainImageLog;
 }   // namespace Core
 #endif  // VK_SWAP_CHAIN_IMAGE_H

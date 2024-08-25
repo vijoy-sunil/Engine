@@ -79,7 +79,7 @@ namespace Core {
             };
             std::map <uint32_t, PipelineInfo> m_pipelineInfoPool;
 
-            static Log::Record* m_VKPipelineMgrLog;
+            Log::Record* m_VKPipelineMgrLog;
             const uint32_t m_instanceId = g_collectionsId++;
             
             void deletePipelineInfo (uint32_t pipelineInfoId) {
@@ -257,7 +257,5 @@ namespace Core {
                 deletePipelineInfo (pipelineInfoId);
             }
     };
-
-    Log::Record* VKPipelineMgr::m_VKPipelineMgrLog;
 }   // namespace Core
 #endif  // VK_PIPELINE_MGR_H

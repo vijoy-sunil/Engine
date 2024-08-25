@@ -8,7 +8,7 @@ using namespace Collections;
 namespace Core {
     class VKPipelineLayout: protected virtual VKPipelineMgr {
         private:
-            static Log::Record* m_VKPipelineLayoutLog;
+            Log::Record* m_VKPipelineLayoutLog;
             const uint32_t m_instanceId = g_collectionsId++;
             
         public:
@@ -68,7 +68,5 @@ namespace Core {
                 pipelineInfo->resource.layout = layout;
             }
     };
-
-    Log::Record* VKPipelineLayout::m_VKPipelineLayoutLog;
 }   // namespace Core
 #endif  // VK_PIPELINE_LAYOUT_H
