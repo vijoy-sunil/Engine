@@ -80,9 +80,9 @@ namespace Core {
                 m_cameraInfoPool[cameraInfoId] = info;
             }
 
-            void createCameraMatrix (uint32_t cameraInfoId, uint32_t resourceId) {
+            void createCameraMatrix (uint32_t cameraInfoId, uint32_t deviceInfoId) {
                 createViewMatrix       (cameraInfoId);
-                createProjectionMatrix (cameraInfoId, resourceId);
+                createProjectionMatrix (cameraInfoId, deviceInfoId);
             }
 
             void createViewMatrix (uint32_t cameraInfoId) {
@@ -102,14 +102,14 @@ namespace Core {
                                                                 cameraInfo->meta.upVector);
             }
 
-            void createProjectionMatrix (uint32_t cameraInfoId, uint32_t resourceId) {
+            void createProjectionMatrix (uint32_t cameraInfoId, uint32_t deviceInfoId) {
                 auto cameraInfo = getCameraInfo (cameraInfoId);
-                auto deviceInfo = getDeviceInfo();
+                auto deviceInfo = getDeviceInfo (deviceInfoId);
                 /* It is important to use the current swap chain extent to calculate the aspect ratio to take into account
                  * the new width and height of the window after a resize
                 */
-                float aspectRatio = deviceInfo->unique[resourceId].swapChain.extent.width/ 
-                                    static_cast <float> (deviceInfo->unique[resourceId].swapChain.extent.height);
+                float aspectRatio = deviceInfo->params.swapChainExtent.width/ 
+                                    static_cast <float> (deviceInfo->params.swapChainExtent.height);
                 cameraInfo->transform.projectionMatrix = glm::perspective (glm::radians (cameraInfo->meta.fovDeg), 
                                                                            aspectRatio, 
                                                                            cameraInfo->meta.nearPlane, 

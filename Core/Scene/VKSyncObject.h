@@ -94,11 +94,12 @@ namespace Core {
             }
 
         protected:
-            void createFence (uint32_t fenceInfoId, 
+            void createFence (uint32_t fenceInfoId,
+                              uint32_t deviceInfoId, 
                               e_syncType type,
                               VkFenceCreateFlags flags) {
 
-                auto deviceInfo = getDeviceInfo();
+                auto deviceInfo = getDeviceInfo (deviceInfoId);
                 for (auto const& info: m_fenceInfoPool[type]) {
                     if (info.meta.id == fenceInfoId) {
                         LOG_ERROR (m_VKSyncObjectLog) << "Fence info id already exists " 
@@ -127,7 +128,7 @@ namespace Core {
                 createInfo.flags = flags;
 
                 VkFence fence;
-                VkResult result = vkCreateFence (deviceInfo->shared.logDevice, 
+                VkResult result = vkCreateFence (deviceInfo->resource.logDevice, 
                                                  &createInfo, 
                                                  VK_NULL_HANDLE, 
                                                  &fence);
@@ -148,8 +149,8 @@ namespace Core {
                 m_fenceInfoPool[type].push_back (info);
             }
 
-            void createSemaphore (uint32_t semaphoreInfoId, e_syncType type) {
-                auto deviceInfo = getDeviceInfo();
+            void createSemaphore (uint32_t semaphoreInfoId, uint32_t deviceInfoId, e_syncType type) {
+                auto deviceInfo = getDeviceInfo (deviceInfoId);
                 for (auto const& info: m_semaphoreInfoPool[type]) {
                     if (info.meta.id == semaphoreInfoId) {
                         LOG_ERROR (m_VKSyncObjectLog) << "Semaphore info id already exists " 
@@ -180,7 +181,7 @@ namespace Core {
                 createInfo.flags = 0;
 
                 VkSemaphore semaphore;
-                VkResult result = vkCreateSemaphore (deviceInfo->shared.logDevice, 
+                VkResult result = vkCreateSemaphore (deviceInfo->resource.logDevice, 
                                                      &createInfo, 
                                                      VK_NULL_HANDLE, 
                                                      &semaphore);
@@ -267,21 +268,21 @@ namespace Core {
                 }    
             }
             
-            void cleanUpFence (uint32_t fenceInfoId, e_syncType type) {
-                auto fenceInfo  = getFenceInfo (fenceInfoId, type);
-                auto deviceInfo = getDeviceInfo();
+            void cleanUpFence (uint32_t fenceInfoId, uint32_t deviceInfoId, e_syncType type) {
+                auto fenceInfo  = getFenceInfo  (fenceInfoId, type);
+                auto deviceInfo = getDeviceInfo (deviceInfoId);
 
-                vkDestroyFence  (deviceInfo->shared.logDevice, 
+                vkDestroyFence  (deviceInfo->resource.logDevice, 
                                  fenceInfo->resource.fence, 
                                  VK_NULL_HANDLE);
                 deleteFenceInfo (fenceInfo, type); 
             }
 
-            void cleanUpSemaphore (uint32_t semaphoreInfoId, e_syncType type) {
+            void cleanUpSemaphore (uint32_t semaphoreInfoId, uint32_t deviceInfoId, e_syncType type) {
                 auto semaphoreInfo = getSemaphoreInfo (semaphoreInfoId, type);
-                auto deviceInfo    = getDeviceInfo();
+                auto deviceInfo    = getDeviceInfo    (deviceInfoId);
 
-                vkDestroySemaphore  (deviceInfo->shared.logDevice, 
+                vkDestroySemaphore  (deviceInfo->resource.logDevice, 
                                      semaphoreInfo->resource.semaphore, 
                                      VK_NULL_HANDLE);
                 deleteSemaphoreInfo (semaphoreInfo, type);

@@ -48,13 +48,13 @@ namespace Core {
                               uint32_t renderPassInfoId,
                               uint32_t pipelineInfoId,
                               uint32_t cameraInfoId,
-                              uint32_t resourceId, 
-                              uint32_t sceneInfoId) {
+                              uint32_t sceneInfoId, 
+                              uint32_t deviceInfoId) {
 
                 auto modelInfoBase = getModelInfo  (*modelInfoIds.begin());
                 auto cameraInfo    = getCameraInfo (cameraInfoId);
                 auto sceneInfo     = getSceneInfo  (sceneInfoId);
-                auto deviceInfo    = getDeviceInfo();
+                auto deviceInfo    = getDeviceInfo (deviceInfoId);
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG DRAW OPS - WAIT                                                                         |
                  * |------------------------------------------------------------------------------------------------|
@@ -72,7 +72,7 @@ namespace Core {
                  * overwrite the current contents of the command buffer while the GPU is using it
                 */
                 uint32_t inFlightFenceInfoId = sceneInfo->id.inFlightFenceInfoBase + m_currentFrameInFlight;
-                vkWaitForFences (deviceInfo->shared.logDevice, 
+                vkWaitForFences (deviceInfo->resource.logDevice, 
                                  1, 
                                  &getFenceInfo (inFlightFenceInfoId, FEN_IN_FLIGHT)->resource.fence, 
                                  VK_TRUE, 
@@ -96,8 +96,8 @@ namespace Core {
                 uint32_t swapChainImageId;
                 uint32_t imageAvailableSemaphoreInfoId = sceneInfo->id.imageAvailableSemaphoreInfoBase +
                                                          m_currentFrameInFlight;
-                VkResult result = vkAcquireNextImageKHR (deviceInfo->shared.logDevice, 
-                                                         deviceInfo->unique[resourceId].swapChain.swapChain, 
+                VkResult result = vkAcquireNextImageKHR (deviceInfo->resource.logDevice, 
+                                                         deviceInfo->resource.swapChain, 
                                                          UINT64_MAX, 
                                                          getSemaphoreInfo (imageAvailableSemaphoreInfoId, 
                                                                            SEM_IMAGE_AVAILABLE)->resource.semaphore, 
@@ -109,13 +109,13 @@ namespace Core {
                 */
                 if (result == VK_ERROR_OUT_OF_DATE_KHR) {
                     LOG_WARNING (m_VKDrawSequenceLog) << "Failed to acquire swap chain image "
-                                                      << "[" << resourceId << "]"
+                                                      << "[" << deviceInfoId << "]"
                                                       << " " 
                                                       << "[" << string_VkResult (result) << "]"
                                                       << std::endl; 
                     recreateSwapChainDeps (sceneInfoId, 
                                            renderPassInfoId,
-                                           resourceId);
+                                           deviceInfoId);
 
                     cameraInfo->meta.updateProjectionMatrix = true;
                     return;
@@ -126,7 +126,7 @@ namespace Core {
                 */
                 else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
                     LOG_ERROR (m_VKDrawSequenceLog) << "Failed to acquire swap chain image "
-                                                    << "[" << resourceId << "]"
+                                                    << "[" << deviceInfoId << "]"
                                                     << " "
                                                     << "[" << string_VkResult (result) << "]"
                                                     << std::endl; 
@@ -144,7 +144,7 @@ namespace Core {
                  * with it. Thus, if we return early, the fence is still signaled and vkWaitForFences wont deadlock the 
                  * next time we use the same fence object
                 */
-                vkResetFences (deviceInfo->shared.logDevice, 
+                vkResetFences (deviceInfo->resource.logDevice, 
                                1, 
                                &getFenceInfo (inFlightFenceInfoId, FEN_IN_FLIGHT)->resource.fence);
                 /* |------------------------------------------------------------------------------------------------|
@@ -152,7 +152,7 @@ namespace Core {
                  * |------------------------------------------------------------------------------------------------|
                 */
                 if (cameraInfo->meta.updateViewMatrix)       createViewMatrix       (cameraInfoId);
-                if (cameraInfo->meta.updateProjectionMatrix) createProjectionMatrix (cameraInfoId, resourceId);
+                if (cameraInfo->meta.updateProjectionMatrix) createProjectionMatrix (cameraInfoId, deviceInfoId);
                 /* Do not recreate camera matrices unless the booleans are set
                 */
                 cameraInfo->meta.updateViewMatrix       = false;
@@ -213,7 +213,7 @@ namespace Core {
                 beginRenderPass      (sceneInfo->resource.commandBuffers[m_currentFrameInFlight],
                                       renderPassInfoId,
                                       swapChainImageId,
-                                      resourceId,
+                                      deviceInfoId,
                                       clearValues);
 
                 bindPipeline         (sceneInfo->resource.commandBuffers[m_currentFrameInFlight],
@@ -227,13 +227,13 @@ namespace Core {
 
                 auto secondaryViewPorts = std::vector <VkViewport> {};
                 setViewPorts         (sceneInfo->resource.commandBuffers[m_currentFrameInFlight],
-                                      resourceId,
+                                      deviceInfoId,
                                       0,
                                       secondaryViewPorts);
 
                 auto secondaryScissors = std::vector <VkRect2D> {};
                 setScissors          (sceneInfo->resource.commandBuffers[m_currentFrameInFlight],
-                                      resourceId,
+                                      deviceInfoId,
                                       0,
                                       secondaryScissors);
 
@@ -332,13 +332,13 @@ namespace Core {
                  * to give it the in flight fence. Now on the next frame, the CPU will wait for this command buffer to 
                  * finish executing before it records new commands into it
                 */
-                result = vkQueueSubmit (deviceInfo->unique[resourceId].graphicsQueue, 
+                result = vkQueueSubmit (deviceInfo->resource.graphicsQueue, 
                                         1,
                                         &drawOpsSubmitInfo,
                                         getFenceInfo (inFlightFenceInfoId, FEN_IN_FLIGHT)->resource.fence);
                 if (result != VK_SUCCESS) {
                     LOG_ERROR (m_VKDrawSequenceLog) << "Failed to submit draw ops command buffer "
-                                                    << "[" << resourceId << "]"
+                                                    << "[" << deviceInfoId << "]"
                                                     << " " 
                                                     << "[" << string_VkResult (result) << "]"
                                                     << std::endl; 
@@ -364,7 +364,7 @@ namespace Core {
                  * each swap chain
                 */
                 auto swapChains = std::vector {
-                    deviceInfo->unique[resourceId].swapChain.swapChain
+                    deviceInfo->resource.swapChain
                 };
                 presentInfo.swapchainCount = static_cast <uint32_t> (swapChains.size());
                 presentInfo.pSwapchains    = swapChains.data();
@@ -392,7 +392,7 @@ namespace Core {
                  * associated with that index, and waiting on the semaphore when submitting any stage that depends on 
                  * the associated swap chain image
                 */
-                result = vkQueuePresentKHR (deviceInfo->unique[resourceId].presentQueue, &presentInfo);
+                result = vkQueuePresentKHR (deviceInfo->resource.presentQueue, &presentInfo);
                 /* Why didn't we check framebuffer resized boolean after vkAcquireNextImageKHR?
                  * It is important to note that a signalled semaphore can only be destroyed by vkDeviceWaitIdle if it is 
                  * being waited on by a vkQueueSubmit. Since we are handling the resize explicitly using the boolean, 
@@ -401,20 +401,20 @@ namespace Core {
                 */
                 if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || isFrameBufferResized()) {
                     LOG_WARNING (m_VKDrawSequenceLog) << "Failed to present swap chain image "
-                                                      << "[" << resourceId << "]"
+                                                      << "[" << deviceInfoId << "]"
                                                       << " " 
                                                       << "[" << string_VkResult (result) << "]" 
                                                       << std::endl; 
                     setFrameBufferResized (false);
                     recreateSwapChainDeps (sceneInfoId, 
                                            renderPassInfoId,
-                                           resourceId);
+                                           deviceInfoId);
                     
                     cameraInfo->meta.updateProjectionMatrix = true;
                 }
                 else if (result != VK_SUCCESS) {
                     LOG_ERROR (m_VKDrawSequenceLog) << "Failed to present swap chain image "
-                                                    << "[" << resourceId << "]"
+                                                    << "[" << deviceInfoId << "]"
                                                     << " " 
                                                     << "[" << string_VkResult (result) << "]" 
                                                     << std::endl;

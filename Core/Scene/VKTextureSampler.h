@@ -46,6 +46,7 @@ namespace Core {
              * you try to read texels outside the image through its addressing mode
             */
             void createTextureSampler (uint32_t sceneInfoId, 
+                                       uint32_t deviceInfoId,
                                        VkFilter filter,
                                        VkSamplerAddressMode addressMode,
                                        VkBool32 anisotropyEnable,
@@ -53,8 +54,8 @@ namespace Core {
                                        float minLod, 
                                        float maxLod) {
 
-                auto sceneInfo  = getSceneInfo (sceneInfoId); 
-                auto deviceInfo = getDeviceInfo();
+                auto sceneInfo  = getSceneInfo  (sceneInfoId);
+                auto deviceInfo = getDeviceInfo (deviceInfoId);
                 /* Samplers are configured through a VkSamplerCreateInfo structure, which specifies all filters and 
                  * transformations that it should apply
                 */
@@ -168,7 +169,7 @@ namespace Core {
                  * a single state
                 */
                 VkSampler textureSampler;
-                VkResult result = vkCreateSampler (deviceInfo->shared.logDevice, 
+                VkResult result = vkCreateSampler (deviceInfo->resource.logDevice, 
                                                    &createInfo, 
                                                    VK_NULL_HANDLE, 
                                                    &textureSampler);
@@ -183,11 +184,11 @@ namespace Core {
                 sceneInfo->resource.textureSampler = textureSampler;
             }
 
-            void cleanUp (uint32_t sceneInfoId) {
-                auto sceneInfo  = getSceneInfo (sceneInfoId);
-                auto deviceInfo = getDeviceInfo();
+            void cleanUp (uint32_t sceneInfoId, uint32_t deviceInfoId) {
+                auto sceneInfo  = getSceneInfo  (sceneInfoId);
+                auto deviceInfo = getDeviceInfo (deviceInfoId);
 
-                vkDestroySampler (deviceInfo->shared.logDevice, 
+                vkDestroySampler (deviceInfo->resource.logDevice, 
                                   sceneInfo->resource.textureSampler, 
                                   VK_NULL_HANDLE);
             }

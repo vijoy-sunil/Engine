@@ -98,12 +98,12 @@ namespace Core {
                               uint32_t renderPassInfoId,
                               uint32_t pipelineInfoId,
                               uint32_t cameraInfoId, 
-                              uint32_t resourceId,
-                              uint32_t sceneInfoId) {
+                              uint32_t sceneInfoId, 
+                              uint32_t deviceInfoId) {
 
-                auto modelInfoBase = getModelInfo (*modelInfoIds.begin());
-                auto sceneInfo     = getSceneInfo (sceneInfoId);
-                auto deviceInfo    = getDeviceInfo();
+                auto modelInfoBase = getModelInfo  (*modelInfoIds.begin());
+                auto sceneInfo     = getSceneInfo  (sceneInfoId);
+                auto deviceInfo    = getDeviceInfo (deviceInfoId);
 #if ENABLE_LOGGING
                 enableValidationLayers();
 #else
@@ -116,46 +116,49 @@ namespace Core {
                  * | CONFIG WINDOW                                                                                  |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                createWindow (resourceId, g_windowSettings.width, g_windowSettings.height);
+                createWindow (deviceInfoId, g_windowSettings.width, g_windowSettings.height);
                 LOG_INFO (m_VKInitSequenceLog) << "[OK] Window " 
-                                               << "[" << resourceId << "]"
+                                               << "[" << deviceInfoId << "]"
                                                << std::endl;
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG INSTANCE                                                                                |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                createInstance();
-                LOG_INFO (m_VKInitSequenceLog) << "[OK] Instance" 
+                createInstance (deviceInfoId);
+                LOG_INFO (m_VKInitSequenceLog) << "[OK] Instance "
+                                               << "[" << deviceInfoId << "]" 
                                                << std::endl; 
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG DEBUG MESSENGER                                                                         |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                createDebugMessenger();
-                LOG_INFO (m_VKInitSequenceLog) << "[OK] Debug messenger" 
+                createDebugMessenger (deviceInfoId);
+                LOG_INFO (m_VKInitSequenceLog) << "[OK] Debug messenger "
+                                               << "[" << deviceInfoId << "]" 
                                                << std::endl; 
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG SURFACE                                                                                 |
                  * |------------------------------------------------------------------------------------------------|
                 */          
-                createSurface (resourceId);
+                createSurface (deviceInfoId);
                 LOG_INFO (m_VKInitSequenceLog) << "[OK] Surface " 
-                                               << "[" << resourceId << "]"
+                                               << "[" << deviceInfoId << "]"
                                                << std::endl;
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG PHY DEVICE                                                                              |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                pickPhyDevice (resourceId);
-                LOG_INFO (m_VKInitSequenceLog) << "[OK] Phy device" 
+                pickPhyDevice (deviceInfoId);
+                LOG_INFO (m_VKInitSequenceLog) << "[OK] Phy device "
+                                               << "[" << deviceInfoId << "]" 
                                                << std::endl;
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG LOG DEVICE                                                                              |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                createLogDevice (resourceId);
+                createLogDevice (deviceInfoId);
                 LOG_INFO (m_VKInitSequenceLog) << "[OK] Log device " 
-                                               << "[" << resourceId << "]"
+                                               << "[" << deviceInfoId << "]"
                                                << std::endl;
                 /* |------------------------------------------------------------------------------------------------|
                  * | IMPORT MODEL                                                                                   |
@@ -171,11 +174,11 @@ namespace Core {
                  * | CONFIG SWAP CHAIN RESOURCES                                                                    |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                createSwapChainResources (sceneInfo->id.swapChainImageInfoBase, resourceId);
+                createSwapChainResources (sceneInfo->id.swapChainImageInfoBase, deviceInfoId);
                 LOG_INFO (m_VKInitSequenceLog) << "[OK] Swap chain resources " 
                                                << "[" << sceneInfo->id.swapChainImageInfoBase << "]"
                                                << " "
-                                               << "[" << resourceId << "]"
+                                               << "[" << deviceInfoId << "]"
                                                << std::endl;   
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG TEXTURE RESOURCES - DIFFUSE TEXTURE                                                     |
@@ -185,32 +188,26 @@ namespace Core {
                  * across models are not loaded again
                 */
                 for (auto const& [path, infoId]: getTextureImagePool()) {
-                    createTextureResources (infoId, resourceId, path.c_str());
+                    createTextureResources (infoId, deviceInfoId, path.c_str());
                     LOG_INFO (m_VKInitSequenceLog) << "[OK] Texture resources " 
                                                    << "[" << infoId << "]"
-                                                   << " "
-                                                   << "[" << resourceId << "]"
                                                    << std::endl; 
                 }
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG DEPTH RESOURCES                                                                         |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                createDepthResources (sceneInfo->id.depthImageInfo, resourceId);
+                createDepthResources (sceneInfo->id.depthImageInfo, deviceInfoId);
                 LOG_INFO (m_VKInitSequenceLog) << "[OK] Depth resources " 
                                                << "[" << sceneInfo->id.depthImageInfo << "]"
-                                               << " "
-                                               << "[" << resourceId << "]"
                                                << std::endl;  
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG MULTI SAMPLE RESOURCES                                                                  |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                createMultiSampleResources (sceneInfo->id.multiSampleImageInfo, resourceId);
+                createMultiSampleResources (sceneInfo->id.multiSampleImageInfo, deviceInfoId);
                 LOG_INFO (m_VKInitSequenceLog) << "[OK] Multi sample resources " 
                                                << "[" << sceneInfo->id.multiSampleImageInfo << "]"
-                                               << " "
-                                               << "[" << resourceId << "]"
                                                << std::endl;    
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG VERTEX BUFFERS                                                                          |
@@ -236,14 +233,12 @@ namespace Core {
                 }
                 
                 createVertexBuffer (vertexBufferInfoId, 
-                                    resourceId,
+                                    deviceInfoId,
                                     combinedVerticesCount * sizeof (Vertex),
                                     combinedVertices.data());
 
                 LOG_INFO (m_VKInitSequenceLog) << "[OK] Vertex buffer " 
                                                << "[" << vertexBufferInfoId << "]"
-                                               << " "
-                                               << "[" << resourceId << "]"
                                                << std::endl; 
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG INDEX BUFFER                                                                            |
@@ -266,14 +261,12 @@ namespace Core {
                 }
 
                 createIndexBuffer (indexBufferInfoId, 
-                                   resourceId,
+                                   deviceInfoId,
                                    combinedIndicesCount * sizeof (uint32_t),
                                    combinedIndices.data());
                 
                 LOG_INFO (m_VKInitSequenceLog) << "[OK] Index buffer " 
                                                << "[" << indexBufferInfoId << "]"
-                                               << " "
-                                               << "[" << resourceId << "]"
                                                << std::endl; 
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG STORAGE BUFFERS                                                                         |
@@ -296,13 +289,11 @@ namespace Core {
                 for (uint32_t i = 0; i < g_maxFramesInFlight; i++) { 
                     uint32_t storageBufferInfoId = sceneInfo->id.storageBufferInfoBase + i;    
                     createStorageBuffer (storageBufferInfoId,
-                                         resourceId,
+                                         deviceInfoId,
                                          sceneInfo->meta.totalInstancesCount * sizeof (InstanceDataSSBO));
 
                     LOG_INFO (m_VKInitSequenceLog) << "[OK] Storage buffer " 
                                                    << "[" << storageBufferInfoId << "]"
-                                                   << " "
-                                                   << "[" << resourceId << "]"
                                                    << std::endl; 
                 }
                 /* |------------------------------------------------------------------------------------------------|
@@ -340,7 +331,7 @@ namespace Core {
                  * | CONFIG RENDER PASS                                                                             |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                createRenderPass (renderPassInfoId);
+                createRenderPass (renderPassInfoId, deviceInfoId);
                 LOG_INFO (m_VKInitSequenceLog) << "[OK] Render pass " 
                                                << "[" << renderPassInfoId << "]"
                                                << std::endl; 
@@ -365,7 +356,7 @@ namespace Core {
                 /* Create a framebuffer for all of the images in the swap chain and use the one that corresponds to the 
                  * retrieved image at drawing time
                 */
-                for (uint32_t i = 0; i < deviceInfo->unique[resourceId].swapChain.size; i++) {
+                for (uint32_t i = 0; i < deviceInfo->meta.swapChainSize; i++) {
                     uint32_t swapChainImageInfoId = sceneInfo->id.swapChainImageInfoBase + i;
                     auto swapChainImageInfo       = getImageInfo (swapChainImageInfoId, SWAPCHAIN_IMAGE);
 
@@ -374,11 +365,11 @@ namespace Core {
                         depthImageInfo->resource.imageView,
                         swapChainImageInfo->resource.imageView
                     };
-                    createFrameBuffer (renderPassInfoId, resourceId, attachments);                    
+                    createFrameBuffer (renderPassInfoId, deviceInfoId, attachments);                    
                     LOG_INFO (m_VKInitSequenceLog) << "[OK] Frame buffer " 
                                                    << "[" << renderPassInfoId << "]"
                                                    << " "
-                                                   << "[" << resourceId << "]"
+                                                   << "[" << deviceInfoId << "]"
                                                    << std::endl; 
                 }
                 /* |------------------------------------------------------------------------------------------------|
@@ -419,10 +410,12 @@ namespace Core {
                  * |------------------------------------------------------------------------------------------------|
                 */
                 auto vertexShaderModule   = createShaderStage (pipelineInfoId, 
+                                                               deviceInfoId,
                                                                VK_SHADER_STAGE_VERTEX_BIT, 
                                                                g_pathSettings.vertexShaderBinary, "main");
 
                 auto fragmentShaderModule = createShaderStage (pipelineInfoId, 
+                                                               deviceInfoId,
                                                                VK_SHADER_STAGE_FRAGMENT_BIT, 
                                                                g_pathSettings.fragmentShaderBinary, "main");
                 /* |------------------------------------------------------------------------------------------------|
@@ -536,7 +529,7 @@ namespace Core {
                     0,
                     0
                 };
-                createDescriptorSetLayout (pipelineInfoId, layoutBindings, bindingFlags, 0);
+                createDescriptorSetLayout (pipelineInfoId, deviceInfoId, layoutBindings, bindingFlags, 0);
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG PUSH CONSTANT RANGES                                                                    |
                  * |------------------------------------------------------------------------------------------------|
@@ -549,14 +542,16 @@ namespace Core {
                  * | CONFIG PIPELINE LAYOUT                                                                         |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                createPipelineLayout (pipelineInfoId);
+                createPipelineLayout (pipelineInfoId, deviceInfoId);
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG PIPELINE                                                                                |
                  * |------------------------------------------------------------------------------------------------|
                 */
                 createGraphicsPipeline (pipelineInfoId, 
-                                        renderPassInfoId, 0,
-                                        -1, VK_NULL_HANDLE);
+                                        renderPassInfoId, 
+                                        deviceInfoId, 
+                                        0, -1, 
+                                        VK_NULL_HANDLE);
 
                 LOG_INFO (m_VKInitSequenceLog) << "[OK] Pipeline " 
                                                << "[" << pipelineInfoId << "]"
@@ -571,15 +566,15 @@ namespace Core {
                  * happen until the graphics pipeline is created. That means that we're allowed to destroy the shader 
                  * modules as soon as pipeline creation is finished
                 */
-                vkDestroyShaderModule (deviceInfo->shared.logDevice, vertexShaderModule,   VK_NULL_HANDLE);
-                vkDestroyShaderModule (deviceInfo->shared.logDevice, fragmentShaderModule, VK_NULL_HANDLE);
+                vkDestroyShaderModule (deviceInfo->resource.logDevice, vertexShaderModule,   VK_NULL_HANDLE);
+                vkDestroyShaderModule (deviceInfo->resource.logDevice, fragmentShaderModule, VK_NULL_HANDLE);
                 LOG_INFO (m_VKInitSequenceLog) << "[DELETE] Shader modules" 
                                                << std::endl;  
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG CAMERA MATRIX                                                                           |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                createCameraMatrix (cameraInfoId, resourceId);
+                createCameraMatrix (cameraInfoId, deviceInfoId);
                 LOG_INFO (m_VKInitSequenceLog) << "[OK] Camera matrix " 
                                                << "[" << cameraInfoId << "]"
                                                << std::endl;
@@ -588,6 +583,7 @@ namespace Core {
                  * |------------------------------------------------------------------------------------------------|
                 */
                 createTextureSampler (sceneInfoId, 
+                                      deviceInfoId,
                                       VK_FILTER_LINEAR,
                                       VK_SAMPLER_ADDRESS_MODE_REPEAT,
                                       VK_TRUE,
@@ -607,6 +603,7 @@ namespace Core {
                                 (getTextureImagePool().size()) * g_maxFramesInFlight)
                 };
                 createDescriptorPool (sceneInfoId, 
+                                      deviceInfoId,
                                       poolSizes, 
                                       g_maxFramesInFlight, 
                                       0);
@@ -621,6 +618,7 @@ namespace Core {
                 createDescriptorSets (sceneInfoId, 
                                       pipelineInfoId, 
                                       descriptorSetLayoutId, 
+                                      deviceInfoId,
                                       g_maxFramesInFlight);
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG DESCRIPTOR SETS UPDATE                                                                  |
@@ -659,7 +657,7 @@ namespace Core {
                                                          1, 0, textureCount)
                     };
 
-                    updateDescriptorSets (writeDescriptorSets);
+                    updateDescriptorSets (deviceInfoId, writeDescriptorSets);
                 }
                 LOG_INFO (m_VKInitSequenceLog) << "[OK] Descriptor sets " 
                                                << "[" << sceneInfoId << "]"
@@ -676,24 +674,25 @@ namespace Core {
                  * we will choose the VK_COMMAND_POOL_CREATE_TRANSIENT_BIT flag. And, this buffer copy command requires a 
                  * queue family that supports transfer operations, which is indicated using VK_QUEUE_TRANSFER_BIT
                 */
-                auto transferOpsCommandPool = getCommandPool (VK_COMMAND_POOL_CREATE_TRANSIENT_BIT,
-                                              deviceInfo->unique[resourceId].indices.transferFamily.value());
-                LOG_INFO (m_VKInitSequenceLog) << "[OK] Transfer ops command pool " 
-                                               << "[" << resourceId << "]"
+                auto transferOpsCommandPool = getCommandPool (deviceInfoId, 
+                                                              VK_COMMAND_POOL_CREATE_TRANSIENT_BIT,
+                                                              deviceInfo->meta.transferFamilyIndex.value());
+                LOG_INFO (m_VKInitSequenceLog) << "[OK] Transfer ops command pool "
+                                               << "[" << deviceInfoId << "]"
                                                << std::endl;
                 /* Note that we are only requesting one command buffer from the pool, since it is recommended to combine 
                  * all the transfer operations in a single command buffer and execute them asynchronously for higher 
                  * throughput
                 */                                            
                 auto transferOpsCommandBuffers = std::vector {
-                    getCommandBuffers (transferOpsCommandPool, 1, VK_COMMAND_BUFFER_LEVEL_PRIMARY)
+                    getCommandBuffers (deviceInfoId, transferOpsCommandPool, 1, VK_COMMAND_BUFFER_LEVEL_PRIMARY)
                 };
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG TRANSFER OPS - FENCE                                                                    |
                  * |------------------------------------------------------------------------------------------------|
                 */
                 uint32_t transferOpsFenceInfoId = 0;
-                createFence (transferOpsFenceInfoId, FEN_TRANSFER_DONE, 0);
+                createFence (transferOpsFenceInfoId, deviceInfoId, FEN_TRANSFER_DONE, 0);
                 LOG_INFO (m_VKInitSequenceLog) << "[OK] Transfer ops fence " 
                                                << "[" << transferOpsFenceInfoId << "]"
                                                << std::endl;
@@ -732,14 +731,14 @@ namespace Core {
                 transferOpsSubmitInfo.sType              = VK_STRUCTURE_TYPE_SUBMIT_INFO;
                 transferOpsSubmitInfo.commandBufferCount = static_cast <uint32_t> (transferOpsCommandBuffers.size());
                 transferOpsSubmitInfo.pCommandBuffers    = transferOpsCommandBuffers.data();
-                VkResult result = vkQueueSubmit (deviceInfo->unique[resourceId].transferQueue, 
+                VkResult result = vkQueueSubmit (deviceInfo->resource.transferQueue, 
                                                  1, 
                                                  &transferOpsSubmitInfo, 
                                                  getFenceInfo (transferOpsFenceInfoId, FEN_TRANSFER_DONE)->resource.fence);
 
                 if (result != VK_SUCCESS) {
                     LOG_ERROR (m_VKInitSequenceLog) << "Failed to submit transfer ops command buffer "
-                                                    << "[" << resourceId << "]"
+                                                    << "[" << deviceInfoId << "]"
                                                     << " " 
                                                     << "[" << string_VkResult (result) << "]"
                                                     << std::endl; 
@@ -762,13 +761,13 @@ namespace Core {
                 LOG_INFO (m_VKInitSequenceLog) << "[WAITING] Transfer ops fence " 
                                                << "[" << transferOpsFenceInfoId << "]"
                                                << std::endl;
-                vkWaitForFences (deviceInfo->shared.logDevice, 
+                vkWaitForFences (deviceInfo->resource.logDevice, 
                                  1, 
                                  &getFenceInfo (transferOpsFenceInfoId, FEN_TRANSFER_DONE)->resource.fence, 
                                  VK_TRUE, 
                                  UINT64_MAX);
 
-                vkResetFences   (deviceInfo->shared.logDevice, 
+                vkResetFences   (deviceInfo->resource.logDevice, 
                                  1, 
                                  &getFenceInfo (transferOpsFenceInfoId, FEN_TRANSFER_DONE)->resource.fence);
                 LOG_INFO (m_VKInitSequenceLog) << "[OK] Transfer ops fence reset "
@@ -778,20 +777,20 @@ namespace Core {
                  * | DESTROY STAGING BUFFERS                                                                        |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                VKBufferMgr::cleanUp (modelInfoBase->id.indexBufferInfo, STAGING_BUFFER);
+                VKBufferMgr::cleanUp (modelInfoBase->id.indexBufferInfo, deviceInfoId, STAGING_BUFFER);
                 LOG_INFO (m_VKInitSequenceLog) << "[DELETE] Staging buffer " 
                                                << "[" << modelInfoBase->id.indexBufferInfo << "]"
                                                << std::endl;  
 
                 for (auto const& infoId: modelInfoBase->id.vertexBufferInfos) {
-                    VKBufferMgr::cleanUp (infoId, STAGING_BUFFER);
+                    VKBufferMgr::cleanUp (infoId, deviceInfoId, STAGING_BUFFER);
                     LOG_INFO (m_VKInitSequenceLog) << "[DELETE] Staging buffer "
                                                    << "[" << infoId << "]"
                                                    << std::endl;
                 }
 
                 for (auto const& [path, infoId]: getTextureImagePool()) {
-                    VKBufferMgr::cleanUp (infoId, STAGING_BUFFER_TEX);
+                    VKBufferMgr::cleanUp (infoId, deviceInfoId, STAGING_BUFFER_TEX);
                     LOG_INFO (m_VKInitSequenceLog) << "[DELETE] Staging buffer (Tex) " 
                                                    << "[" << infoId << "]"
                                                    << std::endl;
@@ -800,7 +799,7 @@ namespace Core {
                  * | DESTROY TRANSFER OPS - FENCE                                                                   |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                cleanUpFence (transferOpsFenceInfoId, FEN_TRANSFER_DONE);
+                cleanUpFence (transferOpsFenceInfoId, deviceInfoId, FEN_TRANSFER_DONE);
                 LOG_INFO (m_VKInitSequenceLog) << "[DELETE] Transfer ops fence " 
                                                << "[" << transferOpsFenceInfoId << "]"
                                                << std::endl;
@@ -808,28 +807,29 @@ namespace Core {
                  * | DESTROY TRANSFER OPS - COMMAND POOL                                                            |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                VKCmdBuffer::cleanUp (transferOpsCommandPool);
+                VKCmdBuffer::cleanUp (deviceInfoId, transferOpsCommandPool);
                 LOG_INFO (m_VKInitSequenceLog) << "[DELETE] Transfer ops command pool"
                                                << std::endl;
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG BLIT OPS - COMMAND POOL AND BUFFER                                                      |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                auto blitOpsCommandPool = getCommandPool (VK_COMMAND_POOL_CREATE_TRANSIENT_BIT,
-                                          deviceInfo->unique[resourceId].indices.graphicsFamily.value());
+                auto blitOpsCommandPool = getCommandPool (deviceInfoId, 
+                                                          VK_COMMAND_POOL_CREATE_TRANSIENT_BIT,
+                                                          deviceInfo->meta.graphicsFamilyIndex.value());
                 LOG_INFO (m_VKInitSequenceLog) << "[OK] Blit ops command pool " 
-                                               << "[" << resourceId << "]"
+                                               << "[" << deviceInfoId << "]"
                                                << std::endl;
                                             
                 auto blitOpsCommandBuffers = std::vector {
-                    getCommandBuffers (blitOpsCommandPool, 1, VK_COMMAND_BUFFER_LEVEL_PRIMARY)
+                    getCommandBuffers (deviceInfoId, blitOpsCommandPool, 1, VK_COMMAND_BUFFER_LEVEL_PRIMARY)
                 };
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG BLIT OPS - FENCE                                                                        |
                  * |------------------------------------------------------------------------------------------------|
                 */
                 uint32_t blitOpsFenceInfoId = 0;
-                createFence (blitOpsFenceInfoId, FEN_BLIT_DONE, 0);
+                createFence (blitOpsFenceInfoId, deviceInfoId, FEN_BLIT_DONE, 0);
                 LOG_INFO (m_VKInitSequenceLog) << "[OK] Blit ops fence " 
                                                << "[" << blitOpsFenceInfoId << "]"
                                                << std::endl;    
@@ -851,14 +851,14 @@ namespace Core {
                 blitOpsSubmitInfo.sType              = VK_STRUCTURE_TYPE_SUBMIT_INFO;
                 blitOpsSubmitInfo.commandBufferCount = static_cast <uint32_t> (blitOpsCommandBuffers.size());
                 blitOpsSubmitInfo.pCommandBuffers    = blitOpsCommandBuffers.data();
-                result = vkQueueSubmit (deviceInfo->unique[resourceId].graphicsQueue, 
+                result = vkQueueSubmit (deviceInfo->resource.graphicsQueue, 
                                         1, 
                                         &blitOpsSubmitInfo, 
                                         getFenceInfo (blitOpsFenceInfoId, FEN_BLIT_DONE)->resource.fence);
 
                 if (result != VK_SUCCESS) {
                     LOG_ERROR (m_VKInitSequenceLog) << "Failed to submit blit ops command buffer "
-                                                    << "[" << resourceId << "]"
+                                                    << "[" << deviceInfoId << "]"
                                                     << " " 
                                                     << "[" << string_VkResult (result) << "]"
                                                     << std::endl; 
@@ -871,13 +871,13 @@ namespace Core {
                 LOG_INFO (m_VKInitSequenceLog) << "[WAITING] Blit ops fence " 
                                                << "[" << blitOpsFenceInfoId << "]"
                                                << std::endl;
-                vkWaitForFences (deviceInfo->shared.logDevice, 
+                vkWaitForFences (deviceInfo->resource.logDevice, 
                                  1, 
                                  &getFenceInfo (blitOpsFenceInfoId, FEN_BLIT_DONE)->resource.fence, 
                                  VK_TRUE, 
                                  UINT64_MAX);
 
-                vkResetFences   (deviceInfo->shared.logDevice, 
+                vkResetFences   (deviceInfo->resource.logDevice, 
                                  1, 
                                  &getFenceInfo (blitOpsFenceInfoId, FEN_BLIT_DONE)->resource.fence);
                 LOG_INFO (m_VKInitSequenceLog) << "[OK] Blit ops fence reset "
@@ -887,7 +887,7 @@ namespace Core {
                  * | DESTROY BLIT OPS - FENCE                                                                       |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                cleanUpFence (blitOpsFenceInfoId, FEN_BLIT_DONE);
+                cleanUpFence (blitOpsFenceInfoId, deviceInfoId, FEN_BLIT_DONE);
                 LOG_INFO (m_VKInitSequenceLog) << "[DELETE] Blit ops fence " 
                                                << "[" << blitOpsFenceInfoId << "]"
                                                << std::endl;
@@ -895,7 +895,7 @@ namespace Core {
                  * | DESTROY BLIT OPS - COMMAND POOL                                                                |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                VKCmdBuffer::cleanUp (blitOpsCommandPool);
+                VKCmdBuffer::cleanUp (deviceInfoId, blitOpsCommandPool);
                 LOG_INFO (m_VKInitSequenceLog) << "[DELETE] Blit ops command pool"
                                                << std::endl;           
                 /* |------------------------------------------------------------------------------------------------|
@@ -907,14 +907,16 @@ namespace Core {
                  * pool. And, we're going to record commands for drawing, which is why we've chosen the graphics queue 
                  * family
                 */
-                auto drawOpsCommandPool = getCommandPool (VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT,
-                                          deviceInfo->unique[resourceId].indices.graphicsFamily.value());
+                auto drawOpsCommandPool = getCommandPool (deviceInfoId, 
+                                                          VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT,
+                                                          deviceInfo->meta.graphicsFamilyIndex.value());
                 LOG_INFO (m_VKInitSequenceLog) << "[OK] Draw ops command pool " 
-                                               << "[" << resourceId << "]"
+                                               << "[" << deviceInfoId << "]"
                                                << std::endl;
                                             
                 auto drawOpsCommandBuffers = std::vector {
-                    getCommandBuffers (drawOpsCommandPool, 
+                    getCommandBuffers (deviceInfoId,
+                                       drawOpsCommandPool, 
                                        g_maxFramesInFlight, 
                                        VK_COMMAND_BUFFER_LEVEL_PRIMARY)
                 };
@@ -938,19 +940,19 @@ namespace Core {
                      * that the first call to vkWaitForFences() returns immediately since the fence is already signaled
                     */
                     uint32_t drawOpsInFlightFenceInfoId = sceneInfo->id.inFlightFenceInfoBase + i;
-                    createFence (drawOpsInFlightFenceInfoId, FEN_IN_FLIGHT, VK_FENCE_CREATE_SIGNALED_BIT);
+                    createFence (drawOpsInFlightFenceInfoId, deviceInfoId, FEN_IN_FLIGHT, VK_FENCE_CREATE_SIGNALED_BIT);
                     LOG_INFO (m_VKInitSequenceLog) << "[OK] Draw ops fence " 
                                                    << "[" << drawOpsInFlightFenceInfoId << "]"
                                                    << std::endl;
 
                     uint32_t drawOpsImageAvailableSemaphoreInfoId = sceneInfo->id.imageAvailableSemaphoreInfoBase + i;
-                    createSemaphore (drawOpsImageAvailableSemaphoreInfoId, SEM_IMAGE_AVAILABLE);
+                    createSemaphore (drawOpsImageAvailableSemaphoreInfoId, deviceInfoId, SEM_IMAGE_AVAILABLE);
                     LOG_INFO (m_VKInitSequenceLog) << "[OK] Draw ops semaphore " 
                                                    << "[" << drawOpsImageAvailableSemaphoreInfoId << "]"
                                                    << std::endl;
 
                     uint32_t drawOpsRenderDoneSemaphoreInfoId = sceneInfo->id.renderDoneSemaphoreInfoBase + i;
-                    createSemaphore (drawOpsRenderDoneSemaphoreInfoId, SEM_RENDER_DONE);
+                    createSemaphore (drawOpsRenderDoneSemaphoreInfoId, deviceInfoId, SEM_RENDER_DONE);
                     LOG_INFO (m_VKInitSequenceLog) << "[OK] Draw ops semaphore " 
                                                    << "[" << drawOpsRenderDoneSemaphoreInfoId << "]"
                                                    << std::endl;

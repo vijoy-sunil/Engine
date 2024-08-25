@@ -53,12 +53,13 @@ namespace Core {
              * do expensive allocations
             */
             void createDescriptorPool (uint32_t sceneInfoId,
+                                       uint32_t deviceInfoId,
                                        const std::vector <VkDescriptorPoolSize>& poolSizes,
                                        uint32_t maxDescriptorSets,
                                        VkDescriptorPoolCreateFlags poolCreateFlags) {
 
-                auto sceneInfo  = getSceneInfo (sceneInfoId);
-                auto deviceInfo = getDeviceInfo();
+                auto sceneInfo  = getSceneInfo  (sceneInfoId);
+                auto deviceInfo = getDeviceInfo (deviceInfoId);
 
                 VkDescriptorPoolCreateInfo createInfo;
                 createInfo.sType         = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
@@ -85,7 +86,7 @@ namespace Core {
                  * members for the creation of the descriptor pool. However, it remains best practise to do so
                 */
                 VkDescriptorPool descriptorPool;
-                VkResult result = vkCreateDescriptorPool (deviceInfo->shared.logDevice, 
+                VkResult result = vkCreateDescriptorPool (deviceInfo->resource.logDevice, 
                                                           &createInfo, 
                                                           VK_NULL_HANDLE, 
                                                           &descriptorPool);
@@ -108,11 +109,12 @@ namespace Core {
             void createDescriptorSets (uint32_t sceneInfoId,
                                        uint32_t pipelineInfoId,
                                        uint32_t descriptorSetLayoutId,
+                                       uint32_t deviceInfoId,
                                        uint32_t descriptorSetCount) {
 
                 auto pipelineInfo = getPipelineInfo (pipelineInfoId);
                 auto sceneInfo    = getSceneInfo    (sceneInfoId);
-                auto deviceInfo   = getDeviceInfo();
+                auto deviceInfo   = getDeviceInfo   (deviceInfoId);
 
                 if (descriptorSetLayoutId >= pipelineInfo->resource.descriptorSetLayouts.size()) {
                     LOG_ERROR (m_VKDescriptorLog) << "Invalid descriptor set layout id " 
@@ -153,7 +155,7 @@ namespace Core {
                 allocInfo.pSetLayouts        = layouts.data();
 
                 std::vector <VkDescriptorSet> descriptorSets (descriptorSetCount);
-                VkResult result = vkAllocateDescriptorSets (deviceInfo->shared.logDevice, 
+                VkResult result = vkAllocateDescriptorSets (deviceInfo->resource.logDevice, 
                                                             &allocInfo, 
                                                             descriptorSets.data());
                 if (result != VK_SUCCESS) {
@@ -259,8 +261,10 @@ namespace Core {
 
             /* The descriptor sets have been allocated now, but the descriptors within still need to be configured
             */
-            void updateDescriptorSets (const std::vector <VkWriteDescriptorSet>& writeDescriptorSets) {
-                auto deviceInfo   = getDeviceInfo();
+            void updateDescriptorSets (uint32_t deviceInfoId, 
+                                       const std::vector <VkWriteDescriptorSet>& writeDescriptorSets) {
+
+                auto deviceInfo   = getDeviceInfo (deviceInfoId);
                 /* The updates are applied using vkUpdateDescriptorSets. It accepts two kinds of arrays as parameters, 
                  * an array of VkWriteDescriptorSet and an array of VkCopyDescriptorSet. The latter can be used to 
                  * copy descriptors to each other, as its name implies
@@ -270,20 +274,20 @@ namespace Core {
                  * vkUpdateDescriptorSets doesn't need to be called more than once for a descriptor set, since 
                  * modifying the buffer that a descriptor set points to will update what the descriptor set sees
                 */
-                vkUpdateDescriptorSets (deviceInfo->shared.logDevice, 
+                vkUpdateDescriptorSets (deviceInfo->resource.logDevice, 
                                         static_cast <uint32_t> (writeDescriptorSets.size()),
                                         writeDescriptorSets.data(), 
                                         0, 
                                         VK_NULL_HANDLE);                
             }
 
-            void cleanUp (uint32_t sceneInfoId) {
-                auto sceneInfo  = getSceneInfo (sceneInfoId);
-                auto deviceInfo = getDeviceInfo();
+            void cleanUp (uint32_t sceneInfoId, uint32_t deviceInfoId) {
+                auto sceneInfo  = getSceneInfo  (sceneInfoId);
+                auto deviceInfo = getDeviceInfo (deviceInfoId);
                 /* You don't need to explicitly clean up descriptor sets, because they will be automatically freed when 
                  * the descriptor pool is destroyed
                 */
-                vkDestroyDescriptorPool (deviceInfo->shared.logDevice, 
+                vkDestroyDescriptorPool (deviceInfo->resource.logDevice, 
                                          sceneInfo->resource.descriptorPool, 
                                          VK_NULL_HANDLE);
             }
