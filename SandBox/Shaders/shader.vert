@@ -99,8 +99,13 @@ layout (location = 1) out uint fragTexId;
 /* Note that the order of the uniform, in and out declarations doesn't matter. The binding directive is similar to the 
  * location directive for attributes. We're going to reference this binding in the descriptor layout
 */
-layout (binding = 0) readonly buffer InstanceDataSSBO {
-    mat4 modelMatrix[];
+struct InstanceDataSSBO {
+    mat4 modelMatrix;
+    mat4 texIdLUT;
+};
+
+layout (binding = 0) readonly buffer InstanceDataBlock {
+    InstanceDataSSBO instances[];
 } instanceData;
 
 layout (push_constant) uniform SceneDataVertPC {
@@ -120,9 +125,12 @@ void main (void) {
     */
     gl_Position  = sceneDataVert.projectionMatrix * 
                    sceneDataVert.viewMatrix       * 
-                   instanceData.modelMatrix[gl_InstanceIndex] * 
+                   instanceData.instances[gl_InstanceIndex].modelMatrix * 
                    vec4 (inPosition, 1.0);
     
     fragTexCoord = inTexCoord;
-    fragTexId    = inTexId;
+
+    uint rowIdx  = inTexId / 4;
+    uint colIdx  = inTexId % 4;
+    fragTexId    = uint (instanceData.instances[gl_InstanceIndex].texIdLUT[rowIdx][colIdx]);
 }

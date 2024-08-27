@@ -5,7 +5,7 @@
 #include "../Device/VKInstance.h"
 #include "../Device/VKSurface.h"
 #include "../Device/VKLogDevice.h"
-#include "../Model/VKModelMgr.h"
+#include "../Model/VKInstanceData.h"
 #include "../Image/VKSwapChainImage.h"
 #include "../Image/VKTextureImage.h"
 #include "../Image/VKDepthImage.h"
@@ -42,7 +42,7 @@ namespace Core {
                           protected virtual VKInstance,
                           protected virtual VKSurface,
                           protected virtual VKLogDevice,
-                          protected virtual VKModelMgr,
+                          protected VKInstanceData,
                           protected virtual VKSwapChainImage,
                           protected VKTextureImage,
                           protected virtual VKDepthImage,
@@ -166,6 +166,13 @@ namespace Core {
                 */
                 for (auto const& infoId: modelInfoIds) {
                     importOBJModel (infoId);
+                    /* Populate texture id look up table for all model instances
+                    */
+                    auto modelInfo = getModelInfo (infoId);
+                    for (uint32_t i = 0; i < modelInfo->meta.instancesCount; i++) {
+                        for (auto const& texId: modelInfo->id.diffuseTextureImageInfos)
+                            updateTexIdLUT (infoId, i, texId, texId);
+                    }
                     LOG_INFO (m_VKInitSequenceLog) << "[OK] Import model " 
                                                    << "[" << infoId << "]"
                                                    << std::endl;

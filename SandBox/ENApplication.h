@@ -1,7 +1,6 @@
 #ifndef EN_APPLICATION_H
 #define EN_APPLICATION_H
 
-#include "../Core/Model/VKInstanceData.h"
 #include "../Core/Scene/VKInitSequence.h"
 #include "../Core/Scene/VKDrawSequence.h"
 #include "../Core/Scene/VKDeleteSequence.h"
@@ -10,8 +9,7 @@
 using namespace Core;
 
 namespace SandBox {
-    class ENApplication: protected VKInstanceData,
-                         protected VKInitSequence,
+    class ENApplication: protected VKInitSequence,
                          protected VKDrawSequence,
                          protected VKDeleteSequence {
         private:
@@ -115,9 +113,9 @@ namespace SandBox {
                 readyCameraInfo (m_cameraInfoId);
                 auto cameraInfo = getCameraInfo (m_cameraInfoId);
 
-                cameraInfo->meta.position  = {0.0f, -2.0f, 1.0f};
-                cameraInfo->meta.center    = {0.0f, -1.5f, 4.0f};
-                cameraInfo->meta.upVector  = {0.0f, -1.0f, 0.0f};
+                cameraInfo->meta.position  = {0.0f, -80.0f,  0.0f};
+                cameraInfo->meta.center    = {0.0f,   0.0f, 10.0f};
+                cameraInfo->meta.upVector  = {0.0f,   0.0f,  1.0f};
                 cameraInfo->meta.fovDeg    = 45.0f;
                 cameraInfo->meta.nearPlane = 0.01f;
                 cameraInfo->meta.farPlane  = 1000.0f;
@@ -138,6 +136,18 @@ namespace SandBox {
                                              m_cameraInfoId,
                                              m_sceneInfoId,
                                              m_deviceInfoId);
+                /* |------------------------------------------------------------------------------------------------|
+                 * | EDIT CONFIGS                                                                                   |
+                 * |------------------------------------------------------------------------------------------------|
+                */
+                {
+                    /* Update instance textures, this is required when you need instances to have different textures
+                     * applied to them compared to the parent instance (model instance id = 0). Note that, the texture
+                     * ids to be updated must exist in the global texture pool
+                    */
+                    for (auto const& modelInstanceId: {1, 2, 3})
+                        updateTexIdLUT (4, modelInstanceId, 3, 5);
+                }
             }
 
             void runScene (void) {

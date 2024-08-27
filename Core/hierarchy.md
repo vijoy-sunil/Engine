@@ -120,9 +120,7 @@
     |{Model/VKModelMgr}
     |
     |
-    |VKModelMatrix
-    |
-    |---------------------->|VKInstanceData
+    |VKInstanceData
 
 
     |<----------------------|{VKDeviceMgr}
@@ -192,7 +190,7 @@
     |
     |<----------------------|{VKLogDevice}
     |
-    |<----------------------|{VKModelMgr}
+    |<----------------------|VKInstanceData
     |
     |<----------------------|{VKSwapChainImage}
     |

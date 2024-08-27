@@ -79,9 +79,29 @@ namespace Core {
      * 
      * These gotchas are a good reason to always be explicit about alignment. That way you won't be caught offguard by 
      * the strange symptoms of alignment error
+     * 
+     * When declaring UBOs/SSBOs, pretend that all 3-element vector types don't exist. This includes column-major 
+     * matrices with 3 rows or row-major matrices with 3 columns. Pretend that the only types are scalars, 2, and 4 
+     * element vectors (and matrices)
+     * 
+     * Reference: https://stackoverflow.com/questions/38172696/should-i-ever-use-a-vec3-inside-of-a-uniform-buffer-or-
+     * shader-storage-buffer-o
+     * 
+     * Layout standards std140 vs std430
+     * std430 - the default for push constants
+     * std140 - the default for uniform buffers
+     * 
+     * Among the most important difference between these two standards is the fact that, in std140, arrays of types are 
+     * not necessarily tightly packed. An array of floats will not be the equivalent to an array of floats in C/C++. The 
+     * array stride (the bytes between array elements) is always rounded up to the size of a vec4 (ie: 16-bytes). So 
+     * arrays will only match their C/C++ definitions if the type is a multiple of 16 bytes
+     * 
+     * For example, a mat3 may be padded internally to take 12 floats of space arranged as 
+     * [x0, y0, z0, pad][x1, y1, z1, pad][x2, y2, z2, pad]
     */
     struct InstanceDataSSBO {
         glm::mat4 modelMatrix;
+        alignas (16) glm::mat4 texIdLUT;
     };
 
     struct SceneDataVertPC {

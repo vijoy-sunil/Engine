@@ -266,15 +266,9 @@ namespace Core {
                 /* Populate texture image pool, which contains all the textures used across models along with their
                  * respective texture image info ids
                 */
-                static uint32_t textureImageInfoIdBase = 0;                    
-                for (auto const& path: modelInfo->path.diffuseTextureImages) {
-                    if (m_textureImagePool.find (path) == m_textureImagePool.end()) {
-                        m_textureImagePool[path] = textureImageInfoIdBase;                           
-                        textureImageInfoIdBase++;
-                    }
- 
-                    modelInfo->id.diffuseTextureImageInfos.push_back (m_textureImagePool[path]);
-                }           
+                for (auto const& path: modelInfo->path.diffuseTextureImages)
+                    updateTextureImagePool (modelInfoId, path);
+           
                 /* Map to take advantage of indices vector (index buffer). Note that, to be able to use std::unordered_map
                  * with a user-defined key-type, you need to define two thing:
                  * (1) A hash function; this must be a class that overrides operator() and calculates the hash value given
@@ -348,9 +342,9 @@ namespace Core {
                                           }; 
                         /* We will handle missing texture faces (material_ids = -1) by adding +1 to all material_ids, this
                          * will allow us to use the default texture whose texture id is 0. Note that, this local texture
-                         * id is an index into the current model's texture array obtained after importing the model file.
-                         * What we need is a texture id that can be used to index into the global texture pool, so that
-                         * the shader can sample from the correct texture from the global pool of textures
+                         * id is an index into the current model's texture array embedded with in the model file. What
+                         * we need is a texture id that can be used to index into the global texture pool, so that the
+                         * shader can sample from the correct texture from the global pool of textures
                         */
                         uint32_t localTexId = shape.mesh.material_ids[faceIndex] + 1;
                         auto texturePath    = modelInfo->path.diffuseTextureImages[localTexId]; 
@@ -389,6 +383,17 @@ namespace Core {
                 dumpParsedData (modelInfoId);
             }
 
+            void updateTextureImagePool (uint32_t modelInfoId, const std::string& texturePath) {
+                auto modelInfo = getModelInfo (modelInfoId);
+
+                static uint32_t textureImageInfoId = 0;
+                if (m_textureImagePool.find (texturePath) == m_textureImagePool.end()) {
+                    m_textureImagePool[texturePath] = textureImageInfoId;
+                    textureImageInfoId++;
+                }
+                modelInfo->id.diffuseTextureImageInfos.push_back (m_textureImagePool[texturePath]);
+            }
+
             std::map <std::string, uint32_t>& getTextureImagePool (void) {
                 return m_textureImagePool;
             }
@@ -412,12 +417,13 @@ namespace Core {
                                                << "[" << key << "]"
                                                << std::endl;
 
-                    LOG_INFO (m_VKModelMgrLog) << "Model matrices" 
-                                               << std::endl;
                     uint32_t modelInstanceId = 0;
                     for (auto const& instance: val.meta.instances) {
-                        LOG_INFO (m_VKModelMgrLog) << "Model instance id "
+                        LOG_INFO (m_VKModelMgrLog) << "Model instance id " 
                                                    << "[" << modelInstanceId << "]"
+                                                   << std::endl;
+
+                        LOG_INFO (m_VKModelMgrLog) << "Model matrix"
                                                    << std::endl;
                         uint32_t rowIdx = 0;
                         while (rowIdx < 4) {
@@ -426,6 +432,20 @@ namespace Core {
                                                        << instance.modelMatrix[rowIdx][1] << " "
                                                        << instance.modelMatrix[rowIdx][2] << " "
                                                        << instance.modelMatrix[rowIdx][3]
+                                                       << "]"
+                                                       << std::endl;
+                            rowIdx++;
+                        }
+
+                        LOG_INFO (m_VKModelMgrLog) << "Texture id look up table"
+                                                   << std::endl;
+                        rowIdx = 0;
+                        while (rowIdx < 4) {
+                            LOG_INFO (m_VKModelMgrLog) << "["
+                                                       << instance.texIdLUT[rowIdx][0] << " "
+                                                       << instance.texIdLUT[rowIdx][1] << " "
+                                                       << instance.texIdLUT[rowIdx][2] << " "
+                                                       << instance.texIdLUT[rowIdx][3]
                                                        << "]"
                                                        << std::endl;
                             rowIdx++;

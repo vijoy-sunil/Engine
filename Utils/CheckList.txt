@@ -35,7 +35,6 @@ VARIABLES
                    camera,
                    fence,
                    semaphore,
-                   resource,
                    scene,
                    device}
 [ - ] Struct info ordering {meta,
@@ -46,7 +45,7 @@ VARIABLES
 -------------------------------------------------------------------------------------------------------------------------
 METHODS
 -------------------------------------------------------------------------------------------------------------------------
-[ - ] Common methods - create, get, is, ready, delete, dump, cleanUp, pick
+[ - ] Common methods - create, get, is, ready, delete, dump, cleanUp, pick, update, import
 [ - ] Return objects/literals methods start with get
 [ - ] Return boolean methods start with is
 [ - ] Return via parameter only if returning multiple variables
@@ -67,33 +66,33 @@ LOG
 [ - ] Check log configs for every file
 [ - ] log_info, log_error, log_warning used appropriately
 [ - ] log_error followed by runtime error throwing same message
-[ - ] In log statements, make sure we are outputting related ids and vars like resourceid, bufferid, imageid etc.
+[ - ] In log statements, make sure we are outputting related ids and vars like device info id, buffer info id etc.
 [ - ] Check spacing in log statements; no spacing at the end if you are not logging any variables
 [ - ] Dump ordering must match relative member orders
 [ - ] Turn off delete empty and go through all log outputs when you run
 -------------------------------------------------------------------------------------------------------------------------
 MISC
 -------------------------------------------------------------------------------------------------------------------------
-[ - ] [a-z]<                                    search all “no space before <”
-[ - ] ->[^ ]                                    search all “no space after ->”
-[ - ] [^ ] \(\)                                 search all “space before ()”
-[ - ] [^ ]\([a-z]                               search all “”no space before (a-z)”
-[ - ] [^ ] \[                                   search all “space before [”
-[ - ] [a-z>]&                                   use of references
-[ - ] [a-z]\*                                   use of pointers
-[ - ] \) [a-z]                                  no use of C-style casting
-[ - ] \) &                                      no use of C-style casting
-[ - ] [0-9]\.[0-9]                              float values end with f
-[ - ] () {                                      void parameter
-[ - ] auto                                      use of auto for vectors, structs etc.
-[ - ] = get                                     use of auto
-[ - ] = create                                  use of auto
-[ - ] const char*                               use const char* for string literals
-[ - ] std::string                               use only if you require std::string features like concat, size etc.
-[ - ] .size()                                   make sure it is casted from size_t to required types
-[ - ] c_str()                                   when passing it to const char* parameter
-[ - ] size_t                                    only used for size of an object and in fns that accept size_t
-[ - ] std::endl                                 in new line
-[ - ] #endif  //                                all endifs should have comment
-[ - ] " [", "[ ", " ]", "] ", " [ ", " ] "      spacing around log brackets
+[ X ] [a-z]<                                    search all “no space before <”
+[ X ] ->[^ ]                                    search all “no space after ->”
+[ X ] [^ ] \(\)                                 search all “space before ()”
+[ X ] [^ ]\([a-z]                               search all “”no space before (a-z)”
+[ X ] [^ ] \[                                   search all “space before [”
+[ X ] [a-z>]&                                   use of references
+[ X ] [a-z]\*                                   use of pointers
+[ X ] \) [a-z]                                  no use of C-style casting
+[ X ] \) &                                      no use of C-style casting
+[ X ] [0-9]\.[0-9]                              float values end with f
+[ X ] () {                                      void parameter
+[ X ] auto                                      use of auto for vectors, structs etc.
+[ X ] = get                                     use of auto
+[ X ] = create                                  use of auto
+[ X ] const char*                               use const char* for string literals
+[ X ] std::string                               use only if you require std::string features like concat, size etc.
+[ X ] .size()                                   make sure it is casted from size_t to required types
+[ X ] c_str()                                   when passing it to const char* parameter
+[ X ] size_t                                    only used for size of an object and in fns that accept size_t
+[ X ] std::endl                                 in new line
+[ X ] #endif  //                                all endifs should have comment
+[ X ] " [", "[ ", " ]", "] ", " [ ", " ] "      spacing around log brackets
 -------------------------------------------------------------------------------------------------------------------------

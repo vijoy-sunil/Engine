@@ -2,8 +2,6 @@
 <i>Classes within {} are virtual inheritance</i>
 
 <pre>
-    |<----------------------|VKInstanceData
-    |
     |<----------------------|VKInitSequence
     |
     |<----------------------|VKDrawSequence
