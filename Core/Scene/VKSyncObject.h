@@ -46,7 +46,7 @@ namespace Core {
             std::map <e_syncType, std::vector <SemaphoreInfo>> m_semaphoreInfoPool;
 
             Log::Record* m_VKSyncObjectLog;
-            const uint32_t m_instanceId = g_collectionsId++;
+            const uint32_t m_instanceId = g_collectionsSettings.instanceId++;
 
             void deleteFenceInfo (FenceInfo* fenceInfo, e_syncType type) {
                 if (m_fenceInfoPool.find (type) != m_fenceInfoPool.end()) {
@@ -84,7 +84,7 @@ namespace Core {
 
         public:
             VKSyncObject (void) {
-                m_VKSyncObjectLog = LOG_INIT (m_instanceId, g_pathSettings.logSaveDir);
+                m_VKSyncObjectLog = LOG_INIT (m_instanceId, g_collectionsSettings.logSaveDirPath);
                 LOG_ADD_CONFIG (m_instanceId, Log::INFO,  Log::TO_FILE_IMMEDIATE);
                 LOG_ADD_CONFIG (m_instanceId, Log::ERROR, Log::TO_FILE_IMMEDIATE | Log::TO_CONSOLE); 
             }
@@ -97,7 +97,7 @@ namespace Core {
             void createFence (uint32_t fenceInfoId,
                               uint32_t deviceInfoId, 
                               e_syncType type,
-                              VkFenceCreateFlags flags) {
+                              VkFenceCreateFlags fenceCreateFlags) {
 
                 auto deviceInfo = getDeviceInfo (deviceInfoId);
                 for (auto const& info: m_fenceInfoPool[type]) {
@@ -125,7 +125,7 @@ namespace Core {
                 VkFenceCreateInfo createInfo;
                 createInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
                 createInfo.pNext = VK_NULL_HANDLE;
-                createInfo.flags = flags;
+                createInfo.flags = fenceCreateFlags;
 
                 VkFence fence;
                 VkResult result = vkCreateFence (deviceInfo->resource.logDevice, 

@@ -1,8 +1,6 @@
 #ifndef VK_SCENE_MGR_H
 #define VK_SCENE_MGR_H
 
-#define GLFW_INCLUDE_VULKAN
-#include <GLFW/glfw3.h>
 #include "../VKConfig.h"
 #include "../../Collections/Log/Log.h"
 
@@ -38,7 +36,7 @@ namespace Core {
             std::map <uint32_t, SceneInfo> m_sceneInfoPool;
 
             Log::Record* m_VKSceneMgrLog;
-            const uint32_t m_instanceId = g_collectionsId++;
+            const uint32_t m_instanceId = g_collectionsSettings.instanceId++;
 
             void deleteSceneInfo (uint32_t sceneInfoId) {
                 if (m_sceneInfoPool.find (sceneInfoId) != m_sceneInfoPool.end()) {
@@ -54,7 +52,7 @@ namespace Core {
             
         public:
             VKSceneMgr (void) {
-                m_VKSceneMgrLog = LOG_INIT (m_instanceId, g_pathSettings.logSaveDir);
+                m_VKSceneMgrLog = LOG_INIT (m_instanceId, g_collectionsSettings.logSaveDirPath);
                 LOG_ADD_CONFIG (m_instanceId, Log::INFO,  Log::TO_FILE_IMMEDIATE);
                 LOG_ADD_CONFIG (m_instanceId, Log::ERROR, Log::TO_FILE_IMMEDIATE | Log::TO_CONSOLE);
             }

@@ -9,7 +9,7 @@ namespace Core {
     class VKSwapChainImage: protected virtual VKImageMgr {
         private:
             Log::Record* m_VKSwapChainImageLog;
-            const uint32_t m_instanceId = g_collectionsId++; 
+            const uint32_t m_instanceId = g_collectionsSettings.instanceId++; 
 
             /* If the swap chain adequate conditions were met (see physical device support function) then the support is 
              * definitely sufficient, but there may still be many different modes of varying optimality. We'll need to 
@@ -131,7 +131,7 @@ namespace Core {
 
         public:
             VKSwapChainImage (void) {
-                m_VKSwapChainImageLog = LOG_INIT (m_instanceId, g_pathSettings.logSaveDir);
+                m_VKSwapChainImageLog = LOG_INIT (m_instanceId, g_collectionsSettings.logSaveDirPath);
                 LOG_ADD_CONFIG (m_instanceId, Log::ERROR, Log::TO_FILE_IMMEDIATE | Log::TO_CONSOLE); 
             }
 

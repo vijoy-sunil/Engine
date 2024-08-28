@@ -39,7 +39,7 @@ namespace Core {
             std::map <e_bufferType, std::vector <BufferInfo>> m_bufferInfoPool;
 
             Log::Record* m_VKBufferMgrLog;
-            const uint32_t m_instanceId = g_collectionsId++;
+            const uint32_t m_instanceId = g_collectionsSettings.instanceId++;
 
             void deleteBufferInfo (BufferInfo* bufferInfo, e_bufferType type) {
                 if (m_bufferInfoPool.find (type) != m_bufferInfoPool.end()) {
@@ -60,7 +60,7 @@ namespace Core {
 
         public:
             VKBufferMgr (void) {
-                m_VKBufferMgrLog = LOG_INIT (m_instanceId, g_pathSettings.logSaveDir);
+                m_VKBufferMgrLog = LOG_INIT (m_instanceId, g_collectionsSettings.logSaveDirPath);
                 LOG_ADD_CONFIG (m_instanceId, Log::INFO,  Log::TO_FILE_IMMEDIATE);
                 LOG_ADD_CONFIG (m_instanceId, Log::ERROR, Log::TO_FILE_IMMEDIATE | Log::TO_CONSOLE); 
             }

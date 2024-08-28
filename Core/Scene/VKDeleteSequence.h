@@ -33,11 +33,11 @@ namespace Core {
                             protected virtual VKSyncObject {
         private:
             Log::Record* m_VKDeleteSequenceLog;
-            const uint32_t m_instanceId = g_collectionsId++;
+            const uint32_t m_instanceId = g_collectionsSettings.instanceId++;
 
         public:
             VKDeleteSequence (void) {
-                m_VKDeleteSequenceLog = LOG_INIT (m_instanceId, g_pathSettings.logSaveDir);
+                m_VKDeleteSequenceLog = LOG_INIT (m_instanceId, g_collectionsSettings.logSaveDirPath);
                 LOG_ADD_CONFIG (m_instanceId, Log::INFO, Log::TO_FILE_IMMEDIATE);
             }
 
@@ -60,7 +60,7 @@ namespace Core {
                  * | DESTROY DRAW OPS - FENCE AND SEMAPHORES                                                        |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                for (uint32_t i = 0; i < g_maxFramesInFlight; i++) {
+                for (uint32_t i = 0; i < g_coreSettings.maxFramesInFlight; i++) {
                     uint32_t renderDoneSemaphoreInfoId = sceneInfo->id.renderDoneSemaphoreInfoBase + i; 
                     cleanUpSemaphore (renderDoneSemaphoreInfoId, deviceInfoId, SEM_RENDER_DONE);
                     LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Draw ops semaphore " 
@@ -68,7 +68,7 @@ namespace Core {
                                                      << std::endl;
                 }
 
-                for (uint32_t i = 0; i < g_maxFramesInFlight; i++) {
+                for (uint32_t i = 0; i < g_coreSettings.maxFramesInFlight; i++) {
                     uint32_t imageAvailableSemaphoreInfoId = sceneInfo->id.imageAvailableSemaphoreInfoBase + i;
                     cleanUpSemaphore (imageAvailableSemaphoreInfoId, deviceInfoId, SEM_IMAGE_AVAILABLE);
                     LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Draw ops semaphore " 
@@ -76,7 +76,7 @@ namespace Core {
                                                      << std::endl;
                 }
 
-                for (uint32_t i = 0; i < g_maxFramesInFlight; i++) {
+                for (uint32_t i = 0; i < g_coreSettings.maxFramesInFlight; i++) {
                     uint32_t inFlightFenceInfoId = sceneInfo->id.inFlightFenceInfoBase + i;
                     cleanUpFence (inFlightFenceInfoId, deviceInfoId, FEN_IN_FLIGHT);
                     LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Draw ops fence " 
@@ -137,7 +137,7 @@ namespace Core {
                  * | DESTROY STORAGE BUFFERS                                                                        |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                for (uint32_t i = 0; i < g_maxFramesInFlight; i++) {
+                for (uint32_t i = 0; i < g_coreSettings.maxFramesInFlight; i++) {
                     uint32_t storageBufferInfoId = sceneInfo->id.storageBufferInfoBase + i; 
                     VKBufferMgr::cleanUp (storageBufferInfoId, deviceInfoId, STORAGE_BUFFER);
                     LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Storage buffer " 

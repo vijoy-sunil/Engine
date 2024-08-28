@@ -9,11 +9,11 @@ namespace Core {
     class VKVertexBuffer: protected virtual VKBufferMgr {
         private:
             Log::Record* m_VKVertexBufferLog;
-            const uint32_t m_instanceId = g_collectionsId++; 
+            const uint32_t m_instanceId = g_collectionsSettings.instanceId++; 
 
         public:
             VKVertexBuffer (void) {
-                m_VKVertexBufferLog = LOG_INIT (m_instanceId, g_pathSettings.logSaveDir);
+                m_VKVertexBufferLog = LOG_INIT (m_instanceId, g_collectionsSettings.logSaveDirPath);
             }
 
             ~VKVertexBuffer (void) {

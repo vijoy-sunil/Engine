@@ -42,7 +42,7 @@ namespace Core {
             std::map <uint32_t, CameraInfo> m_cameraInfoPool;
 
             Log::Record* m_VKCameraMgrLog;
-            const uint32_t m_instanceId = g_collectionsId++;
+            const uint32_t m_instanceId = g_collectionsSettings.instanceId++;
 
             void deleteCameraInfo (uint32_t cameraInfoId) {
                 if (m_cameraInfoPool.find (cameraInfoId) != m_cameraInfoPool.end()) {
@@ -58,7 +58,7 @@ namespace Core {
             
         public:
             VKCameraMgr (void) {
-                m_VKCameraMgrLog = LOG_INIT (m_instanceId, g_pathSettings.logSaveDir);
+                m_VKCameraMgrLog = LOG_INIT (m_instanceId, g_collectionsSettings.logSaveDirPath);
                 LOG_ADD_CONFIG (m_instanceId, Log::INFO,  Log::TO_FILE_IMMEDIATE);
                 LOG_ADD_CONFIG (m_instanceId, Log::ERROR, Log::TO_FILE_IMMEDIATE | Log::TO_CONSOLE); 
             }

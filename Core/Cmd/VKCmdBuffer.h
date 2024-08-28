@@ -9,11 +9,11 @@ namespace Core {
     class VKCmdBuffer: protected virtual VKDeviceMgr {
         private:
             Log::Record* m_VKCmdBufferLog;
-            const uint32_t m_instanceId = g_collectionsId++;
+            const uint32_t m_instanceId = g_collectionsSettings.instanceId++;
 
         public:
             VKCmdBuffer (void) {
-                m_VKCmdBufferLog = LOG_INIT (m_instanceId, g_pathSettings.logSaveDir);
+                m_VKCmdBufferLog = LOG_INIT (m_instanceId, g_collectionsSettings.logSaveDirPath);
                 LOG_ADD_CONFIG (m_instanceId, Log::ERROR, Log::TO_FILE_IMMEDIATE | Log::TO_CONSOLE);
             }
 
@@ -32,7 +32,7 @@ namespace Core {
              * that is used to store the buffers and command buffers are allocated from them
             */
             VkCommandPool getCommandPool (uint32_t deviceInfoId, 
-                                          VkCommandPoolCreateFlags flags, 
+                                          VkCommandPoolCreateFlags poolCreateFlags, 
                                           uint32_t queueFamilyIndex) {
 
                 auto deviceInfo = getDeviceInfo (deviceInfoId);
@@ -48,7 +48,7 @@ namespace Core {
                  * to be individually reset to the initial state; either by calling vkResetCommandBuffer, or via the 
                  * implicit reset when calling vkBeginCommandBuffer
                 */
-                createInfo.flags = flags;
+                createInfo.flags = poolCreateFlags;
                 /* Command buffers are executed by submitting them on one of the device queues. Each command pool can 
                  * only allocate command buffers that are submitted on a single type of queue
                 */
@@ -104,7 +104,7 @@ namespace Core {
             }
 
             void beginRecording (VkCommandBuffer commandBuffer,
-                                 VkCommandBufferUsageFlags flags,
+                                 VkCommandBufferUsageFlags bufferUsageFlags,
                                  const VkCommandBufferInheritanceInfo* inheritanceInfo) {
                 /* We always begin recording a command buffer by calling vkBeginCommandBuffer with a small 
                  * VkCommandBufferBeginInfo structure as argument that specifies some details about the usage of this 
@@ -126,7 +126,7 @@ namespace Core {
                  * to any queue of the same queue family while it is in the pending state, and recorded into multiple 
                  * primary command buffers
                 */
-                beginInfo.flags = flags;
+                beginInfo.flags = bufferUsageFlags;
                 /* The pInheritanceInfo parameter is only relevant for secondary command buffers. It specifies which 
                  * state to inherit from the calling primary command buffers
                 */

@@ -11,11 +11,11 @@ namespace Core {
                          protected virtual VKImageMgr {
         private:
             Log::Record* m_VKMultiSampleLog;
-            const uint32_t m_instanceId = g_collectionsId++;
+            const uint32_t m_instanceId = g_collectionsSettings.instanceId++;
             
         public:
             VKMultiSample (void) {
-                m_VKMultiSampleLog = LOG_INIT (m_instanceId, g_pathSettings.logSaveDir);
+                m_VKMultiSampleLog = LOG_INIT (m_instanceId, g_collectionsSettings.logSaveDirPath);
             }
 
             ~VKMultiSample (void) { 

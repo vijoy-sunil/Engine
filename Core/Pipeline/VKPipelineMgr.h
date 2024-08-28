@@ -80,7 +80,7 @@ namespace Core {
             std::map <uint32_t, PipelineInfo> m_pipelineInfoPool;
 
             Log::Record* m_VKPipelineMgrLog;
-            const uint32_t m_instanceId = g_collectionsId++;
+            const uint32_t m_instanceId = g_collectionsSettings.instanceId++;
             
             void deletePipelineInfo (uint32_t pipelineInfoId) {
                 if (m_pipelineInfoPool.find (pipelineInfoId) != m_pipelineInfoPool.end()) {
@@ -89,14 +89,14 @@ namespace Core {
                 }
 
                 LOG_ERROR (m_VKPipelineMgrLog) << "Failed to delete pipeline info "
-                                               << "[" << pipelineInfoId << "]"          
+                                               << "[" << pipelineInfoId << "]"
                                                << std::endl;
-                throw std::runtime_error ("Failed to delete pipeline info");   
+                throw std::runtime_error ("Failed to delete pipeline info");
             }
 
         public:
             VKPipelineMgr (void) {
-                m_VKPipelineMgrLog = LOG_INIT (m_instanceId, g_pathSettings.logSaveDir); 
+                m_VKPipelineMgrLog = LOG_INIT (m_instanceId, g_collectionsSettings.logSaveDirPath); 
                 LOG_ADD_CONFIG (m_instanceId, Log::INFO,  Log::TO_FILE_IMMEDIATE);
                 LOG_ADD_CONFIG (m_instanceId, Log::ERROR, Log::TO_FILE_IMMEDIATE | Log::TO_CONSOLE); 
             }
@@ -123,7 +123,8 @@ namespace Core {
                                          uint32_t deviceInfoId,
                                          uint32_t subPassIndex,
                                          int32_t basePipelineIndex,
-                                         VkPipeline basePipeline) {
+                                         VkPipeline basePipeline,
+                                         VkPipelineCreateFlags pipelineCreateFlags) {
 
                 auto renderPassInfo = getRenderPassInfo (renderPassInfoId);
                 auto pipelineInfo   = getPipelineInfo   (pipelineInfoId);
@@ -137,7 +138,7 @@ namespace Core {
                 VkGraphicsPipelineCreateInfo createInfo;
                 createInfo.sType               = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
                 createInfo.pNext               = VK_NULL_HANDLE;
-                createInfo.flags               = 0;
+                createInfo.flags               = pipelineCreateFlags;
                 createInfo.pVertexInputState   = &pipelineInfo->state.vertexInput;
                 createInfo.pInputAssemblyState = &pipelineInfo->state.inputAssembly; 
                 createInfo.pTessellationState  = VK_NULL_HANDLE;

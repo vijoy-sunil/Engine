@@ -20,7 +20,7 @@ namespace Core {
             std::map <uint32_t, RenderPassInfo> m_renderPassInfoPool;
 
             Log::Record* m_VKRenderPassMgrLog;
-            const uint32_t m_instanceId = g_collectionsId++;
+            const uint32_t m_instanceId = g_collectionsSettings.instanceId++;
             
             void deleteRenderPassInfo (uint32_t renderPassInfoId) {
                 if (m_renderPassInfoPool.find (renderPassInfoId) != m_renderPassInfoPool.end()) {
@@ -36,7 +36,7 @@ namespace Core {
 
         public:
             VKRenderPassMgr (void) {
-                m_VKRenderPassMgrLog = LOG_INIT (m_instanceId, g_pathSettings.logSaveDir);
+                m_VKRenderPassMgrLog = LOG_INIT (m_instanceId, g_collectionsSettings.logSaveDirPath);
                 LOG_ADD_CONFIG (m_instanceId, Log::INFO,  Log::TO_FILE_IMMEDIATE);
                 LOG_ADD_CONFIG (m_instanceId, Log::ERROR, Log::TO_FILE_IMMEDIATE | Log::TO_CONSOLE); 
             }

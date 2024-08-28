@@ -17,11 +17,11 @@ namespace Core {
                       protected virtual VKSceneMgr {
         private:
             Log::Record* m_VKResizingLog;
-            const uint32_t m_instanceId = g_collectionsId++;
+            const uint32_t m_instanceId = g_collectionsSettings.instanceId++;
 
         public:
             VKResizing (void) {
-                m_VKResizingLog = LOG_INIT (m_instanceId, g_pathSettings.logSaveDir);
+                m_VKResizingLog = LOG_INIT (m_instanceId, g_collectionsSettings.logSaveDirPath);
                 LOG_ADD_CONFIG (m_instanceId, Log::INFO, Log::TO_FILE_IMMEDIATE);                
             }
 

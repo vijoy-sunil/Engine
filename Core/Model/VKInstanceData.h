@@ -10,7 +10,7 @@ namespace Core {
     class VKInstanceData: protected virtual VKModelMgr {
         private:
             Log::Record* m_VKInstanceDataLog;
-            const uint32_t m_instanceId = g_collectionsId++; 
+            const uint32_t m_instanceId = g_collectionsSettings.instanceId++; 
 
             void createModelMatrix (uint32_t modelInfoId,
                                     uint32_t modelInstanceId,
@@ -60,7 +60,7 @@ namespace Core {
 
         public:
             VKInstanceData (void) {
-                m_VKInstanceDataLog = LOG_INIT (m_instanceId, g_pathSettings.logSaveDir);
+                m_VKInstanceDataLog = LOG_INIT (m_instanceId, g_collectionsSettings.logSaveDirPath);
                 LOG_ADD_CONFIG (m_instanceId, Log::INFO,    Log::TO_FILE_IMMEDIATE);
                 LOG_ADD_CONFIG (m_instanceId, Log::WARNING, Log::TO_FILE_IMMEDIATE | Log::TO_CONSOLE);
                 LOG_ADD_CONFIG (m_instanceId, Log::ERROR,   Log::TO_FILE_IMMEDIATE | Log::TO_CONSOLE);

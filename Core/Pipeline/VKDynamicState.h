@@ -9,11 +9,11 @@ namespace Core {
     class VKDynamicState: protected virtual VKPipelineMgr {
         private:
             Log::Record* m_VKDynamicStateLog;
-            const uint32_t m_instanceId = g_collectionsId++;
+            const uint32_t m_instanceId = g_collectionsSettings.instanceId++;
             
         public:
             VKDynamicState (void) {
-                m_VKDynamicStateLog = LOG_INIT (m_instanceId, g_pathSettings.logSaveDir);
+                m_VKDynamicStateLog = LOG_INIT (m_instanceId, g_collectionsSettings.logSaveDirPath);
             }
 
             ~VKDynamicState (void) { 

@@ -1,8 +1,6 @@
 #ifndef VK_VERTEX_DATA_H
 #define VK_VERTEX_DATA_H
 
-#define GLFW_INCLUDE_VULKAN
-#include <GLFW/glfw3.h>
 /* GLM library provides us with linear algebra related types like vectors and matrices. The hash functions are defined in
  * the gtx folder, which means that it is technically still an experimental extension to GLM. Therefore you need to define 
  * GLM_ENABLE_EXPERIMENTAL to use it
@@ -64,11 +62,11 @@ namespace Core {
     class VKVertexData {
         private:
             Log::Record* m_VKVertexDataLog;
-            const uint32_t m_instanceId = g_collectionsId++;          
+            const uint32_t m_instanceId = g_collectionsSettings.instanceId++;
 
         public:
             VKVertexData (void) {
-                m_VKVertexDataLog = LOG_INIT (m_instanceId, g_pathSettings.logSaveDir);
+                m_VKVertexDataLog = LOG_INIT (m_instanceId, g_collectionsSettings.logSaveDirPath);
             }
 
             ~VKVertexData (void) {

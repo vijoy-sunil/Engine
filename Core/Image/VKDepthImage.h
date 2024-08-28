@@ -39,11 +39,11 @@ namespace Core {
     class VKDepthImage: protected virtual VKImageMgr {
         private:
             Log::Record* m_VKDepthImageLog;
-            const uint32_t m_instanceId = g_collectionsId++; 
+            const uint32_t m_instanceId = g_collectionsSettings.instanceId++; 
 
         public:
             VKDepthImage (void) {
-                m_VKDepthImageLog = LOG_INIT (m_instanceId, g_pathSettings.logSaveDir);
+                m_VKDepthImageLog = LOG_INIT (m_instanceId, g_collectionsSettings.logSaveDirPath);
             }
 
             ~VKDepthImage (void) {

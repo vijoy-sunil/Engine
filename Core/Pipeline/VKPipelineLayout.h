@@ -9,11 +9,11 @@ namespace Core {
     class VKPipelineLayout: protected virtual VKPipelineMgr {
         private:
             Log::Record* m_VKPipelineLayoutLog;
-            const uint32_t m_instanceId = g_collectionsId++;
+            const uint32_t m_instanceId = g_collectionsSettings.instanceId++;
             
         public:
             VKPipelineLayout (void) {
-                m_VKPipelineLayoutLog = LOG_INIT (m_instanceId, g_pathSettings.logSaveDir);
+                m_VKPipelineLayoutLog = LOG_INIT (m_instanceId, g_collectionsSettings.logSaveDirPath);
                 LOG_ADD_CONFIG (m_instanceId, Log::ERROR, Log::TO_FILE_IMMEDIATE | Log::TO_CONSOLE); 
             }
 

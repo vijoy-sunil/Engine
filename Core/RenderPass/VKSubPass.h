@@ -53,11 +53,11 @@ namespace Core {
     class VKSubPass: protected virtual VKRenderPassMgr {
         private:
             Log::Record* m_VKSubPassLog;
-            const uint32_t m_instanceId = g_collectionsId++;
+            const uint32_t m_instanceId = g_collectionsSettings.instanceId++;
             
         public:
             VKSubPass (void) {
-                m_VKSubPassLog = LOG_INIT (m_instanceId, g_pathSettings.logSaveDir);
+                m_VKSubPassLog = LOG_INIT (m_instanceId, g_collectionsSettings.logSaveDirPath);
             }
 
             ~VKSubPass (void) { 

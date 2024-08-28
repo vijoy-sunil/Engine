@@ -9,7 +9,7 @@ namespace Core {
     class VKPhyDevice: protected VKQueue {
         private:
             Log::Record* m_VKPhyDeviceLog;
-            const uint32_t m_instanceId = g_collectionsId++;
+            const uint32_t m_instanceId = g_collectionsSettings.instanceId++;
 
             bool isDeviceExtensionsSupported (VkPhysicalDevice phyDevice, 
                                               const std::vector <const char*>& deviceExtensions) {
@@ -117,9 +117,9 @@ namespace Core {
 
         public:
             VKPhyDevice (void) {
-                m_VKPhyDeviceLog = LOG_INIT (m_instanceId, g_pathSettings.logSaveDir); 
+                m_VKPhyDeviceLog = LOG_INIT (m_instanceId, g_collectionsSettings.logSaveDirPath);
                 LOG_ADD_CONFIG (m_instanceId, Log::INFO,  Log::TO_FILE_IMMEDIATE);
-                LOG_ADD_CONFIG (m_instanceId, Log::ERROR, Log::TO_FILE_IMMEDIATE | Log::TO_CONSOLE);               
+                LOG_ADD_CONFIG (m_instanceId, Log::ERROR, Log::TO_FILE_IMMEDIATE | Log::TO_CONSOLE);
             }
 
             ~VKPhyDevice (void) {

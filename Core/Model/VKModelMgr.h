@@ -46,7 +46,7 @@ namespace Core {
             std::map <std::string, uint32_t> m_textureImagePool;
             
             Log::Record* m_VKModelMgrLog;
-            const uint32_t m_instanceId = g_collectionsId++; 
+            const uint32_t m_instanceId = g_collectionsSettings.instanceId++; 
 
             void deleteModelInfo (uint32_t modelInfoId) {
                 if (m_modelInfoPool.find (modelInfoId) != m_modelInfoPool.end()) {
@@ -100,7 +100,7 @@ namespace Core {
 
         public:
             VKModelMgr (void) {
-                m_VKModelMgrLog = LOG_INIT (m_instanceId, g_pathSettings.logSaveDir);
+                m_VKModelMgrLog = LOG_INIT (m_instanceId, g_collectionsSettings.logSaveDirPath);
                 LOG_ADD_CONFIG (m_instanceId, Log::INFO,    Log::TO_FILE_IMMEDIATE);
                 LOG_ADD_CONFIG (m_instanceId, Log::WARNING, Log::TO_FILE_IMMEDIATE | Log::TO_CONSOLE);
                 LOG_ADD_CONFIG (m_instanceId, Log::ERROR,   Log::TO_FILE_IMMEDIATE | Log::TO_CONSOLE);
@@ -123,18 +123,18 @@ namespace Core {
                 }
 
                 ModelInfo info{};
-                info.meta.parsedDataLogInstanceId = g_collectionsId++;
+                info.meta.parsedDataLogInstanceId = g_collectionsSettings.instanceId++;
                 info.path.model                   = modelPath;
                 info.path.mtlFileDir              = mtlFileDirPath;
                 /* Add default diffuse texture as the fist entry in the group of textures. This way, faces with no 
                  * texture can sample from this default texture
                 */
-                info.path.diffuseTextureImages.push_back (g_pathSettings.defaultDiffuseTexture);
+                info.path.diffuseTextureImages.push_back (g_coreSettings.defaultDiffuseTexturePath);
                 m_modelInfoPool[modelInfoId]      = info;
                 /* Config log for parsed data
                 */
                 std::string nameExtension = "_PD_" + std::to_string (modelInfoId);
-                LOG_INIT       (info.meta.parsedDataLogInstanceId, g_pathSettings.logSaveDir);
+                LOG_INIT       (info.meta.parsedDataLogInstanceId, g_collectionsSettings.logSaveDirPath);
                 LOG_ADD_CONFIG (info.meta.parsedDataLogInstanceId, 
                                 Log::INFO, 
                                 Log::TO_FILE_IMMEDIATE, 

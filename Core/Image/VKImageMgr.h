@@ -50,7 +50,7 @@ namespace Core {
             std::map <e_imageType, std::vector <ImageInfo>> m_imageInfoPool;
 
             Log::Record* m_VKImageMgrLog;
-            const uint32_t m_instanceId = g_collectionsId++;
+            const uint32_t m_instanceId = g_collectionsSettings.instanceId++;
 
             /* Helper function that tells us if the format contains a stencil component
             */
@@ -77,7 +77,7 @@ namespace Core {
 
         public:
             VKImageMgr (void) {
-                m_VKImageMgrLog = LOG_INIT (m_instanceId, g_pathSettings.logSaveDir);
+                m_VKImageMgrLog = LOG_INIT (m_instanceId, g_collectionsSettings.logSaveDirPath);
                 LOG_ADD_CONFIG (m_instanceId, Log::INFO,  Log::TO_FILE_IMMEDIATE);
                 LOG_ADD_CONFIG (m_instanceId, Log::ERROR, Log::TO_FILE_IMMEDIATE | Log::TO_CONSOLE); 
                 /* Create a type void image, since the image info struct is private, there may be cases where we need

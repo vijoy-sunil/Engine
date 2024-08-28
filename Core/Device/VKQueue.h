@@ -11,7 +11,7 @@ namespace Core {
     class VKQueue: protected virtual VKDeviceMgr {
         private:
             Log::Record* m_VKQueueLog;
-            const uint32_t m_instanceId = g_collectionsId++;
+            const uint32_t m_instanceId = g_collectionsSettings.instanceId++;
 
             bool isQueueFamilyIndicesComplete (uint32_t deviceInfoId) {
                 auto deviceInfo = getDeviceInfo (deviceInfoId);
@@ -22,7 +22,7 @@ namespace Core {
 
         public:
             VKQueue (void) {
-                m_VKQueueLog = LOG_INIT (m_instanceId, g_pathSettings.logSaveDir);
+                m_VKQueueLog = LOG_INIT (m_instanceId, g_collectionsSettings.logSaveDirPath);
                 LOG_ADD_CONFIG (m_instanceId, Log::INFO, Log::TO_FILE_IMMEDIATE);
             }
 
@@ -86,9 +86,9 @@ namespace Core {
                        !deviceInfo->meta.transferFamilyIndex.has_value())
                         deviceInfo->meta.transferFamilyIndex = queueFamilyIndex;
 #else
-                    deviceInfo->meta.graphicsFamilyIndex = 0;
-                    deviceInfo->meta.presentFamilyIndex  = 1;
-                    deviceInfo->meta.transferFamilyIndex = 2;
+                    deviceInfo->meta.graphicsFamilyIndex = g_queueSettings.graphicsFamilyIndex;
+                    deviceInfo->meta.presentFamilyIndex  = g_queueSettings.presentFamilyIndex;
+                    deviceInfo->meta.transferFamilyIndex = g_queueSettings.transferFamilyIndex;
 #endif  // ENABLE_AUTO_PICK_QUEUE_FAMILY_INDICES
                     queueFamilyIndex++;
                 }

@@ -11,11 +11,11 @@ namespace Core {
                        protected virtual VKPhyDevice {
         private:
             Log::Record* m_VKLogDeviceLog;
-            const uint32_t m_instanceId = g_collectionsId++;
+            const uint32_t m_instanceId = g_collectionsSettings.instanceId++;
 
         public:
             VKLogDevice (void) {
-                m_VKLogDeviceLog = LOG_INIT (m_instanceId, g_pathSettings.logSaveDir);
+                m_VKLogDeviceLog = LOG_INIT (m_instanceId, g_collectionsSettings.logSaveDirPath);
                 LOG_ADD_CONFIG (m_instanceId, Log::WARNING, Log::TO_FILE_IMMEDIATE | Log::TO_CONSOLE);
                 LOG_ADD_CONFIG (m_instanceId, Log::ERROR,   Log::TO_FILE_IMMEDIATE | Log::TO_CONSOLE);              
             }

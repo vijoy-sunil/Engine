@@ -72,19 +72,12 @@ namespace Core {
                           protected virtual VKDescriptor,
                           protected virtual VKSyncObject {
         private:
-            /* Set upper bound lod for the texture sampler. It is recommended that to sample from the entire mipmap chain, 
-             * set min lod to 0.0, and set max lod to a level of detail high enough that the computed level of detail will 
-             * never be clamped. Assuming the standard approach of halving the dimensions of a texture for each miplevel, 
-             * a max lod of 13 would be appropriate for a 4096x4096 source texture
-            */
-            const float m_maxLod = 13.0f;
-
             Log::Record* m_VKInitSequenceLog;
-            const uint32_t m_instanceId = g_collectionsId++;
+            const uint32_t m_instanceId = g_collectionsSettings.instanceId++;
 
         public:
             VKInitSequence (void) {
-                m_VKInitSequenceLog = LOG_INIT (m_instanceId, g_pathSettings.logSaveDir);
+                m_VKInitSequenceLog = LOG_INIT (m_instanceId, g_collectionsSettings.logSaveDirPath);
                 LOG_ADD_CONFIG (m_instanceId, Log::INFO,  Log::TO_FILE_IMMEDIATE);
                 LOG_ADD_CONFIG (m_instanceId, Log::ERROR, Log::TO_FILE_IMMEDIATE | Log::TO_CONSOLE); 
             }
@@ -293,8 +286,8 @@ namespace Core {
                  * from it. Thus, we need to have as many buffers as we have frames in flight, and write to a buffer that
                  * is not currently being read by the GPU
                 */
-                for (uint32_t i = 0; i < g_maxFramesInFlight; i++) { 
-                    uint32_t storageBufferInfoId = sceneInfo->id.storageBufferInfoBase + i;    
+                for (uint32_t i = 0; i < g_coreSettings.maxFramesInFlight; i++) { 
+                    uint32_t storageBufferInfoId = sceneInfo->id.storageBufferInfoBase + i;
                     createStorageBuffer (storageBufferInfoId,
                                          deviceInfoId,
                                          sceneInfo->meta.totalInstancesCount * sizeof (InstanceDataSSBO));
@@ -411,7 +404,9 @@ namespace Core {
                  * | CONFIG PIPELINE STATE - INPUT ASSEMBLY                                                         |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                createInputAssemblyState (pipelineInfoId, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, VK_FALSE);
+                createInputAssemblyState (pipelineInfoId, 
+                                          g_pipelineSettings.inputAssembly.topology, 
+                                          g_pipelineSettings.inputAssembly.restartEnable);
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG PIPELINE STATE - SHADERS                                                                |
                  * |------------------------------------------------------------------------------------------------|
@@ -419,12 +414,14 @@ namespace Core {
                 auto vertexShaderModule   = createShaderStage (pipelineInfoId, 
                                                                deviceInfoId,
                                                                VK_SHADER_STAGE_VERTEX_BIT, 
-                                                               g_pathSettings.vertexShaderBinary, "main");
+                                                               g_pipelineSettings.shaderStage.vertexShaderBinaryPath, 
+                                                               "main");
 
                 auto fragmentShaderModule = createShaderStage (pipelineInfoId, 
                                                                deviceInfoId,
                                                                VK_SHADER_STAGE_FRAGMENT_BIT, 
-                                                               g_pathSettings.fragmentShaderBinary, "main");
+                                                               g_pipelineSettings.shaderStage.fragmentShaderBinaryPath,
+                                                               "main");
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG PIPELINE STATE - VIEW PORT                                                              |
                  * |------------------------------------------------------------------------------------------------|
@@ -435,40 +432,46 @@ namespace Core {
                  * |------------------------------------------------------------------------------------------------|
                 */
                 createRasterizationState (pipelineInfoId, 
-                                          VK_POLYGON_MODE_FILL,
-                                          1.0f,
-                                          VK_CULL_MODE_NONE,
-                                          VK_FRONT_FACE_CLOCKWISE);
+                                          g_pipelineSettings.rasterization.polygonMode,
+                                          g_pipelineSettings.rasterization.lineWidth,
+                                          g_pipelineSettings.rasterization.cullMode,
+                                          g_pipelineSettings.rasterization.frontFace);
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG PIPELINE STATE - MULTI SAMPLE                                                           |
                  * |------------------------------------------------------------------------------------------------|
                 */
                 createMultiSampleState (pipelineInfoId,
                                         sceneInfo->id.multiSampleImageInfo,
-                                        VK_TRUE, 0.2f);
+                                        g_pipelineSettings.multiSample.sampleShadingEnable, 
+                                        g_pipelineSettings.multiSample.minSampleShading);
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG PIPELINE STATE - DEPTH STENCIL                                                          |
                  * |------------------------------------------------------------------------------------------------|
                 */
                 createDepthStencilState (pipelineInfoId,
-                                         VK_TRUE,
-                                         VK_TRUE,
-                                         VK_FALSE, 0.0f, 1.0f,
-                                         VK_FALSE, 
+                                         g_pipelineSettings.depthStencil.depthTestEnable,
+                                         g_pipelineSettings.depthStencil.depthWriteEnable,
+                                         g_pipelineSettings.depthStencil.depthBoundsTestEnable, 
+                                         g_pipelineSettings.depthStencil.minDepthBounds, 
+                                         g_pipelineSettings.depthStencil.maxDepthBounds,
+                                         g_pipelineSettings.depthStencil.stencilTestEnable, 
                                          VK_NULL_HANDLE, VK_NULL_HANDLE);
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG PIPELINE STATE - COLOR BLEND                                                            |
                  * |------------------------------------------------------------------------------------------------|
                 */
                 auto colorBlendAttachments = std::vector {
-                    getColorBlendAttachment (VK_FALSE)
+                    getColorBlendAttachment (g_pipelineSettings.colorBlend.blendEnable)
                 };
                 auto blendConstants = std::vector {
-                    0.0f, 0.0f, 0.0f, 0.0f
+                    g_pipelineSettings.colorBlend.blendConstantR,
+                    g_pipelineSettings.colorBlend.blendConstantG,
+                    g_pipelineSettings.colorBlend.blendConstantB,
+                    g_pipelineSettings.colorBlend.blendConstantA 
                 };
                 createColorBlendState (pipelineInfoId,
-                                       VK_FALSE,
-                                       VK_LOGIC_OP_COPY,
+                                       g_pipelineSettings.colorBlend.logicOpEnable,
+                                       g_pipelineSettings.colorBlend.logicOp,
                                        blendConstants,
                                        colorBlendAttachments);
                 /* |------------------------------------------------------------------------------------------------|
@@ -533,10 +536,14 @@ namespace Core {
                  * it will not index into the unbound slots in the array
                 */
                 auto bindingFlags = std::vector <VkDescriptorBindingFlags> {
-                    0,
-                    0
+                    g_pipelineSettings.descriptorSetLayout.bindingFlagsSSBO,
+                    g_pipelineSettings.descriptorSetLayout.bindingFlagsCIS
                 };
-                createDescriptorSetLayout (pipelineInfoId, deviceInfoId, layoutBindings, bindingFlags, 0);
+                createDescriptorSetLayout (pipelineInfoId, 
+                                           deviceInfoId, 
+                                           layoutBindings, 
+                                           bindingFlags, 
+                                           g_pipelineSettings.descriptorSetLayout.layoutCreateFlags);
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG PUSH CONSTANT RANGES                                                                    |
                  * |------------------------------------------------------------------------------------------------|
@@ -558,7 +565,8 @@ namespace Core {
                                         renderPassInfoId, 
                                         deviceInfoId, 
                                         0, -1, 
-                                        VK_NULL_HANDLE);
+                                        VK_NULL_HANDLE, 
+                                        g_pipelineSettings.pipelineCreateFlags);
 
                 LOG_INFO (m_VKInitSequenceLog) << "[OK] Pipeline " 
                                                << "[" << pipelineInfoId << "]"
@@ -591,11 +599,13 @@ namespace Core {
                 */
                 createTextureSampler (sceneInfoId, 
                                       deviceInfoId,
-                                      VK_FILTER_LINEAR,
-                                      VK_SAMPLER_ADDRESS_MODE_REPEAT,
-                                      VK_TRUE,
-                                      VK_SAMPLER_MIPMAP_MODE_LINEAR,
-                                      0.0f, m_maxLod);
+                                      g_textureSamplerSettings.filter,
+                                      g_textureSamplerSettings.addressMode,
+                                      g_textureSamplerSettings.anisotropyEnable,
+                                      g_textureSamplerSettings.mipMapMode,
+                                      g_textureSamplerSettings.mipLodBias, 
+                                      g_textureSamplerSettings.minLod, 
+                                      g_textureSamplerSettings.maxLod);
                 LOG_INFO (m_VKInitSequenceLog) << "[OK] Texture sampler " 
                                                << "[" << sceneInfoId << "]"
                                                << std::endl;  
@@ -604,16 +614,16 @@ namespace Core {
                  * |------------------------------------------------------------------------------------------------|
                 */
                 auto poolSizes = std::vector {
-                    getPoolSize (VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, g_maxFramesInFlight),
+                    getPoolSize (VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, g_coreSettings.maxFramesInFlight),
 
                     getPoolSize (VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, static_cast <uint32_t> 
-                                (getTextureImagePool().size()) * g_maxFramesInFlight)
+                                (getTextureImagePool().size()) * g_coreSettings.maxFramesInFlight)
                 };
                 createDescriptorPool (sceneInfoId, 
                                       deviceInfoId,
                                       poolSizes, 
-                                      g_maxFramesInFlight, 
-                                      0);
+                                      g_coreSettings.maxFramesInFlight, 
+                                      g_descriptorSettings.poolCreateFlags);
                 LOG_INFO (m_VKInitSequenceLog) << "[OK] Descriptor pool " 
                                                << "[" << sceneInfoId << "]"
                                                << std::endl;  
@@ -626,12 +636,12 @@ namespace Core {
                                       pipelineInfoId, 
                                       descriptorSetLayoutId, 
                                       deviceInfoId,
-                                      g_maxFramesInFlight);
+                                      g_coreSettings.maxFramesInFlight);
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG DESCRIPTOR SETS UPDATE                                                                  |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                for (uint32_t i = 0; i < g_maxFramesInFlight; i++) {
+                for (uint32_t i = 0; i < g_coreSettings.maxFramesInFlight; i++) {
                     uint32_t storageBufferInfoId = sceneInfo->id.storageBufferInfoBase + i; 
                     auto bufferInfo              = getBufferInfo (storageBufferInfoId, STORAGE_BUFFER);
                     auto descriptorBufferInfos   = std::vector {
@@ -924,7 +934,7 @@ namespace Core {
                 auto drawOpsCommandBuffers = std::vector {
                     getCommandBuffers (deviceInfoId,
                                        drawOpsCommandPool, 
-                                       g_maxFramesInFlight, 
+                                       g_coreSettings.maxFramesInFlight, 
                                        VK_COMMAND_BUFFER_LEVEL_PRIMARY)
                 };
 
@@ -939,7 +949,7 @@ namespace Core {
                  * rendering has finished and presentation can happen, but since we can handle multiple frames in flight, 
                  * each frame should have its own set of semaphores and fence
                 */
-                for (uint32_t i = 0; i < g_maxFramesInFlight; i++) {
+                for (uint32_t i = 0; i < g_coreSettings.maxFramesInFlight; i++) {
                     /* On the very first frame, we immediately wait on in flight fence to be signaled. This fence is only 
                      * signaled after a frame has finished rendering, yet since this is the first frame, there are no 
                      * previous frames in which to signal the fence! Thus vkWaitForFences() blocks indefinitely, waiting 

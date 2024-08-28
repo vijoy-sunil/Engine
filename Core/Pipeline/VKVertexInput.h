@@ -9,11 +9,11 @@ namespace Core {
     class VKVertexInput: protected virtual VKPipelineMgr {
         private:
             Log::Record* m_VKVertexInputLog;
-            const uint32_t m_instanceId = g_collectionsId++;
+            const uint32_t m_instanceId = g_collectionsSettings.instanceId++;
             
         public:
             VKVertexInput (void) {
-                m_VKVertexInputLog = LOG_INIT (m_instanceId, g_pathSettings.logSaveDir);
+                m_VKVertexInputLog = LOG_INIT (m_instanceId, g_collectionsSettings.logSaveDirPath);
             }
 
             ~VKVertexInput (void) { 

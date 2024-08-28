@@ -9,11 +9,11 @@ namespace Core {
     class VKFrameBuffer: protected virtual VKRenderPassMgr {
         private:
             Log::Record* m_VKFrameBufferLog;
-            const uint32_t m_instanceId = g_collectionsId++;
+            const uint32_t m_instanceId = g_collectionsSettings.instanceId++;
             
         public:
             VKFrameBuffer (void) {
-                m_VKFrameBufferLog = LOG_INIT (m_instanceId, g_pathSettings.logSaveDir); 
+                m_VKFrameBufferLog = LOG_INIT (m_instanceId, g_collectionsSettings.logSaveDirPath); 
                 LOG_ADD_CONFIG (m_instanceId, Log::ERROR, Log::TO_FILE_IMMEDIATE | Log::TO_CONSOLE); 
             }
 

@@ -13,11 +13,11 @@ namespace Core {
                  protected virtual VKPipelineMgr {
         private:
             Log::Record* m_VKCmdLog;
-            const uint32_t m_instanceId = g_collectionsId++;
+            const uint32_t m_instanceId = g_collectionsSettings.instanceId++;
 
         public:
             VKCmd (void) {
-                m_VKCmdLog = LOG_INIT (m_instanceId, g_pathSettings.logSaveDir);
+                m_VKCmdLog = LOG_INIT (m_instanceId, g_collectionsSettings.logSaveDirPath);
             }
 
             ~VKCmd (void) {
