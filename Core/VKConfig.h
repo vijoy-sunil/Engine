@@ -39,8 +39,8 @@ namespace Core {
         } inputAssembly;
 
         struct ShaderStage {
-            const char* vertexShaderBinaryPath                       = "Build/Bin/vert.spv";
-            const char* fragmentShaderBinaryPath                     = "Build/Bin/frag.spv";
+            const char* vertexShaderBinaryPath                       = "Build/Bin/defaultShaderVert.spv";
+            const char* fragmentShaderBinaryPath                     = "Build/Bin/defaultShaderFrag.spv";
         } shaderStage;
         
         struct Rasterization {
