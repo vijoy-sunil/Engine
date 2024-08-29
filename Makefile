@@ -12,18 +12,27 @@ BINDIR     			:= $(BUILDDIR)/Bin
 OBJDIR     			:= $(BINDIR)/Objs
 LOGDIR				:= $(BUILDDIR)/Log
 SHADERDIR			:= $(SRCDIR)/Shaders
-VERTSHADER			:= $(SHADERDIR)/shader.vert
-FRAGSHADER			:= $(SHADERDIR)/shader.frag
 
-SOURCES   			:= $(wildcard $(SRCDIR)/*.cpp)
-OBJECTS   			:= $(SOURCES:$(SRCDIR)/%.cpp=$(OBJDIR)/%.o)
-DEPENDENCIES 		:= $(OBJECTS:.o=.d)
+SRCS   				:= $(wildcard $(SRCDIR)/*.cpp)
+SRCS_VERTSHADER  	:= $(wildcard $(SHADERDIR)/*.vert)
+SRCS_FRAGSHADER  	:= $(wildcard $(SHADERDIR)/*.frag)
+OBJS   				:= $(SRCS:$(SRCDIR)/%.cpp=$(OBJDIR)/%.o)
+DEPS 				:= $(OBJS:.o=.d)
 
 BIN 				= app
-VERTSHADER_BIN  	= vert
-FRAGSHADER_BIN  	= frag 
 BINFMT				= _exe
-SHADERBINFMT		= .spv
+TARGET 				:= $(addsuffix $(BINFMT),$(BIN))
+# Create shader binary file names from shader source files as such. Let's say the shader source name in XYZ.vert, then 
+# the binary name will be XYZVert.spv
+BINFMT_SHADER      	= .spv
+SFX_VERTSHADER		= vert
+SFX_FRAGSHADER  	= frag
+BINSFX_VERTSHADER	:= $(addsuffix $(BINFMT_SHADER),Vert)
+BINSFX_FRAGSHADER	:= $(addsuffix $(BINFMT_SHADER),Frag)
+TARGETS_VERTSHADER  := $(foreach file,$(notdir $(SRCS_VERTSHADER)), \
+					   $(patsubst %.$(SFX_VERTSHADER),%$(BINSFX_VERTSHADER),$(file)))
+TARGETS_FRAGSHADER  := $(foreach file,$(notdir $(SRCS_FRAGSHADER)), \
+					   $(patsubst %.$(SFX_FRAGSHADER),%$(BINSFX_FRAGSHADER),$(file)))
 
 CXX        			= clang++
 CXXFLAGS   			= -std=c++20 -Wall -Wextra -O3
@@ -31,28 +40,37 @@ LD         			= clang++ -o
 LDFLAGS    			= -Wall -pedantic `pkg-config --static --libs glfw3` -lvulkan -Wl,-rpath,$(VULKAN_SDK)/lib
 RM         			= rm -f
 RMDIR				= rm -r -f
-TARGET 				:= $(addsuffix $(BINFMT),$(BIN))
+
 INCLUDES			:= -I$(VULKAN_SDK)/include				\
 				   	   -I$(GLM_INCDIR)/include				\
 				   	   -I$(GLFW_INCDIR)/include				\
 					   -I$(STB_INCDIR)						\
 					   -I$(OBJLOADER_INCDIR)				\
 					   -I$(JSONPARSER_INCDIR)/single_include
-# setup glslc compiler path
+# Setup glslc compiler path
 # This compiler (by Google) is designed to verify that your shader code is fully standards compliant (across GPU vendors) 
 # and produces one  SPIR-V binary that you can ship with your program
 GLSLC				:= $(VULKAN_SDK)/bin/glslc
 
-# targets
+# Targets
 $(OBJDIR)/%.o: $(SRCDIR)/%.cpp
 	@$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -MMD -o $@
 	@echo "[OK] compile"
 
-$(BINDIR)/$(TARGET): $(OBJECTS)
-	@$(LD) $@ $(LDFLAGS) $(OBJECTS)
+$(BINDIR)/$(TARGET): $(OBJS)
+	@$(LD) $@ $(LDFLAGS) $<
 	@echo "[OK] link"
 
--include $(DEPENDENCIES)
+-include $(DEPS)
+
+$(TARGETS_VERTSHADER): $(SRCS_VERTSHADER)
+	$(GLSLC) $< -o $(BINDIR)/$@
+
+$(TARGETS_FRAGSHADER): $(SRCS_FRAGSHADER)
+	$(GLSLC) $< -o $(BINDIR)/$@
+
+shaders: $(TARGETS_VERTSHADER) $(TARGETS_FRAGSHADER)
+	@echo "[OK] shader compile"
 
 .PHONY: clean run shaders info
 clean:
@@ -60,7 +78,7 @@ clean:
 	@echo "[OK] objects clean"
 	@$(RM) $(BINDIR)/*$(BINFMT)
 	@echo "[OK] binary clean"
-	@$(RM) $(BINDIR)/*$(SHADERBINFMT)
+	@$(RM) $(BINDIR)/*$(BINFMT_SHADER)
 	@echo "[OK] shader clean"
 	@$(RMDIR) $(LOGDIR)/*
 	@echo "[OK] log clean"
@@ -68,18 +86,15 @@ clean:
 run:
 	$(BINDIR)/$(addsuffix $(BINFMT),$(BIN))
 
-shaders:
-	$(GLSLC) $(VERTSHADER) -o $(BINDIR)/$(addsuffix $(SHADERBINFMT),$(VERTSHADER_BIN))
-	$(GLSLC) $(FRAGSHADER) -o $(BINDIR)/$(addsuffix $(SHADERBINFMT),$(FRAGSHADER_BIN))
-	@echo "[OK] shader compile"
-
 info:
-	@echo "[*] Source dir:		${SRCDIR}       "
-	@echo "[*] Build dir:		${BUILDDIR}     "
-	@echo "[*] Binary dir:		${BINDIR}       "
-	@echo "[*] Object dir:		${OBJDIR}       "
-	@echo "[*] Log save dir:	${LOGDIR}       "
-	@echo "[*] Shader dir:		${SHADERDIR}    "
-	@echo "[*] Source files:	${SOURCES}      "
-	@echo "[*] Object files:	${OBJECTS}      "
-	@echo "[*] Dependencies:	${DEPENDENCIES} "
+	@echo "[*] Source dir:		${SRCDIR}       	"
+	@echo "[*] Build dir:		${BUILDDIR}     	"
+	@echo "[*] Binary dir:		${BINDIR}       	"
+	@echo "[*] Object dir:		${OBJDIR}       	"
+	@echo "[*] Log save dir:	${LOGDIR}       	"
+	@echo "[*] Shader dir:		${SHADERDIR}    	"
+	@echo "[*] Source files:	${SRCS}      		"
+	@echo "[*] Vert shaders:	$(SRCS_VERTSHADER) 	"
+	@echo "[*] Frag shaders: 	$(SRCS_FRAGSHADER) 	"
+	@echo "[*] Object files:	${OBJS}      		"
+	@echo "[*] Dependencies:	${DEPS} 			"
