@@ -66,7 +66,7 @@ namespace Core {
 
         struct ColorBlend {
             const VkLogicOp logicOp                                  = VK_LOGIC_OP_COPY;
-            const VkBool32 blendEnable                               = VK_FALSE;
+            const VkBool32 blendEnable                               = VK_TRUE;
             const VkBool32 logicOpEnable                             = VK_FALSE;
             const float blendConstantR                               = 0.0f;
             const float blendConstantG                               = 0.0f;

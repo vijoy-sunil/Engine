@@ -295,8 +295,8 @@ namespace Core {
                 dumpDeviceInfoPool();
                 dumpModelInfoPool();
                 dumpImageInfoPool();
-                dumpBufferInfoPool();   
-                dumpRenderPassInfoPool();  
+                dumpBufferInfoPool();
+                dumpRenderPassInfoPool();
                 dumpPipelineInfoPool();
                 dumpCameraInfoPool();
                 dumpFenceInfoPool();

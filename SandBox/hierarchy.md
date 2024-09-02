@@ -8,7 +8,9 @@
     |
     |<----------------------|VKDeleteSequence
     |
-    |<......................|ENConfig
+    |<......................|ENModel
+    |
+    |<......................|ENEnvironment
     |
     |
     |SandBox/ENApplication

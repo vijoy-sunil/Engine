@@ -1,5 +1,5 @@
-#ifndef EN_CONFIG_H
-#define EN_CONFIG_H
+#ifndef EN_MODEL_H
+#define EN_MODEL_H
 
 #include <map>
 
@@ -12,12 +12,7 @@ namespace SandBox {
         const char* instanceDataPath;
     };
 
-    std::map <uint32_t, ModelImportInfo> g_modelImportInfoPool = {
-        /* |------------------------------------------------------------------------------------------------|
-         * | SAMPLE                                                                                         |
-         * |------------------------------------------------------------------------------------------------|
-        */
-#if ENABLE_SAMPLE_MODELS_IMPORT
+    std::map <uint32_t, ModelImportInfo> g_sampleModelImportInfoPool  = {
         {0, {"SandBox/Models/Sample/Model_1.obj", 
              "SandBox/Models/Sample/", 
              "SandBox/Models/Sample/Model_1_Instances.json"}},
@@ -32,12 +27,14 @@ namespace SandBox {
 
         {3, {"SandBox/Models/Sample/Model_4.obj", 
              "SandBox/Models/Sample/", 
-             "SandBox/Models/Sample/Model_4_Instances.json"}},
+             "SandBox/Models/Sample/Model_4_Instances.json"}}
+    };
+
+    std::map <uint32_t, ModelImportInfo> g_staticModelImportInfoPool  = {
         /* |------------------------------------------------------------------------------------------------|
          * | TRACK                                                                                          |
          * |------------------------------------------------------------------------------------------------|
         */
-#else
         {4, {"SandBox/Models/Track/T0_Generic_NoCap.obj", 
              "SandBox/Models/Track/", 
              "SandBox/Models/Track/T0_Generic_NoCap_Instances.json"}},
@@ -64,7 +61,10 @@ namespace SandBox {
 
         {10, {"SandBox/Models/Track/T0_Curve_R10_D90.obj", 
               "SandBox/Models/Track/", 
-              "SandBox/Models/Track/T0_Curve_R10_D90_Instances.json"}},
+              "SandBox/Models/Track/T0_Curve_R10_D90_Instances.json"}}
+    };
+
+    std::map <uint32_t, ModelImportInfo> g_dynamicModelImportInfoPool = {
         /* |------------------------------------------------------------------------------------------------|
          * | VEHICLE                                                                                        |
          * |------------------------------------------------------------------------------------------------|
@@ -76,7 +76,6 @@ namespace SandBox {
         {12, {"SandBox/Models/Vehicle/Tyre.obj", 
               "SandBox/Models/Vehicle/", 
               "SandBox/Models/Vehicle/Tyre_Instances.json"}}
-#endif  // ENABLE_SAMPLE_MODELS_IMPORT
     };
 }   // namespace SandBox
-#endif  // EN_CONFIG_H
+#endif  // EN_MODEL_H

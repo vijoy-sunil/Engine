@@ -22,18 +22,11 @@ namespace Core {
                           protected virtual VKSyncObject,
                           protected VKResizing {
         private:
-            /* To use the right objects (command buffers, sync objects etc.) every frame, keep track of the current frame 
-             * in flight
-            */
-            uint32_t m_currentFrameInFlight;
-
             Log::Record* m_VKDrawSequenceLog;
             const uint32_t m_instanceId = g_collectionsSettings.instanceId++;
 
         public:
             VKDrawSequence (void) {
-                m_currentFrameInFlight = 0;
-
                 m_VKDrawSequenceLog = LOG_INIT (m_instanceId, g_collectionsSettings.logSaveDirPath);
                 LOG_ADD_CONFIG (m_instanceId, Log::WARNING, Log::TO_FILE_IMMEDIATE | Log::TO_CONSOLE);
                 LOG_ADD_CONFIG (m_instanceId, Log::ERROR,   Log::TO_FILE_IMMEDIATE | Log::TO_CONSOLE);
@@ -44,17 +37,20 @@ namespace Core {
             }
 
         protected:
-            void runSequence (const std::vector <uint32_t>& modelInfoIds,
+            template <typename T>
+            void runSequence (uint32_t deviceInfoId,
+                              const std::vector <uint32_t>& modelInfoIds,
                               uint32_t renderPassInfoId,
                               uint32_t pipelineInfoId,
                               uint32_t cameraInfoId,
                               uint32_t sceneInfoId, 
-                              uint32_t deviceInfoId) {
+                              uint32_t currentFrameInFlight,
+                              T lambda) {
 
+                auto deviceInfo    = getDeviceInfo (deviceInfoId);
                 auto modelInfoBase = getModelInfo  (*modelInfoIds.begin());
                 auto cameraInfo    = getCameraInfo (cameraInfoId);
                 auto sceneInfo     = getSceneInfo  (sceneInfoId);
-                auto deviceInfo    = getDeviceInfo (deviceInfoId);
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG DRAW OPS - WAIT                                                                         |
                  * |------------------------------------------------------------------------------------------------|
@@ -71,7 +67,7 @@ namespace Core {
                  * frame's work to the command buffer until the current frame has finished executing, as we don't want to 
                  * overwrite the current contents of the command buffer while the GPU is using it
                 */
-                uint32_t inFlightFenceInfoId = sceneInfo->id.inFlightFenceInfoBase + m_currentFrameInFlight;
+                uint32_t inFlightFenceInfoId = sceneInfo->id.inFlightFenceInfoBase + currentFrameInFlight;
                 vkWaitForFences (deviceInfo->resource.logDevice, 
                                  1, 
                                  &getFenceInfo (inFlightFenceInfoId, FEN_IN_FLIGHT)->resource.fence, 
@@ -95,7 +91,7 @@ namespace Core {
                 */
                 uint32_t swapChainImageId;
                 uint32_t imageAvailableSemaphoreInfoId = sceneInfo->id.imageAvailableSemaphoreInfoBase +
-                                                         m_currentFrameInFlight;
+                                                         currentFrameInFlight;
                 VkResult result = vkAcquireNextImageKHR (deviceInfo->resource.logDevice, 
                                                          deviceInfo->resource.swapChain, 
                                                          UINT64_MAX, 
@@ -113,9 +109,9 @@ namespace Core {
                                                       << " " 
                                                       << "[" << string_VkResult (result) << "]"
                                                       << std::endl; 
-                    recreateSwapChainDeps (sceneInfoId, 
+                    recreateSwapChainDeps (deviceInfoId,
                                            renderPassInfoId,
-                                           deviceInfoId);
+                                           sceneInfoId);
 
                     cameraInfo->meta.updateProjectionMatrix = true;
                     return;
@@ -152,7 +148,7 @@ namespace Core {
                  * |------------------------------------------------------------------------------------------------|
                 */
                 if (cameraInfo->meta.updateViewMatrix)       createViewMatrix       (cameraInfoId);
-                if (cameraInfo->meta.updateProjectionMatrix) createProjectionMatrix (cameraInfoId, deviceInfoId);
+                if (cameraInfo->meta.updateProjectionMatrix) createProjectionMatrix (deviceInfoId, cameraInfoId);
                 /* Do not recreate camera matrices unless the booleans are set
                 */
                 cameraInfo->meta.updateViewMatrix       = false;
@@ -172,7 +168,7 @@ namespace Core {
                     combinedInstances.insert  (combinedInstances.end(), modelInfo->meta.instances.begin(),
                                                                         modelInfo->meta.instances.end());
                 }
-                updateStorageBuffer (sceneInfo->id.storageBufferInfoBase + m_currentFrameInFlight,
+                updateStorageBuffer (sceneInfo->id.storageBufferInfoBase + currentFrameInFlight,
                                      sceneInfo->meta.totalInstancesCount * sizeof (InstanceDataSSBO),
                                      combinedInstances.data());
 
@@ -185,8 +181,8 @@ namespace Core {
                 */
                 /* First, we call vkResetCommandBuffer on the command buffer to make sure it is able to be recorded
                 */
-                vkResetCommandBuffer (sceneInfo->resource.commandBuffers[m_currentFrameInFlight], 0);
-                beginRecording       (sceneInfo->resource.commandBuffers[m_currentFrameInFlight], 0, VK_NULL_HANDLE);
+                vkResetCommandBuffer (sceneInfo->resource.commandBuffers[currentFrameInFlight], 0);
+                beginRecording       (sceneInfo->resource.commandBuffers[currentFrameInFlight], 0, VK_NULL_HANDLE);
                 /* Define the clear values to use for VK_ATTACHMENT_LOAD_OP_CLEAR. Note that, the order of clear values 
                  * should be identical to the order of your attachments
                  * 
@@ -210,58 +206,58 @@ namespace Core {
                         {{1.0f, 0}}
                     }
                 };
-                beginRenderPass      (sceneInfo->resource.commandBuffers[m_currentFrameInFlight],
+                beginRenderPass      (deviceInfoId,
                                       renderPassInfoId,
                                       swapChainImageId,
-                                      deviceInfoId,
-                                      clearValues);
+                                      clearValues,
+                                      sceneInfo->resource.commandBuffers[currentFrameInFlight]);
 
-                bindPipeline         (sceneInfo->resource.commandBuffers[m_currentFrameInFlight],
-                                      pipelineInfoId,
-                                      VK_PIPELINE_BIND_POINT_GRAPHICS);
+                bindPipeline         (pipelineInfoId,
+                                      VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                      sceneInfo->resource.commandBuffers[currentFrameInFlight]);
 
-                updatePushConstants  (sceneInfo->resource.commandBuffers[m_currentFrameInFlight],
-                                      pipelineInfoId,
+                updatePushConstants  (pipelineInfoId,
                                       VK_SHADER_STAGE_VERTEX_BIT,
-                                      0, sizeof (SceneDataVertPC), &sceneDataVert);
+                                      0, sizeof (SceneDataVertPC), &sceneDataVert,
+                                      sceneInfo->resource.commandBuffers[currentFrameInFlight]);
 
                 auto secondaryViewPorts = std::vector <VkViewport> {};
-                setViewPorts         (sceneInfo->resource.commandBuffers[m_currentFrameInFlight],
-                                      deviceInfoId,
+                setViewPorts         (deviceInfoId,
                                       0,
-                                      secondaryViewPorts);
+                                      secondaryViewPorts,
+                                      sceneInfo->resource.commandBuffers[currentFrameInFlight]);
 
                 auto secondaryScissors = std::vector <VkRect2D> {};
-                setScissors          (sceneInfo->resource.commandBuffers[m_currentFrameInFlight],
-                                      deviceInfoId,
+                setScissors          (deviceInfoId,
                                       0,
-                                      secondaryScissors);
+                                      secondaryScissors,
+                                      sceneInfo->resource.commandBuffers[currentFrameInFlight]);
 
                 auto vertexBufferInfoIdsToBind = modelInfoBase->id.vertexBufferInfos;
                 auto vertexBufferOffsets       = std::vector <VkDeviceSize> {
                     0
                 };
-                bindVertexBuffers    (sceneInfo->resource.commandBuffers[m_currentFrameInFlight],
+                bindVertexBuffers    (vertexBufferInfoIdsToBind,
                                       0,
-                                      vertexBufferInfoIdsToBind,
-                                      vertexBufferOffsets);
+                                      vertexBufferOffsets,
+                                      sceneInfo->resource.commandBuffers[currentFrameInFlight]);
 
-                bindIndexBuffer      (sceneInfo->resource.commandBuffers[m_currentFrameInFlight],
-                                      modelInfoBase->id.indexBufferInfo,
+                bindIndexBuffer      (modelInfoBase->id.indexBufferInfo,
                                       0,
-                                      VK_INDEX_TYPE_UINT32);
+                                      VK_INDEX_TYPE_UINT32,
+                                      sceneInfo->resource.commandBuffers[currentFrameInFlight]);
 
                 auto descriptorSetsToBind = std::vector {
-                    sceneInfo->resource.descriptorSets[m_currentFrameInFlight]
+                    sceneInfo->resource.descriptorSets[currentFrameInFlight]
                 };
                 auto dynamicOffsets       = std::vector <uint32_t> {
                 };     
-                bindDescriptorSets   (sceneInfo->resource.commandBuffers[m_currentFrameInFlight],
-                                      pipelineInfoId,
+                bindDescriptorSets   (pipelineInfoId,
                                       VK_PIPELINE_BIND_POINT_GRAPHICS,
                                       0,
                                       descriptorSetsToBind,
-                                      dynamicOffsets);
+                                      dynamicOffsets,
+                                      sceneInfo->resource.commandBuffers[currentFrameInFlight]);
                 /* |------------|-----------|-----------|
                  * |    VB0     |   VB1     |   VB2     |   vertex buffers 
                  * |------------|-----------|-----------|
@@ -283,17 +279,20 @@ namespace Core {
                 for (auto const& infoId: modelInfoIds) {
                     auto modelInfo = getModelInfo (infoId);
  
-                    drawIndexed (sceneInfo->resource.commandBuffers[m_currentFrameInFlight],
-                                 modelInfo->meta.indicesCount,
-                                 modelInfo->meta.instancesCount, firstIndex, vertexOffset, firstInstance);
+                    drawIndexed (modelInfo->meta.indicesCount,
+                                 modelInfo->meta.instancesCount, 
+                                 firstIndex, vertexOffset, firstInstance,
+                                 sceneInfo->resource.commandBuffers[currentFrameInFlight]);
 
                     firstIndex    += modelInfo->meta.indicesCount;
                     vertexOffset  += modelInfo->meta.verticesCount;
                     firstInstance += modelInfo->meta.instancesCount;
                 }
 
-                endRenderPass (sceneInfo->resource.commandBuffers[m_currentFrameInFlight]);
-                endRecording  (sceneInfo->resource.commandBuffers[m_currentFrameInFlight]);  
+                lambda();
+
+                endRenderPass (sceneInfo->resource.commandBuffers[currentFrameInFlight]);
+                endRecording  (sceneInfo->resource.commandBuffers[currentFrameInFlight]);  
 
                 VkSubmitInfo drawOpsSubmitInfo;
                 drawOpsSubmitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -317,11 +316,11 @@ namespace Core {
                 drawOpsSubmitInfo.pWaitSemaphores    = waitSemaphores.data();
                 drawOpsSubmitInfo.pWaitDstStageMask  = waitStages.data();
                 drawOpsSubmitInfo.commandBufferCount = 1;
-                drawOpsSubmitInfo.pCommandBuffers    = &sceneInfo->resource.commandBuffers[m_currentFrameInFlight];
+                drawOpsSubmitInfo.pCommandBuffers    = &sceneInfo->resource.commandBuffers[currentFrameInFlight];
                 /* The signalSemaphoreCount and pSignalSemaphores parameters specify which semaphores to signal once the 
                  * command buffer(s) have finished execution
                 */
-                uint32_t renderDoneSemaphoreInfoId = sceneInfo->id.renderDoneSemaphoreInfoBase + m_currentFrameInFlight;
+                uint32_t renderDoneSemaphoreInfoId = sceneInfo->id.renderDoneSemaphoreInfoBase + currentFrameInFlight;
                 auto signalSemaphores = std::vector {
                     getSemaphoreInfo (renderDoneSemaphoreInfoId, SEM_RENDER_DONE)->resource.semaphore 
                 };
@@ -406,9 +405,9 @@ namespace Core {
                                                       << "[" << string_VkResult (result) << "]" 
                                                       << std::endl; 
                     setFrameBufferResized (false);
-                    recreateSwapChainDeps (sceneInfoId, 
+                    recreateSwapChainDeps (deviceInfoId, 
                                            renderPassInfoId,
-                                           deviceInfoId);
+                                           sceneInfoId);
                     
                     cameraInfo->meta.updateProjectionMatrix = true;
                 }
@@ -424,7 +423,7 @@ namespace Core {
                  * | CONFIG DRAW OPS - UPDATE CURRENT FRAME IN FLIGHT COUNT                                         |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                m_currentFrameInFlight = (m_currentFrameInFlight + 1) % g_coreSettings.maxFramesInFlight;
+                currentFrameInFlight = (currentFrameInFlight + 1) % g_coreSettings.maxFramesInFlight;
             }
     };
 }   // namespace Core
