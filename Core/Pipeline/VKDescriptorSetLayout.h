@@ -59,14 +59,14 @@ namespace Core {
              * about every descriptor binding used in the shaders for pipeline creation, just like we had to do for every 
              * vertex attribute and its location index, through a VkDescriptorSetLayoutBinding struct
             */
-            void createDescriptorSetLayout (uint32_t pipelineInfoId,
-                                            uint32_t deviceInfoId,
+            void createDescriptorSetLayout (uint32_t deviceInfoId,
+                                            uint32_t pipelineInfoId,
                                             const std::vector <VkDescriptorSetLayoutBinding>& layoutBindings,
                                             const std::vector <VkDescriptorBindingFlags>& bindingFlags,
                                             VkDescriptorSetLayoutCreateFlags layoutCreateFlags) {
 
-                auto pipelineInfo = getPipelineInfo (pipelineInfoId);
                 auto deviceInfo   = getDeviceInfo   (deviceInfoId);
+                auto pipelineInfo = getPipelineInfo (pipelineInfoId);
                 /* Specify descriptor set layout binding properties
                 */
                 VkDescriptorSetLayoutBindingFlagsCreateInfo bindingFlagsCreateInfo;

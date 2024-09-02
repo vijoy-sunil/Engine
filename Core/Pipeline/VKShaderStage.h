@@ -82,8 +82,8 @@ namespace Core {
             }
 
         protected:  
-            VkShaderModule createShaderStage (uint32_t pipelineInfoId,
-                                              uint32_t deviceInfoId,
+            VkShaderModule createShaderStage (uint32_t deviceInfoId,
+                                              uint32_t pipelineInfoId,
                                               VkShaderStageFlagBits stage,
                                               const char* shaderBinaryPath,
                                               const char* entryPoint) {

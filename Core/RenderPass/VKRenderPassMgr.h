@@ -58,9 +58,9 @@ namespace Core {
                 m_renderPassInfoPool[renderPassInfoId] = info;
             }
 
-            void createRenderPass (uint32_t renderPassInfoId, uint32_t deviceInfoId) {
-                auto renderPassInfo = getRenderPassInfo (renderPassInfoId);
+            void createRenderPass (uint32_t deviceInfoId, uint32_t renderPassInfoId) {
                 auto deviceInfo     = getDeviceInfo     (deviceInfoId);
+                auto renderPassInfo = getRenderPassInfo (renderPassInfoId);
 
                 VkRenderPassCreateInfo createInfo;
                 createInfo.sType           = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
@@ -127,9 +127,9 @@ namespace Core {
                 }
             }
 
-            void cleanUp (uint32_t renderPassInfoId, uint32_t deviceInfoId) {
-                auto renderPassInfo = getRenderPassInfo (renderPassInfoId);
+            void cleanUp (uint32_t deviceInfoId, uint32_t renderPassInfoId) {
                 auto deviceInfo     = getDeviceInfo     (deviceInfoId);
+                auto renderPassInfo = getRenderPassInfo (renderPassInfoId);
 
                 vkDestroyRenderPass  (deviceInfo->resource.logDevice, 
                                       renderPassInfo->resource.renderPass, 

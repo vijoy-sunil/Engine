@@ -118,17 +118,27 @@ namespace Core {
                 m_pipelineInfoPool[pipelineInfoId] = info;
             }
 
-            void createGraphicsPipeline (uint32_t pipelineInfoId,
+            void derivePipelineInfo (uint32_t pipelineInfoId, uint32_t basePipelineInfoId) {
+                auto pipelineInfo      = getPipelineInfo (pipelineInfoId);
+                auto basePipelineInfo  = getPipelineInfo (basePipelineInfoId);
+                /* Note that, we wan't to be careful when shallow copying the struct members. Hence, why we are not
+                 * copying the resource members 
+                */
+                pipelineInfo->meta     = basePipelineInfo->meta;
+                pipelineInfo->state    = basePipelineInfo->state;
+            }
+
+            void createGraphicsPipeline (uint32_t deviceInfoId,
                                          uint32_t renderPassInfoId,
-                                         uint32_t deviceInfoId,
+                                         uint32_t pipelineInfoId,
                                          uint32_t subPassIndex,
                                          int32_t basePipelineIndex,
                                          VkPipeline basePipeline,
                                          VkPipelineCreateFlags pipelineCreateFlags) {
 
+                auto deviceInfo     = getDeviceInfo     (deviceInfoId);
                 auto renderPassInfo = getRenderPassInfo (renderPassInfoId);
                 auto pipelineInfo   = getPipelineInfo   (pipelineInfoId);
-                auto deviceInfo     = getDeviceInfo     (deviceInfoId);
 
                 pipelineInfo->meta.subPassIndex      = subPassIndex;
                 pipelineInfo->meta.basePipelineIndex = basePipelineIndex;
@@ -244,9 +254,9 @@ namespace Core {
                 }
             }
 
-            void cleanUp (uint32_t pipelineInfoId, uint32_t deviceInfoId) {
-                auto pipelineInfo = getPipelineInfo (pipelineInfoId);
+            void cleanUp (uint32_t deviceInfoId, uint32_t pipelineInfoId) {
                 auto deviceInfo   = getDeviceInfo   (deviceInfoId);
+                auto pipelineInfo = getPipelineInfo (pipelineInfoId);
 
                 vkDestroyPipeline       (deviceInfo->resource.logDevice, pipelineInfo->resource.pipeline, VK_NULL_HANDLE);
                 vkDestroyPipelineLayout (deviceInfo->resource.logDevice, pipelineInfo->resource.layout,   VK_NULL_HANDLE);

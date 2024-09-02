@@ -24,8 +24,8 @@ namespace Core {
             /* An index buffer is essentially an array of pointers into the vertex buffer. It allows you to reorder the 
              * vertex data, reuse existing data for multiple vertices and thus saving memory when loading complex models
             */
-            void createIndexBuffer (uint32_t bufferInfoId,
-                                    uint32_t deviceInfoId,
+            void createIndexBuffer (uint32_t deviceInfoId,
+                                    uint32_t bufferInfoId,
                                     VkDeviceSize size, 
                                     const void* data) {
                                         
@@ -33,8 +33,8 @@ namespace Core {
                 auto stagingBufferShareQueueFamilyIndices = std::vector {
                     deviceInfo->meta.transferFamilyIndex.value()
                 };
-                createBuffer (bufferInfoId, 
-                              deviceInfoId,
+                createBuffer (deviceInfoId, 
+                              bufferInfoId,
                               STAGING_BUFFER,
                               size,
                               VK_BUFFER_USAGE_TRANSFER_SRC_BIT, 
@@ -56,8 +56,8 @@ namespace Core {
                     deviceInfo->meta.graphicsFamilyIndex.value(), 
                     deviceInfo->meta.transferFamilyIndex.value()
                 };
-                createBuffer (bufferInfoId, 
-                              deviceInfoId,
+                createBuffer (deviceInfoId, 
+                              bufferInfoId,
                               INDEX_BUFFER,
                               size, 
                               VK_BUFFER_USAGE_TRANSFER_DST_BIT | 

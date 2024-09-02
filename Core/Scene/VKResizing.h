@@ -42,12 +42,12 @@ namespace Core {
              * range to an high dynamic range monitor. This may require the application to recreate the renderpass to 
              * make sure the change between dynamic ranges is properly reflected
             */
-            void recreateSwapChainDeps (uint32_t sceneInfoId, 
+            void recreateSwapChainDeps (uint32_t deviceInfoId, 
                                         uint32_t renderPassInfoId,
-                                        uint32_t deviceInfoId) {
+                                        uint32_t sceneInfoId) {
 
-                auto sceneInfo  = getSceneInfo  (sceneInfoId);
                 auto deviceInfo = getDeviceInfo (deviceInfoId);
+                auto sceneInfo  = getSceneInfo  (sceneInfoId);
 
                 /* There is another case where a swap chain may become out of date and that is a special kind of window 
                  * resizing: window minimization. This case is special because it will result in a frame buffer size of 0.
@@ -72,7 +72,7 @@ namespace Core {
                  * | DESTROY FRAME BUFFERS                                                                          |
                  * |------------------------------------------------------------------------------------------------|
                 */               
-                VKFrameBuffer::cleanUp (renderPassInfoId, deviceInfoId);
+                VKFrameBuffer::cleanUp (deviceInfoId, renderPassInfoId);
                 LOG_INFO (m_VKResizingLog) << "[DELETE] Frame buffers " 
                                            << "[" << renderPassInfoId << "]"
                                            << " "
@@ -82,7 +82,7 @@ namespace Core {
                  * | DESTROY MULTI SAMPLE RESOURCES                                                                 |
                  * |------------------------------------------------------------------------------------------------|
                 */                                                 
-                VKImageMgr::cleanUp (sceneInfo->id.multiSampleImageInfo, deviceInfoId, MULTISAMPLE_IMAGE);
+                VKImageMgr::cleanUp (deviceInfoId, sceneInfo->id.multiSampleImageInfo, MULTISAMPLE_IMAGE);
                 LOG_INFO (m_VKResizingLog) << "[DELETE] Multi sample resources " 
                                            << "[" << sceneInfo->id.multiSampleImageInfo << "]"
                                            << std::endl; 
@@ -90,7 +90,7 @@ namespace Core {
                  * | DESTROY DEPTH RESOURCES                                                                        |
                  * |------------------------------------------------------------------------------------------------|
                 */                                                 
-                VKImageMgr::cleanUp (sceneInfo->id.depthImageInfo, deviceInfoId, DEPTH_IMAGE);
+                VKImageMgr::cleanUp (deviceInfoId, sceneInfo->id.depthImageInfo, DEPTH_IMAGE);
                 LOG_INFO (m_VKResizingLog) << "[DELETE] Depth resources " 
                                            << "[" << sceneInfo->id.depthImageInfo << "]"
                                            << std::endl;
@@ -100,7 +100,7 @@ namespace Core {
                 */                                                 
                 for (uint32_t i = 0; i < deviceInfo->meta.swapChainSize; i++) {
                     uint32_t swapChainImageInfoId = sceneInfo->id.swapChainImageInfoBase + i;
-                    VKImageMgr::cleanUp (swapChainImageInfoId, deviceInfoId, SWAPCHAIN_IMAGE);
+                    VKImageMgr::cleanUp (deviceInfoId, swapChainImageInfoId, SWAPCHAIN_IMAGE);
                     LOG_INFO (m_VKResizingLog) << "[DELETE] Swap chain resources " 
                                                << "[" << swapChainImageInfoId << "]"
                                                << " "
@@ -123,7 +123,7 @@ namespace Core {
                  * | CONFIG SWAP CHAIN RESOURCES                                                                    |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                createSwapChainResources (sceneInfo->id.swapChainImageInfoBase, deviceInfoId);
+                createSwapChainResources (deviceInfoId, sceneInfo->id.swapChainImageInfoBase);
                 LOG_INFO (m_VKResizingLog) << "[OK] Swap chain resources " 
                                            << "[" << sceneInfo->id.swapChainImageInfoBase << "]"
                                            << " "
@@ -133,7 +133,7 @@ namespace Core {
                  * | CONFIG DEPTH RESOURCES                                                                         |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                createDepthResources (sceneInfo->id.depthImageInfo, deviceInfoId);
+                createDepthResources (deviceInfoId, sceneInfo->id.depthImageInfo);
                 LOG_INFO (m_VKResizingLog) << "[OK] Depth resources " 
                                            << "[" << sceneInfo->id.depthImageInfo << "]"
                                            << std::endl; 
@@ -141,7 +141,7 @@ namespace Core {
                  * | CONFIG MULTI SAMPLE RESOURCES                                                                  |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                createMultiSampleResources (sceneInfo->id.multiSampleImageInfo, deviceInfoId);
+                createMultiSampleResources (deviceInfoId, sceneInfo->id.multiSampleImageInfo);
                 LOG_INFO (m_VKResizingLog) << "[OK] Multi sample resources " 
                                            << "[" << sceneInfo->id.multiSampleImageInfo << "]"
                                            << std::endl;
@@ -161,7 +161,7 @@ namespace Core {
                         depthImageInfo->resource.imageView,
                         swapChainImageInfo->resource.imageView
                     };
-                    createFrameBuffer (renderPassInfoId, deviceInfoId, attachments);                    
+                    createFrameBuffer (deviceInfoId, renderPassInfoId, attachments);                    
                     LOG_INFO (m_VKResizingLog) << "[OK] Frame buffer " 
                                                << "[" << renderPassInfoId << "]"
                                                << " "

@@ -44,7 +44,7 @@ namespace Core {
              * attachment. If you are rendering 3D geometry, and you want it to look correct, you'll likely have to add 
              * this depth attachment
             */
-            void createMultiSampleAttachment (uint32_t renderPassInfoId, uint32_t imageInfoId) {
+            void createMultiSampleAttachment (uint32_t imageInfoId, uint32_t renderPassInfoId) {
                 auto imageInfo      = getImageInfo (imageInfoId, MULTISAMPLE_IMAGE);
                 auto renderPassInfo = getRenderPassInfo (renderPassInfoId);
 
@@ -72,7 +72,7 @@ namespace Core {
                 renderPassInfo->resource.attachments.push_back (attachment);
             }
 
-            void createDepthStencilAttachment (uint32_t renderPassInfoId, uint32_t imageInfoId) {
+            void createDepthStencilAttachment (uint32_t imageInfoId, uint32_t renderPassInfoId) {
                 auto imageInfo      = getImageInfo (imageInfoId, DEPTH_IMAGE);
                 auto renderPassInfo = getRenderPassInfo (renderPassInfoId);
 
@@ -97,7 +97,7 @@ namespace Core {
             /* Note that, multisampled images cannot be presented directly. We first need to resolve them to a regular
              * image
             */
-            void createResolveAttachment (uint32_t renderPassInfoId, uint32_t imageInfoId) {
+            void createResolveAttachment (uint32_t imageInfoId, uint32_t renderPassInfoId) {
                 auto imageInfo      = getImageInfo (imageInfoId, SWAPCHAIN_IMAGE);
                 auto renderPassInfo = getRenderPassInfo (renderPassInfoId);
 

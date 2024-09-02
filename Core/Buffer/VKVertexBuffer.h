@@ -34,8 +34,8 @@ namespace Core {
              * After creating the two buffers, we'll then use a buffer copy command to move the data from the staging 
              * buffer to the actual vertex buffer by recording a copy command on the transfer queue
             */
-            void createVertexBuffer (uint32_t bufferInfoId, 
-                                     uint32_t deviceInfoId, 
+            void createVertexBuffer (uint32_t deviceInfoId, 
+                                     uint32_t bufferInfoId, 
                                      VkDeviceSize size, 
                                      const void* data) {
 
@@ -67,8 +67,8 @@ namespace Core {
                  * the allocated memory. Do keep in mind that this may lead to slightly worse performance than explicit 
                  * flushing
                 */
-                createBuffer (bufferInfoId, 
-                              deviceInfoId,
+                createBuffer (deviceInfoId, 
+                              bufferInfoId,
                               STAGING_BUFFER,
                               size,
                               VK_BUFFER_USAGE_TRANSFER_SRC_BIT, 
@@ -103,8 +103,8 @@ namespace Core {
                  * for the staging buffer and the transfer destination flag for the vertexBuffer, along with the vertex 
                  * buffer usage flag
                 */
-                createBuffer (bufferInfoId, 
-                              deviceInfoId,
+                createBuffer (deviceInfoId, 
+                              bufferInfoId,
                               VERTEX_BUFFER,
                               size, 
                               VK_BUFFER_USAGE_TRANSFER_DST_BIT | 

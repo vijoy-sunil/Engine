@@ -62,8 +62,8 @@ namespace Core {
              * VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
              * Optimal for sampling from a shader
             */
-            void createTextureResources (uint32_t imageInfoId, 
-                                         uint32_t deviceInfoId, 
+            void createTextureResources (uint32_t deviceInfoId, 
+                                         uint32_t imageInfoId, 
                                          const char* imageFilePath) {
                                             
                 auto deviceInfo = getDeviceInfo (deviceInfoId);
@@ -108,8 +108,8 @@ namespace Core {
                 /* Create staging buffer, the buffer should be in host visible memory so that we can map it and it 
                  * should be usable as a transfer source so that we can copy it to an image later on
                 */
-                createBuffer (imageInfoId, 
-                              deviceInfoId,
+                createBuffer (deviceInfoId, 
+                              imageInfoId,
                               STAGING_BUFFER_TEX,
                               size,
                               VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
@@ -176,8 +176,8 @@ namespace Core {
                     deviceInfo->meta.graphicsFamilyIndex.value(),
                     deviceInfo->meta.transferFamilyIndex.value()
                 };
-                createImageResources (imageInfoId, 
-                                      deviceInfoId,
+                createImageResources (deviceInfoId, 
+                                      imageInfoId,
                                       TEXTURE_IMAGE,
                                       static_cast <uint32_t> (width),
                                       static_cast <uint32_t> (height),

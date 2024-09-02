@@ -37,7 +37,7 @@ namespace Core {
              * As one might expect, more samples lead to better results, however it is also more computationally 
              * expensive
             */
-            void createMultiSampleResources (uint32_t imageInfoId, uint32_t deviceInfoId) {
+            void createMultiSampleResources (uint32_t deviceInfoId, uint32_t imageInfoId) {
                 auto deviceInfo = getDeviceInfo (deviceInfoId);
                 auto imageShareQueueFamilyIndices = std::vector {
                     deviceInfo->meta.graphicsFamilyIndex.value()
@@ -71,8 +71,8 @@ namespace Core {
                  * resolve, depth/stencil, or input attachment. Note that, memory types must not have both 
                  * VK_MEMORY_PROPERTY_LAZILY_ALLOCATED_BIT and VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT set
                 */
-                createImageResources (imageInfoId, 
-                                      deviceInfoId,
+                createImageResources (deviceInfoId, 
+                                      imageInfoId,
                                       MULTISAMPLE_IMAGE,
                                       deviceInfo->params.swapChainExtent.width,
                                       deviceInfo->params.swapChainExtent.height,

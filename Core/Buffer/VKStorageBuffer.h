@@ -21,8 +21,8 @@ namespace Core {
             }
 
         protected:  
-            void createStorageBuffer (uint32_t bufferInfoId, 
-                                      uint32_t deviceInfoId, 
+            void createStorageBuffer (uint32_t deviceInfoId, 
+                                      uint32_t bufferInfoId, 
                                       VkDeviceSize size, 
                                       const void* data) {
                 // TO DO
@@ -32,8 +32,8 @@ namespace Core {
                 static_cast <void> (data);
             }
 
-            void createStorageBuffer (uint32_t bufferInfoId, 
-                                      uint32_t deviceInfoId, 
+            void createStorageBuffer (uint32_t deviceInfoId, 
+                                      uint32_t bufferInfoId, 
                                       VkDeviceSize size) {
 
                 auto deviceInfo = getDeviceInfo (deviceInfoId);
@@ -41,8 +41,8 @@ namespace Core {
                     deviceInfo->meta.graphicsFamilyIndex.value()
                 };
 
-                createBuffer (bufferInfoId,
-                              deviceInfoId, 
+                createBuffer (deviceInfoId,
+                              bufferInfoId, 
                               STORAGE_BUFFER,
                               size,
                               VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, 

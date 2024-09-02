@@ -26,12 +26,12 @@ namespace Core {
              * memory attachments that a render pass instance uses. In other words, a frame buffer binds a VkImageView 
              * with an attachment, and the frame buffer together with the render pass defines the render target 
             */
-            void createFrameBuffer (uint32_t renderPassInfoId, 
-                                    uint32_t deviceInfoId,
+            void createFrameBuffer (uint32_t deviceInfoId, 
+                                    uint32_t renderPassInfoId,
                                     const std::vector <VkImageView>& attachments) {
 
-                auto renderPassInfo = getRenderPassInfo (renderPassInfoId);
                 auto deviceInfo     = getDeviceInfo     (deviceInfoId);
+                auto renderPassInfo = getRenderPassInfo (renderPassInfoId);
 
                 VkFramebufferCreateInfo createInfo;
                 createInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
@@ -70,9 +70,9 @@ namespace Core {
                 renderPassInfo->resource.frameBuffers.push_back (frameBuffer);
             }
 
-            void cleanUp (uint32_t renderPassInfoId, uint32_t deviceInfoId) {
-                auto renderPassInfo = getRenderPassInfo (renderPassInfoId);
+            void cleanUp (uint32_t deviceInfoId, uint32_t renderPassInfoId) {
                 auto deviceInfo     = getDeviceInfo     (deviceInfoId);
+                auto renderPassInfo = getRenderPassInfo (renderPassInfoId);
                 /* Destroy the framebuffers before the image views and render pass that they are based on
                 */
                 for (auto const& frameBuffer: renderPassInfo->resource.frameBuffers)

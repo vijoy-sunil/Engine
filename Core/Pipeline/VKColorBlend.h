@@ -47,9 +47,14 @@ namespace Core {
                  * The resulting color is AND'd with the colorWriteMask to determine which channels are actually passed 
                  * through
                  * finalColor = finalColor & colorWriteMask;
+                 * 
+                 * The most common way to use color blending is to implement alpha blending, where we want the new color
+                 * to be blended with the old color based on its opacity
+                 * finalColor.rgb = newAlpha * newColor + (1 - newAlpha) * oldColor
+                 * finalColor.a   = newAlpha.a
                 */
-                attachment.srcColorBlendFactor = VK_BLEND_FACTOR_ONE; 
-                attachment.dstColorBlendFactor = VK_BLEND_FACTOR_ZERO; 
+                attachment.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA; 
+                attachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA; 
                 attachment.colorBlendOp        = VK_BLEND_OP_ADD; 
                 attachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE; 
                 attachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;  
@@ -57,21 +62,7 @@ namespace Core {
                 attachment.colorWriteMask      = VK_COLOR_COMPONENT_R_BIT | 
                                                  VK_COLOR_COMPONENT_G_BIT | 
                                                  VK_COLOR_COMPONENT_B_BIT | 
-                                                 VK_COLOR_COMPONENT_A_BIT;   
-                /* Example: The most common way to use color blending is to implement alpha blending, where we want the 
-                 * new color to be blended with the old color based on its opacity
-                 * finalColor.rgb = newAlpha * newColor + (1 - newAlpha) * oldColor
-                 * finalColor.a   = newAlpha.a
-                 * 
-                 * This can be configured like below
-                 * attachment.blendEnable         = VK_TRUE;
-                 * attachment.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
-                 * attachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
-                 * attachment.colorBlendOp        = VK_BLEND_OP_ADD;
-                 * attachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
-                 * attachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
-                 * attachment.alphaBlendOp        = VK_BLEND_OP_ADD;
-                */
+                                                 VK_COLOR_COMPONENT_A_BIT;
                 return attachment;
             }
 
@@ -83,7 +74,7 @@ namespace Core {
                 
                 auto pipelineInfo = getPipelineInfo (pipelineInfoId);
                 /* The second structure references the array of structures for all of the framebuffers and allows you to 
-                 * set blend constants that you can use as blend factors in the aforementioned calculations
+                 * set blend constants that you can use as blend factors
                 */
                 VkPipelineColorBlendStateCreateInfo createInfo;
                 createInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;

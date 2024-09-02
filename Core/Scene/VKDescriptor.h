@@ -52,14 +52,14 @@ namespace Core {
              * allows you to allocate a big heap of types ahead of time so that later on you don't have to ask the gpu to 
              * do expensive allocations
             */
-            void createDescriptorPool (uint32_t sceneInfoId,
-                                       uint32_t deviceInfoId,
+            void createDescriptorPool (uint32_t deviceInfoId,
+                                       uint32_t sceneInfoId,
                                        const std::vector <VkDescriptorPoolSize>& poolSizes,
                                        uint32_t maxDescriptorSets,
                                        VkDescriptorPoolCreateFlags poolCreateFlags) {
 
-                auto sceneInfo  = getSceneInfo  (sceneInfoId);
                 auto deviceInfo = getDeviceInfo (deviceInfoId);
+                auto sceneInfo  = getSceneInfo  (sceneInfoId);
 
                 VkDescriptorPoolCreateInfo createInfo;
                 createInfo.sType         = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
@@ -106,15 +106,15 @@ namespace Core {
              * actually bind the resource to the  descriptors so that the shader can access them. The descriptor set is 
              * then bound for the drawing commands just like the vertex buffers and framebuffer
             */
-            void createDescriptorSets (uint32_t sceneInfoId,
+            void createDescriptorSets (uint32_t deviceInfoId,
                                        uint32_t pipelineInfoId,
+                                       uint32_t sceneInfoId,
                                        uint32_t descriptorSetLayoutId,
-                                       uint32_t deviceInfoId,
                                        uint32_t descriptorSetCount) {
 
+                auto deviceInfo   = getDeviceInfo   (deviceInfoId);
                 auto pipelineInfo = getPipelineInfo (pipelineInfoId);
                 auto sceneInfo    = getSceneInfo    (sceneInfoId);
-                auto deviceInfo   = getDeviceInfo   (deviceInfoId);
 
                 if (descriptorSetLayoutId >= pipelineInfo->resource.descriptorSetLayouts.size()) {
                     LOG_ERROR (m_VKDescriptorLog) << "Invalid descriptor set layout id " 
@@ -281,9 +281,9 @@ namespace Core {
                                         VK_NULL_HANDLE);                
             }
 
-            void cleanUp (uint32_t sceneInfoId, uint32_t deviceInfoId) {
-                auto sceneInfo  = getSceneInfo  (sceneInfoId);
+            void cleanUp (uint32_t deviceInfoId, uint32_t sceneInfoId) {
                 auto deviceInfo = getDeviceInfo (deviceInfoId);
+                auto sceneInfo  = getSceneInfo  (sceneInfoId);
                 /* You don't need to explicitly clean up descriptor sets, because they will be automatically freed when 
                  * the descriptor pool is destroyed
                 */

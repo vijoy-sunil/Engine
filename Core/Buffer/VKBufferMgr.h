@@ -70,8 +70,8 @@ namespace Core {
             }
             
         protected:
-            void createBuffer (uint32_t bufferInfoId,
-                               uint32_t deviceInfoId,
+            void createBuffer (uint32_t deviceInfoId,
+                               uint32_t bufferInfoId,
                                e_bufferType type,
                                VkDeviceSize size, 
                                VkBufferUsageFlags usage, 
@@ -283,9 +283,9 @@ namespace Core {
                 }
             }
 
-            void cleanUp (uint32_t bufferInfoId, uint32_t deviceInfoId, e_bufferType type) {
-                auto bufferInfo = getBufferInfo (bufferInfoId, type);
+            void cleanUp (uint32_t deviceInfoId, uint32_t bufferInfoId, e_bufferType type) {
                 auto deviceInfo = getDeviceInfo (deviceInfoId);
+                auto bufferInfo = getBufferInfo (bufferInfoId, type);
 
                 vkDestroyBuffer  (deviceInfo->resource.logDevice, bufferInfo->resource.buffer,       VK_NULL_HANDLE);
                 /* Memory that is bound to a buffer object may be freed once the buffer is no longer used, so let's free 

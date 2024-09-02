@@ -45,8 +45,8 @@ namespace Core {
              * Aside from these filters, a sampler can also take care of transformations. It determines what happens when 
              * you try to read texels outside the image through its addressing mode
             */
-            void createTextureSampler (uint32_t sceneInfoId, 
-                                       uint32_t deviceInfoId,
+            void createTextureSampler (uint32_t deviceInfoId, 
+                                       uint32_t sceneInfoId,
                                        VkFilter filter,
                                        VkSamplerAddressMode addressMode,
                                        VkBool32 anisotropyEnable,
@@ -55,8 +55,8 @@ namespace Core {
                                        float minLod, 
                                        float maxLod) {
 
-                auto sceneInfo  = getSceneInfo  (sceneInfoId);
                 auto deviceInfo = getDeviceInfo (deviceInfoId);
+                auto sceneInfo  = getSceneInfo  (sceneInfoId);
                 /* Samplers are configured through a VkSamplerCreateInfo structure, which specifies all filters and 
                  * transformations that it should apply
                 */
@@ -185,9 +185,9 @@ namespace Core {
                 sceneInfo->resource.textureSampler = textureSampler;
             }
 
-            void cleanUp (uint32_t sceneInfoId, uint32_t deviceInfoId) {
-                auto sceneInfo  = getSceneInfo  (sceneInfoId);
+            void cleanUp (uint32_t deviceInfoId, uint32_t sceneInfoId) {
                 auto deviceInfo = getDeviceInfo (deviceInfoId);
+                auto sceneInfo  = getSceneInfo  (sceneInfoId);
 
                 vkDestroySampler (deviceInfo->resource.logDevice, 
                                   sceneInfo->resource.textureSampler, 

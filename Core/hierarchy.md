@@ -31,6 +31,19 @@
                             |---------------------->|VKLogDevice
 
 
+    |VKConfig, Log
+    :
+    :
+    |VKVertexData
+    |
+    |<......................|VKUniform
+    |
+    |{Model/VKModelMgr}
+    |
+    |
+    |VKInstanceData
+
+
     |{VKPhyDevice}
     |
     |
@@ -108,19 +121,6 @@
     |---------------------->|VKPushConstantRange
     |
     |---------------------->|VKPipelineLayout
-
-
-    |VKConfig, Log
-    :
-    :
-    |VKVertexData
-    |
-    |<......................|VKUniform
-    |
-    |{Model/VKModelMgr}
-    |
-    |
-    |VKInstanceData
 
 
     |<----------------------|{VKDeviceMgr}

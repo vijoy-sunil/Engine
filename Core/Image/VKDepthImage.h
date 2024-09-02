@@ -55,7 +55,7 @@ namespace Core {
              * attachment, defined by the swap chain extent, an image usage appropriate for a depth attachment and optimal 
              * tiling
             */
-            void createDepthResources (uint32_t imageInfoId, uint32_t deviceInfoId) {
+            void createDepthResources (uint32_t deviceInfoId, uint32_t imageInfoId) {
                 auto deviceInfo = getDeviceInfo (deviceInfoId);
                 /* What is the right format for a depth image?
                  * Unlike the texture image, we don't necessarily need a specific format, because we won't be directly 
@@ -87,8 +87,8 @@ namespace Core {
                 auto imageShareQueueFamilyIndices = std::vector {
                     deviceInfo->meta.graphicsFamilyIndex.value()
                 };
-                createImageResources (imageInfoId, 
-                                      deviceInfoId,
+                createImageResources (deviceInfoId, 
+                                      imageInfoId,
                                       DEPTH_IMAGE,
                                       deviceInfo->params.swapChainExtent.width,
                                       deviceInfo->params.swapChainExtent.height,

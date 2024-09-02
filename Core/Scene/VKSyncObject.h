@@ -94,8 +94,8 @@ namespace Core {
             }
 
         protected:
-            void createFence (uint32_t fenceInfoId,
-                              uint32_t deviceInfoId, 
+            void createFence (uint32_t deviceInfoId,
+                              uint32_t fenceInfoId, 
                               e_syncType type,
                               VkFenceCreateFlags fenceCreateFlags) {
 
@@ -149,7 +149,7 @@ namespace Core {
                 m_fenceInfoPool[type].push_back (info);
             }
 
-            void createSemaphore (uint32_t semaphoreInfoId, uint32_t deviceInfoId, e_syncType type) {
+            void createSemaphore (uint32_t deviceInfoId, uint32_t semaphoreInfoId, e_syncType type) {
                 auto deviceInfo = getDeviceInfo (deviceInfoId);
                 for (auto const& info: m_semaphoreInfoPool[type]) {
                     if (info.meta.id == semaphoreInfoId) {
@@ -268,9 +268,9 @@ namespace Core {
                 }    
             }
             
-            void cleanUpFence (uint32_t fenceInfoId, uint32_t deviceInfoId, e_syncType type) {
-                auto fenceInfo  = getFenceInfo  (fenceInfoId, type);
+            void cleanUpFence (uint32_t deviceInfoId, uint32_t fenceInfoId, e_syncType type) {
                 auto deviceInfo = getDeviceInfo (deviceInfoId);
+                auto fenceInfo  = getFenceInfo  (fenceInfoId, type);
 
                 vkDestroyFence  (deviceInfo->resource.logDevice, 
                                  fenceInfo->resource.fence, 
@@ -278,9 +278,9 @@ namespace Core {
                 deleteFenceInfo (fenceInfo, type); 
             }
 
-            void cleanUpSemaphore (uint32_t semaphoreInfoId, uint32_t deviceInfoId, e_syncType type) {
-                auto semaphoreInfo = getSemaphoreInfo (semaphoreInfoId, type);
+            void cleanUpSemaphore (uint32_t deviceInfoId, uint32_t semaphoreInfoId, e_syncType type) {
                 auto deviceInfo    = getDeviceInfo    (deviceInfoId);
+                auto semaphoreInfo = getSemaphoreInfo (semaphoreInfoId, type);
 
                 vkDestroySemaphore  (deviceInfo->resource.logDevice, 
                                      semaphoreInfo->resource.semaphore, 

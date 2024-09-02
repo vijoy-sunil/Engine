@@ -80,9 +80,9 @@ namespace Core {
                 m_cameraInfoPool[cameraInfoId] = info;
             }
 
-            void createCameraMatrix (uint32_t cameraInfoId, uint32_t deviceInfoId) {
+            void createCameraMatrix (uint32_t deviceInfoId, uint32_t cameraInfoId) {
                 createViewMatrix       (cameraInfoId);
-                createProjectionMatrix (cameraInfoId, deviceInfoId);
+                createProjectionMatrix (deviceInfoId, cameraInfoId);
             }
 
             void createViewMatrix (uint32_t cameraInfoId) {
@@ -102,9 +102,9 @@ namespace Core {
                                                                 cameraInfo->meta.upVector);
             }
 
-            void createProjectionMatrix (uint32_t cameraInfoId, uint32_t deviceInfoId) {
-                auto cameraInfo = getCameraInfo (cameraInfoId);
+            void createProjectionMatrix (uint32_t deviceInfoId, uint32_t cameraInfoId) {
                 auto deviceInfo = getDeviceInfo (deviceInfoId);
+                auto cameraInfo = getCameraInfo (cameraInfoId);
                 /* It is important to use the current swap chain extent to calculate the aspect ratio to take into account
                  * the new width and height of the window after a resize
                 */

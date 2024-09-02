@@ -23,8 +23,8 @@ namespace Core {
             }
 
         protected:
-            void createMultiSampleState (uint32_t pipelineInfoId, 
-                                         uint32_t imageInfoId,
+            void createMultiSampleState (uint32_t imageInfoId, 
+                                         uint32_t pipelineInfoId,
                                          VkBool32 sampleShadingEnable, 
                                          float minSampleShading) {
 

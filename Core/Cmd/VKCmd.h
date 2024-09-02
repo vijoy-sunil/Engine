@@ -25,10 +25,10 @@ namespace Core {
             }
 
         protected:
-            void setViewPorts (VkCommandBuffer commandBuffer,
-                               uint32_t deviceInfoId,
+            void setViewPorts (uint32_t deviceInfoId,
                                uint32_t firstViewPort,
-                               std::vector <VkViewport>& viewPorts) {
+                               std::vector <VkViewport>& viewPorts,
+                               VkCommandBuffer commandBuffer) {
                 
                 auto deviceInfo = getDeviceInfo (deviceInfoId);
                 /* We've told Vulkan which operations to execute in the graphics pipeline and specified viewport and 
@@ -52,10 +52,10 @@ namespace Core {
                                   viewPorts.data());
             }
 
-            void setScissors (VkCommandBuffer commandBuffer,
-                              uint32_t deviceInfoId,
+            void setScissors (uint32_t deviceInfoId,
                               uint32_t firstScissor,
-                              std::vector <VkRect2D>& scissors) {
+                              std::vector <VkRect2D>& scissors,
+                              VkCommandBuffer commandBuffer) {
 
                 auto deviceInfo = getDeviceInfo (deviceInfoId);
 
@@ -70,9 +70,13 @@ namespace Core {
                                  scissors.data());
             }
 
-            void copyBufferToBuffer (VkCommandBuffer commandBuffer,
-                                     uint32_t srcBufferInfoId, e_bufferType srcBufferType, VkDeviceSize srcOffset,
-                                     uint32_t dstBufferInfoId, e_bufferType dstBufferType, VkDeviceSize dstOffset) {
+            void copyBufferToBuffer (uint32_t srcBufferInfoId,
+                                     uint32_t dstBufferInfoId,
+                                     e_bufferType srcBufferType, 
+                                     e_bufferType dstBufferType,
+                                     VkDeviceSize srcOffset,
+                                     VkDeviceSize dstOffset,
+                                     VkCommandBuffer commandBuffer) {
 
                 auto srcBufferInfo = getBufferInfo (srcBufferInfoId, srcBufferType);
                 auto dstBufferInfo = getBufferInfo (dstBufferInfoId, dstBufferType);
@@ -91,10 +95,13 @@ namespace Core {
                                  &copyRegion);
             }
 
-            void copyBufferToImage (VkCommandBuffer commandBuffer,
-                                    uint32_t srcBufferInfoId, e_bufferType srcBufferType, VkDeviceSize srcOffset,
-                                    uint32_t dstImageInfoId,  e_imageType  dstImageType, 
-                                    VkImageLayout dstImageLayout) {
+            void copyBufferToImage (uint32_t srcBufferInfoId,
+                                    uint32_t dstImageInfoId,
+                                    e_bufferType srcBufferType, 
+                                    e_imageType dstImageType, 
+                                    VkDeviceSize srcOffset,
+                                    VkImageLayout dstImageLayout,
+                                    VkCommandBuffer commandBuffer) {
 
                 auto dstImageInfo  = getImageInfo  (dstImageInfoId,  dstImageType);
                 auto srcBufferInfo = getBufferInfo (srcBufferInfoId, srcBufferType);
@@ -184,8 +191,9 @@ namespace Core {
              * Note that, if you are using a dedicated transfer queue, vkCmdBlitImage must be submitted to a queue with 
              * graphics capability
             */
-            void blitImageToMipMaps (VkCommandBuffer commandBuffer,
-                                     uint32_t imageInfoId, e_imageType imageType) {
+            void blitImageToMipMaps (uint32_t imageInfoId, 
+                                     e_imageType imageType,
+                                     VkCommandBuffer commandBuffer) {
 
                 auto imageInfo = getImageInfo (imageInfoId, imageType);
                 /* Generating mip maps
@@ -358,14 +366,14 @@ namespace Core {
                                       1, &barrier);                 
             }
 
-            void beginRenderPass (VkCommandBuffer commandBuffer,
+            void beginRenderPass (uint32_t deviceInfoId,
                                   uint32_t renderPassInfoId,
                                   uint32_t swapChainImageId,
-                                  uint32_t deviceInfoId,
-                                  const std::vector <VkClearValue>& clearValues) {
+                                  const std::vector <VkClearValue>& clearValues,
+                                  VkCommandBuffer commandBuffer) {
                 
-                auto renderPassInfo = getRenderPassInfo (renderPassInfoId);
                 auto deviceInfo     = getDeviceInfo     (deviceInfoId);
+                auto renderPassInfo = getRenderPassInfo (renderPassInfoId);
                 /* Drawing starts by beginning the render pass with vkCmdBeginRenderPass. The render pass is configured 
                  * using some parameters in a VkRenderPassBeginInfo struct
                 */
@@ -406,9 +414,9 @@ namespace Core {
                 vkCmdEndRenderPass (commandBuffer);
             }
 
-            void bindPipeline (VkCommandBuffer commandBuffer,
-                               uint32_t pipelineInfoId,
-                               VkPipelineBindPoint bindPoint) {
+            void bindPipeline (uint32_t pipelineInfoId,
+                               VkPipelineBindPoint bindPoint,
+                               VkCommandBuffer commandBuffer) {
                 
                 auto pipelineInfo = getPipelineInfo (pipelineInfoId);
                 vkCmdBindPipeline (commandBuffer, 
@@ -416,10 +424,10 @@ namespace Core {
                                    pipelineInfo->resource.pipeline);
             }
 
-            void updatePushConstants (VkCommandBuffer commandBuffer,
-                                      uint32_t pipelineInfoId,
+            void updatePushConstants (uint32_t pipelineInfoId,
                                       VkShaderStageFlags stageFlags, 
-                                      uint32_t offset, uint32_t size, const void* data) {
+                                      uint32_t offset, uint32_t size, const void* data,
+                                      VkCommandBuffer commandBuffer) {
                 
                 auto pipelineInfo = getPipelineInfo (pipelineInfoId);
                 vkCmdPushConstants (commandBuffer,
@@ -428,10 +436,10 @@ namespace Core {
                                     offset, size, data);
             }
 
-            void bindVertexBuffers (VkCommandBuffer commandBuffer,
+            void bindVertexBuffers (const std::vector <uint32_t>& bufferInfoIds,
                                     uint32_t firstBinding,
-                                    const std::vector <uint32_t>& bufferInfoIds,
-                                    const std::vector <VkDeviceSize>& offsets) {
+                                    const std::vector <VkDeviceSize>& offsets,
+                                    VkCommandBuffer commandBuffer) {
                 
                 std::vector <VkBuffer> vertexBuffers;
                 /* The vkCmdBindVertexBuffers function is used to bind vertex buffers to bindings. The first two 
@@ -451,10 +459,10 @@ namespace Core {
                                         offsets.data());
             }
 
-            void bindIndexBuffer (VkCommandBuffer commandBuffer,
-                                  uint32_t bufferInfoId,
+            void bindIndexBuffer (uint32_t bufferInfoId,
                                   VkDeviceSize offset,
-                                  VkIndexType indexType) {
+                                  VkIndexType indexType,
+                                  VkCommandBuffer commandBuffer) {
                 
                 auto bufferInfo = getBufferInfo (bufferInfoId, INDEX_BUFFER);
                 /* The vkCmdBindIndexBuffer binds the index buffer, just like we did for the vertex buffer. The 
@@ -468,12 +476,12 @@ namespace Core {
                                       indexType);
             }
 
-            void bindDescriptorSets (VkCommandBuffer commandBuffer,
-                                     uint32_t pipelineInfoId,
+            void bindDescriptorSets (uint32_t pipelineInfoId,
                                      VkPipelineBindPoint bindPoint,
                                      uint32_t firstSet,
                                      const std::vector <VkDescriptorSet>& descriptorSets,
-                                     const std::vector <uint32_t>& dynamicOffsets) {
+                                     const std::vector <uint32_t>& dynamicOffsets,
+                                     VkCommandBuffer commandBuffer) {
                 
                 auto pipelineInfo = getPipelineInfo (pipelineInfoId);
                 /* Unlike vertex and index buffers, descriptor sets are not unique to graphics pipelines. Therefore we 
@@ -495,12 +503,25 @@ namespace Core {
                                          dynamicOffsets.data());
             }
 
-            void drawIndexed (VkCommandBuffer commandBuffer,
-                              uint32_t indicesCount,
+            void draw (uint32_t vertexCount, 
+                       uint32_t instanceCount, 
+                       uint32_t firstVertex, 
+                       uint32_t firstInstance,
+                       VkCommandBuffer commandBuffer) {
+
+                vkCmdDraw (commandBuffer, 
+                           vertexCount, 
+                           instanceCount, 
+                           firstVertex, 
+                           firstInstance);
+            }
+
+            void drawIndexed (uint32_t indicesCount,
                               uint32_t instanceCount, 
                               uint32_t firstIndex, 
                               int32_t vertexOffset, 
-                              uint32_t firstInstance) {
+                              uint32_t firstInstance,
+                              VkCommandBuffer commandBuffer) {
                 
                 /* InstanceCount: Used for instanced rendering, use 1 if you're not doing that
                  * firstIndex:    Specifies an offset into the index buffer, using a value of 1 would cause the graphics 

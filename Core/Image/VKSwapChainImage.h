@@ -150,7 +150,7 @@ namespace Core {
              * up, but the general purpose of the swap chain is to synchronize the presentation of images with the 
              * refresh rate of the screen
             */
-            void createSwapChainResources (uint32_t imageInfoId, uint32_t deviceInfoId) {
+            void createSwapChainResources (uint32_t deviceInfoId, uint32_t imageInfoId) {
                 auto deviceInfo       = getDeviceInfo (deviceInfoId);
                 auto swapChainSupport = getSwapChainSupportDetails (deviceInfoId, deviceInfo->resource.phyDevice);
 
@@ -289,8 +289,8 @@ namespace Core {
                 */
                 for (uint32_t i = 0; i < swapChainSize; i++) {
                     imageInfo->meta.id = imageInfoId + i;
-                    createImageView (imageInfo, 
-                                     deviceInfoId,
+                    createImageView (deviceInfoId, 
+                                     imageInfo,
                                      SWAPCHAIN_IMAGE,
                                      0,
                                      swapChainImages[i]);

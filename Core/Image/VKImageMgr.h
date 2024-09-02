@@ -132,8 +132,8 @@ namespace Core {
              * VkImageView object. An image view is quite literally a view into an image. It describes how to access the 
              * image and which part of the image to access
             */
-            void createImageView (ImageInfo* imageInfo,
-                                  uint32_t deviceInfoId,
+            void createImageView (uint32_t deviceInfoId,
+                                  ImageInfo* imageInfo,
                                   e_imageType type, 
                                   uint32_t baseMipLevel,
                                   VkImage image) {
@@ -194,8 +194,8 @@ namespace Core {
                 m_imageInfoPool[type].push_back (*imageInfo);
             }
 
-            void createImageResources (uint32_t imageInfoId,
-                                       uint32_t deviceInfoId,
+            void createImageResources (uint32_t deviceInfoId,
+                                       uint32_t imageInfoId,
                                        e_imageType type,
                                        uint32_t width, 
                                        uint32_t height,
@@ -351,8 +351,8 @@ namespace Core {
                 info.allocation.memoryTypeIndex = allocInfo.memoryTypeIndex;
                 /* Create image view
                 */
-                createImageView (&info, 
-                                 deviceInfoId,
+                createImageView (deviceInfoId,
+                                 &info,
                                  type, 
                                  0,
                                  image);
@@ -549,9 +549,9 @@ namespace Core {
                 }
             }
 
-            void cleanUp (uint32_t imageInfoId, uint32_t deviceInfoId, e_imageType type) {
-                auto imageInfo  = getImageInfo  (imageInfoId, type);
+            void cleanUp (uint32_t deviceInfoId, uint32_t imageInfoId, e_imageType type) {
                 auto deviceInfo = getDeviceInfo (deviceInfoId); 
+                auto imageInfo  = getImageInfo  (imageInfoId, type);
                 /* If we are cleaning up swap chain resources, we are only going to delete the associated image view. The
                  * destroy swap chain method will take care of the rest
                 */
