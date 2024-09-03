@@ -166,11 +166,9 @@
     |Scene/VKResizing
 
 
-    |<......................|VKConfig
-    |
-    |<......................|Log
-    |
-    |
+    |VKConfig, Log
+    :
+    :
     |{Scene/VKSceneMgr}     |{VKDeviceMgr}
     |                       |
     |                       |
