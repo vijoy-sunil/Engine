@@ -1,6 +1,5 @@
 #ifndef VK_VERTEX_DATA_H
 #define VK_VERTEX_DATA_H
-
 /* GLM library provides us with linear algebra related types like vectors and matrices. The hash functions are defined in
  * the gtx folder, which means that it is technically still an experimental extension to GLM. Therefore you need to define 
  * GLM_ENABLE_EXPERIMENTAL to use it
