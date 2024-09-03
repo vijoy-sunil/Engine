@@ -74,7 +74,7 @@ namespace Core {
                 
                 auto pipelineInfo = getPipelineInfo (pipelineInfoId);
                 /* The second structure references the array of structures for all of the framebuffers and allows you to 
-                 * set blend constants that you can use as blend factors
+                 * set blend constants that you can use as blend factors between them
                 */
                 VkPipelineColorBlendStateCreateInfo createInfo;
                 createInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
