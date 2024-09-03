@@ -26,8 +26,8 @@ namespace Core {
                                       VkDeviceSize size, 
                                       const void* data) {
                 // TO DO
-                static_cast <void> (bufferInfoId);
                 static_cast <void> (deviceInfoId);
+                static_cast <void> (bufferInfoId);
                 static_cast <void> (size);
                 static_cast <void> (data);
             }
