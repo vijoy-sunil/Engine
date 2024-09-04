@@ -21,13 +21,13 @@ VARIABLES
 [ - ] Reduce use of macros, use const instead
 [ - ] use nullptr for null pointers instead of NULL
 [ - ] use VK_NULL_HANDLE instead of nullptr for Vulkan objects
-[ - ] static cast instead of C-style cast
 [ - ] For loops use matching types for iterator
 [ - ] Stack allocate whenever you can instead of heap
 [ - ] Pool structs resource will only have Vulkan objects, others could be in meta
 [ - ] createInfo and allocInfo used everywhere for consistency
 [ - ] populate info structure by reference via local variable at the end
-[ - ] ID ordering {model, 
+[ - ] ID ordering {device,
+                   model, 
                    image,
                    buffer,
                    renderPass,
@@ -35,8 +35,7 @@ VARIABLES
                    camera,
                    fence,
                    semaphore,
-                   scene,
-                   device}
+                   scene}
 [ - ] Struct info ordering {meta,
                             path,
                             id,
