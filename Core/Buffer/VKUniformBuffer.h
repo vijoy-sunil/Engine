@@ -23,17 +23,6 @@ namespace Core {
         protected:  
             void createUniformBuffer (uint32_t deviceInfoId, 
                                       uint32_t bufferInfoId, 
-                                      VkDeviceSize size, 
-                                      const void* data) {
-                // TO DO
-                static_cast <void> (deviceInfoId);
-                static_cast <void> (bufferInfoId);
-                static_cast <void> (size);
-                static_cast <void> (data);
-            }
-
-            void createUniformBuffer (uint32_t deviceInfoId, 
-                                      uint32_t bufferInfoId, 
                                       VkDeviceSize size) {
                 /* Note that, this method doesn't accept a data pointer. This is because we're going to copy new data to 
                  * the uniform buffer every time we call the update function. In addition, it doesn't really make any 
