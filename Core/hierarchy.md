@@ -41,6 +41,9 @@
     |{Model/VKModelMgr}
     |
     |
+    |VKModelMatrix
+    |
+    |
     |VKInstanceData
 
 
