@@ -42,8 +42,8 @@ namespace Core {
                     uint32_t indexBufferInfo;
                 } id;
             };
-            std::map <uint32_t, ModelInfo>   m_modelInfoPool;
-            std::map <std::string, uint32_t> m_textureImagePool;
+            std::unordered_map <uint32_t, ModelInfo>   m_modelInfoPool;
+            std::unordered_map <std::string, uint32_t> m_textureImagePool;
             
             Log::Record* m_VKModelMgrLog;
             const uint32_t m_instanceId = g_collectionsSettings.instanceId++; 
@@ -394,7 +394,7 @@ namespace Core {
                 modelInfo->id.diffuseTextureImageInfos.push_back (m_textureImagePool[texturePath]);
             }
 
-            std::map <std::string, uint32_t>& getTextureImagePool (void) {
+            std::unordered_map <std::string, uint32_t>& getTextureImagePool (void) {
                 return m_textureImagePool;
             }
 

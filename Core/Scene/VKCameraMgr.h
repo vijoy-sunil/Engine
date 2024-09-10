@@ -38,7 +38,7 @@ namespace Core {
                     glm::mat4 projectionMatrix;
                 } transform;
             };
-            std::map <uint32_t, CameraInfo> m_cameraInfoPool;
+            std::unordered_map <uint32_t, CameraInfo> m_cameraInfoPool;
 
             Log::Record* m_VKCameraMgrLog;
             const uint32_t m_instanceId = g_collectionsSettings.instanceId++;

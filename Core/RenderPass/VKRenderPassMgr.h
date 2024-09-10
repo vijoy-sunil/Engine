@@ -17,7 +17,7 @@ namespace Core {
                     VkRenderPass renderPass;
                 } resource;
             };
-            std::map <uint32_t, RenderPassInfo> m_renderPassInfoPool;
+            std::unordered_map <uint32_t, RenderPassInfo> m_renderPassInfoPool;
 
             Log::Record* m_VKRenderPassMgrLog;
             const uint32_t m_instanceId = g_collectionsSettings.instanceId++;

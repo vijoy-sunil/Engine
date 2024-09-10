@@ -47,7 +47,7 @@ namespace Core {
                     return meta.id == other.meta.id;
                 }  
             };
-            std::map <e_imageType, std::vector <ImageInfo>> m_imageInfoPool;
+            std::unordered_map <e_imageType, std::vector <ImageInfo>> m_imageInfoPool;
 
             Log::Record* m_VKImageMgrLog;
             const uint32_t m_instanceId = g_collectionsSettings.instanceId++;

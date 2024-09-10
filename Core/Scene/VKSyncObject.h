@@ -28,7 +28,7 @@ namespace Core {
                     return meta.id == other.meta.id;
                 }
             };
-            std::map <e_syncType, std::vector <FenceInfo>> m_fenceInfoPool;
+            std::unordered_map <e_syncType, std::vector <FenceInfo>> m_fenceInfoPool;
 
             struct SemaphoreInfo {
                 struct Meta {
@@ -43,7 +43,7 @@ namespace Core {
                     return meta.id == other.meta.id;
                 }
             };
-            std::map <e_syncType, std::vector <SemaphoreInfo>> m_semaphoreInfoPool;
+            std::unordered_map <e_syncType, std::vector <SemaphoreInfo>> m_semaphoreInfoPool;
 
             Log::Record* m_VKSyncObjectLog;
             const uint32_t m_instanceId = g_collectionsSettings.instanceId++;

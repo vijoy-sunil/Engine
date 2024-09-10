@@ -71,7 +71,7 @@ namespace Core {
                     float maxSamplerAnisotropy;
                 } params;
             };
-            std::map <uint32_t, DeviceInfo> m_deviceInfoPool;
+            std::unordered_map <uint32_t, DeviceInfo> m_deviceInfoPool;
 
             /* List of required device extensions
             */

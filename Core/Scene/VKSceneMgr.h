@@ -33,7 +33,7 @@ namespace Core {
                     std::vector <VkCommandBuffer> commandBuffers;
                 } resource;
             };
-            std::map <uint32_t, SceneInfo> m_sceneInfoPool;
+            std::unordered_map <uint32_t, SceneInfo> m_sceneInfoPool;
 
             Log::Record* m_VKSceneMgrLog;
             const uint32_t m_instanceId = g_collectionsSettings.instanceId++;

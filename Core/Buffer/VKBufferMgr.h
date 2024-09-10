@@ -36,7 +36,7 @@ namespace Core {
                     return meta.id == other.meta.id;
                 }                   
             };
-            std::map <e_bufferType, std::vector <BufferInfo>> m_bufferInfoPool;
+            std::unordered_map <e_bufferType, std::vector <BufferInfo>> m_bufferInfoPool;
 
             Log::Record* m_VKBufferMgrLog;
             const uint32_t m_instanceId = g_collectionsSettings.instanceId++;

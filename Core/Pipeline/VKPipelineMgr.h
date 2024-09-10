@@ -77,7 +77,7 @@ namespace Core {
                     VkPipeline basePipeline; 
                 } resource;
             };
-            std::map <uint32_t, PipelineInfo> m_pipelineInfoPool;
+            std::unordered_map <uint32_t, PipelineInfo> m_pipelineInfoPool;
 
             Log::Record* m_VKPipelineMgrLog;
             const uint32_t m_instanceId = g_collectionsSettings.instanceId++;
