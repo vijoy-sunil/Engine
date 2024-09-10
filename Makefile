@@ -11,7 +11,7 @@ BUILDDIR			= ./Build
 BINDIR     			:= $(BUILDDIR)/Bin
 OBJDIR     			:= $(BINDIR)/Objs
 LOGDIR				:= $(BUILDDIR)/Log
-SHADERDIR			:= $(SRCDIR)/Shaders
+SHADERDIR			:= $(SRCDIR)/Shader
 
 SRCS   				:= $(wildcard $(SRCDIR)/*.cpp)
 SRCS_VERTSHADER  	:= $(wildcard $(SHADERDIR)/*.vert)
