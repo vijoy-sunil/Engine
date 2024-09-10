@@ -8,7 +8,7 @@ namespace Buffer {
     class BufferMgr: public Admin::InstanceMgr {
         public:
             template <typename T>
-            BufferImpl <T>* createBuffer (uint32_t instanceId, e_type type, size_t capacity) {
+            BufferImpl <T>* createBuffer (uint32_t instanceId, e_bufferType type, size_t capacity) {
                 /* Create and add buffer object to pool
                 */
                 if (m_instancePool.find (instanceId) == m_instancePool.end()) {

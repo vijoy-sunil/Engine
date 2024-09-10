@@ -2,15 +2,47 @@
 <i>Classes within {} are virtual inheritance</i>
 
 <pre>
+    ENEnum
+    :
+    :
+    |---------------------->|Config/ENEnvConfig
+    |
+    |---------------------->|Config/ENModelConfig
+
+
+    |<----------------------|{VKDeviceMgr}
+    |
+    |<----------------------|{Utils/UserInput}
+    |
+    |<......................|ENEnvConfig
+    |
+    |
+    |Control/ENGenericControl
+
+
+    |<----------------------|{VKModelMgr}
+    |
+    |<----------------------|{VKCameraMgr}
+    |
+    |<----------------------|{UserInput}
+    |
+    |<......................|ENEnvConfig
+    |
+    |
+    |Control/ENCameraControl
+
+
     |<----------------------|VKInitSequence
     |
     |<----------------------|VKDrawSequence
     |
     |<----------------------|VKDeleteSequence
     |
-    |<......................|ENModel
+    |<----------------------|ENGenericControl
     |
-    |<......................|ENEnvironment
+    |<----------------------|ENCameraControl
+    |
+    |<......................|ENModelConfig
     |
     |
     |SandBox/ENApplication

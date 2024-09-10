@@ -8,10 +8,10 @@
                     dataType,                                                                                   \
                     capacity)                   Buffer::g_bufferMgr.createBuffer <dataType> (id, type, capacity)
 #define GET_BUFFER(id, dataType)                dynamic_cast <Buffer::BufferImpl <dataType> *>                  \
-                                                (Buffer::g_bufferMgr.getInstance (id)) 
+                                                (Buffer::g_bufferMgr.getInstance (id))
 #define BUFFER_CLOSE(id)                        Buffer::g_bufferMgr.closeInstance (id)
 #define BUFFER_CLOSE_ALL                        Buffer::g_bufferMgr.closeAllInstances()
-#define BUFFER_MGR_DUMP                         Buffer::g_bufferMgr.dump (std::cout)  
+#define BUFFER_MGR_DUMP                         Buffer::g_bufferMgr.dump (std::cout)
 
 #define BUFFER_PUSH(data)                       push (data)
 #define BUFFER_POP_FIRST                        popFirst()
@@ -30,5 +30,5 @@
 #define BUFFER_DUMP_CUSTOM(lambda)              dump (std::cout, lambda)
 /* When a buffer sink is used for the logger, this id is added to the log instance id for the buffer sink
 */
-#define RESERVED_ID_LOG_SINK                    99
+#define RESERVED_ID_LOG_SINK                    0
 #endif  // BUFFER_H

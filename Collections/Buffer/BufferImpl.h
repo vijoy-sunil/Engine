@@ -8,13 +8,13 @@ namespace Buffer {
     typedef enum {
         WITH_OVERFLOW    = 0,
         WITHOUT_OVERFLOW = 1
-    } e_type;
+    } e_bufferType;
 
     template <typename T>
     class BufferImpl: public Admin::NonTemplateBase {
         private:
             uint32_t m_instanceId;
-            e_type m_type;
+            e_bufferType m_type;
             size_t m_capacity;
             size_t m_numItems;
 
@@ -32,7 +32,7 @@ namespace Buffer {
             }
 
         public:
-            BufferImpl (uint32_t instanceId, e_type type, size_t capacity) {
+            BufferImpl (uint32_t instanceId, e_bufferType type, size_t capacity) {
                 m_instanceId = instanceId;
                 m_type       = type;
                 m_capacity   = capacity;

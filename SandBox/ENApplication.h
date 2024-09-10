@@ -4,15 +4,16 @@
 #include "../Core/Scene/VKInitSequence.h"
 #include "../Core/Scene/VKDrawSequence.h"
 #include "../Core/Scene/VKDeleteSequence.h"
-#include "Configs/ENModel.h"
-#include "Configs/ENEnvironment.h"
-
-using namespace Core;
+#include "Control/ENGenericControl.h"
+#include "Control/ENCameraControl.h"
+#include "Config/ENModelConfig.h"
 
 namespace SandBox {
     class ENApplication: protected VKInitSequence,
                          protected VKDrawSequence,
-                         protected VKDeleteSequence {
+                         protected VKDeleteSequence,
+                         protected ENGenericControl,
+                         protected ENCameraControl {
         private:
             uint32_t m_deviceInfoId;
             std::vector <uint32_t> m_modelInfoIds;
@@ -84,18 +85,17 @@ namespace SandBox {
                 }
 #endif  // ENABLE_SAMPLE_MODELS_IMPORT
                 /* |------------------------------------------------------------------------------------------------|
-                 * | READY CAMERA INFO                                                                              |
+                 * | READY CAMERA INFO & CAMERA CONTROL                                                             |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                readyCameraInfo (m_cameraInfoId);
-                auto cameraInfo = getCameraInfo (m_cameraInfoId);
+                readyCameraInfo    (m_cameraInfoId);
+                readyCameraControl (m_deviceInfoId, m_cameraInfoId, SPOILER);
+                updateCameraState  (VEHICLE_BASE, 0);
 
-                cameraInfo->meta.position  = {0.0f, -80.0f,  0.0f};
-                cameraInfo->meta.center    = {0.0f,   0.0f, 10.0f};
-                cameraInfo->meta.upVector  = {0.0f,   0.0f,  1.0f};
-                cameraInfo->meta.fovDeg    = 45.0f;
-                cameraInfo->meta.nearPlane = 0.01f;
-                cameraInfo->meta.farPlane  = 1000.0f;
+                auto cameraInfo            = getCameraInfo (m_cameraInfoId);
+                cameraInfo->meta.upVector  = g_cameraSettings.upVector;
+                cameraInfo->meta.nearPlane = g_cameraSettings.nearPlane;
+                cameraInfo->meta.farPlane  = g_cameraSettings.farPlane;
                 /* |------------------------------------------------------------------------------------------------|
                  * | READY SCENE INFO                                                                               |
                  * |------------------------------------------------------------------------------------------------|
@@ -106,7 +106,10 @@ namespace SandBox {
                     m_renderDoneSemaphoreInfoBase
                 };
                 readySceneInfo (m_sceneInfoId, totalInstancesCount, sceneInfoIds);
-
+                /* |------------------------------------------------------------------------------------------------|
+                 * | RUN SEQUENCE - INIT                                                                            |
+                 * |------------------------------------------------------------------------------------------------|
+                */
                 VKInitSequence::runSequence (m_deviceInfoId, 
                                              m_modelInfoIds, 
                                              m_renderPassInfoId,
@@ -126,7 +129,7 @@ namespace SandBox {
                      * ids to be updated must exist in the global texture pool
                     */
                     for (auto const& modelInstanceId: {1, 2, 3})
-                        updateTexIdLUT (4, modelInstanceId, 3, 5);
+                        updateTexIdLUT (T0_GENERIC_NOCAP, modelInstanceId, 5, 4);
 #endif  // ENABLE_SAMPLE_MODELS_IMPORT
                 }
                 {
@@ -187,7 +190,15 @@ namespace SandBox {
 
                     vkDestroyShaderModule (deviceInfo->resource.logDevice, vertexShaderModule,   VK_NULL_HANDLE);
                     vkDestroyShaderModule (deviceInfo->resource.logDevice, fragmentShaderModule, VK_NULL_HANDLE);
-                }});
+                }
+                });
+                /* |------------------------------------------------------------------------------------------------|
+                 * | READY CONTROL                                                                                  |
+                 * |------------------------------------------------------------------------------------------------|
+                */
+                auto deviceInfo = getDeviceInfo (m_deviceInfoId);
+                readyGenericControl             (m_deviceInfoId);
+                readyKeyCallBack                (deviceInfo->resource.window);
             }
 
             void runScene (void) {
@@ -197,8 +208,38 @@ namespace SandBox {
                  * |------------------------------------------------------------------------------------------------|
                 */
                 while (!glfwWindowShouldClose (deviceInfo->resource.window)) {
+                    /* GLFW needs to poll the window system for events both to provide input to the application and to 
+                     * prove to the window system that the application hasn't locked up. Event processing is normally 
+                     * done each frame after buffer swapping. Even when you have no windows, event polling needs to be 
+                     * done in order to receive monitor and joystick connection events. glfwPollEvents(), processes only
+                     * those events that have already been received and then returns immediately. This is the best choice
+                     * when rendering continuously, like most games do
+                     * 
+                     * Note that, if you only need to update the contents of the window when you receive new input, 
+                     * glfwWaitEvents() is a better choice
+                    */
                     glfwPollEvents();
+                /* |------------------------------------------------------------------------------------------------|
+                 * | MOTION UPDATE                                                                                  |
+                 * |------------------------------------------------------------------------------------------------|
+                */
+                    /* Calculate the time in seconds since rendering has started with floating point accuracy
+                    */
+                    static auto startTime = std::chrono::high_resolution_clock::now();
+                    auto currentTime      = std::chrono::high_resolution_clock::now();
+                    float deltaTime       = std::chrono::duration <float, std::chrono::seconds::period> 
+                                            (currentTime - startTime).count();  
 
+                    handleKeyEvents    (currentTime);
+                    /* [ X ] update vehicle state here before camera state so that the model matrix is ready to be
+                     * used by camera vectors in the same frame
+                    */
+                    static_cast <void> (deltaTime);
+                    updateCameraState  (VEHICLE_BASE, 0);
+                /* |------------------------------------------------------------------------------------------------|
+                 * | RUN SEQUENCE - DRAW                                                                            |
+                 * |------------------------------------------------------------------------------------------------|
+                */
                     VKDrawSequence::runSequence (m_deviceInfoId,
                                                  m_modelInfoIds, 
                                                  m_renderPassInfoId,
@@ -238,6 +279,11 @@ namespace SandBox {
                  * device to finish operations before exiting mainLoop and destroying the window
                 */
                 vkDeviceWaitIdle (deviceInfo->resource.logDevice);
+                /* |------------------------------------------------------------------------------------------------|
+                 * | DESTROY CONTROL                                                                                |
+                 * |------------------------------------------------------------------------------------------------|
+                */
+                UserInput::cleanUp (deviceInfo->resource.window);
             }
 
             void deleteScene (void) {
@@ -245,7 +291,10 @@ namespace SandBox {
                     m_pipelineInfoId,   /* Base pipeline */
                     1                   /* Grid pipeline */
                 };
-
+                /* |------------------------------------------------------------------------------------------------|
+                 * | RUN SEQUENCE - DELETE                                                                          |
+                 * |------------------------------------------------------------------------------------------------|
+                */
                 VKDeleteSequence::runSequence (m_deviceInfoId,
                                                m_modelInfoIds, 
                                                m_renderPassInfoId,

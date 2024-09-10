@@ -11,11 +11,12 @@ namespace Core {
     #define ENABLE_PARSED_INSTANCE_DATA_DUMP                         (true)
 
     struct CollectionsSettings {
-        /* Keep track of instance ids for collections library. Note that, we are not taking into account of reserved ids
-         * used by collections library which may result in collision
+        /* Collections instance id range assignments
+         * Reserved     [0]
+         * Core/        [1, 100]
         */
-        uint32_t instanceId                                          = 0;
-        const char* logSaveDirPath                                   = "Build/Log/";
+        uint32_t instanceId                                          = 1;
+        const char* logSaveDirPath                                   = "Build/Log/Core/";
     } g_collectionsSettings;
 
     struct WindowSettings {

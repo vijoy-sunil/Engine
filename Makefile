@@ -55,24 +55,34 @@ GLSLC				:= $(VULKAN_SDK)/bin/glslc
 # Targets
 $(OBJDIR)/%.o: $(SRCDIR)/%.cpp
 	@$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -MMD -o $@
-	@echo "[OK] compile"
+	@echo "[OK] app compile"
 
-$(BINDIR)/$(TARGET): $(OBJS)
-	@$(LD) $@ $(LDFLAGS) $<
-	@echo "[OK] link"
+$(TARGET): $(OBJS)
+	@$(LD) $(BINDIR)/$@ $(LDFLAGS) $<
+	@echo "[OK] app link"
 
 -include $(DEPS)
 
 %$(BINSFX_VERTSHADER): $(SHADERDIR)/%.$(SFX_VERTSHADER)
-	$(GLSLC) $< -o $(BINDIR)/$@
+	@$(GLSLC) $< -o $(BINDIR)/$@
 
 %$(BINSFX_FRAGSHADER): $(SHADERDIR)/%.$(SFX_FRAGSHADER)
-	$(GLSLC) $< -o $(BINDIR)/$@
+	@$(GLSLC) $< -o $(BINDIR)/$@
+
+.PHONY: all directories shaders app clean run info
+
+all: directories shaders app 
+
+directories:
+	@mkdir -p $(LOGDIR)/Core
+	@mkdir -p $(LOGDIR)/SandBox
+	@echo "[OK] directories"
 
 shaders: $(TARGETS_VERTSHADER) $(TARGETS_FRAGSHADER)
 	@echo "[OK] shader compile"
 
-.PHONY: clean run shaders info
+app: $(TARGET)
+
 clean:
 	@$(RM) $(OBJDIR)/* 
 	@echo "[OK] objects clean"

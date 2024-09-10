@@ -8,7 +8,6 @@
  * possible confusion
 */
 #define GLM_FORCE_RADIANS
-#include <glm/glm.hpp>
 /* The glm/gtc/matrix_transform.hpp header exposes functions that can be used to generate model transformations like 
  * glm::rotate, view transformations like glm::lookAt and projection transformations like glm::perspective
 */
@@ -23,7 +22,7 @@ namespace Core {
             struct CameraInfo {
                 struct Meta {
                     glm::vec3 position; 
-                    glm::vec3 center;
+                    glm::vec3 direction;
                     glm::vec3 upVector;
 
                     float fovDeg; 
@@ -90,15 +89,17 @@ namespace Core {
                 /* The glm::lookAt function takes the eye (camera) position, where you want to look at, in world space, 
                  * and up axis as parameters
                  * 
-                 * The up vector is basically a vector defining your world's "upwards" direction. In almost all normal 
-                 * cases, this will be the vector (0, 1, 0) i.e. towards positive Y
+                 * The up vector is basically a vector defining your world's "upwards" direction
                  * 
                  * Note that, we need to take care of how the vertices are being drawn, whether in counter-clockwise 
                  * order or clockwise order, since it might cause backface culling to kick in and prevent any geometry 
                  * from being drawn
+                 * 
+                 * The direction that the camera looks at is the current position + the direction vector. This ensures 
+                 * that however we move, the camera keeps looking at the target direction
                 */
                 cameraInfo->transform.viewMatrix = glm::lookAt (cameraInfo->meta.position, 
-                                                                cameraInfo->meta.center, 
+                                                                cameraInfo->meta.position + cameraInfo->meta.direction,
                                                                 cameraInfo->meta.upVector);
             }
 
@@ -158,10 +159,10 @@ namespace Core {
                                                 << "]"  
                                                 << std::endl;
 
-                    LOG_INFO (m_VKCameraMgrLog) << "Center "
-                                                << "[" << val.meta.center.x << ", "
-                                                       << val.meta.center.y << ", "
-                                                       << val.meta.center.z
+                    LOG_INFO (m_VKCameraMgrLog) << "Direction "
+                                                << "[" << val.meta.direction.x << ", "
+                                                       << val.meta.direction.y << ", "
+                                                       << val.meta.direction.z
                                                 << "]"  
                                                 << std::endl;
 
