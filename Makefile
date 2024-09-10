@@ -9,7 +9,7 @@ JSONPARSER_INCDIR   = /opt/homebrew/Cellar/json-develop
 SRCDIR     			= ./SandBox
 BUILDDIR			= ./Build
 BINDIR     			:= $(BUILDDIR)/Bin
-OBJDIR     			:= $(BINDIR)/Objs
+OBJDIR     			:= $(BINDIR)/Obj
 LOGDIR				:= $(BUILDDIR)/Log
 SHADERDIR			:= $(SRCDIR)/Shader
 
