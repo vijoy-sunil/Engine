@@ -1,4 +1,4 @@
 .DS_Store
 .vscode
-SandBox/Models/*.blend
-SandBox/Models/*.blend1
+Assets/Model/*.blend
+Assets/Model/*.blend1

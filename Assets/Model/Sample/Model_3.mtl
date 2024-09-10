@@ -1,7 +1,7 @@
 # Blender 3.6.1 MTL File: 'Sketchbook.blend'
 # www.blender.org
 
-newmtl Material_Track_Base
+newmtl Material_Cube
 Ns 250.000000
 Ka 1.000000 1.000000 1.000000
 Ks 0.500000 0.500000 0.500000
@@ -9,9 +9,9 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.450000
 d 1.000000
 illum 2
-map_Kd /Users/vijoys/Downloads/Projects/Engine/SandBox/Textures/Track/tex_16x16_track_base.png
+map_Kd /Users/vijoys/Downloads/Projects/Engine/Assets/Texture/Sample/tex_512x512_bw.png
 
-newmtl Material_Track_Railing
+newmtl Material_Cube_2
 Ns 250.000000
 Ka 1.000000 1.000000 1.000000
 Ks 0.500000 0.500000 0.500000
@@ -19,15 +19,14 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.450000
 d 1.000000
 illum 2
-map_Kd /Users/vijoys/Downloads/Projects/Engine/SandBox/Textures/Track/tex_16x16_track_railing.png
+map_Kd /Users/vijoys/Downloads/Projects/Engine/Assets/Texture/Sample/tex_512x512_rb.png
 
-newmtl Material_Track_Surface_Composite
+newmtl Material_Cylinder
 Ns 250.000000
 Ka 1.000000 1.000000 1.000000
-Kd 0.552010 0.768151 0.715694
 Ks 0.500000 0.500000 0.500000
 Ke 0.000000 0.000000 0.000000
 Ni 1.450000
 d 1.000000
 illum 2
-map_Kd /Users/vijoys/Downloads/Projects/Engine/SandBox/Textures/Track/tex_64x64_track_surface_marker.png
+map_Kd /Users/vijoys/Downloads/Projects/Engine/Assets/Texture/Sample/tex_512x512_gb.png

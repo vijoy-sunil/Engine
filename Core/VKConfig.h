@@ -128,7 +128,7 @@ namespace Core {
          * the swap chain yet 
         */
         const uint32_t maxFramesInFlight                             = 2;        
-        const char* defaultDiffuseTexturePath                        = "SandBox/Textures/tex_16x16_empty.png";
+        const char* defaultDiffuseTexturePath                        = "Assets/Texture/tex_16x16_empty.png";
     } g_coreSettings;
 }   // namespace Core
 #endif  // VK_CONFIG_H
