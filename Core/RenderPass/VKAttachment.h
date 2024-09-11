@@ -4,8 +4,6 @@
 #include "VKRenderPassMgr.h"
 #include "../Image/VKImageMgr.h"
 
-using namespace Collections;
-
 namespace Core {
     class VKAttachment: protected virtual VKRenderPassMgr,
                         protected virtual VKImageMgr {

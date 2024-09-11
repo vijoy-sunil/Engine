@@ -3,8 +3,6 @@
 
 #include "VKImageMgr.h"
 
-using namespace Collections;
-
 namespace Core {
     class VKMultiSampleImage: protected virtual VKImageMgr {
         private:

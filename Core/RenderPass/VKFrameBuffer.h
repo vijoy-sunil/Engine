@@ -3,8 +3,6 @@
 
 #include "VKRenderPassMgr.h"
 
-using namespace Collections;
-
 namespace Core {
     class VKFrameBuffer: protected virtual VKRenderPassMgr {
         private:

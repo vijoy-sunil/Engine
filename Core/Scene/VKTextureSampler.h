@@ -4,8 +4,6 @@
 #include "VKSceneMgr.h"
 #include "../Device/VKDeviceMgr.h"
 
-using namespace Collections;
-
 namespace Core {
     class VKTextureSampler: protected virtual VKSceneMgr,
                             protected virtual VKDeviceMgr {

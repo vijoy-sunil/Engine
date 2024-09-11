@@ -4,8 +4,6 @@
 #include "VKValidation.h"
 #include "VKPhyDevice.h"
 
-using namespace Collections;
-
 namespace Core {
     class VKLogDevice: protected virtual VKValidation,
                        protected virtual VKPhyDevice {

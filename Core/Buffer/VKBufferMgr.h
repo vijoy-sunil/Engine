@@ -3,8 +3,6 @@
 
 #include "../Device/VKPhyDevice.h"
 
-using namespace Collections;
-
 namespace Core {
     class VKBufferMgr: protected virtual VKPhyDevice {
         private:

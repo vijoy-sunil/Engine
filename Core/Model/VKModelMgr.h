@@ -7,8 +7,6 @@
 #include "VKVertexData.h"
 #include "../Scene/VKUniform.h"
 
-using namespace Collections;
-
 namespace Core {
     class VKModelMgr: protected VKVertexData {
         private:

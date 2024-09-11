@@ -3,8 +3,6 @@
 
 #include "VKQueue.h"
 
-using namespace Collections;
-
 namespace Core {
     class VKPhyDevice: protected VKQueue {
         private:

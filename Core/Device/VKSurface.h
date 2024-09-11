@@ -3,8 +3,6 @@
 
 #include "VKDeviceMgr.h"
 
-using namespace Collections;
-
 namespace Core {
     class VKSurface: protected virtual VKDeviceMgr {
         private:

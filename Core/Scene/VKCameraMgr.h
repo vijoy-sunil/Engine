@@ -14,8 +14,6 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include "../Device/VKDeviceMgr.h"
 
-using namespace Collections;
-
 namespace Core {
     class VKCameraMgr: protected virtual VKDeviceMgr {
         private:

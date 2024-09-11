@@ -3,8 +3,6 @@
 
 #include "../Device/VKDeviceMgr.h"
 
-using namespace Collections;
-
 namespace Core {
     class VKRenderPassMgr: protected virtual VKDeviceMgr {
         private:

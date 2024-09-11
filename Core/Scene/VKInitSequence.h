@@ -35,8 +35,6 @@
 #include "VKDescriptor.h"
 #include "VKSyncObject.h"
 
-using namespace Collections;
-
 namespace Core {
     class VKInitSequence: protected virtual VKWindow,
                           protected virtual VKInstance,

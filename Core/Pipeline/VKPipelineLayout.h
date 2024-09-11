@@ -3,8 +3,6 @@
 
 #include "VKPipelineMgr.h"
 
-using namespace Collections;
-
 namespace Core {
     class VKPipelineLayout: protected virtual VKPipelineMgr {
         private:

@@ -4,8 +4,6 @@
 #include "VKPipelineMgr.h"
 #include "../Image/VKImageMgr.h"
 
-using namespace Collections;
-
 namespace Core {
     class VKMultiSample: protected virtual VKPipelineMgr,
                          protected virtual VKImageMgr {

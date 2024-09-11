@@ -3,8 +3,6 @@
 
 #include "VKBufferMgr.h"
 
-using namespace Collections;
-
 namespace Core {
     class VKIndexBuffer: protected virtual VKBufferMgr {
         private:

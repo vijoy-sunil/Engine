@@ -5,8 +5,6 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include "VKModelMgr.h"
 
-using namespace Collections;
-
 namespace Core {
     class VKModelMatrix: protected virtual VKModelMgr {
         private:

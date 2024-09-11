@@ -5,8 +5,6 @@
 #include "../../Utils/UserInput.h"
 #include "../Config/ENEnvConfig.h"
 
-using namespace Collections;
-
 namespace SandBox {
     class ENGenericControl: protected virtual Core::VKDeviceMgr,
                             protected virtual Utils::UserInput {

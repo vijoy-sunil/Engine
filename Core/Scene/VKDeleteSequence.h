@@ -15,8 +15,6 @@
 #include "VKDescriptor.h"
 #include "VKSyncObject.h"
 
-using namespace Collections;
-
 namespace Core {
     class VKDeleteSequence: protected virtual VKWindow,
                             protected virtual VKInstance,

@@ -9,9 +9,9 @@
 #include "Config/ENModelConfig.h"
 
 namespace SandBox {
-    class ENApplication: protected VKInitSequence,
-                         protected VKDrawSequence,
-                         protected VKDeleteSequence,
+    class ENApplication: protected Core::VKInitSequence,
+                         protected Core::VKDrawSequence,
+                         protected Core::VKDeleteSequence,
                          protected ENGenericControl,
                          protected ENCameraControl {
         private:
@@ -177,7 +177,7 @@ namespace SandBox {
                     createPushConstantRange   (gridPipelineInfoId, 
                                                VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
                                                0, 
-                                               sizeof (SceneDataVertPC));
+                                               sizeof (Core::SceneDataVertPC));
 
                     createPipelineLayout      (m_deviceInfoId, gridPipelineInfoId);
 
@@ -261,13 +261,13 @@ namespace SandBox {
                                              VK_PIPELINE_BIND_POINT_GRAPHICS,
                                              sceneInfo->resource.commandBuffers[m_currentFrameInFlight]);
 
-                        SceneDataVertPC sceneData;
+                        Core::SceneDataVertPC sceneData;
                         sceneData.viewMatrix       = cameraInfo->transform.viewMatrix;
                         sceneData.projectionMatrix = cameraInfo->transform.projectionMatrix;
 
                         updatePushConstants (gridPipelineInfoId,
                                              VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
-                                             0, sizeof (SceneDataVertPC), &sceneData,
+                                             0, sizeof (Core::SceneDataVertPC), &sceneData,
                                              sceneInfo->resource.commandBuffers[m_currentFrameInFlight]);
 
                         draw (6, 1, 0, 0, sceneInfo->resource.commandBuffers[m_currentFrameInFlight]);

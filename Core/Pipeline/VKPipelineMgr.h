@@ -3,8 +3,6 @@
 
 #include "../RenderPass/VKRenderPassMgr.h"
 
-using namespace Collections;
-
 namespace Core {
     /* An overview of the pipeline
      * Vertex/Index Buffer

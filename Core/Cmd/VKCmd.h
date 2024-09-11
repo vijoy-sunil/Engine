@@ -5,8 +5,6 @@
 #include "../Buffer/VKBufferMgr.h"
 #include "../Pipeline/VKPipelineMgr.h"
 
-using namespace Collections;
-
 namespace Core {
     class VKCmd: protected virtual VKImageMgr,
                  protected virtual VKBufferMgr,

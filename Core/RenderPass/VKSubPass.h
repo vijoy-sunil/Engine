@@ -3,8 +3,6 @@
 
 #include "VKRenderPassMgr.h"
 
-using namespace Collections;
-
 namespace Core {
     /* The idea of sub passes is that you have multiple operations in a sequence that operate on the same pixels in the 
      * frame buffer, which is mainly useful for things like deferred rendering

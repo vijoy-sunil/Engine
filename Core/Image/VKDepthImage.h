@@ -3,8 +3,6 @@
 
 #include "VKImageMgr.h"
 
-using namespace Collections;
-
 namespace Core {
     /* Without a depth buffer, fragments of a geometry that should have been drawn over the fragments of another geometry
      * based on the z position attribute will not be rasterized properly as it would solely depend on the ordering in the 

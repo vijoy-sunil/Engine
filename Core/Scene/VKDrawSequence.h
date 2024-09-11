@@ -10,8 +10,6 @@
 #include "VKSyncObject.h"
 #include "VKResizing.h"
 
-using namespace Collections;
-
 namespace Core {
     class VKDrawSequence: protected virtual VKWindow,
                           protected virtual VKModelMgr,

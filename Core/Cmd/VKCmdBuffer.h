@@ -3,8 +3,6 @@
 
 #include "../Device/VKDeviceMgr.h"
 
-using namespace Collections;
-
 namespace Core {
     class VKCmdBuffer: protected virtual VKDeviceMgr {
         private:

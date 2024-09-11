@@ -3,8 +3,6 @@
 
 #include "VKImageMgr.h"
 
-using namespace Collections;
-
 namespace Core {
     class VKSwapChainImage: protected virtual VKImageMgr {
         private:

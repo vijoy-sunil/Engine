@@ -3,8 +3,6 @@
 
 #include "VKDeviceMgr.h"
 
-using namespace Collections;
-
 namespace Core {
     class VKWindow: protected virtual VKDeviceMgr {
         private:

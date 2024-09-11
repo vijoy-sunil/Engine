@@ -4,8 +4,6 @@
 #include <set>
 #include "VKDeviceMgr.h"
 
-using namespace Collections;
-
 namespace Core {
     class VKValidation: protected virtual VKDeviceMgr {
         private:

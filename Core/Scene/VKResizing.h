@@ -7,8 +7,6 @@
 #include "../RenderPass/VKFrameBuffer.h"
 #include "VKSceneMgr.h"
 
-using namespace Collections;
-
 namespace Core {
     class VKResizing: protected virtual VKSwapChainImage,
                       protected virtual VKDepthImage,

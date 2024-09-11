@@ -3,8 +3,6 @@
 
 #include "VKValidation.h"
 
-using namespace Collections;
-
 namespace Core {
     class VKInstance: protected virtual VKValidation {
         private:

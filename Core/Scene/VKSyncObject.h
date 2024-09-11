@@ -4,8 +4,6 @@
 #include "../Device/VKDeviceMgr.h"
 #include "../../Utils/LogHelper.h"
 
-using namespace Collections;
-
 namespace Core {
     /* A core design philosophy in Vulkan is that synchronization of execution on the GPU is explicit. The order of 
      * operations is up to us to define using various synchronization primitives which tell the driver the order we want 

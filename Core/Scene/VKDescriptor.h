@@ -4,8 +4,6 @@
 #include "VKSceneMgr.h"
 #include "../Pipeline/VKPipelineMgr.h"
 
-using namespace Collections;
-
 namespace Core {
     /* We're now able to pass arbitrary attributes to the vertex shader for each vertex, but what about global variables?
      * (for example, the transformation matrix). We could include it as vertex data, but that's a waste of memory and it 

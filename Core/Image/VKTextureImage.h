@@ -9,8 +9,6 @@
 #include "VKImageMgr.h"
 #include "../Buffer/VKBufferMgr.h"
 
-using namespace Collections;
-
 namespace Core {
     class VKTextureImage: protected virtual VKImageMgr,
                           protected virtual VKBufferMgr {

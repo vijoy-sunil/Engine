@@ -4,8 +4,6 @@
 #include <nlohmann/json.hpp>
 #include "VKModelMatrix.h"
 
-using namespace Collections;
-
 namespace Core {
     class VKInstanceData: protected VKModelMatrix {
         private:

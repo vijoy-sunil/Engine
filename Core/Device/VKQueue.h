@@ -5,8 +5,6 @@
 #include "VKDeviceMgr.h"
 #include "../../Utils/LogHelper.h"
 
-using namespace Collections;
-
 namespace Core {
     class VKQueue: protected virtual VKDeviceMgr {
         private:
