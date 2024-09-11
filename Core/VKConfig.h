@@ -127,7 +127,7 @@ namespace Core {
          * begin drawing in theory. But in practise would cause delays in execution because no image can be acquired from 
          * the swap chain yet 
         */
-        const uint32_t maxFramesInFlight                             = 2;        
+        const uint32_t maxFramesInFlight                             = 2;
         const char* defaultDiffuseTexturePath                        = "Assets/Texture/tex_16x16_empty.png";
     } g_coreSettings;
 }   // namespace Core

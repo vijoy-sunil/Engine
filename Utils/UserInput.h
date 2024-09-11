@@ -139,9 +139,7 @@ namespace Utils {
             void readyCursorPositionCallBack  (GLFWwindow* window) {
                 glfwSetWindowUserPointer      (window, this);
                 glfwSetCursorPosCallback      (window, cursorPosCallBack);
-                /* Tell GLFW that it should hide the cursor and capture it. Capturing a cursor means that, once the 
-                 * application has focus, the mouse cursor stays within the center of the window (unless the application
-                 * loses focus or quits)
+                /* GLFW_CURSOR_DISABLED hides and grabs the cursor, providing virtual and unlimited cursor movement
                 */
                 glfwSetInputMode              (window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
             }
