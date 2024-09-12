@@ -325,12 +325,12 @@ namespace SandBox {
                     throw std::runtime_error ("Invalid model instance id");
                 }
 
-                glm::mat4 modelMatrix      = modelInfo->meta.instances[modelInstanceId].modelMatrix;                
+                glm::mat4 modelMatrix      = modelInfo->meta.instances[modelInstanceId].modelMatrix;
                 cameraInfo->meta.position  = glm::vec3 (modelMatrix * 
-                                             glm::vec4 (g_cameraStateInfoPool[currentType].position, 1.0));
+                                             glm::vec4 (g_cameraStateInfoPool[currentType].position,  1.0f));
 
                 cameraInfo->meta.direction = glm::vec3 (modelMatrix * 
-                                             glm::vec4 (g_cameraStateInfoPool[currentType].direction, 1.0)) -
+                                             glm::vec4 (g_cameraStateInfoPool[currentType].direction, 1.0f)) -
                                              cameraInfo->meta.position;
 
                 cameraInfo->meta.fovDeg    = g_cameraStateInfoPool[currentType].fovDeg;

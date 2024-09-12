@@ -90,7 +90,11 @@ namespace SandBox {
                 */
                 readyCameraInfo    (m_cameraInfoId);
                 readyCameraControl (m_deviceInfoId, m_cameraInfoId, SPOILER);
+#if ENABLE_SAMPLE_MODELS_IMPORT
+                updateCameraState  (SAMPLE_1, 0);
+#else
                 updateCameraState  (VEHICLE_BASE, 0);
+#endif  // ENABLE_SAMPLE_MODELS_IMPORT
 
                 auto cameraInfo            = getCameraInfo (m_cameraInfoId);
                 cameraInfo->meta.upVector  = g_cameraSettings.upVector;
@@ -235,7 +239,11 @@ namespace SandBox {
                      * used by camera vectors in the same frame
                     */
                     static_cast <void> (deltaTime);
+#if ENABLE_SAMPLE_MODELS_IMPORT
+                    updateCameraState  (SAMPLE_1, 0);
+#else
                     updateCameraState  (VEHICLE_BASE, 0);
+#endif  // ENABLE_SAMPLE_MODELS_IMPORT
                 /* |------------------------------------------------------------------------------------------------|
                  * | RUN SEQUENCE - DRAW                                                                            |
                  * |------------------------------------------------------------------------------------------------|

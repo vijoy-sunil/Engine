@@ -4,15 +4,17 @@ FILES/FOLDERS
 [ - ] Include guards match file name
 [ - ] Class name match file name
 [ - ] File name has to be singular, not a plural
-[ - ] Core/, Collections/ sub folder names have to be singular
+[ - ] Sub folder names have to be singular
 [ - ] hierarchy graph, mark virtual
 [ - ] Make sure every header file is necessary
 [ - ] include order match inheritance order and hierarchy graph
 [ - ] include <> paths before “” paths
+[ - ] Check if you need to update readme
 -------------------------------------------------------------------------------------------------------------------------
 VARIABLES
 -------------------------------------------------------------------------------------------------------------------------
 [ - ] Use auto for vectors and structs
+[ - ] Make sure we are not nesting "using namespace"
 [ - ] global member objects indicated by g_
 [ - ] enums indicated by e_
 [ - ] private member vars indicated by m_
@@ -26,6 +28,7 @@ VARIABLES
 [ - ] Pool structs resource will only have Vulkan objects, others could be in meta
 [ - ] createInfo and allocInfo used everywhere for consistency
 [ - ] populate info structure by reference via local variable at the end
+[ - ] use unordered map instead of map if you don't need inputs to be inherently sorted
 [ - ] ID ordering {device,
                    model, 
                    image,
@@ -93,5 +96,5 @@ MISC
 [ - ] size_t                                    only used for size of an object and in fns that accept size_t
 [ - ] std::endl                                 in new line
 [ - ] #endif  //                                all endifs should have comment
-[ - ] " [", "[ ", " ]", "] ", " [ ", " ] "      spacing around log brackets
+[ - ] " [", "[ ", " [ ", " ]", "] ", " ] "      spacing around log brackets
 -------------------------------------------------------------------------------------------------------------------------
