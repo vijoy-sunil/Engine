@@ -62,15 +62,15 @@ GLSLC				:= $(VULKAN_SDK)/bin/glslc
 # |-------------------------------------------------------------------------|
 $(OBJ_DIR)/%.o: $(APP_DIR)/%.cpp
 	@$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -MMD -o $@
-	@echo "[OK]" $< "compile"
+	@echo "[OK] compile" $<
 
 $(OBJ_DIR)/%.o: $(IMGUI_DIR)/%.cpp
 	@$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -MMD -o $@
-	@echo "[OK]" $< "compile"
+	@echo "[OK] compile" $<
 
 $(OBJ_DIR)/%.o: $(IMGUI_BACKEND_DIR)/%.cpp
 	@$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -MMD -o $@
-	@echo "[OK]" $< "compile"
+	@echo "[OK] compile" $<
 
 $(APP_TARGET): $(OBJS)
 	@$(LD) $(BIN_DIR)/$@ $(LDFLAGS) $^
@@ -80,11 +80,11 @@ $(APP_TARGET): $(OBJS)
 
 %Vert.spv: $(SHADER_DIR)/%.vert
 	@$(GLSLC) $< -o $(BIN_DIR)/$@
-	@echo "[OK]" $< "compile"
+	@echo "[OK] compile" $<
 
 %Frag.spv: $(SHADER_DIR)/%.frag
 	@$(GLSLC) $< -o $(BIN_DIR)/$@
-	@echo "[OK]" $< "compile"
+	@echo "[OK] compile" $<
 # |-------------------------------------------------------------------------|
 # | Targets																	|
 # |-------------------------------------------------------------------------|
