@@ -1,110 +1,112 @@
-# VULKAN_SDK is setup in .zshrc
-GLM_INCDIR			= /opt/homebrew/Cellar/glm/1.0.1
-GLFW_INCDIR			= /opt/homebrew/Cellar/glfw/3.4
-STB_INCDIR			= /opt/homebrew/Cellar/stb-master
-OBJLOADER_INCDIR	= /opt/homebrew/Cellar/tinyobjloader-release
-JSONPARSER_INCDIR   = /opt/homebrew/Cellar/json-develop
-
-# Setup directories and file paths
-SRCDIR     			= ./SandBox
-BUILDDIR			= ./Build
-BINDIR     			:= $(BUILDDIR)/Bin
-OBJDIR     			:= $(BINDIR)/Obj
-LOGDIR				:= $(BUILDDIR)/Log
-SHADERDIR			:= $(SRCDIR)/Shader
-
-SRCS   				:= $(wildcard $(SRCDIR)/*.cpp)
-SRCS_VERTSHADER  	:= $(wildcard $(SHADERDIR)/*.vert)
-SRCS_FRAGSHADER  	:= $(wildcard $(SHADERDIR)/*.frag)
-OBJS   				:= $(SRCS:$(SRCDIR)/%.cpp=$(OBJDIR)/%.o)
+# |-------------------------------------------------------------------------|
+# |	Directories																|
+# |-------------------------------------------------------------------------|
+# 'VULKAN_SDK' is setup in .zshrc
+GLM_DIR				:= /opt/homebrew/Cellar/glm/1.0.1
+GLFW_DIR			:= /opt/homebrew/Cellar/glfw/3.4
+IMGUI_DIR			:= ./Dependency/ImGui
+IMGUI_BACKEND_DIR	:= $(IMGUI_DIR)/Backend
+APP_DIR				:= ./SandBox
+SHADER_DIR			:= $(APP_DIR)/Shader
+BUILD_DIR			:= ./Build
+BIN_DIR     		:= $(BUILD_DIR)/Bin
+OBJ_DIR     		:= $(BUILD_DIR)/Obj
+LOG_DIR				:= $(BUILD_DIR)/Log
+# |-------------------------------------------------------------------------|
+# | Sources																	|
+# |-------------------------------------------------------------------------|
+APP_SRCS			:= $(APP_DIR)/main.cpp									\
+					   $(IMGUI_DIR)/imgui.cpp 								\
+					   $(IMGUI_DIR)/imgui_demo.cpp							\
+					   $(IMGUI_DIR)/imgui_draw.cpp 							\
+					   $(IMGUI_DIR)/imgui_tables.cpp						\
+					   $(IMGUI_DIR)/imgui_widgets.cpp						\
+					   $(IMGUI_BACKEND_DIR)/imgui_impl_glfw.cpp				\
+					   $(IMGUI_BACKEND_DIR)/imgui_impl_vulkan.cpp
+VERT_SHADER_SRCS	:= $(wildcard $(SHADER_DIR)/*.vert)
+FRAG_SHADER_SRCS	:= $(wildcard $(SHADER_DIR)/*.frag)
+# |-------------------------------------------------------------------------|
+# | Objects																	|
+# |-------------------------------------------------------------------------|
+OBJS				:= $(addprefix $(OBJ_DIR)/,								\
+					   $(addsuffix .o, $(basename $(notdir $(APP_SRCS)))))
 DEPS 				:= $(OBJS:.o=.d)
+# |-------------------------------------------------------------------------|
+# | Naming																	|
+# |-------------------------------------------------------------------------|
+APP_TARGET			:= app_exe
+VERT_SHADER_TARGET	:= $(foreach file,$(notdir $(VERT_SHADER_SRCS)),		\
+					   $(patsubst %.vert,%Vert.spv,$(file)))
+FRAG_SHADER_TARGET	:= $(foreach file,$(notdir $(FRAG_SHADER_SRCS)), 		\
+					   $(patsubst %.frag,%Frag.spv,$(file)))
+# |-------------------------------------------------------------------------|
+# | Flags																	|
+# |-------------------------------------------------------------------------|
+CXX        			:= clang++
+CXXFLAGS   			:= -std=c++20 -Wall -Wextra -O3
+LD         			:= clang++ -o
+LDFLAGS    			:= -Wall -pedantic `pkg-config --static --libs glfw3` 	\
+					   -lvulkan -Wl,-rpath,$(VULKAN_SDK)/lib
+RM         			:= rm -f
+RMDIR				:= rm -r -f
 
-BIN 				= app
-BINFMT				= _exe
-TARGET 				:= $(addsuffix $(BINFMT),$(BIN))
-# Create shader binary file names from shader source files as such. Let's say the shader source name in XYZ.vert, then 
-# the binary name will be XYZVert.spv
-BINFMT_SHADER      	= .spv
-SFX_VERTSHADER		= vert
-SFX_FRAGSHADER  	= frag
-BINSFX_VERTSHADER	:= $(addsuffix $(BINFMT_SHADER),Vert)
-BINSFX_FRAGSHADER	:= $(addsuffix $(BINFMT_SHADER),Frag)
-TARGETS_VERTSHADER  := $(foreach file,$(notdir $(SRCS_VERTSHADER)), \
-					   $(patsubst %.$(SFX_VERTSHADER),%$(BINSFX_VERTSHADER),$(file)))
-TARGETS_FRAGSHADER  := $(foreach file,$(notdir $(SRCS_FRAGSHADER)), \
-					   $(patsubst %.$(SFX_FRAGSHADER),%$(BINSFX_FRAGSHADER),$(file)))
-
-CXX        			= clang++
-CXXFLAGS   			= -std=c++20 -Wall -Wextra -O3
-LD         			= clang++ -o
-LDFLAGS    			= -Wall -pedantic `pkg-config --static --libs glfw3` -lvulkan -Wl,-rpath,$(VULKAN_SDK)/lib
-RM         			= rm -f
-RMDIR				= rm -r -f
-
-INCLUDES			:= -I$(VULKAN_SDK)/include				\
-				   	   -I$(GLM_INCDIR)/include				\
-				   	   -I$(GLFW_INCDIR)/include				\
-					   -I$(STB_INCDIR)						\
-					   -I$(OBJLOADER_INCDIR)				\
-					   -I$(JSONPARSER_INCDIR)/single_include
+INCLUDES			:= -I$(VULKAN_SDK)/include								\
+				   	   -I$(GLM_DIR)/include									\
+				   	   -I$(GLFW_DIR)/include								\
+					   -I$(IMGUI_DIR)										\
+					   -I$(IMGUI_BACKEND_DIR)
 # Setup glslc compiler path
-# This compiler (by Google) is designed to verify that your shader code is fully standards compliant (across GPU vendors) 
-# and produces one  SPIR-V binary that you can ship with your program
 GLSLC				:= $(VULKAN_SDK)/bin/glslc
-
-# Targets
-$(OBJDIR)/%.o: $(SRCDIR)/%.cpp
+# |-------------------------------------------------------------------------|
+# | Rules																	|
+# |-------------------------------------------------------------------------|
+$(OBJ_DIR)/%.o: $(APP_DIR)/%.cpp
 	@$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -MMD -o $@
-	@echo "[OK] app compile"
+	@echo "[OK]" $< "compile"
 
-$(TARGET): $(OBJS)
-	@$(LD) $(BINDIR)/$@ $(LDFLAGS) $<
-	@echo "[OK] app link"
+$(OBJ_DIR)/%.o: $(IMGUI_DIR)/%.cpp
+	@$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -MMD -o $@
+	@echo "[OK]" $< "compile"
+
+$(OBJ_DIR)/%.o: $(IMGUI_BACKEND_DIR)/%.cpp
+	@$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -MMD -o $@
+	@echo "[OK]" $< "compile"
+
+$(APP_TARGET): $(OBJS)
+	@$(LD) $(BIN_DIR)/$@ $(LDFLAGS) $^
+	@echo "[OK] link"
 
 -include $(DEPS)
 
-%$(BINSFX_VERTSHADER): $(SHADERDIR)/%.$(SFX_VERTSHADER)
-	@$(GLSLC) $< -o $(BINDIR)/$@
+%Vert.spv: $(SHADER_DIR)/%.vert
+	@$(GLSLC) $< -o $(BIN_DIR)/$@
+	@echo "[OK]" $< "compile"
 
-%$(BINSFX_FRAGSHADER): $(SHADERDIR)/%.$(SFX_FRAGSHADER)
-	@$(GLSLC) $< -o $(BINDIR)/$@
-
-.PHONY: all directories shaders app clean run info
+%Frag.spv: $(SHADER_DIR)/%.frag
+	@$(GLSLC) $< -o $(BIN_DIR)/$@
+	@echo "[OK]" $< "compile"
+# |-------------------------------------------------------------------------|
+# | Targets																	|
+# |-------------------------------------------------------------------------|
+.PHONY: all directories shaders app clean run
 
 all: directories shaders app 
 
 directories:
-	@mkdir -p $(LOGDIR)/Core
-	@mkdir -p $(LOGDIR)/SandBox
+	@mkdir -p $(BIN_DIR)
+	@mkdir -p $(OBJ_DIR)
+	@mkdir -p $(LOG_DIR)/Core
+	@mkdir -p $(LOG_DIR)/Gui
+	@mkdir -p $(LOG_DIR)/SandBox
 	@echo "[OK] directories"
 
-shaders: $(TARGETS_VERTSHADER) $(TARGETS_FRAGSHADER)
-	@echo "[OK] shader compile"
+shaders: $(VERT_SHADER_TARGET) $(FRAG_SHADER_TARGET)
 
-app: $(TARGET)
+app: $(APP_TARGET)
 
 clean:
-	@$(RM) $(OBJDIR)/* 
-	@echo "[OK] objects clean"
-	@$(RM) $(BINDIR)/*$(BINFMT)
-	@echo "[OK] binary clean"
-	@$(RM) $(BINDIR)/*$(BINFMT_SHADER)
-	@echo "[OK] shader clean"
-	@$(RMDIR) $(LOGDIR)/*
-	@echo "[OK] log clean"
+	@$(RMDIR) $(BUILD_DIR)/* 
+	@echo "[OK] clean"
 
 run:
-	$(BINDIR)/$(addsuffix $(BINFMT),$(BIN))
-
-info:
-	@echo "[*] Source dir:		${SRCDIR}       	"
-	@echo "[*] Build dir:		${BUILDDIR}     	"
-	@echo "[*] Binary dir:		${BINDIR}       	"
-	@echo "[*] Object dir:		${OBJDIR}       	"
-	@echo "[*] Log save dir:	${LOGDIR}       	"
-	@echo "[*] Shader dir:		${SHADERDIR}    	"
-	@echo "[*] Source files:	${SRCS}      		"
-	@echo "[*] Vert shaders:	$(SRCS_VERTSHADER) 	"
-	@echo "[*] Frag shaders: 	$(SRCS_FRAGSHADER) 	"
-	@echo "[*] Object files:	${OBJS}      		"
-	@echo "[*] Dependencies:	${DEPS} 			"
+	$(BIN_DIR)/$(APP_TARGET)
