@@ -195,7 +195,7 @@ namespace Core {
                  * | DESTROY SWAP CHAIN RESOURCES                                                                   |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                for (uint32_t i = 0; i < deviceInfo->meta.swapChainSize; i++) {
+                for (uint32_t i = 0; i < deviceInfo->params.swapChainSize; i++) {
                     uint32_t swapChainImageInfoId = sceneInfo->id.swapChainImageInfoBase + i;
                     VKImageMgr::cleanUp (deviceInfoId, swapChainImageInfoId, SWAPCHAIN_IMAGE);
                     LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Swap chain resources " 

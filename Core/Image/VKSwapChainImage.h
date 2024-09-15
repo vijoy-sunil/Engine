@@ -296,11 +296,12 @@ namespace Core {
 
                 /* Save swap chain info to device info
                 */
-                deviceInfo->meta.swapChainSize          = swapChainSize;
-                deviceInfo->resource.swapChain          = swapChain;
-                deviceInfo->params.swapChainFormat      = createInfo.imageFormat;
-                deviceInfo->params.swapChainPresentMode = createInfo.presentMode;
-                deviceInfo->params.swapChainExtent      = createInfo.imageExtent;
+                deviceInfo->resource.swapChain            = swapChain;
+                deviceInfo->params.swapChainSize          = swapChainSize;
+                deviceInfo->params.swapChainFormat        = createInfo.imageFormat;
+                deviceInfo->params.swapChainPresentMode   = createInfo.presentMode;
+                deviceInfo->params.swapChainExtent        = createInfo.imageExtent;
+                deviceInfo->params.minSwapChainImageCount = createInfo.minImageCount;
                 /* Restore id of void image since we will need it for subsequent calls to create swap chain resources
                 */
                 imageInfo->meta.id = 0;

@@ -13,7 +13,6 @@ namespace Core {
             struct DeviceInfo {
                 struct Meta {
                     uint32_t memoryAllocationCount;
-                    uint32_t swapChainSize;
                     /* It's not really possible to use a magic value to indicate the nonexistence of a queue family, 
                      * since any value of uint32_t could in theory be a valid queue family index including 0. We will be
                      * using std::optional which is a wrapper that contains no value until you assign something to it
@@ -53,9 +52,11 @@ namespace Core {
                 } resource;
 
                 struct Parameters {
+                    uint32_t swapChainSize;
                     VkFormat swapChainFormat;
                     VkPresentModeKHR swapChainPresentMode;
                     VkExtent2D swapChainExtent;
+                    uint32_t minSwapChainImageCount;
                     /* Sample points for MSAA (multi sample anit aliasing)
                     */
                     VkSampleCountFlagBits maxSampleCount;
@@ -164,10 +165,6 @@ namespace Core {
                                                 << "[" << val.meta.memoryAllocationCount << "]"
                                                 << std::endl; 
 
-                    LOG_INFO (m_VKDeviceMgrLog) << "Swap chain size "
-                                                << "[" << val.meta.swapChainSize << "]"
-                                                << std::endl; 
-
                     LOG_INFO (m_VKDeviceMgrLog) << "Graphics queue family index "
                                                 << "[" << val.meta.graphicsFamilyIndex.value() << "]"
                                                 << std::endl;
@@ -179,6 +176,10 @@ namespace Core {
                     LOG_INFO (m_VKDeviceMgrLog) << "Transfer queue family index "
                                                 << "[" << val.meta.transferFamilyIndex.value() << "]"
                                                 << std::endl;  
+
+                    LOG_INFO (m_VKDeviceMgrLog) << "Swap chain size "
+                                                << "[" << val.params.swapChainSize << "]"
+                                                << std::endl; 
 
                     LOG_INFO (m_VKDeviceMgrLog) << "Swap chain format "
                                                 << "[" << string_VkFormat (val.params.swapChainFormat) << "]"
@@ -192,6 +193,10 @@ namespace Core {
                                                 << "[" << val.params.swapChainExtent.width  << ", "
                                                        << val.params.swapChainExtent.height << "]"
                                                 << std::endl;  
+
+                    LOG_INFO (m_VKDeviceMgrLog) << "Min swap chain image count "
+                                                << "[" << val.params.minSwapChainImageCount << "]"
+                                                << std::endl; 
 
                     LOG_INFO (m_VKDeviceMgrLog) << "Max sample count "
                                                 << "[" << string_VkSampleCountFlagBits (val.params.maxSampleCount) << "]"
