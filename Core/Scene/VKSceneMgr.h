@@ -82,6 +82,15 @@ namespace Core {
                 m_sceneInfoPool[sceneInfoId] = info;
             }
 
+            void deriveSceneInfo (uint32_t sceneInfoId, uint32_t baseSceneInfoId) {
+                auto baseSceneInfo = getSceneInfo (baseSceneInfoId);
+                SceneInfo info{};
+                info.meta          = baseSceneInfo->meta;
+                info.id            = baseSceneInfo->id;
+
+                m_sceneInfoPool[sceneInfoId] = info;
+            }
+
             SceneInfo* getSceneInfo (uint32_t sceneInfoId) {
                 if (m_sceneInfoPool.find (sceneInfoId) != m_sceneInfoPool.end())
                     return &m_sceneInfoPool[sceneInfoId];

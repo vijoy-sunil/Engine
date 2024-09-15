@@ -117,13 +117,15 @@ namespace Core {
             }
 
             void derivePipelineInfo (uint32_t pipelineInfoId, uint32_t basePipelineInfoId) {
-                auto pipelineInfo      = getPipelineInfo (pipelineInfoId);
-                auto basePipelineInfo  = getPipelineInfo (basePipelineInfoId);
+                auto basePipelineInfo = getPipelineInfo (basePipelineInfoId);
+                PipelineInfo info{};
                 /* Note that, we wan't to be careful when shallow copying the struct members. Hence, why we are not
                  * copying the resource members 
                 */
-                pipelineInfo->meta     = basePipelineInfo->meta;
-                pipelineInfo->state    = basePipelineInfo->state;
+                info.meta  = basePipelineInfo->meta;
+                info.state = basePipelineInfo->state;
+
+                m_pipelineInfoPool[pipelineInfoId] = info;
             }
 
             void createGraphicsPipeline (uint32_t deviceInfoId,
