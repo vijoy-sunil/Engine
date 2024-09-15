@@ -41,31 +41,24 @@ namespace Core {
              * per-pixel color information of the rendered picture. Maybe you stop there, or maybe you also add a depth 
              * attachment. If you are rendering 3D geometry, and you want it to look correct, you'll likely have to add 
              * this depth attachment
+             * 
+             * Note that, multisampled images cannot be presented directly. We first need to resolve them to a regular
+             * image
             */
             void createMultiSampleAttachment (uint32_t imageInfoId, uint32_t renderPassInfoId) {
                 auto imageInfo      = getImageInfo (imageInfoId, MULTISAMPLE_IMAGE);
                 auto renderPassInfo = getRenderPassInfo (renderPassInfoId);
 
                 VkAttachmentDescription attachment;
-                attachment.flags          = 0;
+                attachment.flags          = g_renderPassSettings.multiSampleAttachment.flags;
                 attachment.format         = imageInfo->params.format;
                 attachment.samples        = imageInfo->params.sampleCount;
-                attachment.loadOp         = VK_ATTACHMENT_LOAD_OP_CLEAR;
-                /* For multi-sampled rendering in Vulkan, the multi-sampled image is treated separately from the final 
-                 * single-sampled image; this provides separate control over what values need to reach memory, since - 
-                 * like the depth buffer - the multi-sampled image may only need to be accessed during the processing of 
-                 * a tile. For this reason, if the multi-sampled image is not required after the render pass, it can be 
-                 * created with VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT and bound to an allocation created with 
-                 * VK_MEMORY_PROPERTY_LAZILY_ALLOCATED_BIT. The multi-sampled attachment storeOp can then be set to 
-                 * VK_ATTACHMENT_STORE_OP_DONT_CARE in the VkAttachmentDescription, so that (at least on tiled renderers)
-                 * the full multi-sampled attachment does not need to be written to memory, which can save a lot of 
-                 * bandwidth
-                */
-                attachment.storeOp        = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-                attachment.stencilLoadOp  = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-                attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-                attachment.initialLayout  = VK_IMAGE_LAYOUT_UNDEFINED;
-                attachment.finalLayout    = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+                attachment.loadOp         = g_renderPassSettings.multiSampleAttachment.loadOp;
+                attachment.storeOp        = g_renderPassSettings.multiSampleAttachment.storeOp;
+                attachment.stencilLoadOp  = g_renderPassSettings.multiSampleAttachment.stencilLoadOp;
+                attachment.stencilStoreOp = g_renderPassSettings.multiSampleAttachment.stencilStoreOp;
+                attachment.initialLayout  = g_renderPassSettings.multiSampleAttachment.initialLayout;
+                attachment.finalLayout    = g_renderPassSettings.multiSampleAttachment.finalLayout;
 
                 renderPassInfo->resource.attachments.push_back (attachment);
             }
@@ -76,41 +69,38 @@ namespace Core {
 
                 /* The format should be the same as the depth image itself. We don't care about storing the depth data 
                  * (storeOp), because it will not be used after drawing has finished. This may allow the hardware to 
-                 * perform additional optimizations. 
+                 * perform additional optimizations
                 */
                 VkAttachmentDescription attachment;
-                attachment.flags          = 0;
+                attachment.flags          = g_renderPassSettings.depthStencilAttachment.flags;
                 attachment.format         = imageInfo->params.format;
                 attachment.samples        = imageInfo->params.sampleCount;
-                attachment.loadOp         = VK_ATTACHMENT_LOAD_OP_CLEAR;
-                attachment.storeOp        = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-                attachment.stencilLoadOp  = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-                attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-                attachment.initialLayout  = VK_IMAGE_LAYOUT_UNDEFINED;
-                attachment.finalLayout    = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL; 
+                attachment.loadOp         = g_renderPassSettings.depthStencilAttachment.loadOp;
+                attachment.storeOp        = g_renderPassSettings.depthStencilAttachment.storeOp;
+                attachment.stencilLoadOp  = g_renderPassSettings.depthStencilAttachment.stencilLoadOp;
+                attachment.stencilStoreOp = g_renderPassSettings.depthStencilAttachment.stencilStoreOp;
+                attachment.initialLayout  = g_renderPassSettings.depthStencilAttachment.initialLayout;
+                attachment.finalLayout    = g_renderPassSettings.depthStencilAttachment.finalLayout; 
 
-                renderPassInfo->resource.attachments.push_back (attachment);                 
+                renderPassInfo->resource.attachments.push_back (attachment);
             }
 
-            /* Note that, multisampled images cannot be presented directly. We first need to resolve them to a regular
-             * image
-            */
-            void createResolveAttachment (uint32_t imageInfoId, uint32_t renderPassInfoId) {
+            void createColorAttachment (uint32_t imageInfoId, uint32_t renderPassInfoId) {
                 auto imageInfo      = getImageInfo (imageInfoId, SWAPCHAIN_IMAGE);
                 auto renderPassInfo = getRenderPassInfo (renderPassInfoId);
 
                 VkAttachmentDescription attachment;
-                attachment.flags          = 0;
+                attachment.flags          = g_renderPassSettings.colorAttachment.flags;
                 attachment.format         = imageInfo->params.format;
                 attachment.samples        = imageInfo->params.sampleCount;
-                attachment.loadOp         = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-                attachment.storeOp        = VK_ATTACHMENT_STORE_OP_STORE;
-                attachment.stencilLoadOp  = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-                attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-                attachment.initialLayout  = VK_IMAGE_LAYOUT_UNDEFINED;
-                attachment.finalLayout    = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;       
+                attachment.loadOp         = g_renderPassSettings.colorAttachment.loadOp;
+                attachment.storeOp        = g_renderPassSettings.colorAttachment.storeOp;
+                attachment.stencilLoadOp  = g_renderPassSettings.colorAttachment.stencilLoadOp;
+                attachment.stencilStoreOp = g_renderPassSettings.colorAttachment.stencilStoreOp;
+                attachment.initialLayout  = g_renderPassSettings.colorAttachment.initialLayout;
+                attachment.finalLayout    = g_renderPassSettings.colorAttachment.finalLayout;
 
-                renderPassInfo->resource.attachments.push_back (attachment);         
+                renderPassInfo->resource.attachments.push_back (attachment);
             }            
     };
 }   // namespace Core
