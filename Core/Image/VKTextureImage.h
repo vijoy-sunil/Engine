@@ -5,7 +5,7 @@
  * include the function bodies, otherwise we'll get linking errors
 */
 #define STB_IMAGE_IMPLEMENTATION
-#include <stb_image.h>
+#include "../../Dependency/STBImage/stb_image.h"
 #include "VKImageMgr.h"
 #include "../Buffer/VKBufferMgr.h"
 

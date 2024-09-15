@@ -39,12 +39,14 @@
     |<......................|VKUniform
     |
     |{Model/VKModelMgr}
+    :(Dependency/TinyObjLoader)
     |
     |
     |VKModelMatrix
     |
     |
     |VKInstanceData
+    :(Dependency/JsonNlohmann)
 
 
     |{VKPhyDevice}
@@ -58,6 +60,7 @@
     |                       |
     |                       |
     |---------------------->|VKTextureImage
+    |                       :(Dependency/STBImage)
     |
     |---------------------->|VKDepthImage
     |

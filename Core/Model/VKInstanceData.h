@@ -1,7 +1,7 @@
 #ifndef VK_INSTANCE_DATA_H
 #define VK_INSTANCE_DATA_H
 
-#include <nlohmann/json.hpp>
+#include "../../Dependency/JsonNlohmann/json.hpp"
 #include "VKModelMatrix.h"
 
 namespace Core {

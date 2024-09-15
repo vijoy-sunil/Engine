@@ -3,7 +3,7 @@
 /* We will use the tinyobjloader library to load model data from an OBJ file
 */
 #define TINYOBJLOADER_IMPLEMENTATION
-#include <tiny_obj_loader.h>
+#include "../../Dependency/TinyObjLoader/tiny_obj_loader.h"
 #include "VKVertexData.h"
 #include "../Scene/VKUniform.h"
 
