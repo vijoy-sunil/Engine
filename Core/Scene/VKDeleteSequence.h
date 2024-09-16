@@ -44,16 +44,23 @@ namespace Core {
             }
 
         protected:
+            template <typename T>
             void runSequence (uint32_t deviceInfoId, 
                               const std::vector <uint32_t>& modelInfoIds, 
-                              uint32_t renderPassInfoId, 
+                              const std::vector <uint32_t>& renderPassInfoIds, 
                               const std::vector <uint32_t>& pipelineInfoIds,
                               uint32_t cameraInfoId,
-                              uint32_t sceneInfoId) {
+                              uint32_t sceneInfoId,
+                              T extensions) {
 
                 auto deviceInfo    = getDeviceInfo (deviceInfoId);
-                auto modelInfoBase = getModelInfo  (*modelInfoIds.begin());
+                auto modelInfoBase = getModelInfo  (modelInfoIds[0]);
                 auto sceneInfo     = getSceneInfo  (sceneInfoId);
+                /* |------------------------------------------------------------------------------------------------|
+                 * | DESTROY EXTENSIONS                                                                             |
+                 * |------------------------------------------------------------------------------------------------|
+                */
+                extensions();
                 /* |------------------------------------------------------------------------------------------------|
                  * | DESTROY DRAW OPS - FENCE AND SEMAPHORES                                                        |
                  * |------------------------------------------------------------------------------------------------|
@@ -119,20 +126,24 @@ namespace Core {
                  * | DESTROY FRAME BUFFERS                                                                          |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                VKFrameBuffer::cleanUp (deviceInfoId, renderPassInfoId);
-                LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Frame buffers " 
-                                                 << "[" << renderPassInfoId << "]"
-                                                 << " "
-                                                 << "[" << deviceInfoId << "]"
-                                                 << std::endl;                 
+                for (auto const& infoId: renderPassInfoIds) {
+                    VKFrameBuffer::cleanUp (deviceInfoId, infoId);
+                    LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Frame buffers " 
+                                                     << "[" << infoId << "]"
+                                                     << " "
+                                                     << "[" << deviceInfoId << "]"
+                                                     << std::endl;
+                }
                 /* |------------------------------------------------------------------------------------------------|
                  * | DESTROY RENDER PASS                                                                            |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                VKRenderPassMgr::cleanUp (deviceInfoId, renderPassInfoId);
-                LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Render pass " 
-                                                 << "[" << renderPassInfoId << "]"
-                                                 << std::endl; 
+                for (auto const& infoId: renderPassInfoIds) {
+                    VKRenderPassMgr::cleanUp (deviceInfoId, infoId);
+                    LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Render pass " 
+                                                     << "[" << infoId << "]"
+                                                     << std::endl;
+                }
                 /* |------------------------------------------------------------------------------------------------|
                  * | DESTROY STORAGE BUFFERS                                                                        |
                  * |------------------------------------------------------------------------------------------------|

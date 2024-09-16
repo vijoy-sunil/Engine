@@ -13,6 +13,7 @@ namespace Core {
              * using this boolean
             */
             bool m_frameBufferResized;
+            bool m_windowIconified;
 
             /* The reason that we're creating a static function as a callback is because GLFW does not know how to 
              * properly call a member function with the right 'this' pointer to our VKWindow class instance. However, 
@@ -29,9 +30,16 @@ namespace Core {
                 thisPtr->setFrameBufferResized (true);
             }
 
+            static void windowIconifyCallback (GLFWwindow* window, int iconified) {
+                auto thisPtr =  reinterpret_cast <VKWindow*> (glfwGetWindowUserPointer (window));
+                if (iconified)  thisPtr->m_windowIconified = true;
+                else            thisPtr->m_windowIconified = false;
+            }
+
         public:
             VKWindow (void) {
                 m_frameBufferResized = false;
+                m_windowIconified    = false;
                 m_VKWindowLog = LOG_INIT (m_instanceId, g_collectionsSettings.logSaveDirPath);
             }
 
@@ -46,6 +54,10 @@ namespace Core {
 
             bool isFrameBufferResized (void) {
                 return m_frameBufferResized;
+            }
+
+            bool isWindowIconified (void) {
+                return m_windowIconified;
             }
 
             void createWindow (uint32_t deviceInfoId, int width, int height, bool enResizing = true) {
@@ -69,12 +81,9 @@ namespace Core {
                                                        VK_NULL_HANDLE);
                 /* Set user pointer of window, this pointer is used in the callback function
                 */
-                glfwSetWindowUserPointer (window, this);
-                /* To detect window resizes we can use the glfwSetFramebufferSizeCallback function in the GLFW framework 
-                 * to set up a callback (this is done to handle resizes explicitly)
-                */
+                glfwSetWindowUserPointer       (window, this);
                 glfwSetFramebufferSizeCallback (window, frameBufferResizeCallback);
-
+                glfwSetWindowIconifyCallback   (window, windowIconifyCallback);
                 deviceInfo->resource.window = window;
             }
 

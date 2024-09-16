@@ -35,18 +35,21 @@ namespace Core {
             }
 
         protected:
-            template <typename T>
+            template <typename T1, typename T2, typename T3>
             void runSequence (uint32_t deviceInfoId,
                               const std::vector <uint32_t>& modelInfoIds,
                               uint32_t renderPassInfoId,
                               uint32_t pipelineInfoId,
                               uint32_t cameraInfoId,
                               uint32_t sceneInfoId, 
-                              uint32_t currentFrameInFlight,
-                              T lambda) {
+                              uint32_t& currentFrameInFlight,
+                              uint32_t& swapChainImageId,
+                              T1 primaryExtensions, 
+                              T2 secondaryExtensions,
+                              T3 tertiaryExtensions) {
 
                 auto deviceInfo    = getDeviceInfo (deviceInfoId);
-                auto modelInfoBase = getModelInfo  (*modelInfoIds.begin());
+                auto modelInfoBase = getModelInfo  (modelInfoIds[0]);
                 auto cameraInfo    = getCameraInfo (cameraInfoId);
                 auto sceneInfo     = getSceneInfo  (sceneInfoId);
                 /* |------------------------------------------------------------------------------------------------|
@@ -87,7 +90,6 @@ namespace Core {
                  * the framebuffer. It just returns the index of the next image that will be available at some point 
                  * notified by the semaphore
                 */
-                uint32_t swapChainImageId;
                 uint32_t imageAvailableSemaphoreInfoId = sceneInfo->id.imageAvailableSemaphoreInfoBase +
                                                          currentFrameInFlight;
                 VkResult result = vkAcquireNextImageKHR (deviceInfo->resource.logDevice, 
@@ -107,10 +109,14 @@ namespace Core {
                                                       << " " 
                                                       << "[" << string_VkResult (result) << "]"
                                                       << std::endl; 
-                    recreateSwapChainDeps (deviceInfoId,
+                    recreateSwapChainDeps (deviceInfoId, 
                                            renderPassInfoId,
                                            sceneInfoId);
-
+                /* |------------------------------------------------------------------------------------------------|
+                 * | CONFIG TERTIARY EXTENSIONS                                                                     |
+                 * |------------------------------------------------------------------------------------------------|
+                */
+                    tertiaryExtensions();
                     cameraInfo->meta.updateProjectionMatrix = true;
                     return;
                 }
@@ -125,6 +131,17 @@ namespace Core {
                                                     << "[" << string_VkResult (result) << "]"
                                                     << std::endl; 
                     throw std::runtime_error ("Failed to acquire swap chain image");
+                }
+                /* There is another case where a swap chain may become out of date and that is a special kind of window 
+                 * resizing: window minimization. We will handle that by pausing until the window is in the foreground 
+                 * again
+                */
+                else if (isWindowIconified()) {
+                    LOG_WARNING (m_VKDrawSequenceLog) << "Window iconified"
+                                                      << std::endl; 
+
+                    while (isWindowIconified())     glfwWaitEvents();
+                    vkDeviceWaitIdle                (deviceInfo->resource.logDevice);
                 }
                 /* After waiting for fence, we need to manually reset the fence to the unsignaled state immediately after.
                  * But we delay it to upto this point to avoid deadlock on the in flight fence
@@ -286,10 +303,17 @@ namespace Core {
                     vertexOffset  += modelInfo->meta.verticesCount;
                     firstInstance += modelInfo->meta.instancesCount;
                 }
-
-                lambda();
-
+                /* |------------------------------------------------------------------------------------------------|
+                 * | CONFIG PRIMARY EXTENSIONS                                                                      |
+                 * |------------------------------------------------------------------------------------------------|
+                */
+                primaryExtensions();
                 endRenderPass (sceneInfo->resource.commandBuffers[currentFrameInFlight]);
+                /* |------------------------------------------------------------------------------------------------|
+                 * | CONFIG SECONDARY EXTENSIONS                                                                    |
+                 * |------------------------------------------------------------------------------------------------|
+                */
+                secondaryExtensions();
                 endRecording  (sceneInfo->resource.commandBuffers[currentFrameInFlight]);  
 
                 VkSubmitInfo drawOpsSubmitInfo;
@@ -406,7 +430,11 @@ namespace Core {
                     recreateSwapChainDeps (deviceInfoId, 
                                            renderPassInfoId,
                                            sceneInfoId);
-                    
+                /* |------------------------------------------------------------------------------------------------|
+                 * | CONFIG TERTIARY EXTENSIONS                                                                     |
+                 * |------------------------------------------------------------------------------------------------|
+                */
+                    tertiaryExtensions();
                     cameraInfo->meta.updateProjectionMatrix = true;
                 }
                 else if (result != VK_SUCCESS) {
@@ -417,6 +445,13 @@ namespace Core {
                                                     << std::endl;
                     throw std::runtime_error ("Failed to present swap chain image");
                 } 
+                else if (isWindowIconified()) {
+                    LOG_WARNING (m_VKDrawSequenceLog) << "Window iconified"
+                                                      << std::endl; 
+
+                    while (isWindowIconified())     glfwWaitEvents();
+                    vkDeviceWaitIdle                (deviceInfo->resource.logDevice);
+                }
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG DRAW OPS - UPDATE CURRENT FRAME IN FLIGHT COUNT                                         |
                  * |------------------------------------------------------------------------------------------------|

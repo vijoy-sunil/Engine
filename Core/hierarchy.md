@@ -210,17 +210,17 @@
     |
     |<----------------------|{VKStorageBuffer}
     |
-    |<----------------------|VKAttachment
+    |<----------------------|{VKAttachment}
     |
-    |<----------------------|VKSubPass
+    |<----------------------|{VKSubPass}
     |
     |<----------------------|{VKFrameBuffer}
     |
-    |<----------------------|VKVertexInput
+    |<----------------------|{VKVertexInput}
     |
     |<----------------------|VKInputAssembly
     |
-    |<----------------------|VKShaderStage
+    |<----------------------|{VKShaderStage}
     |
     |<----------------------|VKViewPort
     |
@@ -234,11 +234,11 @@
     |
     |<----------------------|VKDynamicState
     |
-    |<----------------------|VKDescriptorSetLayout
+    |<----------------------|{VKDescriptorSetLayout}
     |
-    |<----------------------|VKPushConstantRange
+    |<----------------------|{VKPushConstantRange}
     |
-    |<----------------------|VKPipelineLayout
+    |<----------------------|{VKPipelineLayout}
     |
     |<----------------------|{VKCmdBuffer}
     |

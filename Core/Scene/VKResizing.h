@@ -46,21 +46,6 @@ namespace Core {
 
                 auto deviceInfo = getDeviceInfo (deviceInfoId);
                 auto sceneInfo  = getSceneInfo  (sceneInfoId);
-
-                /* There is another case where a swap chain may become out of date and that is a special kind of window 
-                 * resizing: window minimization. This case is special because it will result in a frame buffer size of 0.
-                 * We will handle that by pausing until the window is in the foreground again
-                */
-                int width = 0, height = 0;
-                glfwGetFramebufferSize (deviceInfo->resource.window, &width, &height);
-                while (width == 0 || height == 0) {
-                    glfwGetFramebufferSize (deviceInfo->resource.window, &width, &height);
-                    /* This function puts the calling thread to sleep until at least one event is available in the event 
-                     * queue
-                    */
-                    glfwWaitEvents();
-                }
-
                 /* We first call vkDeviceWaitIdle, because we shouldn't touch resources that may still be in use
                 */
                 vkDeviceWaitIdle (deviceInfo->resource.logDevice);

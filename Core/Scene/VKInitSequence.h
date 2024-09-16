@@ -48,21 +48,21 @@ namespace Core {
                           protected VKVertexBuffer,
                           protected VKIndexBuffer,
                           protected virtual VKStorageBuffer,
-                          protected VKAttachment,
-                          protected VKSubPass,
+                          protected virtual VKAttachment,
+                          protected virtual VKSubPass,
                           protected virtual VKFrameBuffer,
-                          protected VKVertexInput,
+                          protected virtual VKVertexInput,
                           protected VKInputAssembly,
-                          protected VKShaderStage,
+                          protected virtual VKShaderStage,
                           protected VKViewPort,
                           protected VKRasterization,
                           protected VKMultiSample,
                           protected VKDepthStencil,
                           protected VKColorBlend,
                           protected VKDynamicState,
-                          protected VKDescriptorSetLayout,
-                          protected VKPushConstantRange,
-                          protected VKPipelineLayout,
+                          protected virtual VKDescriptorSetLayout,
+                          protected virtual VKPushConstantRange,
+                          protected virtual VKPipelineLayout,
                           protected virtual VKCmdBuffer,
                           protected virtual VKCmd,
                           protected virtual VKCameraMgr,
@@ -92,10 +92,10 @@ namespace Core {
                               uint32_t pipelineInfoId,
                               uint32_t cameraInfoId, 
                               uint32_t sceneInfoId, 
-                              T lambda) {
+                              T extensions) {
 
                 auto deviceInfo    = getDeviceInfo (deviceInfoId);
-                auto modelInfoBase = getModelInfo  (*modelInfoIds.begin());
+                auto modelInfoBase = getModelInfo  (modelInfoIds[0]);
                 auto sceneInfo     = getSceneInfo  (sceneInfoId);
 #if ENABLE_LOGGING
                 enableValidationLayers();
@@ -228,8 +228,8 @@ namespace Core {
                     combinedVertices.insert  (combinedVertices.end(), modelInfo->meta.vertices.begin(),
                                                                       modelInfo->meta.vertices.end());
    
-                    infoId == *modelInfoIds.begin() ? modelInfo->id.vertexBufferInfos.push_back (vertexBufferInfoId):
-                                                      modelInfo->id.vertexBufferInfos.push_back (UINT32_MAX);
+                    infoId == modelInfoIds[0] ? modelInfo->id.vertexBufferInfos.push_back (vertexBufferInfoId):
+                                                modelInfo->id.vertexBufferInfos.push_back (UINT32_MAX);
                 }
                 
                 createVertexBuffer (deviceInfoId, 
@@ -256,8 +256,8 @@ namespace Core {
                     combinedIndices.insert  (combinedIndices.end(), modelInfo->meta.indices.begin(),
                                                                     modelInfo->meta.indices.end());
                     
-                    infoId == *modelInfoIds.begin() ? modelInfo->id.indexBufferInfo = indexBufferInfoId:
-                                                      modelInfo->id.indexBufferInfo = UINT32_MAX;
+                    infoId == modelInfoIds[0] ? modelInfo->id.indexBufferInfo = indexBufferInfoId:
+                                                modelInfo->id.indexBufferInfo = UINT32_MAX;
                 }
 
                 createIndexBuffer (deviceInfoId, 
@@ -304,7 +304,7 @@ namespace Core {
 
                 createMultiSampleAttachment  (sceneInfo->id.multiSampleImageInfo,   renderPassInfoId);
                 createDepthStencilAttachment (sceneInfo->id.depthImageInfo,         renderPassInfoId);
-                createResolveAttachment      (sceneInfo->id.swapChainImageInfoBase, renderPassInfoId);
+                createColorAttachment        (sceneInfo->id.swapChainImageInfoBase, renderPassInfoId);
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG SUB PASS                                                                                |
                  * |------------------------------------------------------------------------------------------------|
@@ -356,7 +356,7 @@ namespace Core {
                 /* Create a framebuffer for all of the images in the swap chain and use the one that corresponds to the 
                  * retrieved image at drawing time
                 */
-                for (uint32_t i = 0; i < deviceInfo->meta.swapChainSize; i++) {
+                for (uint32_t i = 0; i < deviceInfo->params.swapChainSize; i++) {
                     uint32_t swapChainImageInfoId = sceneInfo->id.swapChainImageInfoBase + i;
                     auto swapChainImageInfo       = getImageInfo (swapChainImageInfoId, SWAPCHAIN_IMAGE);
 
@@ -979,10 +979,10 @@ namespace Core {
                                                    << std::endl;
                 }
                 /* |------------------------------------------------------------------------------------------------|
-                 * | EDIT CONFIGS                                                                                   |
+                 * | CONFIG EXTENSIONS                                                                              |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                lambda();
+                extensions();
                 /* |------------------------------------------------------------------------------------------------|
                  * | DUMP METHODS                                                                                   |
                  * |------------------------------------------------------------------------------------------------|
