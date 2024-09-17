@@ -139,9 +139,7 @@ namespace Core {
                 else if (isWindowIconified()) {
                     LOG_WARNING (m_VKDrawSequenceLog) << "Window iconified"
                                                       << std::endl; 
-
-                    while (isWindowIconified())     glfwWaitEvents();
-                    vkDeviceWaitIdle                (deviceInfo->resource.logDevice);
+                    while (isWindowIconified())       glfwWaitEvents();
                 }
                 /* After waiting for fence, we need to manually reset the fence to the unsignaled state immediately after.
                  * But we delay it to upto this point to avoid deadlock on the in flight fence
@@ -448,9 +446,7 @@ namespace Core {
                 else if (isWindowIconified()) {
                     LOG_WARNING (m_VKDrawSequenceLog) << "Window iconified"
                                                       << std::endl; 
-
-                    while (isWindowIconified())     glfwWaitEvents();
-                    vkDeviceWaitIdle                (deviceInfo->resource.logDevice);
+                    while (isWindowIconified())       glfwWaitEvents();
                 }
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG DRAW OPS - UPDATE CURRENT FRAME IN FLIGHT COUNT                                         |
