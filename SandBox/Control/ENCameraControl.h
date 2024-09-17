@@ -3,13 +3,13 @@
 
 #include "../../Core/Model/VKModelMgr.h"
 #include "../../Core/Scene/VKCameraMgr.h"
-#include "../../Utils/UserInput.h"
+#include "../../Gui/UIMgr.h"
 #include "../Config/ENEnvConfig.h"
 
 namespace SandBox {
     class ENCameraControl: protected virtual Core::VKModelMgr,
                            protected virtual Core::VKCameraMgr,
-                           protected virtual Utils::UserInput {
+                           protected virtual Gui::UIMgr {
         private:
             uint32_t m_deviceInfoId;
             uint32_t m_cameraInfoId;
@@ -32,16 +32,14 @@ namespace SandBox {
                 m_currentType  = type;
 
                 if (m_previousType != FREE_ROAM  && m_currentType == FREE_ROAM) {
-                    auto deviceInfo = getDeviceInfo (m_deviceInfoId);
-                    readyCursorPositionCallBack     (deviceInfo->resource.window);
-                    readyScrollOffsetCallBack       (deviceInfo->resource.window);
+                    readyCursorPositionCallBack  (m_deviceInfoId);
+                    readyScrollOffsetCallBack    (m_deviceInfoId);
                 }
                 /* Delete mouse event callbacks if the camera is not in free roam mode
                 */
                 if (m_previousType == FREE_ROAM && m_currentType != FREE_ROAM) {
-                    auto deviceInfo = getDeviceInfo (m_deviceInfoId);
-                    deleteCursorPositionCallBack    (deviceInfo->resource.window);
-                    deleteScrollOffsetCallBack      (deviceInfo->resource.window);
+                    deleteCursorPositionCallBack (m_deviceInfoId);
+                    deleteScrollOffsetCallBack   (m_deviceInfoId);
                 }
             }
 
@@ -300,10 +298,10 @@ namespace SandBox {
                     this->moveForward                   (deltaTime);
                 });
 
-                createMouseEventBinding (Utils::CURSOR_POSITION,                [this](float xPos, float yPos) {
+                createMouseEventBinding (Core::CURSOR_POSITION,                 [this](float xPos, float yPos) {
                     this->lookAround                    (xPos, yPos);
                 });
-                createMouseEventBinding (Utils::SCROLL_OFFSET,                  [this](float xOffset, float yOffset) {
+                createMouseEventBinding (Core::SCROLL_OFFSET,                   [this](float xOffset, float yOffset) {
                     this->updateFov                     (xOffset, yOffset);
                 });
             }
