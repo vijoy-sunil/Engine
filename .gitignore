@@ -2,3 +2,4 @@
 .vscode
 Assets/Model/*.blend
 Assets/Model/*.blend1
+Dependency/*
