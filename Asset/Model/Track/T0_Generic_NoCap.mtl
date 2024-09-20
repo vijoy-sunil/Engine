@@ -9,7 +9,7 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.450000
 d 1.000000
 illum 2
-map_Kd /Users/vijoys/Downloads/Projects/Engine/Assets/Texture/Track/tex_16x16_track_base.png
+map_Kd /Users/vijoys/Downloads/Projects/Engine/Asset/Texture/Track/tex_16x16_track_base.png
 
 newmtl Material_Track_Railing
 Ns 250.000000
@@ -19,7 +19,7 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.450000
 d 1.000000
 illum 2
-map_Kd /Users/vijoys/Downloads/Projects/Engine/Assets/Texture/Track/tex_16x16_track_railing.png
+map_Kd /Users/vijoys/Downloads/Projects/Engine/Asset/Texture/Track/tex_16x16_track_railing.png
 
 newmtl Material_Track_Surface_Composite
 Ns 250.000000
@@ -30,4 +30,4 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.450000
 d 1.000000
 illum 2
-map_Kd /Users/vijoys/Downloads/Projects/Engine/Assets/Texture/Track/tex_64x64_track_surface_generic.png
+map_Kd /Users/vijoys/Downloads/Projects/Engine/Asset/Texture/Track/tex_64x64_track_surface_marker.png
