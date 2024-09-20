@@ -5,7 +5,7 @@
 #include <sstream>
 #include "../Buffer/Buffer.h"
 
-namespace Collections {
+namespace Collection {
 namespace Log {
     typedef enum {
         NONE    = 0,
@@ -324,5 +324,5 @@ namespace Log {
             }
     };
 }   // namespace Log
-}   // namespace Collections
+}   // namespace Collection
 #endif  // RECORD_H

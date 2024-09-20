@@ -1,7 +1,7 @@
 #ifndef DUMP_FORMATTING_H
 #define DUMP_FORMATTING_H
 
-namespace Collections {
+namespace Collection {
     #define TAB_L1          "\t"
     #define TAB_L2          TAB_L1 "\t"
     #define TAB_L3          TAB_L2 "\t"
@@ -16,5 +16,5 @@ namespace Collections {
     #define CLOSE_L1        TAB_L1 << "}" << "\n"
     #define CLOSE_L3        TAB_L3 << "}" << "\n"
     #define CLOSE_L5        TAB_L5 << "}" << "\n"
-}   // namespace Collections
+}   // namespace Collection
 #endif  // DUMP_FORMATTING_H

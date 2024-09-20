@@ -1,20 +1,20 @@
-# Collections
+# Collection
 
 ## Import
 <pre>
-using namespace Collections;
+using namespace Collection;
 </pre>
 
 ## Directory structure
 <pre>
-    Collections
+    Collection
     |-- Buffer             
     |-- Log          
 </pre>
 
 ## Namespaces
 <pre>
-    <i>Collections</i>
+    <i>Collection</i>
     |-- <i>Admin</i>
     |-- <i>Buffer</i>
     |-- <i>Log</i>

@@ -3,7 +3,7 @@
 
 #include "BufferImpl.h"
 
-namespace Collections {
+namespace Collection {
 namespace Buffer {
     class BufferMgr: public Admin::InstanceMgr {
         public:
@@ -25,5 +25,5 @@ namespace Buffer {
     };
     BufferMgr g_bufferMgr;
 }   // namespace Buffer
-}   // namespace Collections
+}   // namespace Collection
 #endif  // BUFFER_MGR_H

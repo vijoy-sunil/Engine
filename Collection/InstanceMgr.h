@@ -5,7 +5,7 @@
 #include <map>
 #include "DumpFormatting.h"
 
-namespace Collections {
+namespace Collection {
 namespace Admin {
     /* A template which can generate a family of types, such as  Buffer <int> or List <double>, all these variants are 
      * not related such that the one is somehow derived from the other or such. So you have to establish some relation 
@@ -107,5 +107,5 @@ namespace Admin {
             }
     };
 }   // namespace Admin
-}   // namespace Collections
+}   // namespace Collection
 #endif  // INSTANCE_MGR_H

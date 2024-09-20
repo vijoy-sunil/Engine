@@ -3,7 +3,7 @@
 
 #include "Record.h"
 
-namespace Collections {
+namespace Collection {
 namespace Log {
     class RecordMgr: public Admin::InstanceMgr {
         public:
@@ -69,5 +69,5 @@ namespace Log {
     };
     RecordMgr g_recordMgr;
 }   // namespace Log
-}   // namespace Collections
+}   // namespace Collection
 #endif  // RECORD_MGR_H

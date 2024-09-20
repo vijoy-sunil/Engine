@@ -3,7 +3,7 @@
 
 #include "../InstanceMgr.h"
 
-namespace Collections {
+namespace Collection {
 namespace Buffer {
     typedef enum {
         WITH_OVERFLOW    = 0,
@@ -179,5 +179,5 @@ namespace Buffer {
             }
     };
 }   // namespace Buffer
-}   // namespace Collections
+}   // namespace Collection
 #endif  // BUFFER_IMPL_H
