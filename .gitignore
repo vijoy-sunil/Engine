@@ -1,8 +1,8 @@
 .DS_Store
 .vscode
-Assets/Model/*.blend
-Assets/Model/*.blend1
-Dependency/imgui
-Dependency/json
-Dependency/stb
-Dependency/tinyobjloader
+Asset/Model/*.blend
+Asset/Model/*.blend1
+Dependency/imgui/
+Dependency/json/
+Dependency/stb/
+Dependency/tinyobjloader/

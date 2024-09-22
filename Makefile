@@ -4,8 +4,9 @@
 # 'VULKAN_SDK' is setup in .zshrc
 GLM_DIR				:= /opt/homebrew/Cellar/glm/1.0.1
 GLFW_DIR			:= /opt/homebrew/Cellar/glfw/3.4
-IMGUI_DIR			:= ./Dependency/ImGui
-IMGUI_BACKEND_DIR	:= $(IMGUI_DIR)/Backend
+DEPENDENCY_DIR		:= ./Dependency
+IMGUI_DIR			:= $(DEPENDENCY_DIR)/imgui
+IMGUI_BACKEND_DIR	:= $(IMGUI_DIR)/backends
 APP_DIR				:= ./SandBox
 SHADER_DIR			:= $(APP_DIR)/Shader
 BUILD_DIR			:= ./Build
@@ -53,6 +54,7 @@ RMDIR				:= rm -r -f
 INCLUDES			:= -I$(VULKAN_SDK)/include								\
 				   	   -I$(GLM_DIR)/include									\
 				   	   -I$(GLFW_DIR)/include								\
+					   -I$(DEPENDENCY_DIR)									\
 					   -I$(IMGUI_DIR)										\
 					   -I$(IMGUI_BACKEND_DIR)
 # Setup glslc compiler path

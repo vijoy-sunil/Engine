@@ -7,7 +7,7 @@ namespace Core {
     class VKSwapChainImage: protected virtual VKImageMgr {
         private:
             Log::Record* m_VKSwapChainImageLog;
-            const uint32_t m_instanceId = g_collectionsSettings.instanceId++; 
+            const uint32_t m_instanceId = g_collectionSettings.instanceId++; 
 
             /* If the swap chain adequate conditions were met (see physical device support function) then the support is 
              * definitely sufficient, but there may still be many different modes of varying optimality. We'll need to 
@@ -129,7 +129,7 @@ namespace Core {
 
         public:
             VKSwapChainImage (void) {
-                m_VKSwapChainImageLog = LOG_INIT (m_instanceId, g_collectionsSettings.logSaveDirPath);
+                m_VKSwapChainImageLog = LOG_INIT (m_instanceId, g_collectionSettings.logSaveDirPath);
                 LOG_ADD_CONFIG (m_instanceId, Log::ERROR, Log::TO_FILE_IMMEDIATE | Log::TO_CONSOLE); 
             }
 
@@ -138,7 +138,7 @@ namespace Core {
             }
 
         protected:
-            /* Vulkan does not have the concept of a "default framebuffer", hence it requires an infrastructure that will 
+            /* Vulkan does not have the concept of a "default frame buffer", hence it requires an infrastructure that will 
              * own the buffers we will render to before we visualize them on the screen. This infrastructure is known as 
              * the swap chain and must be created explicitly in Vulkan. The swap chain is essentially a queue of images 
              * that are waiting to be presented to the screen
@@ -289,7 +289,7 @@ namespace Core {
                     imageInfo->meta.id = imageInfoId + i;
                     createImageView (deviceInfoId, 
                                      imageInfo,
-                                     SWAPCHAIN_IMAGE,
+                                     SWAP_CHAIN_IMAGE,
                                      0,
                                      swapChainImages[i]);
                 }

@@ -1,19 +1,19 @@
 #ifndef VK_TEXTURE_SAMPLER_H
 #define VK_TEXTURE_SAMPLER_H
 
-#include "VKSceneMgr.h"
 #include "../Device/VKDeviceMgr.h"
+#include "VKSceneMgr.h"
 
 namespace Core {
-    class VKTextureSampler: protected virtual VKSceneMgr,
-                            protected virtual VKDeviceMgr {
+    class VKTextureSampler: protected virtual VKDeviceMgr,
+                            protected virtual VKSceneMgr {
         private:
             Log::Record* m_VKTextureSamplerLog;
-            const uint32_t m_instanceId = g_collectionsSettings.instanceId++;
+            const uint32_t m_instanceId = g_collectionSettings.instanceId++;
             
         public:
             VKTextureSampler (void) {
-                m_VKTextureSamplerLog = LOG_INIT (m_instanceId, g_collectionsSettings.logSaveDirPath);
+                m_VKTextureSamplerLog = LOG_INIT (m_instanceId, g_collectionSettings.logSaveDirPath);
                 LOG_ADD_CONFIG (m_instanceId, Log::ERROR, Log::TO_FILE_IMMEDIATE | Log::TO_CONSOLE);
             }
 

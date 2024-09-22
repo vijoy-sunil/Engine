@@ -7,7 +7,7 @@ namespace Core {
     class VKShaderStage: protected virtual VKPipelineMgr {
         private:
             Log::Record* m_VKShaderStageLog;
-            const uint32_t m_instanceId = g_collectionsSettings.instanceId++;
+            const uint32_t m_instanceId = g_collectionSettings.instanceId++;
 
             /* Read all of the bytes from the specified file and return them in a byte array managed by std::vector. This 
              * function is used to read shader binary files
@@ -70,7 +70,7 @@ namespace Core {
 
         public:
             VKShaderStage (void) {
-                m_VKShaderStageLog = LOG_INIT (m_instanceId, g_collectionsSettings.logSaveDirPath);
+                m_VKShaderStageLog = LOG_INIT (m_instanceId, g_collectionSettings.logSaveDirPath);
                 LOG_ADD_CONFIG (m_instanceId, Log::WARNING, Log::TO_FILE_IMMEDIATE | Log::TO_CONSOLE);
                 LOG_ADD_CONFIG (m_instanceId, Log::ERROR,   Log::TO_FILE_IMMEDIATE | Log::TO_CONSOLE); 
             }

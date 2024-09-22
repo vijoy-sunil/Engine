@@ -37,28 +37,27 @@ namespace Core {
             std::unordered_map <e_bufferType, std::vector <BufferInfo>> m_bufferInfoPool;
 
             Log::Record* m_VKBufferMgrLog;
-            const uint32_t m_instanceId = g_collectionsSettings.instanceId++;
+            const uint32_t m_instanceId = g_collectionSettings.instanceId++;
 
             void deleteBufferInfo (BufferInfo* bufferInfo, e_bufferType type) {
                 if (m_bufferInfoPool.find (type) != m_bufferInfoPool.end()) {
                     auto& infos = m_bufferInfoPool[type];
 
                     infos.erase (std::remove (infos.begin(), infos.end(), *bufferInfo), infos.end());
-                    m_bufferInfoPool[type] = infos;
                     return;
                 }
 
                 LOG_ERROR (m_VKBufferMgrLog) << "Failed to delete buffer info "
                                              << "[" << bufferInfo->meta.id << "]"
                                              << " "
-                                             << "[" << Utils::getBufferTypeString (type) << "]"             
+                                             << "[" << getBufferTypeString (type) << "]"             
                                              << std::endl;
                 throw std::runtime_error ("Failed to delete buffer info");              
             }
 
         public:
             VKBufferMgr (void) {
-                m_VKBufferMgrLog = LOG_INIT (m_instanceId, g_collectionsSettings.logSaveDirPath);
+                m_VKBufferMgrLog = LOG_INIT (m_instanceId, g_collectionSettings.logSaveDirPath);
                 LOG_ADD_CONFIG (m_instanceId, Log::INFO,  Log::TO_FILE_IMMEDIATE);
                 LOG_ADD_CONFIG (m_instanceId, Log::ERROR, Log::TO_FILE_IMMEDIATE | Log::TO_CONSOLE); 
             }
@@ -82,7 +81,7 @@ namespace Core {
                         LOG_ERROR (m_VKBufferMgrLog) << "Buffer info id already exists " 
                                                      << "[" << bufferInfoId << "]"
                                                      << " "
-                                                     << "[" << Utils::getBufferTypeString (type) << "]"
+                                                     << "[" << getBufferTypeString (type) << "]"
                                                      << std::endl;
                         throw std::runtime_error ("Buffer info id already exists");
                     }
@@ -120,7 +119,7 @@ namespace Core {
                     LOG_ERROR (m_VKBufferMgrLog) << "Failed to create buffer " 
                                                  << "[" << bufferInfoId << "]"
                                                  << " "
-                                                 << "[" << Utils::getBufferTypeString (type) << "]"
+                                                 << "[" << getBufferTypeString (type) << "]"
                                                  << " "
                                                  << "[" << string_VkResult (result) << "]" 
                                                  << std::endl; 
@@ -174,7 +173,7 @@ namespace Core {
                     LOG_ERROR (m_VKBufferMgrLog) << "Failed to allocate buffer memory " 
                                                  << "[" << bufferInfoId << "]"
                                                  << " "
-                                                 << "[" << Utils::getBufferTypeString (type) << "]"
+                                                 << "[" << getBufferTypeString (type) << "]"
                                                  << " "
                                                  << "[" << string_VkResult (result) << "]"
                                                  << std::endl; 
@@ -225,7 +224,7 @@ namespace Core {
                 LOG_ERROR (m_VKBufferMgrLog) << "Failed to find buffer info "
                                              << "[" << bufferInfoId << "]"
                                              << " "
-                                             << "[" << Utils::getBufferTypeString (type) << "]"           
+                                             << "[" << getBufferTypeString (type) << "]"           
                                              << std::endl;
                 throw std::runtime_error ("Failed to find buffer info");
             }
@@ -236,7 +235,7 @@ namespace Core {
 
                 for (auto const& [key, val]: m_bufferInfoPool) {
                     LOG_INFO (m_VKBufferMgrLog) << "Type " 
-                                                << "[" << Utils::getBufferTypeString (key) << "]"
+                                                << "[" << getBufferTypeString (key) << "]"
                                                 << std::endl;
                     
                     for (auto const& info: val) {
@@ -250,14 +249,14 @@ namespace Core {
 
                         LOG_INFO (m_VKBufferMgrLog) << "Usage"
                                                     << std::endl;
-                        auto flags = Utils::getSplitString (string_VkBufferUsageFlags (info.params.usage), "|");
+                        auto flags = getSplitString (string_VkBufferUsageFlags (info.params.usage), "|");
                         for (auto const& flag: flags)
                         LOG_INFO (m_VKBufferMgrLog) << "[" << flag << "]" 
                                                     << std::endl; 
 
                         LOG_INFO (m_VKBufferMgrLog) << "Property"
                                                     << std::endl;
-                        auto properties = Utils::getSplitString (string_VkMemoryPropertyFlags (info.params.property), "|");
+                        auto properties = getSplitString (string_VkMemoryPropertyFlags (info.params.property), "|");
                         for (auto const& property: properties)
                         LOG_INFO (m_VKBufferMgrLog) << "[" << property << "]" 
                                                     << std::endl; 

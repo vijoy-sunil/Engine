@@ -31,11 +31,11 @@ namespace Core {
                             protected virtual VKSyncObject {
         private:
             Log::Record* m_VKDeleteSequenceLog;
-            const uint32_t m_instanceId = g_collectionsSettings.instanceId++;
+            const uint32_t m_instanceId = g_collectionSettings.instanceId++;
 
         public:
             VKDeleteSequence (void) {
-                m_VKDeleteSequenceLog = LOG_INIT (m_instanceId, g_collectionsSettings.logSaveDirPath);
+                m_VKDeleteSequenceLog = LOG_INIT (m_instanceId, g_collectionSettings.logSaveDirPath);
                 LOG_ADD_CONFIG (m_instanceId, Log::INFO, Log::TO_FILE_IMMEDIATE);
             }
 
@@ -180,7 +180,7 @@ namespace Core {
                  * | DESTROY MULTI SAMPLE RESOURCES                                                                 |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                VKImageMgr::cleanUp (deviceInfoId, sceneInfo->id.multiSampleImageInfo, MULTISAMPLE_IMAGE);
+                VKImageMgr::cleanUp (deviceInfoId, sceneInfo->id.multiSampleImageInfo, MULTI_SAMPLE_IMAGE);
                 LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Multi sample resources " 
                                                  << "[" << sceneInfo->id.multiSampleImageInfo << "]"
                                                  << std::endl; 
@@ -208,7 +208,7 @@ namespace Core {
                 */
                 for (uint32_t i = 0; i < deviceInfo->params.swapChainSize; i++) {
                     uint32_t swapChainImageInfoId = sceneInfo->id.swapChainImageInfoBase + i;
-                    VKImageMgr::cleanUp (deviceInfoId, swapChainImageInfoId, SWAPCHAIN_IMAGE);
+                    VKImageMgr::cleanUp (deviceInfoId, swapChainImageInfoId, SWAP_CHAIN_IMAGE);
                     LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Swap chain resources " 
                                                      << "[" << swapChainImageInfoId << "]"
                                                      << " "

@@ -7,9 +7,9 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/hash.hpp>
 #include "../VKConfig.h"
-#include "../../Collections/Log/Log.h"
+#include "../../Collection/Log/Log.h"
 
-using namespace Collections;
+using namespace Collection;
 
 namespace Core {
     struct Vertex {
@@ -61,11 +61,11 @@ namespace Core {
     class VKVertexData {
         private:
             Log::Record* m_VKVertexDataLog;
-            const uint32_t m_instanceId = g_collectionsSettings.instanceId++;
+            const uint32_t m_instanceId = g_collectionSettings.instanceId++;
 
         public:
             VKVertexData (void) {
-                m_VKVertexDataLog = LOG_INIT (m_instanceId, g_collectionsSettings.logSaveDirPath);
+                m_VKVertexDataLog = LOG_INIT (m_instanceId, g_collectionSettings.logSaveDirPath);
             }
 
             ~VKVertexData (void) {

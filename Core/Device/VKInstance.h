@@ -7,7 +7,7 @@ namespace Core {
     class VKInstance: protected virtual VKValidation {
         private:
             Log::Record* m_VKInstanceLog;
-            const uint32_t m_instanceId = g_collectionsSettings.instanceId++;
+            const uint32_t m_instanceId = g_collectionSettings.instanceId++;
 
             std::vector <const char*> getInstanceExtensions (void) {
                 std::vector <const char*> instanceExtensions;
@@ -79,7 +79,7 @@ namespace Core {
 
         public:
             VKInstance (void) {
-                m_VKInstanceLog = LOG_INIT (m_instanceId, g_collectionsSettings.logSaveDirPath);
+                m_VKInstanceLog = LOG_INIT (m_instanceId, g_collectionSettings.logSaveDirPath);
                 LOG_ADD_CONFIG (m_instanceId, Log::INFO,    Log::TO_FILE_IMMEDIATE);
                 LOG_ADD_CONFIG (m_instanceId, Log::WARNING, Log::TO_FILE_IMMEDIATE | Log::TO_CONSOLE);
                 LOG_ADD_CONFIG (m_instanceId, Log::ERROR,   Log::TO_FILE_IMMEDIATE | Log::TO_CONSOLE);

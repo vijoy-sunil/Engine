@@ -30,7 +30,6 @@
 #include "../Pipeline/VKPipelineLayout.h"
 #include "../Cmd/VKCmdBuffer.h"
 #include "../Cmd/VKCmd.h"
-#include "VKCameraMgr.h"
 #include "VKTextureSampler.h"
 #include "VKDescriptor.h"
 #include "VKSyncObject.h"
@@ -65,17 +64,16 @@ namespace Core {
                           protected virtual VKPipelineLayout,
                           protected virtual VKCmdBuffer,
                           protected virtual VKCmd,
-                          protected virtual VKCameraMgr,
                           protected virtual VKTextureSampler,
                           protected virtual VKDescriptor,
                           protected virtual VKSyncObject {
         private:
             Log::Record* m_VKInitSequenceLog;
-            const uint32_t m_instanceId = g_collectionsSettings.instanceId++;
+            const uint32_t m_instanceId = g_collectionSettings.instanceId++;
 
         public:
             VKInitSequence (void) {
-                m_VKInitSequenceLog = LOG_INIT (m_instanceId, g_collectionsSettings.logSaveDirPath);
+                m_VKInitSequenceLog = LOG_INIT (m_instanceId, g_collectionSettings.logSaveDirPath);
                 LOG_ADD_CONFIG (m_instanceId, Log::INFO,  Log::TO_FILE_IMMEDIATE);
                 LOG_ADD_CONFIG (m_instanceId, Log::ERROR, Log::TO_FILE_IMMEDIATE | Log::TO_CONSOLE); 
             }
@@ -90,7 +88,6 @@ namespace Core {
                               const std::vector <uint32_t>& modelInfoIds,
                               uint32_t renderPassInfoId,
                               uint32_t pipelineInfoId,
-                              uint32_t cameraInfoId, 
                               uint32_t sceneInfoId, 
                               T extensions) {
 
@@ -301,32 +298,134 @@ namespace Core {
                  * |------------------------------------------------------------------------------------------------|
                 */
                 readyRenderPassInfo (renderPassInfoId);
+                /* For multi-sampled rendering in Vulkan, the multi-sampled image is treated separately from the final
+                 * single-sampled image. This provides separate control over what values need to reach memory, since 
+                 * like the depth buffer, the multi-sampled image may only need to be accessed during the processing of 
+                 * a tile. For this reason, if the multi-sampled image is not required after the render pass, it can be 
+                 * created with VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT and bound to an allocation created with 
+                 * VK_MEMORY_PROPERTY_LAZILY_ALLOCATED_BIT. The multi-sampled attachment storeOp can then be set to 
+                 * VK_ATTACHMENT_STORE_OP_DONT_CARE in the VkAttachmentDescription, so that (at least on tiled renderers)
+                 * the full multi-sampled attachment does not need to be written to memory, which can save a lot of 
+                 * bandwidth
+                 * 
+                 * Note that, multisampled images cannot be presented directly. We first need to resolve them to a 
+                 * regular image
+                */
+                createAttachment    (sceneInfo->id.multiSampleImageInfo,
+                                     renderPassInfoId,
+                                     MULTI_SAMPLE_IMAGE,
+                                     0,
+                                     VK_ATTACHMENT_LOAD_OP_CLEAR,       VK_ATTACHMENT_STORE_OP_DONT_CARE,
+                                     VK_ATTACHMENT_LOAD_OP_DONT_CARE,   VK_ATTACHMENT_STORE_OP_DONT_CARE,
+                                     VK_IMAGE_LAYOUT_UNDEFINED,         VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
 
-                createMultiSampleAttachment  (sceneInfo->id.multiSampleImageInfo,   renderPassInfoId);
-                createDepthStencilAttachment (sceneInfo->id.depthImageInfo,         renderPassInfoId);
-                createColorAttachment        (sceneInfo->id.swapChainImageInfoBase, renderPassInfoId);
+                /* Create depth attachment. Note that, the format should be the same as the depth image itself. We don't
+                 * care about storing the depth data (storeOp), because it will not be used after drawing has finished. 
+                 * This may allow the hardware to perform additional optimizations
+                */
+                createAttachment    (sceneInfo->id.depthImageInfo,
+                                     renderPassInfoId,
+                                     DEPTH_IMAGE,
+                                     0,
+                                     VK_ATTACHMENT_LOAD_OP_CLEAR,       VK_ATTACHMENT_STORE_OP_DONT_CARE,
+                                     VK_ATTACHMENT_LOAD_OP_DONT_CARE,   VK_ATTACHMENT_STORE_OP_DONT_CARE,
+                                     VK_IMAGE_LAYOUT_UNDEFINED,         VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
+                /* Note that, the finalLayout is not set to VK_IMAGE_LAYOUT_PRESENT_SRC_KHR since this is not the
+                 * final render pass
+                */
+                createAttachment    (sceneInfo->id.swapChainImageInfoBase,
+                                     renderPassInfoId,
+                                     SWAP_CHAIN_IMAGE,
+                                     0,
+                                     VK_ATTACHMENT_LOAD_OP_DONT_CARE,   VK_ATTACHMENT_STORE_OP_STORE,
+                                     VK_ATTACHMENT_LOAD_OP_DONT_CARE,   VK_ATTACHMENT_STORE_OP_DONT_CARE,
+                                     VK_IMAGE_LAYOUT_UNDEFINED,         VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG SUB PASS                                                                                |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                auto colorAttachmentRefs = std::vector {
+                /* The first transition for an attached image of a render pass will be from the initialLayout for the 
+                 * render pass to the reference layout for the first sub pass that uses the image. The last transition 
+                 * for an attached image will be from reference layout of the final sub pass that uses the attachment to 
+                 * the finalLayout for the render pass
+                */
+                auto inputAttachmentRefs       = std::vector <VkAttachmentReference> {
+                };
+                auto colorAttachmentRefs       = std::vector {
                     getAttachmentReference (0, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL)
                 };
                 auto depthStencilAttachmentRef = 
                     getAttachmentReference (1, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
-                auto resolveAttachmentRefs = std::vector {
+                auto resolveAttachmentRefs     = std::vector {
                     getAttachmentReference (2, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL)
                 };
                 createSubPass (renderPassInfoId,
+                               inputAttachmentRefs,
                                colorAttachmentRefs,
                                &depthStencilAttachmentRef,
                                resolveAttachmentRefs);
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG SUB PASS DEPENDENCIES                                                                   |
                  * |------------------------------------------------------------------------------------------------|
-                */                
-                createDepthStencilDependency (renderPassInfoId, VK_SUBPASS_EXTERNAL, 0);
-                createColorWriteDependency   (renderPassInfoId, VK_SUBPASS_EXTERNAL, 0);
+                */
+                /* It is possible that multiple frames are rendered simultaneously by the GPU. This is a problem when 
+                 * using a single depth buffer, because one frame could overwrite the depth buffer while a previous 
+                 * frame is still rendering to it. To prevent this, we add a sub pass dependency that synchronizes 
+                 * accesses to the depth attachment
+                 *  
+                 * This dependency tells vulkan that the depth attachment in a render pass cannot be used before previous 
+                 * render passes have finished using it
+                 * 
+                 * Note that, the depth image is first accessed in the early fragment test pipeline stage and we need to 
+                 * make sure that there is no conflict between the transitioning of the depth image and it being cleared
+                 * as part of its load operation (VK_ATTACHMENT_LOAD_OP_CLEAR)
+                */
+                createDependency (renderPassInfoId, 
+                                  0, 
+                                  VK_SUBPASS_EXTERNAL, 0,
+                                  VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT |
+                                  VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,     
+                                  VK_ACCESS_NONE,
+                                  VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT |
+                                  VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
+                                  VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT);
+                /* Remember that the sub passes in a render pass automatically take care of image layout transitions. 
+                 * These transitions are controlled by sub pass dependencies, which specify memory and execution 
+                 * dependencies between sub passes. Note that, the operations right before and right after a sub pass 
+                 * also count as implicit "sub passes"
+                 * 
+                 * There are two built-in dependencies that take care of the transition at the start of the render pass 
+                 * and at the end of the render pass, but the former does not occur at the right time. It assumes that 
+                 * the transition occurs at the start of the pipeline, but we haven't acquired the image yet at that 
+                 * point (see sync object wait operation)
+                 * 
+                 * Solution: (We choose option #2)
+                 * (1) We could change the waitStages for the image available semaphore to 
+                 * VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT to ensure that the render passes don't begin until the image is 
+                 * available
+                 * 
+                 * (2) We can make the render pass wait for the VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT stage 
+                 * (this stage specifies the stage of the pipeline after blending where the final color values are 
+                 * output from the pipeline)
+                 * 
+                 * Image layout transition
+                 * Before the render pass, the layout of the image will be transitioned to the layout you specify, for 
+                 * example VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL. However, by default this happens at the beginning 
+                 * of the pipeline at which point we haven't acquired the image yet (we acquire it in the 
+                 * VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT stage per the sync object wait operation). That means 
+                 * that we need to change the behaviour of the render pass to also only change the layout once we've 
+                 * come to that stage
+                 * 
+                 * The stage masks in the sub pass dependency allow the sub pass to already begin before the image is 
+                 * available up until the point where it needs to write to it
+                */
+                createDependency (renderPassInfoId, 
+                                  0, 
+                                  VK_SUBPASS_EXTERNAL, 0,
+                                  VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, 
+                                  VK_ACCESS_NONE,
+                                  VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, 
+                                  VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT);
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG RENDER PASS                                                                             |
                  * |------------------------------------------------------------------------------------------------|
@@ -343,22 +442,22 @@ namespace Core {
                  * In MSAA, each pixel is sampled in an offscreen buffer which is then rendered to the screen. This 
                  * new buffer is slightly different from regular images we've been rendering to - they have to be able
                  * to store more than one sample per pixel. Once a multisampled buffer is created, it has to be 
-                 * resolved to the default framebuffer (which stores only a single sample per pixel). This is why we 
+                 * resolved to the default frame buffer (which stores only a single sample per pixel). This is why we 
                  * have to create an additional render target. We only need one render target since only one drawing 
                  * operation is active at a time, just like with the depth buffer
                  * 
-                 * Note that, we are using the same depth image on each of the swap chain framebuffers. This is because 
+                 * Note that, we are using the same depth image on each of the swap chain frame buffers. This is because 
                  * we do not need to change the depth image between frames (in flight), we can just keep clearing and 
-                 * reusing the same depth image for every frame (see subpass dependency)
+                 * reusing the same depth image for every frame (see sub pass dependency)
                 */
-                auto multiSampleImageInfo = getImageInfo (sceneInfo->id.multiSampleImageInfo, MULTISAMPLE_IMAGE);
+                auto multiSampleImageInfo = getImageInfo (sceneInfo->id.multiSampleImageInfo, MULTI_SAMPLE_IMAGE);
                 auto depthImageInfo       = getImageInfo (sceneInfo->id.depthImageInfo,       DEPTH_IMAGE);
-                /* Create a framebuffer for all of the images in the swap chain and use the one that corresponds to the 
+                /* Create a frame buffer for all of the images in the swap chain and use the one that corresponds to the 
                  * retrieved image at drawing time
                 */
                 for (uint32_t i = 0; i < deviceInfo->params.swapChainSize; i++) {
                     uint32_t swapChainImageInfoId = sceneInfo->id.swapChainImageInfoBase + i;
-                    auto swapChainImageInfo       = getImageInfo (swapChainImageInfoId, SWAPCHAIN_IMAGE);
+                    auto swapChainImageInfo       = getImageInfo (swapChainImageInfoId, SWAP_CHAIN_IMAGE);
 
                     auto attachments = std::vector {
                         multiSampleImageInfo->resource.imageView,
@@ -585,14 +684,6 @@ namespace Core {
                 vkDestroyShaderModule (deviceInfo->resource.logDevice, fragmentShaderModule, VK_NULL_HANDLE);
                 LOG_INFO (m_VKInitSequenceLog) << "[DELETE] Shader modules" 
                                                << std::endl;  
-                /* |------------------------------------------------------------------------------------------------|
-                 * | CONFIG CAMERA MATRIX                                                                           |
-                 * |------------------------------------------------------------------------------------------------|
-                */
-                createCameraMatrix (deviceInfoId, cameraInfoId);
-                LOG_INFO (m_VKInitSequenceLog) << "[OK] Camera matrix " 
-                                               << "[" << cameraInfoId << "]"
-                                               << std::endl;
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG TEXTURE SAMPLER                                                                         |
                  * |------------------------------------------------------------------------------------------------|
@@ -993,7 +1084,6 @@ namespace Core {
                 dumpBufferInfoPool();
                 dumpRenderPassInfoPool();
                 dumpPipelineInfoPool();
-                dumpCameraInfoPool();
                 dumpFenceInfoPool();
                 dumpSemaphoreInfoPool();
                 dumpSceneInfoPool();

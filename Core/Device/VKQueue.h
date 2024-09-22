@@ -3,13 +3,13 @@
 
 #include <set>
 #include "VKDeviceMgr.h"
-#include "../../Utils/LogHelper.h"
+#include "../VKLogHelper.h"
 
 namespace Core {
     class VKQueue: protected virtual VKDeviceMgr {
         private:
             Log::Record* m_VKQueueLog;
-            const uint32_t m_instanceId = g_collectionsSettings.instanceId++;
+            const uint32_t m_instanceId = g_collectionSettings.instanceId++;
 
             bool isQueueFamilyIndicesComplete (uint32_t deviceInfoId) {
                 auto deviceInfo = getDeviceInfo (deviceInfoId);
@@ -20,7 +20,7 @@ namespace Core {
 
         public:
             VKQueue (void) {
-                m_VKQueueLog = LOG_INIT (m_instanceId, g_collectionsSettings.logSaveDirPath);
+                m_VKQueueLog = LOG_INIT (m_instanceId, g_collectionSettings.logSaveDirPath);
                 LOG_ADD_CONFIG (m_instanceId, Log::INFO, Log::TO_FILE_IMMEDIATE);
             }
 
@@ -61,7 +61,7 @@ namespace Core {
                                             
                     LOG_INFO (m_VKQueueLog) << "Queue family supported flags" 
                                             << std::endl;  
-                    auto flags = Utils::getSplitString (string_VkQueueFlags (queueFamily.queueFlags), "|");
+                    auto flags = getSplitString (string_VkQueueFlags (queueFamily.queueFlags), "|");
                     for (auto const& flag: flags)
                     LOG_INFO (m_VKQueueLog) << "[" << flag << "]" 
                                             << std::endl;

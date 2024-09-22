@@ -2,9 +2,9 @@
 #define VK_SCENE_MGR_H
 
 #include "../VKConfig.h"
-#include "../../Collections/Log/Log.h"
+#include "../../Collection/Log/Log.h"
 
-using namespace Collections;
+using namespace Collection;
 
 namespace Core {
     class VKSceneMgr {
@@ -36,7 +36,7 @@ namespace Core {
             std::unordered_map <uint32_t, SceneInfo> m_sceneInfoPool;
 
             Log::Record* m_VKSceneMgrLog;
-            const uint32_t m_instanceId = g_collectionsSettings.instanceId++;
+            const uint32_t m_instanceId = g_collectionSettings.instanceId++;
 
             void deleteSceneInfo (uint32_t sceneInfoId) {
                 if (m_sceneInfoPool.find (sceneInfoId) != m_sceneInfoPool.end()) {
@@ -52,7 +52,7 @@ namespace Core {
             
         public:
             VKSceneMgr (void) {
-                m_VKSceneMgrLog = LOG_INIT (m_instanceId, g_collectionsSettings.logSaveDirPath);
+                m_VKSceneMgrLog = LOG_INIT (m_instanceId, g_collectionSettings.logSaveDirPath);
                 LOG_ADD_CONFIG (m_instanceId, Log::INFO,  Log::TO_FILE_IMMEDIATE);
                 LOG_ADD_CONFIG (m_instanceId, Log::ERROR, Log::TO_FILE_IMMEDIATE | Log::TO_CONSOLE);
             }
@@ -62,10 +62,7 @@ namespace Core {
             }
 
         protected:
-            void readySceneInfo (uint32_t sceneInfoId, 
-                                 uint32_t totatInstancesCount,
-                                 const std::vector <uint32_t>& infoIds) {
-
+            void readySceneInfo (uint32_t sceneInfoId, uint32_t totatInstancesCount) {
                 if (m_sceneInfoPool.find (sceneInfoId) != m_sceneInfoPool.end()) {
                     LOG_ERROR (m_VKSceneMgrLog) << "Scene info id already exists "
                                                 << "[" << sceneInfoId << "]"
@@ -74,21 +71,8 @@ namespace Core {
                 }
 
                 SceneInfo info{};
-                info.meta.totalInstancesCount           = totatInstancesCount;
-                info.id.inFlightFenceInfoBase           = infoIds[0];
-                info.id.imageAvailableSemaphoreInfoBase = infoIds[1];
-                info.id.renderDoneSemaphoreInfoBase     = infoIds[2];
-
-                m_sceneInfoPool[sceneInfoId] = info;
-            }
-
-            void deriveSceneInfo (uint32_t sceneInfoId, uint32_t baseSceneInfoId) {
-                auto baseSceneInfo = getSceneInfo (baseSceneInfoId);
-                SceneInfo info{};
-                info.meta          = baseSceneInfo->meta;
-                info.id            = baseSceneInfo->id;
-
-                m_sceneInfoPool[sceneInfoId] = info;
+                info.meta.totalInstancesCount = totatInstancesCount;
+                m_sceneInfoPool[sceneInfoId]  = info;
             }
 
             SceneInfo* getSceneInfo (uint32_t sceneInfoId) {

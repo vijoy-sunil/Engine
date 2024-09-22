@@ -3,7 +3,7 @@
 /* We will use the tinyobjloader library to load model data from an OBJ file
 */
 #define TINYOBJLOADER_IMPLEMENTATION
-#include "../../Dependency/TinyObjLoader/tiny_obj_loader.h"
+#include <tinyobjloader/tiny_obj_loader.h>
 #include "VKVertexData.h"
 #include "../Scene/VKUniform.h"
 
@@ -44,7 +44,7 @@ namespace Core {
             std::unordered_map <std::string, uint32_t> m_textureImagePool;
             
             Log::Record* m_VKModelMgrLog;
-            const uint32_t m_instanceId = g_collectionsSettings.instanceId++; 
+            const uint32_t m_instanceId = g_collectionSettings.instanceId++; 
 
             void deleteModelInfo (uint32_t modelInfoId) {
                 if (m_modelInfoPool.find (modelInfoId) != m_modelInfoPool.end()) {
@@ -98,7 +98,7 @@ namespace Core {
 
         public:
             VKModelMgr (void) {
-                m_VKModelMgrLog = LOG_INIT (m_instanceId, g_collectionsSettings.logSaveDirPath);
+                m_VKModelMgrLog = LOG_INIT (m_instanceId, g_collectionSettings.logSaveDirPath);
                 LOG_ADD_CONFIG (m_instanceId, Log::INFO,    Log::TO_FILE_IMMEDIATE);
                 LOG_ADD_CONFIG (m_instanceId, Log::WARNING, Log::TO_FILE_IMMEDIATE | Log::TO_CONSOLE);
                 LOG_ADD_CONFIG (m_instanceId, Log::ERROR,   Log::TO_FILE_IMMEDIATE | Log::TO_CONSOLE);
@@ -121,7 +121,7 @@ namespace Core {
                 }
 
                 ModelInfo info{};
-                info.meta.parsedDataLogInstanceId = g_collectionsSettings.instanceId++;
+                info.meta.parsedDataLogInstanceId = g_collectionSettings.instanceId++;
                 info.path.model                   = modelPath;
                 info.path.mtlFileDir              = mtlFileDirPath;
                 /* Add default diffuse texture as the fist entry in the group of textures. This way, faces with no 
@@ -132,7 +132,7 @@ namespace Core {
                 /* Config log for parsed data
                 */
                 std::string nameExtension = "_PD_" + std::to_string (modelInfoId);
-                LOG_INIT       (info.meta.parsedDataLogInstanceId, g_collectionsSettings.logSaveDirPath);
+                LOG_INIT       (info.meta.parsedDataLogInstanceId, g_collectionSettings.logSaveDirPath);
                 LOG_ADD_CONFIG (info.meta.parsedDataLogInstanceId, 
                                 Log::INFO, 
                                 Log::TO_FILE_IMMEDIATE, 

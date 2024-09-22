@@ -3,9 +3,9 @@
 
 #include <vulkan/vk_enum_string_helper.h>
 #include "../VKConfig.h"
-#include "../../Collections/Log/Log.h"
+#include "../../Collection/Log/Log.h"
 
-using namespace Collections;
+using namespace Collection;
 
 namespace Core {
     class VKDeviceMgr {
@@ -100,7 +100,7 @@ namespace Core {
             }; 
             
             Log::Record* m_VKDeviceMgrLog;
-            const uint32_t m_instanceId = g_collectionsSettings.instanceId++;
+            const uint32_t m_instanceId = g_collectionSettings.instanceId++;
 
             void deleteDeviceInfo (uint32_t deviceInfoId) {
                 if (m_deviceInfoPool.find (deviceInfoId) != m_deviceInfoPool.end()) {
@@ -116,7 +116,7 @@ namespace Core {
 
         public:
             VKDeviceMgr (void) {
-                m_VKDeviceMgrLog = LOG_INIT (m_instanceId, g_collectionsSettings.logSaveDirPath);
+                m_VKDeviceMgrLog = LOG_INIT (m_instanceId, g_collectionSettings.logSaveDirPath);
                 LOG_ADD_CONFIG (m_instanceId, Log::INFO,  Log::TO_FILE_IMMEDIATE);
                 LOG_ADD_CONFIG (m_instanceId, Log::ERROR, Log::TO_FILE_IMMEDIATE | Log::TO_CONSOLE);
             }

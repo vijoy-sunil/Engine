@@ -7,11 +7,11 @@ namespace Core {
     class VKPushConstantRange: protected virtual VKPipelineMgr {
         private:
             Log::Record* m_VKPushConstantRangeLog;
-            const uint32_t m_instanceId = g_collectionsSettings.instanceId++;
+            const uint32_t m_instanceId = g_collectionSettings.instanceId++;
             
         public:
             VKPushConstantRange (void) {
-                m_VKPushConstantRangeLog = LOG_INIT (m_instanceId, g_collectionsSettings.logSaveDirPath);
+                m_VKPushConstantRangeLog = LOG_INIT (m_instanceId, g_collectionSettings.logSaveDirPath);
             }
 
             ~VKPushConstantRange (void) { 

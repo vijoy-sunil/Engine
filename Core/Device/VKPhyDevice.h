@@ -7,7 +7,7 @@ namespace Core {
     class VKPhyDevice: protected VKQueue {
         private:
             Log::Record* m_VKPhyDeviceLog;
-            const uint32_t m_instanceId = g_collectionsSettings.instanceId++;
+            const uint32_t m_instanceId = g_collectionSettings.instanceId++;
 
             bool isDeviceExtensionsSupported (VkPhysicalDevice phyDevice, 
                                               const std::vector <const char*>& deviceExtensions) {
@@ -115,7 +115,7 @@ namespace Core {
 
         public:
             VKPhyDevice (void) {
-                m_VKPhyDeviceLog = LOG_INIT (m_instanceId, g_collectionsSettings.logSaveDirPath);
+                m_VKPhyDeviceLog = LOG_INIT (m_instanceId, g_collectionSettings.logSaveDirPath);
                 LOG_ADD_CONFIG (m_instanceId, Log::INFO,  Log::TO_FILE_IMMEDIATE);
                 LOG_ADD_CONFIG (m_instanceId, Log::ERROR, Log::TO_FILE_IMMEDIATE | Log::TO_CONSOLE);
             }
@@ -216,8 +216,8 @@ namespace Core {
                                                 << "[" << memProperties.memoryTypes[i].heapIndex << "]"
                                                 << std::endl;
 
-                    auto flags = Utils::getSplitString (string_VkMemoryPropertyFlags 
-                                                       (memProperties.memoryTypes[i].propertyFlags), "|");
+                    auto flags = getSplitString (string_VkMemoryPropertyFlags 
+                                                (memProperties.memoryTypes[i].propertyFlags), "|");
                     for (auto const& flag: flags)
                     LOG_INFO (m_VKPhyDeviceLog) << "[" << flag << "]" 
                                                 << std::endl; 
@@ -233,8 +233,8 @@ namespace Core {
                                                 << "[" << memProperties.memoryHeaps[i].size << "]"
                                                 << std::endl;
 
-                    auto flags = Utils::getSplitString (string_VkMemoryHeapFlags 
-                                                       (memProperties.memoryHeaps[i].flags), "|");
+                    auto flags = getSplitString (string_VkMemoryHeapFlags 
+                                                (memProperties.memoryHeaps[i].flags), "|");
                     for (auto const& flag: flags)
                     LOG_INFO (m_VKPhyDeviceLog) << "[" << flag << "]" 
                                                 << std::endl;                                                     
@@ -246,7 +246,7 @@ namespace Core {
                 */
                 LOG_INFO (m_VKPhyDeviceLog) << "Desired memory properties" 
                                             << std::endl;  
-                auto flags = Utils::getSplitString (string_VkMemoryPropertyFlags (properties), "|");
+                auto flags = getSplitString (string_VkMemoryPropertyFlags (properties), "|");
                 for (auto const& flag: flags)
                 LOG_INFO (m_VKPhyDeviceLog) << "[" << flag << "]" 
                                             << std::endl;                                                   

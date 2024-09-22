@@ -7,11 +7,11 @@ namespace Core {
     class VKRasterization: protected virtual VKPipelineMgr {
         private:
             Log::Record* m_VKRasterizationLog;
-            const uint32_t m_instanceId = g_collectionsSettings.instanceId++;
+            const uint32_t m_instanceId = g_collectionSettings.instanceId++;
             
         public:
             VKRasterization (void) {
-                m_VKRasterizationLog = LOG_INIT (m_instanceId, g_collectionsSettings.logSaveDirPath);
+                m_VKRasterizationLog = LOG_INIT (m_instanceId, g_collectionSettings.logSaveDirPath);
             }
 
             ~VKRasterization (void) { 
@@ -52,7 +52,7 @@ namespace Core {
                 */
                 createInfo.depthClampEnable = VK_FALSE;
                 /* If rasterizerDiscardEnable is set to VK_TRUE, then geometry never passes through the rasterizer stage. 
-                 * This basically disables any output to the framebuffer
+                 * This basically disables any output to the frame buffer
                 */
                 createInfo.rasterizerDiscardEnable = VK_FALSE;
                 /* The polygonMode determines how fragments are generated for geometry

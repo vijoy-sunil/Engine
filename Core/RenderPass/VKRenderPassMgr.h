@@ -18,7 +18,7 @@ namespace Core {
             std::unordered_map <uint32_t, RenderPassInfo> m_renderPassInfoPool;
 
             Log::Record* m_VKRenderPassMgrLog;
-            const uint32_t m_instanceId = g_collectionsSettings.instanceId++;
+            const uint32_t m_instanceId = g_collectionSettings.instanceId++;
             
             void deleteRenderPassInfo (uint32_t renderPassInfoId) {
                 if (m_renderPassInfoPool.find (renderPassInfoId) != m_renderPassInfoPool.end()) {
@@ -34,7 +34,7 @@ namespace Core {
 
         public:
             VKRenderPassMgr (void) {
-                m_VKRenderPassMgrLog = LOG_INIT (m_instanceId, g_collectionsSettings.logSaveDirPath);
+                m_VKRenderPassMgrLog = LOG_INIT (m_instanceId, g_collectionSettings.logSaveDirPath);
                 LOG_ADD_CONFIG (m_instanceId, Log::INFO,  Log::TO_FILE_IMMEDIATE);
                 LOG_ADD_CONFIG (m_instanceId, Log::ERROR, Log::TO_FILE_IMMEDIATE | Log::TO_CONSOLE); 
             }
@@ -111,7 +111,7 @@ namespace Core {
                                                     << "[" << val.resource.attachments.size() << "]"
                                                     << std::endl;
 
-                    LOG_INFO (m_VKRenderPassMgrLog) << "Subpasses count " 
+                    LOG_INFO (m_VKRenderPassMgrLog) << "Sub passes count " 
                                                     << "[" << val.resource.subPasses.size() << "]"
                                                     << std::endl; 
 
@@ -119,7 +119,7 @@ namespace Core {
                                                     << "[" << val.resource.dependencies.size() << "]"
                                                     << std::endl;
 
-                    LOG_INFO (m_VKRenderPassMgrLog) << "Framebuffers count " 
+                    LOG_INFO (m_VKRenderPassMgrLog) << "Frame buffers count " 
                                                     << "[" << val.resource.frameBuffers.size() << "]"
                                                     << std::endl;
                 }

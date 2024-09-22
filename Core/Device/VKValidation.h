@@ -27,7 +27,7 @@ namespace Core {
             };
 
             static Log::Record* m_VKValidationLog;
-            const uint32_t m_instanceId = g_collectionsSettings.instanceId++;
+            const uint32_t m_instanceId = g_collectionSettings.instanceId++;
             /* Logging to a circular buffer requires us to specify the buffer capacity. A multiple of 3 will allow us to
              * save the validation message as a whole (msg, severity and type)
             */
@@ -130,7 +130,7 @@ namespace Core {
             VKValidation (void) {
                 m_enableValidationLayers    = false;
                 m_validationLayersSupported = false;
-                m_VKValidationLog = LOG_INIT (m_instanceId, g_collectionsSettings.logSaveDirPath, m_logBufferCapacity);
+                m_VKValidationLog = LOG_INIT (m_instanceId, g_collectionSettings.logSaveDirPath, m_logBufferCapacity);
                 LOG_ADD_CONFIG (m_instanceId, Log::INFO,    Log::TO_FILE_IMMEDIATE);
                 LOG_ADD_CONFIG (m_instanceId, Log::WARNING, Log::TO_FILE_IMMEDIATE | Log::TO_CONSOLE | 
                                                                                      Log::TO_FILE_BUFFER_CIRCULAR);

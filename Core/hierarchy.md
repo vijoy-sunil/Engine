@@ -5,7 +5,8 @@
     |VKConfig, Log
     :
     :
-    |{Device/VKDeviceMgr}
+    |{VKDeviceMgr}
+    |(protected)
     |
     |---------------------->|VKWindow
     |
@@ -14,18 +15,21 @@
     |                       |VKEnum
     |                       :
     |                       :
-    |                       |Utils/LogHelper
+    |                       |VKLogHelper
     |                       :
     |                       :
     |---------------------->|VKQueue
+    |                       |(protected)
     |                       |
     |                       |---------------------->|VKPhyDevice
     |
     |---------------------->|{VKValidation}
+                            |(protected)
                             |
                             |---------------------->|VKInstance
                             |
                             |                       |{VKPhyDevice}
+                            |                       |(protected)
                             |                       |
                             |                       |
                             |---------------------->|VKLogDevice
@@ -35,32 +39,34 @@
     :
     :
     |VKVertexData
+    |(protected)
     |
-    |<......................|VKUniform
     |
-    |{Model/VKModelMgr}
-    :(Dependency/TinyObjLoader)
+    |{VKModelMgr}           |<......................|VKUniform
+    |(protected)
     |
     |
     |VKModelMatrix
+    |(protected)
     |
     |
     |VKInstanceData
-    :(Dependency/JsonNlohmann)
 
 
     |{VKPhyDevice}
+    |(protected)
     |
     |
-    |{Image/VKImageMgr}
+    |{VKImageMgr}
+    |(protected)
     |
     |---------------------->|VKSwapChainImage
     |
     |                       |{VKBufferMgr}
+    |                       |(protected)
     |                       |
     |                       |
     |---------------------->|VKTextureImage
-    |                       :(Dependency/STBImage)
     |
     |---------------------->|VKDepthImage
     |
@@ -68,9 +74,11 @@
 
 
     |{VKPhyDevice}
+    |(protected)
     |
     |
-    |{Buffer/VKBufferMgr}
+    |{VKBufferMgr}
+    |(protected)
     |
     |---------------------->|VKVertexBuffer
     |
@@ -82,11 +90,11 @@
 
 
     |{VKDeviceMgr}
+    |(protected)
     |
     |
-    |{RenderPass/VKRenderPassMgr}
-    |
-    |                       |{VKImageMgr}
+    |{VKRenderPassMgr}      |{VKImageMgr}
+    |(protected)            |(protected)
     |                       |
     |                       |
     |---------------------->|VKAttachment
@@ -97,9 +105,11 @@
 
 
     |{VKRenderPassMgr}
+    |(protected)
     |
     |
-    |{Pipeline/VKPipelineMgr}
+    |{VKPipelineMgr}
+    |(protected)
     |
     |---------------------->|VKVertexInput
     |
@@ -112,6 +122,7 @@
     |---------------------->|VKRasterization
     |
     |                       |{VKImageMgr}
+    |                       |(protected)
     |                       |
     |                       |
     |---------------------->|VKMultiSample
@@ -130,8 +141,9 @@
 
 
     |<----------------------|{VKDeviceMgr}
+    |                       |(protected)
     |
-    |Cmd/VKCmdBuffer
+    |VKCmdBuffer
 
 
     |<----------------------|{VKImageMgr}
@@ -140,22 +152,24 @@
     |
     |<----------------------|{VKPipelineMgr}
     |
-    |
-    |Cmd/VKCmd
+    |(protected)
+    |VKCmd
 
 
     |<----------------------|{VKDeviceMgr}
+    |                       |(protected)
     |
     |
-    |Scene/VKCameraMgr
+    |VKCameraMgr
 
 
     |<----------------------|{VKDeviceMgr}
+    |                       |(protected)
     |
-    |<......................|LogHelper
+    |<......................|VKLogHelper
     |
     |
-    |Scene/VKSyncObject
+    |VKSyncObject
 
 
     |<----------------------|{VKSwapChainImage}
@@ -168,19 +182,21 @@
     |
     |<----------------------|{VKSceneMgr}
     |
-    |
-    |Scene/VKResizing
+    |(protected)
+    |VKResizing
 
 
     |VKConfig, Log
     :
     :
-    |{Scene/VKSceneMgr}     |{VKDeviceMgr}
+    |{VKSceneMgr}           |{VKDeviceMgr}
+    |(protected)            |(protected)
     |                       |
     |                       |
     |---------------------->|VKTextureSampler
     |
     |                       |{VKPipelineMgr}
+    |                       |(protected)
     |                       |
     |                       |
     |---------------------->|VKDescriptor
@@ -244,8 +260,6 @@
     |
     |<----------------------|{VKCmd}
     |
-    |<----------------------|{VKCameraMgr}
-    |
     |<----------------------|{VKTextureSampler}
     |
     |<----------------------|{VKDescriptor}
@@ -253,7 +267,8 @@
     |<----------------------|{VKSyncObject}
     |
     |
-    |Scene/VKInitSequence
+    |(protected)
+    |VKInitSequence
 
 
     |<----------------------|{VKWindow}
@@ -273,7 +288,8 @@
     |<----------------------|VKResizing
     |
     |
-    |Scene/VKDrawSequence
+    |(protected)
+    |VKDrawSequence
 
 
     |<----------------------|{VKWindow}
@@ -303,5 +319,6 @@
     |<----------------------|{VKSyncObject}
     |
     |
-    |Scene/VKDeleteSequence
+    |(protected)
+    |VKDeleteSequence
 </pre>

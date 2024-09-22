@@ -21,11 +21,11 @@ namespace Core {
                           protected VKResizing {
         private:
             Log::Record* m_VKDrawSequenceLog;
-            const uint32_t m_instanceId = g_collectionsSettings.instanceId++;
+            const uint32_t m_instanceId = g_collectionSettings.instanceId++;
 
         public:
             VKDrawSequence (void) {
-                m_VKDrawSequenceLog = LOG_INIT (m_instanceId, g_collectionsSettings.logSaveDirPath);
+                m_VKDrawSequenceLog = LOG_INIT (m_instanceId, g_collectionSettings.logSaveDirPath);
                 LOG_ADD_CONFIG (m_instanceId, Log::WARNING, Log::TO_FILE_IMMEDIATE | Log::TO_CONSOLE);
                 LOG_ADD_CONFIG (m_instanceId, Log::ERROR,   Log::TO_FILE_IMMEDIATE | Log::TO_CONSOLE);
             }
@@ -87,7 +87,7 @@ namespace Core {
                  * engine is finished using the image. That's the point in time where we can start drawing to it
                  * 
                  * The index refers to the VkImage in our swap chain images array. We're going to use that index to pick 
-                 * the framebuffer. It just returns the index of the next image that will be available at some point 
+                 * the frame buffer. It just returns the index of the next image that will be available at some point 
                  * notified by the semaphore
                 */
                 uint32_t imageAvailableSemaphoreInfoId = sceneInfo->id.imageAvailableSemaphoreInfoBase +
@@ -412,7 +412,7 @@ namespace Core {
                  * the associated swap chain image
                 */
                 result = vkQueuePresentKHR (deviceInfo->resource.presentQueue, &presentInfo);
-                /* Why didn't we check framebuffer resized boolean after vkAcquireNextImageKHR?
+                /* Why didn't we check frame buffer resized boolean after vkAcquireNextImageKHR?
                  * It is important to note that a signalled semaphore can only be destroyed by vkDeviceWaitIdle if it is 
                  * being waited on by a vkQueueSubmit. Since we are handling the resize explicitly using the boolean, 
                  * returning after vkAcquireNextImageKHR (thus calling vkDeviceWaitIdle) will make the semaphore signalled 

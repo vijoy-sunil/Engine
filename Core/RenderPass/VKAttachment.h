@@ -1,19 +1,19 @@
 #ifndef VK_ATTACHMENT_H
 #define VK_ATTACHMENT_H
 
-#include "VKRenderPassMgr.h"
 #include "../Image/VKImageMgr.h"
+#include "VKRenderPassMgr.h"
 
 namespace Core {
-    class VKAttachment: protected virtual VKRenderPassMgr,
-                        protected virtual VKImageMgr {
+    class VKAttachment: protected virtual VKImageMgr,
+                        protected virtual VKRenderPassMgr {
         private:
             Log::Record* m_VKAttachmentLog;
-            const uint32_t m_instanceId = g_collectionsSettings.instanceId++;
+            const uint32_t m_instanceId = g_collectionSettings.instanceId++;
             
         public:
             VKAttachment (void) {
-                m_VKAttachmentLog = LOG_INIT (m_instanceId, g_collectionsSettings.logSaveDirPath);
+                m_VKAttachmentLog = LOG_INIT (m_instanceId, g_collectionSettings.logSaveDirPath);
             }
 
             ~VKAttachment (void) { 
@@ -22,11 +22,13 @@ namespace Core {
 
         protected:
             /* The VkAttachmentReference does not reference the attachment object directly, it references the index in 
-             * the attachments array specified in VkRenderPassCreateInfo. This allows different subpasses to reference the 
-             * same attachment
+             * the attachments array specified in VkRenderPassCreateInfo. This allows different sub passes to reference 
+             * the same attachment
              *
-             * The layout specifies which layout we would like the attachment to have during a subpass that uses this 
-             * reference. Vulkan will automatically transition the attachment to this layout when the subpass is started
+             * The attachment reference layout tells vulkan what layout to transition the image to at the beginning of 
+             * the sub pass for which this reference is defined. Or more to the point, it is the layout which the image 
+             * will be in for the duration of the sub pass. Note that, vulkan will automatically transition the attachment
+             * to this layout when the sub pass is started
             */
             VkAttachmentReference getAttachmentReference (uint32_t attachmentIndex, VkImageLayout layout) {
                 VkAttachmentReference attachmentReference;
@@ -41,67 +43,34 @@ namespace Core {
              * per-pixel color information of the rendered picture. Maybe you stop there, or maybe you also add a depth 
              * attachment. If you are rendering 3D geometry, and you want it to look correct, you'll likely have to add 
              * this depth attachment
-             * 
-             * Note that, multisampled images cannot be presented directly. We first need to resolve them to a regular
-             * image
             */
-            void createMultiSampleAttachment (uint32_t imageInfoId, uint32_t renderPassInfoId) {
-                auto imageInfo      = getImageInfo (imageInfoId, MULTISAMPLE_IMAGE);
+            void createAttachment (uint32_t imageInfoId, 
+                                   uint32_t renderPassInfoId,
+                                   e_imageType type,
+                                   VkAttachmentDescriptionFlags flags,
+                                   VkAttachmentLoadOp loadOp,           
+                                   VkAttachmentStoreOp storeOp,
+                                   VkAttachmentLoadOp stencilLoadOp,    
+                                   VkAttachmentStoreOp stencilStoreOp,
+                                   VkImageLayout initialLayout,         
+                                   VkImageLayout finalLayout) {
+
+                auto imageInfo      = getImageInfo (imageInfoId, type);
                 auto renderPassInfo = getRenderPassInfo (renderPassInfoId);
 
                 VkAttachmentDescription attachment;
-                attachment.flags          = g_renderPassSettings.multiSampleAttachment.flags;
+                attachment.flags          = flags;
                 attachment.format         = imageInfo->params.format;
                 attachment.samples        = imageInfo->params.sampleCount;
-                attachment.loadOp         = g_renderPassSettings.multiSampleAttachment.loadOp;
-                attachment.storeOp        = g_renderPassSettings.multiSampleAttachment.storeOp;
-                attachment.stencilLoadOp  = g_renderPassSettings.multiSampleAttachment.stencilLoadOp;
-                attachment.stencilStoreOp = g_renderPassSettings.multiSampleAttachment.stencilStoreOp;
-                attachment.initialLayout  = g_renderPassSettings.multiSampleAttachment.initialLayout;
-                attachment.finalLayout    = g_renderPassSettings.multiSampleAttachment.finalLayout;
+                attachment.loadOp         = loadOp;
+                attachment.storeOp        = storeOp;
+                attachment.stencilLoadOp  = stencilLoadOp;
+                attachment.stencilStoreOp = stencilStoreOp;
+                attachment.initialLayout  = initialLayout;
+                attachment.finalLayout    = finalLayout;
 
                 renderPassInfo->resource.attachments.push_back (attachment);
             }
-
-            void createDepthStencilAttachment (uint32_t imageInfoId, uint32_t renderPassInfoId) {
-                auto imageInfo      = getImageInfo (imageInfoId, DEPTH_IMAGE);
-                auto renderPassInfo = getRenderPassInfo (renderPassInfoId);
-
-                /* The format should be the same as the depth image itself. We don't care about storing the depth data 
-                 * (storeOp), because it will not be used after drawing has finished. This may allow the hardware to 
-                 * perform additional optimizations
-                */
-                VkAttachmentDescription attachment;
-                attachment.flags          = g_renderPassSettings.depthStencilAttachment.flags;
-                attachment.format         = imageInfo->params.format;
-                attachment.samples        = imageInfo->params.sampleCount;
-                attachment.loadOp         = g_renderPassSettings.depthStencilAttachment.loadOp;
-                attachment.storeOp        = g_renderPassSettings.depthStencilAttachment.storeOp;
-                attachment.stencilLoadOp  = g_renderPassSettings.depthStencilAttachment.stencilLoadOp;
-                attachment.stencilStoreOp = g_renderPassSettings.depthStencilAttachment.stencilStoreOp;
-                attachment.initialLayout  = g_renderPassSettings.depthStencilAttachment.initialLayout;
-                attachment.finalLayout    = g_renderPassSettings.depthStencilAttachment.finalLayout; 
-
-                renderPassInfo->resource.attachments.push_back (attachment);
-            }
-
-            void createColorAttachment (uint32_t imageInfoId, uint32_t renderPassInfoId) {
-                auto imageInfo      = getImageInfo (imageInfoId, SWAPCHAIN_IMAGE);
-                auto renderPassInfo = getRenderPassInfo (renderPassInfoId);
-
-                VkAttachmentDescription attachment;
-                attachment.flags          = g_renderPassSettings.colorAttachment.flags;
-                attachment.format         = imageInfo->params.format;
-                attachment.samples        = imageInfo->params.sampleCount;
-                attachment.loadOp         = g_renderPassSettings.colorAttachment.loadOp;
-                attachment.storeOp        = g_renderPassSettings.colorAttachment.storeOp;
-                attachment.stencilLoadOp  = g_renderPassSettings.colorAttachment.stencilLoadOp;
-                attachment.stencilStoreOp = g_renderPassSettings.colorAttachment.stencilStoreOp;
-                attachment.initialLayout  = g_renderPassSettings.colorAttachment.initialLayout;
-                attachment.finalLayout    = g_renderPassSettings.colorAttachment.finalLayout;
-
-                renderPassInfo->resource.attachments.push_back (attachment);
-            }            
     };
 }   // namespace Core
 #endif  // VK_ATTACHMENT_H

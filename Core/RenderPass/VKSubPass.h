@@ -8,22 +8,22 @@ namespace Core {
      * frame buffer, which is mainly useful for things like deferred rendering
      * 
      * A graphics pipeline describes a set of operations that usually take vertices from an input buffer and ultimately 
-     * write pixels to an output framebuffer. This task of writing pixels to one or more framebuffers constitutes a single
-     * sub pass. The sub pass describes which framebuffers will be accessed (read/written) by the graphics pipeline and 
-     * in which state they should be at various stages in the pipeline (e.g. they should be writable right before the 
-     * fragment shader starts running). It is possible that this is all of your rendering and then you can wrap this
-     *  single sub pass into a render pass and call it a day
+     * write pixels to an output frame buffer. This task of writing pixels to one or more frame buffers constitutes a 
+     * single sub pass. The sub pass describes which frame buffers will be accessed (read/written) by the graphics 
+     * pipeline and in which state they should be at various stages in the pipeline (e.g. they should be writable right 
+     * before the fragment shader starts running). It is possible that this is all of your rendering and then you can 
+     * wrap this single sub pass into a render pass and call it a day
      * 
      * However, let's say you want to render various post-processing effects like bloom, depth-of-field and motion blur 
-     * one after another to composite the final shot. Let's assume you already have your scene rendered to a framebuffer. 
+     * one after another to composite the final shot. Let's assume you already have your scene rendered to a frame buffer. 
      * Then you could apply the post-processing effects by having:
      * 
      * render pass 1
-     * - sub pass: render scene with added bloom to a new framebuffer
+     * - sub pass: render scene with added bloom to a new frame buffer
      * render pass 2
-     * - sub pass: add blur to bloom framebuffer and output it to a new framebuffer
+     * - sub pass: add blur to bloom frame buffer and output it to a new frame buffer
      * render pass 3
-     * - sub pass: add motion blur to depth-of-field framebuffer and output to the final framebuffer
+     * - sub pass: add motion blur to depth-of-field frame buffer and output to the final frame buffer
      * 
      * This approach works, but the problem is that we have to write the pixels to memory every time, only to read them 
      * back right away in the next operation. We can do this more efficiently by having a single render pass and multiple 
@@ -43,19 +43,19 @@ namespace Core {
      * effects and deferred rendering and less useful for chaining other operations. If you need to read other pixels, 
      * then you will have to use multiple render passes 
      * 
-     * In other words, sub passes control the state and usage of your framebuffers at the point that they start being used
-     * by the graphics pipeline and at the point when they stop being used. They don't affect the passing of variables 
-     * between shaders and pipeline stages, that is controlled by the pipeline itself. They are really designed to allow 
-     * you to efficiently pass images between graphics pipelines and not within them
+     * In other words, sub passes control the state and usage of your frame buffers at the point that they start being
+     * used by the graphics pipeline and at the point when they stop being used. They don't affect the passing of  
+     * variables between shaders and pipeline stages, that is controlled by the pipeline itself. They are really designed
+     * to allow you to efficiently pass images between graphics pipelines and not within them
     */
     class VKSubPass: protected virtual VKRenderPassMgr {
         private:
             Log::Record* m_VKSubPassLog;
-            const uint32_t m_instanceId = g_collectionsSettings.instanceId++;
+            const uint32_t m_instanceId = g_collectionSettings.instanceId++;
             
         public:
             VKSubPass (void) {
-                m_VKSubPassLog = LOG_INIT (m_instanceId, g_collectionsSettings.logSaveDirPath);
+                m_VKSubPassLog = LOG_INIT (m_instanceId, g_collectionSettings.logSaveDirPath);
             }
 
             ~VKSubPass (void) { 
@@ -63,46 +63,29 @@ namespace Core {
             }
 
         protected:
-            /* Remember that the subpasses in a render pass automatically take care of image layout transitions. These 
-             * transitions are controlled by subpass dependencies, which specify memory and execution dependencies 
-             * between subpasses. Note that, the operations right before and right after a subpass also count as implicit
-             * "subpasses"
-             * 
-             * There are two built-in dependencies that take care of the transition at the start of the render pass and at
-             * the end of the render pass, but the former does not occur at the right time. It assumes that the transition
-             * occurs at the start of the pipeline, but we haven't acquired the image yet at that point (see sync object
-             * wait operation)
-             * 
-             * Solution: (We choose option #2)
-             * (1) We could change the waitStages for the image available semaphore to 
-             * VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT to ensure that the render passes don't begin until the image is available
-             * 
-             * (2) We can make the render pass wait for the VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT stage (this 
-             * stage specifies the stage of the pipeline after blending where the final color values are output from the 
-             * pipeline)
-             * 
-             * Image layout transition
-             * Before the render pass, the layout of the image will be transitioned to the layout you specify, for example
-             * VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL. However, by default this happens at the beginning of the pipeline
-             * at which point we haven't acquired the image yet (we acquire it in the 
-             * VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT stage per the sync object wait operation). That means that we
-             * need to change the behaviour of the render pass to also only change the layout once we've come to that 
-             * stage
-             * 
-             * The stage masks in the subpass dependency allow the subpass to already begin before the image is available 
-             * up until the point where it needs to write to it
+            /* Barriers vs render pass mechanisms (sub pass dependencies vs layout transitions):
+             * Barriers work with anything; they don't care where the image comes from, was used for, or where it is 
+             * going. Render pass mechanisms only work for stuff that happens in a render pass and primarily deal with 
+             * images attached to render passes (implicit layout transitions only work on attachments). So during a 
+             * render pass, you can only change layout using the render pass mechanism, or you must be outside the 
+             * render pass
             */
-            void createColorWriteDependency (uint32_t renderPassInfoId,
-                                             uint32_t srcSubPass, 
-                                             uint32_t dstSubPass) {
+            void createDependency (uint32_t renderPassInfoId,
+                                   VkDependencyFlags flags,
+                                   uint32_t srcSubPass, 
+                                   uint32_t dstSubPass,
+                                   VkPipelineStageFlags srcStageMask, 
+                                   VkAccessFlags srcAccessMask,
+                                   VkPipelineStageFlags dstStageMask, 
+                                   VkAccessFlags dstAccessMask) {
 
                 auto renderPassInfo = getRenderPassInfo (renderPassInfoId);
 
                 VkSubpassDependency dependency;
-                dependency.dependencyFlags = 0;
+                dependency.dependencyFlags = flags;
                 /* Note that, stage masks relate to execution order, while access masks relate to memory/cache access
                  *
-                 * Execution order is like a dependency chain between the two subpassess, with the stage masks saying 
+                 * Execution order is like a dependency chain between the two sub passess, with the stage masks saying 
                  * which stages of the destination depend on the source. Stage masks are useful because they limit the 
                  * dependency to only the stages that actually are dependent, while allowing other stages to occur. So 
                  * like abstractally speaking, if the 5th stage of B (B5) depends on 3rd stage of A, then B1-B4 can still 
@@ -125,77 +108,38 @@ namespace Core {
                  * 
                  * Note that, VK_ACCESS_NONE means that there is no memory dependency the barrier introduces
                  *  
-                 * srcSubpass is the index of the subpass we're dependant on. If we wanted to depend on a subpass that's 
+                 * srcSubpass is the index of the sub pass we're dependant on. If we wanted to depend on a sub pass that's 
                  * part of a previous render pass, we could just pass in VK_SUBPASS_EXTERNAL here instead. Note that, this
-                 * would mean "wait for all of the subpasses within all of the render passes before this one", this also
-                 * includes the implicit subpass that takes care of image layout transitions
+                 * would mean "wait for all of the sub passes within all of the render passes before this one", this also
+                 * includes the implicit sub pass that takes care of image layout transitions
                  * 
-                 * dstSubpass is the index to the current subpass, i.e. the one this dependency exists for
+                 * dstSubpass is the index to the current sub pass, i.e. the one this dependency exists for
                  * 
                  * The dstSubpass must always be higher than srcSubpass to prevent cycles in the dependency graph (unless 
-                 * one of the subpasses is VK_SUBPASS_EXTERNAL)
+                 * one of the sub passes is VK_SUBPASS_EXTERNAL)
                 */
-                dependency.srcSubpass = srcSubPass;
-                dependency.dstSubpass = dstSubPass;
+                dependency.srcSubpass    = srcSubPass;
+                dependency.dstSubpass    = dstSubPass;
                 /* srcStageMask is a bitmask of all of the Vulkan "stages" (basically, steps of the rendering process) we
                  * are asking Vulkan to finish executing within srcSubpass before we move on to dstSubpass
                  *
                  * srcAccessMask is a bitmask of all the Vulkan memory access types used by srcSubpass
-                 * 
-                 * We need to wait for the swap chain to finish reading from the image before we can access it. This can 
-                 * be accomplished by waiting on the color attachment output stage itself
                 */
-                dependency.srcStageMask  = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-                dependency.srcAccessMask = VK_ACCESS_NONE;
+                dependency.srcStageMask  = srcStageMask;
+                dependency.srcAccessMask = srcAccessMask;
                 /* dstStageMask is a bitmask of all of the Vulkan stages in dstSubpass that we're NOT allowed to execute 
                  * until after the stages in srcStageMask have completed within srcSubpass
                  * 
                  * dstAccessMask is a bitmask of all the Vulkan memory access types we're going to use in dstSubpass
-                 * 
-                 * The operations that should wait on this are, in the color attachment stage and involve the writing of 
-                 * the color attachment, These settings will prevent the transition from happening until it's actually 
-                 * necessary: when we want to start writing to it
                 */
-                dependency.dstStageMask  = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-                dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+                dependency.dstStageMask  = dstStageMask; 
+                dependency.dstAccessMask = dstAccessMask; 
 
-                renderPassInfo->resource.dependencies.push_back (dependency);
-            }
-
-            /* It is possible that multiple frames are rendered simultaneously by the GPU. This is a problem when using 
-             * a single depth buffer, because one frame could overwrite the depth buffer while a previous frame is still 
-             * rendering to it. To prevent this, we add a new subpass dependency that synchronizes accesses to the depth 
-             * attachment
-             *  
-             * This dependency tells Vulkan that the depth attachment in a renderpass cannot be used before previous 
-             * render passes have finished using it
-            */
-            void createDepthStencilDependency (uint32_t renderPassInfoId, 
-                                               uint32_t srcSubPass, 
-                                               uint32_t dstSubPass) {
-                
-                auto renderPassInfo = getRenderPassInfo (renderPassInfoId);
-
-                VkSubpassDependency dependency;
-                dependency.dependencyFlags = 0;
-                dependency.srcSubpass      = srcSubPass;
-                dependency.dstSubpass      = dstSubPass;
-                /* The depth image is first accessed in the early fragment test pipeline stage and we need to make sure 
-                 * that there is no conflict between the transitioning of the depth image and it being cleared as part of 
-                 * its load operation (VK_ATTACHMENT_LOAD_OP_CLEAR)
-                */
-                dependency.srcStageMask  = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | 
-                                           VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
-                dependency.srcAccessMask = VK_ACCESS_NONE;
-
-                dependency.dstStageMask  = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | 
-                                           VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
-                dependency.dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT; 
-
-                renderPassInfo->resource.dependencies.push_back (dependency);            
+                renderPassInfo->resource.dependencies.push_back (dependency); 
             }
 
             void createSubPass (uint32_t renderPassInfoId,
+                                const std::vector <VkAttachmentReference>& inputAttachments,
                                 const std::vector <VkAttachmentReference>& colorAttachments,
                                 const VkAttachmentReference* depthStencilAttachment,
                                 const std::vector <VkAttachmentReference>& resolveAttachments) {
@@ -205,23 +149,23 @@ namespace Core {
                 VkSubpassDescription subPass;
                 subPass.flags                   = 0;
                 subPass.pipelineBindPoint       = VK_PIPELINE_BIND_POINT_GRAPHICS;
-                subPass.inputAttachmentCount    = 0;
-                subPass.pInputAttachments       = VK_NULL_HANDLE;
+                subPass.inputAttachmentCount    = static_cast <uint32_t> (inputAttachments.size());
+                subPass.pInputAttachments       = inputAttachments.data();
                 subPass.preserveAttachmentCount = 0;
                 subPass.pPreserveAttachments    = VK_NULL_HANDLE;
                 subPass.colorAttachmentCount    = static_cast <uint32_t> (colorAttachments.size());
                 /* The index of the attachment in this array is directly referenced from the fragment shader with the 
                  * layout (location = ?) out directive
                 */
-                subPass.pColorAttachments = colorAttachments.data();
-                /* Unlike color attachments, a subpass can only use a single depth (+stencil) attachment. That is why 
+                subPass.pColorAttachments       = colorAttachments.data();
+                /* Unlike color attachments, a sub pass can only use a single depth (+stencil) attachment. That is why 
                  * pDepthStencilAttachment accepts only a single attachment reference and not an array of references
                 */
                 subPass.pDepthStencilAttachment = depthStencilAttachment;
-                /* This will let the render pass define a multisample resolve operation which will let us render the image
-                 * to screen
+                /* This will let the render pass define a multi sample resolve operation which will let us render the 
+                 * image to screen
                 */
-                subPass.pResolveAttachments = resolveAttachments.data();
+                subPass.pResolveAttachments     = resolveAttachments.data();
 
                 renderPassInfo->resource.subPasses.push_back (subPass);
             }

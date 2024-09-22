@@ -7,11 +7,11 @@ namespace Core {
     class VKColorBlend: protected virtual VKPipelineMgr {
         private:
             Log::Record* m_VKColorBlendLog;
-            const uint32_t m_instanceId = g_collectionsSettings.instanceId++;
+            const uint32_t m_instanceId = g_collectionSettings.instanceId++;
             
         public:
             VKColorBlend (void) {
-                m_VKColorBlendLog = LOG_INIT (m_instanceId, g_collectionsSettings.logSaveDirPath);
+                m_VKColorBlendLog = LOG_INIT (m_instanceId, g_collectionSettings.logSaveDirPath);
             }
 
             ~VKColorBlend (void) { 
@@ -20,17 +20,17 @@ namespace Core {
 
         protected:
             /* After a fragment shader has returned a color, it needs to be combined with the color that is already in 
-             * the framebuffer. This transformation is known as color blending and there are two ways to do it:
+             * the frame buffer. This transformation is known as color blending and there are two ways to do it:
              * (1) Mix the old and new value to produce a final color
              * (2) Combine the old and new value using a bitwise operation
              * 
              * There are two types of structs to configure color blending. The first struct, 
-             * VkPipelineColorBlendAttachmentState contains the configuration per attached framebuffer and the second 
+             * VkPipelineColorBlendAttachmentState contains the configuration per attached frame buffer and the second 
              * struct, VkPipelineColorBlendStateCreateInfo contains the global color blending settings
             */
             VkPipelineColorBlendAttachmentState getColorBlendAttachment (VkBool32 blendEnable) {
                 VkPipelineColorBlendAttachmentState attachment;
-                /* This per-framebuffer struct allows you to configure the first way of color blending (if set to true) 
+                /* This per-frame buffer struct allows you to configure the first way of color blending (if set to true) 
                  * using the formula configured using the struct members. If blendEnable is set to VK_FALSE, then the new 
                  * color from the fragment shader is passed through unmodified
                 */
@@ -71,7 +71,7 @@ namespace Core {
                                         const std::vector <VkPipelineColorBlendAttachmentState>& attachments) {
                 
                 auto pipelineInfo = getPipelineInfo (pipelineInfoId);
-                /* The second structure references the array of structures for all of the framebuffers and allows you to 
+                /* The second structure references the array of structures for all of the frame buffers and allows you to 
                  * set blend constants that you can use as blend factors between them
                 */
                 VkPipelineColorBlendStateCreateInfo createInfo;
@@ -81,8 +81,8 @@ namespace Core {
                 /* If you want to use the second method of blending (bitwise combination), then you should set 
                  * logicOpEnable to VK_TRUE. The bitwise operation can then be specified in the logicOp field. Note that 
                  * this will automatically disable the first method, as if you had set blendEnable to VK_FALSE for every 
-                 * attached framebuffer. However, the colorWriteMask will also be used in this mode to determine which 
-                 * channels in the framebuffer will actually be affected
+                 * attached frame buffer. However, the colorWriteMask will also be used in this mode to determine which 
+                 * channels in the frame buffer will actually be affected
                 */
                 createInfo.logicOpEnable   = logicOpEnable;
                 createInfo.logicOp         = logicOp; 

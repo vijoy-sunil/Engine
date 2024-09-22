@@ -7,11 +7,11 @@ namespace Core {
     class VKMultiSampleImage: protected virtual VKImageMgr {
         private:
             Log::Record* m_VKMultiSampleImageLog;
-            const uint32_t m_instanceId = g_collectionsSettings.instanceId++; 
+            const uint32_t m_instanceId = g_collectionSettings.instanceId++; 
 
         public:
             VKMultiSampleImage (void) {
-                m_VKMultiSampleImageLog = LOG_INIT (m_instanceId, g_collectionsSettings.logSaveDirPath);
+                m_VKMultiSampleImageLog = LOG_INIT (m_instanceId, g_collectionSettings.logSaveDirPath);
             }
 
             ~VKMultiSampleImage (void) {
@@ -25,7 +25,7 @@ namespace Core {
              * result of a limited numbers of pixels that are available for rendering
              * 
              * Since there are no displays out there with unlimited resolution, it will be always visible to some extent. 
-             * There's a number of ways to fix this and on one of the more popular ones is Multisample anti-aliasing 
+             * There's a number of ways to fix this and on one of the more popular ones is multi sample anti-aliasing 
              * (MSAA)
              * 
              * In ordinary rendering, the pixel color is determined based on a single sample point which in most cases is 
@@ -71,7 +71,7 @@ namespace Core {
                 */
                 createImageResources (deviceInfoId, 
                                       imageInfoId,
-                                      MULTISAMPLE_IMAGE,
+                                      MULTI_SAMPLE_IMAGE,
                                       deviceInfo->params.swapChainExtent.width,
                                       deviceInfo->params.swapChainExtent.height,
                                       1,

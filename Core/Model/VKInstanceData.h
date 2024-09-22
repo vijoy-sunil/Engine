@@ -1,18 +1,18 @@
 #ifndef VK_INSTANCE_DATA_H
 #define VK_INSTANCE_DATA_H
 
-#include "../../Dependency/JsonNlohmann/json.hpp"
+#include <json/single_include/nlohmann/json.hpp>
 #include "VKModelMatrix.h"
 
 namespace Core {
     class VKInstanceData: protected VKModelMatrix {
         private:
             Log::Record* m_VKInstanceDataLog;
-            const uint32_t m_instanceId = g_collectionsSettings.instanceId++; 
+            const uint32_t m_instanceId = g_collectionSettings.instanceId++; 
 
         public:
             VKInstanceData (void) {
-                m_VKInstanceDataLog = LOG_INIT (m_instanceId, g_collectionsSettings.logSaveDirPath);
+                m_VKInstanceDataLog = LOG_INIT (m_instanceId, g_collectionSettings.logSaveDirPath);
                 LOG_ADD_CONFIG (m_instanceId, Log::INFO,    Log::TO_FILE_IMMEDIATE);
                 LOG_ADD_CONFIG (m_instanceId, Log::WARNING, Log::TO_FILE_IMMEDIATE | Log::TO_CONSOLE);
                 LOG_ADD_CONFIG (m_instanceId, Log::ERROR,   Log::TO_FILE_IMMEDIATE | Log::TO_CONSOLE);

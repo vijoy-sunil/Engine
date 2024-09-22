@@ -5,7 +5,7 @@
  * include the function bodies, otherwise we'll get linking errors
 */
 #define STB_IMAGE_IMPLEMENTATION
-#include "../../Dependency/STBImage/stb_image.h"
+#include <stb/stb_image.h>
 #include "VKImageMgr.h"
 #include "../Buffer/VKBufferMgr.h"
 
@@ -14,11 +14,11 @@ namespace Core {
                           protected virtual VKBufferMgr {
         private:
             Log::Record* m_VKTextureImageLog;
-            const uint32_t m_instanceId = g_collectionsSettings.instanceId++; 
+            const uint32_t m_instanceId = g_collectionSettings.instanceId++; 
 
         public:
             VKTextureImage (void) {
-                m_VKTextureImageLog = LOG_INIT (m_instanceId, g_collectionsSettings.logSaveDirPath);
+                m_VKTextureImageLog = LOG_INIT (m_instanceId, g_collectionSettings.logSaveDirPath);
                 LOG_ADD_CONFIG (m_instanceId, Log::ERROR, Log::TO_FILE_IMMEDIATE | Log::TO_CONSOLE); 
             }
 

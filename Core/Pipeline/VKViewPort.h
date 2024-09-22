@@ -7,11 +7,11 @@ namespace Core {
     class VKViewPort: protected virtual VKPipelineMgr {
         private:
             Log::Record* m_VKViewPortLog;
-            const uint32_t m_instanceId = g_collectionsSettings.instanceId++;
+            const uint32_t m_instanceId = g_collectionSettings.instanceId++;
             
         public:
             VKViewPort (void) {
-                m_VKViewPortLog = LOG_INIT (m_instanceId, g_collectionsSettings.logSaveDirPath);
+                m_VKViewPortLog = LOG_INIT (m_instanceId, g_collectionSettings.logSaveDirPath);
             }
 
             ~VKViewPort (void) { 

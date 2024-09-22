@@ -7,11 +7,11 @@ namespace Core {
     class VKDepthStencil: protected virtual VKPipelineMgr {
         private:
             Log::Record* m_VKDepthStencilLog;
-            const uint32_t m_instanceId = g_collectionsSettings.instanceId++;
+            const uint32_t m_instanceId = g_collectionSettings.instanceId++;
             
         public:
             VKDepthStencil (void) {
-                m_VKDepthStencilLog = LOG_INIT (m_instanceId, g_collectionsSettings.logSaveDirPath);
+                m_VKDepthStencilLog = LOG_INIT (m_instanceId, g_collectionSettings.logSaveDirPath);
             }
 
             ~VKDepthStencil (void) { 

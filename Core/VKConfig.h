@@ -10,17 +10,17 @@ namespace Core {
     #define ENABLE_AUTO_PICK_QUEUE_FAMILY_INDICES                    (true)
     #define ENABLE_PARSED_INSTANCE_DATA_DUMP                         (true)
 
-    struct CollectionsSettings {
-        /* Collections instance id range assignments
+    struct CollectionSettings {
+        /* Collection instance id range assignments
          * Reserved     [0]
          * Core/        [1, 100]
         */
         uint32_t instanceId                                          = 1;
         const char* logSaveDirPath                                   = "Build/Log/Core/";
-    } g_collectionsSettings;
+    } g_collectionSettings;
 
     struct WindowSettings {
-        const int width                                              = 800;
+        const int width                                              = 1280;
         const int height                                             = 720;
         const char* title                                            = "WINDOW_";
     } g_windowSettings;
@@ -32,47 +32,6 @@ namespace Core {
         const uint32_t presentFamilyIndex                            = 1;
         const uint32_t transferFamilyIndex                           = 2;
     } g_queueSettings;
-
-    struct RenderPassSettings {
-        /* For multi-sampled rendering in Vulkan, the multi-sampled image is treated separately from the final single-
-         * sampled image. This provides separate control over what values need to reach memory, since like the depth 
-         * buffer, the multi-sampled image may only need to be accessed during the processing of a tile. For this reason, 
-         * if the multi-sampled image is not required after the render pass, it can be created with 
-         * VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT and bound to an allocation created with 
-         * VK_MEMORY_PROPERTY_LAZILY_ALLOCATED_BIT. The multi-sampled attachment storeOp can then be set to 
-         * VK_ATTACHMENT_STORE_OP_DONT_CARE in the VkAttachmentDescription, so that (at least on tiled renderers) the full
-         * multi-sampled attachment does not need to be written to memory, which can save a lot of bandwidth
-        */
-        struct MultiSampleAttachment {
-            const VkAttachmentDescriptionFlags flags                 = 0;
-            const VkAttachmentLoadOp loadOp                          = VK_ATTACHMENT_LOAD_OP_CLEAR;
-            const VkAttachmentStoreOp storeOp                        = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-            const VkAttachmentLoadOp stencilLoadOp                   = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-            const VkAttachmentStoreOp stencilStoreOp                 = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-            const VkImageLayout initialLayout                        = VK_IMAGE_LAYOUT_UNDEFINED;
-            const VkImageLayout finalLayout                          = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-        } multiSampleAttachment;
-
-        struct DepthStencilAttachment {
-            const VkAttachmentDescriptionFlags flags                 = 0;
-            const VkAttachmentLoadOp loadOp                          = VK_ATTACHMENT_LOAD_OP_CLEAR;
-            const VkAttachmentStoreOp storeOp                        = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-            const VkAttachmentLoadOp stencilLoadOp                   = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-            const VkAttachmentStoreOp stencilStoreOp                 = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-            const VkImageLayout initialLayout                        = VK_IMAGE_LAYOUT_UNDEFINED;
-            const VkImageLayout finalLayout                          = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-        } depthStencilAttachment;
-
-        struct ColorAttachment {
-            const VkAttachmentDescriptionFlags flags                 = 0;
-            const VkAttachmentLoadOp loadOp                          = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-            const VkAttachmentStoreOp storeOp                        = VK_ATTACHMENT_STORE_OP_STORE;
-            const VkAttachmentLoadOp stencilLoadOp                   = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-            const VkAttachmentStoreOp stencilStoreOp                 = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-            const VkImageLayout initialLayout                        = VK_IMAGE_LAYOUT_UNDEFINED;
-            const VkImageLayout finalLayout                          = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-        } colorAttachment;
-    } g_renderPassSettings;
 
     struct PipelineSettings {
         struct InputAssembly {
@@ -169,7 +128,7 @@ namespace Core {
          * the swap chain yet 
         */
         const uint32_t maxFramesInFlight                             = 2;
-        const char* defaultDiffuseTexturePath                        = "Assets/Texture/tex_16x16_empty.png";
+        const char* defaultDiffuseTexturePath                        = "Asset/Texture/tex_16x16_empty.png";
     } g_coreSettings;
 }   // namespace Core
 #endif  // VK_CONFIG_H

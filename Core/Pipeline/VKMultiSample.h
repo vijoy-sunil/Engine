@@ -1,19 +1,19 @@
 #ifndef VK_MULTI_SAMPLE_H
 #define VK_MULTI_SAMPLE_H
 
-#include "VKPipelineMgr.h"
 #include "../Image/VKImageMgr.h"
+#include "VKPipelineMgr.h"
 
 namespace Core {
-    class VKMultiSample: protected virtual VKPipelineMgr,
-                         protected virtual VKImageMgr {
+    class VKMultiSample: protected virtual VKImageMgr,
+                         protected virtual VKPipelineMgr{
         private:
             Log::Record* m_VKMultiSampleLog;
-            const uint32_t m_instanceId = g_collectionsSettings.instanceId++;
+            const uint32_t m_instanceId = g_collectionSettings.instanceId++;
             
         public:
             VKMultiSample (void) {
-                m_VKMultiSampleLog = LOG_INIT (m_instanceId, g_collectionsSettings.logSaveDirPath);
+                m_VKMultiSampleLog = LOG_INIT (m_instanceId, g_collectionSettings.logSaveDirPath);
             }
 
             ~VKMultiSample (void) { 
@@ -26,7 +26,7 @@ namespace Core {
                                          VkBool32 sampleShadingEnable, 
                                          float minSampleShading) {
 
-                auto imageInfo    = getImageInfo    (imageInfoId, MULTISAMPLE_IMAGE);                
+                auto imageInfo    = getImageInfo    (imageInfoId, MULTI_SAMPLE_IMAGE);                
                 auto pipelineInfo = getPipelineInfo (pipelineInfoId);
 
                 VkPipelineMultisampleStateCreateInfo createInfo;

@@ -47,7 +47,7 @@ namespace Core {
             bool m_windowIconified;
 
             Log::Record* m_VKWindowLog;
-            const uint32_t m_instanceId = g_collectionsSettings.instanceId++;
+            const uint32_t m_instanceId = g_collectionSettings.instanceId++;
 
             /* The reason that we're creating a static function as a callback is because GLFW does not know how to 
              * properly call a member function with the right 'this' pointer to our VKWindow class instance. However, 
@@ -74,7 +74,7 @@ namespace Core {
             VKWindow (void) {
                 m_frameBufferResized = false;
                 m_windowIconified    = false;
-                m_VKWindowLog = LOG_INIT (m_instanceId, g_collectionsSettings.logSaveDirPath);
+                m_VKWindowLog = LOG_INIT (m_instanceId, g_collectionSettings.logSaveDirPath);
             }
 
             ~VKWindow (void) {

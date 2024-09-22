@@ -11,11 +11,11 @@ namespace Core {
                  protected virtual VKPipelineMgr {
         private:
             Log::Record* m_VKCmdLog;
-            const uint32_t m_instanceId = g_collectionsSettings.instanceId++;
+            const uint32_t m_instanceId = g_collectionSettings.instanceId++;
 
         public:
             VKCmd (void) {
-                m_VKCmdLog = LOG_INIT (m_instanceId, g_collectionsSettings.logSaveDirPath);
+                m_VKCmdLog = LOG_INIT (m_instanceId, g_collectionSettings.logSaveDirPath);
             }
 
             ~VKCmd (void) {
@@ -378,10 +378,10 @@ namespace Core {
                 VkRenderPassBeginInfo beginInfo;
                 beginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
                 beginInfo.pNext = VK_NULL_HANDLE;
-                /* The first parameters are the render pass itself and the attachments to bind. We created a framebuffer 
+                /* The first parameters are the render pass itself and the attachments to bind. We created a frame buffer 
                  * for each swap chain image where it is specified as a color attachment. Thus we need to bind the 
-                 * framebuffer for the swap chain image we want to draw to. Using the image index parameter which was 
-                 * passed in, we can pick the right framebuffer for the current swap chain image
+                 * frame buffer for the swap chain image we want to draw to. Using the image index parameter which was 
+                 * passed in, we can pick the right frame buffer for the current swap chain image
                 */
                 beginInfo.renderPass  = renderPassInfo->resource.renderPass;
                 beginInfo.framebuffer = renderPassInfo->resource.frameBuffers[swapChainImageId];

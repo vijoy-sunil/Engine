@@ -7,11 +7,11 @@ namespace Core {
     class VKIndexBuffer: protected virtual VKBufferMgr {
         private:
             Log::Record* m_VKIndexBufferLog;
-            const uint32_t m_instanceId = g_collectionsSettings.instanceId++; 
+            const uint32_t m_instanceId = g_collectionSettings.instanceId++; 
 
         public:
             VKIndexBuffer (void) {
-                m_VKIndexBufferLog = LOG_INIT (m_instanceId, g_collectionsSettings.logSaveDirPath);
+                m_VKIndexBufferLog = LOG_INIT (m_instanceId, g_collectionSettings.logSaveDirPath);
             }
 
             ~VKIndexBuffer (void) {

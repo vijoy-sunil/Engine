@@ -48,7 +48,7 @@ namespace Core {
             std::unordered_map <e_imageType, std::vector <ImageInfo>> m_imageInfoPool;
 
             Log::Record* m_VKImageMgrLog;
-            const uint32_t m_instanceId = g_collectionsSettings.instanceId++;
+            const uint32_t m_instanceId = g_collectionSettings.instanceId++;
 
             /* Helper function that tells us if the format contains a stencil component
             */
@@ -61,21 +61,20 @@ namespace Core {
                     auto& infos = m_imageInfoPool[type];
 
                     infos.erase (std::remove (infos.begin(), infos.end(), *imageInfo), infos.end());
-                    m_imageInfoPool[type] = infos;
                     return;
                 }
 
                 LOG_ERROR (m_VKImageMgrLog) << "Failed to delete image info "
                                             << "[" << imageInfo->meta.id << "]"
                                             << " "
-                                            << "[" << Utils::getImageTypeString (type) << "]"           
+                                            << "[" << getImageTypeString (type) << "]"           
                                             << std::endl;
                 throw std::runtime_error ("Failed to delete image info");              
             }
 
         public:
             VKImageMgr (void) {
-                m_VKImageMgrLog = LOG_INIT (m_instanceId, g_collectionsSettings.logSaveDirPath);
+                m_VKImageMgrLog = LOG_INIT (m_instanceId, g_collectionSettings.logSaveDirPath);
                 LOG_ADD_CONFIG (m_instanceId, Log::INFO,  Log::TO_FILE_IMMEDIATE);
                 LOG_ADD_CONFIG (m_instanceId, Log::ERROR, Log::TO_FILE_IMMEDIATE | Log::TO_CONSOLE); 
                 /* Create a type void image, since the image info struct is private, there may be cases where we need
@@ -102,7 +101,7 @@ namespace Core {
 
                 LOG_INFO (m_VKImageMgrLog) << "Required features"
                                            << std::endl;   
-                auto flags = Utils::getSplitString (string_VkFormatFeatureFlags (features), "|");
+                auto flags = getSplitString (string_VkFormatFeatureFlags (features), "|");
                 for (auto const& flag: flags)
                 LOG_INFO (m_VKImageMgrLog) << "[" << flag << "]" 
                                            << std::endl;
@@ -142,7 +141,7 @@ namespace Core {
                         LOG_ERROR (m_VKImageMgrLog) << "Image info id already exists " 
                                                     << "[" << imageInfo->meta.id << "]"
                                                     << " "
-                                                    << "[" << Utils::getImageTypeString (type) << "]"
+                                                    << "[" << getImageTypeString (type) << "]"
                                                     << std::endl;
                         throw std::runtime_error ("Image info id already exists");
                     }
@@ -180,7 +179,7 @@ namespace Core {
                     LOG_ERROR (m_VKImageMgrLog) << "Failed to create image view " 
                                                 << "[" << imageInfo->meta.id << "]"
                                                 << " "
-                                                << "[" << Utils::getImageTypeString (type) << "]"
+                                                << "[" << getImageTypeString (type) << "]"
                                                 << " "
                                                 << "[" << string_VkResult (result) << "]"
                                                 << std::endl;
@@ -213,7 +212,7 @@ namespace Core {
                         LOG_ERROR (m_VKImageMgrLog) << "Image info id already exists " 
                                                     << "[" << imageInfoId << "]"
                                                     << " "
-                                                    << "[" << Utils::getImageTypeString (type) << "]"
+                                                    << "[" << getImageTypeString (type) << "]"
                                                     << std::endl;
                         throw std::runtime_error ("Image info id already exists");
                     }
@@ -293,7 +292,7 @@ namespace Core {
                     LOG_ERROR (m_VKImageMgrLog) << "Failed to create image " 
                                                 << "[" << imageInfoId << "]"
                                                 << " "
-                                                << "[" << Utils::getImageTypeString (type) << "]"
+                                                << "[" << getImageTypeString (type) << "]"
                                                 << " "
                                                 << "[" << string_VkResult (result) << "]"
                                                 << std::endl; 
@@ -321,7 +320,7 @@ namespace Core {
                     LOG_ERROR (m_VKImageMgrLog) << "Failed to allocate image memory " 
                                                 << "[" << imageInfoId << "]"
                                                 << " "
-                                                << "[" << Utils::getImageTypeString (type) << "]"
+                                                << "[" << getImageTypeString (type) << "]"
                                                 << " "
                                                 << "[" << string_VkResult (result) << "]"
                                                 << std::endl;                     
@@ -466,7 +465,7 @@ namespace Core {
                 LOG_ERROR (m_VKImageMgrLog) << "Failed to find image info "
                                             << "[" << imageInfoId << "]"
                                             << " "
-                                            << "[" << Utils::getImageTypeString (type) << "]"                                         
+                                            << "[" << getImageTypeString (type) << "]"                                         
                                             << std::endl;
                 throw std::runtime_error ("Failed to find image info");
             }
@@ -477,7 +476,7 @@ namespace Core {
 
                 for (auto const& [key, val]: m_imageInfoPool) {
                     LOG_INFO (m_VKImageMgrLog) << "Type " 
-                                               << "[" << Utils::getImageTypeString (key) << "]"
+                                               << "[" << getImageTypeString (key) << "]"
                                                << std::endl;
                     
                     for (auto const& info: val) {
@@ -504,7 +503,7 @@ namespace Core {
 
                         LOG_INFO (m_VKImageMgrLog) << "Usage"
                                                    << std::endl;
-                        auto flags = Utils::getSplitString (string_VkImageUsageFlags (info.params.usage), "|");
+                        auto flags = getSplitString (string_VkImageUsageFlags (info.params.usage), "|");
                         for (auto const& flag: flags)
                         LOG_INFO (m_VKImageMgrLog) << "[" << flag << "]" 
                                                    << std::endl; 
@@ -519,7 +518,7 @@ namespace Core {
 
                         LOG_INFO (m_VKImageMgrLog) << "Property"
                                                    << std::endl;
-                        auto properties = Utils::getSplitString (string_VkMemoryPropertyFlags (info.params.property), "|");
+                        auto properties = getSplitString (string_VkMemoryPropertyFlags (info.params.property), "|");
                         for (auto const& property: properties)
                         LOG_INFO (m_VKImageMgrLog) << "[" << property << "]" 
                                                    << std::endl; 
@@ -555,7 +554,7 @@ namespace Core {
                 */
                 vkDestroyImageView (deviceInfo->resource.logDevice, imageInfo->resource.imageView,   VK_NULL_HANDLE);
 
-                if (type != SWAPCHAIN_IMAGE) {
+                if (type != SWAP_CHAIN_IMAGE) {
                 vkDestroyImage     (deviceInfo->resource.logDevice, imageInfo->resource.image,       VK_NULL_HANDLE);
                 vkFreeMemory       (deviceInfo->resource.logDevice, imageInfo->resource.imageMemory, VK_NULL_HANDLE);
                 }

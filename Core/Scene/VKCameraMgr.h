@@ -39,7 +39,7 @@ namespace Core {
             std::unordered_map <uint32_t, CameraInfo> m_cameraInfoPool;
 
             Log::Record* m_VKCameraMgrLog;
-            const uint32_t m_instanceId = g_collectionsSettings.instanceId++;
+            const uint32_t m_instanceId = g_collectionSettings.instanceId++;
 
             void deleteCameraInfo (uint32_t cameraInfoId) {
                 if (m_cameraInfoPool.find (cameraInfoId) != m_cameraInfoPool.end()) {
@@ -55,7 +55,7 @@ namespace Core {
             
         public:
             VKCameraMgr (void) {
-                m_VKCameraMgrLog = LOG_INIT (m_instanceId, g_collectionsSettings.logSaveDirPath);
+                m_VKCameraMgrLog = LOG_INIT (m_instanceId, g_collectionSettings.logSaveDirPath);
                 LOG_ADD_CONFIG (m_instanceId, Log::INFO,  Log::TO_FILE_IMMEDIATE);
                 LOG_ADD_CONFIG (m_instanceId, Log::ERROR, Log::TO_FILE_IMMEDIATE | Log::TO_CONSOLE); 
             }
@@ -184,11 +184,11 @@ namespace Core {
                                                 << std::endl; 
 
                     LOG_INFO (m_VKCameraMgrLog) << "Update view matrix " 
-                                                << "[" << Utils::getBoolString (val.meta.updateViewMatrix) << "]"
+                                                << "[" << getBoolString (val.meta.updateViewMatrix) << "]"
                                                 << std::endl;
 
                     LOG_INFO (m_VKCameraMgrLog) << "Update projection matrix " 
-                                                << "[" << Utils::getBoolString (val.meta.updateProjectionMatrix) << "]"
+                                                << "[" << getBoolString (val.meta.updateProjectionMatrix) << "]"
                                                 << std::endl;                                               
 
                     LOG_INFO (m_VKCameraMgrLog) << "View matrix" 

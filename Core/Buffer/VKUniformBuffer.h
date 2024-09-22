@@ -7,11 +7,11 @@ namespace Core {
     class VKUniformBuffer: protected virtual VKBufferMgr {
         private:
             Log::Record* m_VKUniformBufferLog;
-            const uint32_t m_instanceId = g_collectionsSettings.instanceId++;
+            const uint32_t m_instanceId = g_collectionSettings.instanceId++;
 
         public:
             VKUniformBuffer (void) {
-                m_VKUniformBufferLog = LOG_INIT (m_instanceId, g_collectionsSettings.logSaveDirPath);
+                m_VKUniformBufferLog = LOG_INIT (m_instanceId, g_collectionSettings.logSaveDirPath);
             }
 
             ~VKUniformBuffer (void) {

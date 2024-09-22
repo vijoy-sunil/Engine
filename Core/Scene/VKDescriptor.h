@@ -1,8 +1,8 @@
 #ifndef VK_DESCRIPTOR_H
 #define VK_DESCRIPTOR_H
 
-#include "VKSceneMgr.h"
 #include "../Pipeline/VKPipelineMgr.h"
+#include "VKSceneMgr.h"
 
 namespace Core {
     /* We're now able to pass arbitrary attributes to the vertex shader for each vertex, but what about global variables?
@@ -18,15 +18,15 @@ namespace Core {
      * (2) Allocate a descriptor set from a descriptor pool
      * (3) Bind the descriptor set during rendering
     */
-    class VKDescriptor: protected virtual VKSceneMgr,
-                        protected virtual VKPipelineMgr {
+    class VKDescriptor: protected virtual VKPipelineMgr,
+                        protected virtual VKSceneMgr {
         private:
             Log::Record* m_VKDescriptorLog;
-            const uint32_t m_instanceId = g_collectionsSettings.instanceId++; 
+            const uint32_t m_instanceId = g_collectionSettings.instanceId++; 
 
         public:
             VKDescriptor (void) {
-                m_VKDescriptorLog = LOG_INIT (m_instanceId, g_collectionsSettings.logSaveDirPath);
+                m_VKDescriptorLog = LOG_INIT (m_instanceId, g_collectionSettings.logSaveDirPath);
                 LOG_ADD_CONFIG (m_instanceId, Log::ERROR, Log::TO_FILE_IMMEDIATE | Log::TO_CONSOLE);
             }
 
@@ -100,9 +100,9 @@ namespace Core {
             }
 
             /* A descriptor set specifies the actual buffer or image resources that will be bound to the descriptors, just 
-             * like a framebuffer specifies the actual image views to bind to render pass attachments. In short, we will 
+             * like a frame buffer specifies the actual image views to bind to render pass attachments. In short, we will 
              * actually bind the resource to the  descriptors so that the shader can access them. The descriptor set is 
-             * then bound for the drawing commands just like the vertex buffers and framebuffer
+             * then bound for the drawing commands just like the vertex buffers and frame buffer
             */
             void createDescriptorSets (uint32_t deviceInfoId,
                                        uint32_t pipelineInfoId,

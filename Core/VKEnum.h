@@ -4,10 +4,10 @@
 namespace Core {
     typedef enum {
         VOID_IMAGE          = 0,
-        SWAPCHAIN_IMAGE     = 1,
+        SWAP_CHAIN_IMAGE    = 1,
         TEXTURE_IMAGE       = 2,
         DEPTH_IMAGE         = 3,
-        MULTISAMPLE_IMAGE   = 4
+        MULTI_SAMPLE_IMAGE  = 4
     } e_imageType;
 
     typedef enum {

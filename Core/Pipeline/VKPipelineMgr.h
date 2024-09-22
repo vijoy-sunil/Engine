@@ -25,17 +25,17 @@ namespace Core {
      *      |
      * Rasterization        [FIXED FUNCTION]
      * The rasterization stage discretizes the primitives into fragments. These are the pixel elements that they fill on 
-     * the framebuffer. Any fragments that fall outside the screen are discarded and the attributes outputted by the 
+     * the frame buffer. Any fragments that fall outside the screen are discarded and the attributes outputted by the 
      * vertex shader are interpolated across the fragments. Usually the fragments that are behind other primitive fragments
      * are also discarded here because of depth testing
      *      |
      * Fragement Shader     [PROGRAMMABLE]
-     * The fragment shader is invoked for every fragment that survives and determines which framebuffer(s) the fragments 
+     * The fragment shader is invoked for every fragment that survives and determines which frame buffer(s) the fragments 
      * are written to and with which color and depth values
      *      |     
      * Color Blending       [FIXED FUNCTION]
      * The color blending stage applies operations to mix different fragments that map to the same pixel in the 
-     * framebuffer. Fragments can simply overwrite each other, add up or be mixed based upon transparency
+     * frame buffer. Fragments can simply overwrite each other, add up or be mixed based upon transparency
      * 
      * Fixed function stages allow you to tweak their operations using parameters, but the way they work is predefined.
      * Programmable stages are programmable, which means that you can upload your own code to the graphics card to apply 
@@ -78,7 +78,7 @@ namespace Core {
             std::unordered_map <uint32_t, PipelineInfo> m_pipelineInfoPool;
 
             Log::Record* m_VKPipelineMgrLog;
-            const uint32_t m_instanceId = g_collectionsSettings.instanceId++;
+            const uint32_t m_instanceId = g_collectionSettings.instanceId++;
             
             void deletePipelineInfo (uint32_t pipelineInfoId) {
                 if (m_pipelineInfoPool.find (pipelineInfoId) != m_pipelineInfoPool.end()) {
@@ -94,7 +94,7 @@ namespace Core {
 
         public:
             VKPipelineMgr (void) {
-                m_VKPipelineMgrLog = LOG_INIT (m_instanceId, g_collectionsSettings.logSaveDirPath); 
+                m_VKPipelineMgrLog = LOG_INIT (m_instanceId, g_collectionSettings.logSaveDirPath); 
                 LOG_ADD_CONFIG (m_instanceId, Log::INFO,  Log::TO_FILE_IMMEDIATE);
                 LOG_ADD_CONFIG (m_instanceId, Log::ERROR, Log::TO_FILE_IMMEDIATE | Log::TO_CONSOLE); 
             }
@@ -171,16 +171,17 @@ namespace Core {
                  * defined by the VkPipeline
                  * 
                  * VkRenderPass is a data oriented thing. It is necessitated by tiled architecture GPUs. Conceptually, 
-                 * they divide the framebuffer up into tiles that are processed independently. Tiled-architecture GPUs 
+                 * they divide the frame buffer up into tiles that are processed independently. Tiled-architecture GPUs 
                  * need to "load" images\buffers from general-purpose RAM to "on-chip memory". When they are done they 
                  * "store" their results back to RAM. This loading of attachments is done by smaller "tiles", so the 
                  * on-chip memory (and therefore shaders) never sees the whole memory at the same time
                  * 
                  * Loading and storing these tiles is rather slow and a good optimization strategy is to combine as many 
-                 * operations as possible into one cycle over the whole framebuffer. It's trivial to see that operations 
-                 * can be combined safely as long as they don't depend on intermediate results from other tiles. Subpasses
-                 * and subpass dependencies tell the GPU drivers where these kinds of dependencies exist (or don't), so 
-                 * that they can group the actual render calls more effectively under the hood
+                 * operations as possible into one cycle over the whole frame buffer. It's trivial to see that operations 
+                 * can be combined safely as long as they don't depend on intermediate results from other tiles
+                 * 
+                 * Sub passes and sub pass dependencies tell the GPU drivers where these kinds of dependencies exist 
+                 * (or don't), so that they can group the actual render calls more effectively under the hood
                  * 
                  * Note that, you can have multiple pipeline in a single render pass
                 */
@@ -236,7 +237,7 @@ namespace Core {
                                                   << "[" << key << "]"
                                                   << std::endl;
 
-                    LOG_INFO (m_VKPipelineMgrLog) << "Subpass index " 
+                    LOG_INFO (m_VKPipelineMgrLog) << "Sub pass index " 
                                                   << "[" << val.meta.subPassIndex << "]"
                                                   << std::endl; 
 
