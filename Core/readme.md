@@ -16,4 +16,4 @@ Source: [StackOverflow](https://stackoverflow.com/questions/39557141/what-is-the
 
 > `VkFramebuffer` + `VkRenderPass` defines the render target
 
-![](../Utils/Images/SimplifiedFlow.png)
+![](../Misc/Images/SimplifiedFlow.png)

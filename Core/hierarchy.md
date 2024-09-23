@@ -152,6 +152,7 @@
     |
     |<----------------------|{VKPipelineMgr}
     |
+    |
     |(protected)
     |VKCmd
 
@@ -181,6 +182,7 @@
     |<----------------------|{VKFrameBuffer}
     |
     |<----------------------|{VKSceneMgr}
+    |
     |
     |(protected)
     |VKResizing

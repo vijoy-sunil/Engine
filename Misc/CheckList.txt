@@ -1,0 +1,109 @@
+-------------------------------------------------------------------------------------------------------------------------
+FILES/FOLDERS
+-------------------------------------------------------------------------------------------------------------------------
+[ - ] Include guards match file name
+[ X ] namespace comment at end
+[ - ] Class name match file name
+[ - ] File name has to be singular, not a plural
+[ X ] Parent folder/Sub folder names have to be singular
+[ - ] hierarchy graph, mark virtual
+[ - ] Make sure every header file is necessary
+[ - ] include order match inheritance order and hierarchy graph
+[ - ] include <> paths before “” paths
+[ - ] Check if you need to update readme
+[ X ] Trim trailing whitespaces
+[ X ] Global ordering {Library files like map etc.
+                       Dependency,
+                       Core,
+                       Extension,
+                       Control,
+                       Misc files like config etc.}
+-------------------------------------------------------------------------------------------------------------------------
+VARIABLES
+-------------------------------------------------------------------------------------------------------------------------
+[ - ] Use auto for vectors and structs
+[ - ] Make sure we are not nesting "using namespace"
+[ - ] global member objects indicated by g_
+[ - ] enums indicated by e_
+[ - ] private member vars indicated by m_
+[ - ] vector names end with s
+[ - ] struct names begin with upper case
+[ - ] Reduce use of macros, use const instead
+[ - ] use nullptr for null pointers instead of NULL
+[ - ] use VK_NULL_HANDLE instead of nullptr for Vulkan objects
+[ - ] For loops use matching types for iterator
+[ - ] Stack allocate whenever you can instead of heap
+[ - ] Pool structs resource will only have Vulkan objects, others could be in meta
+[ - ] createInfo and allocInfo used everywhere for consistency
+[ - ] populate info structure by reference via local variable at the end
+[ - ] use unordered map instead of map if you don't need inputs to be inherently sorted
+[ - ] ID ordering {device,
+                   model, 
+                   image,
+                   buffer,
+                   renderPass,
+                   pipeline,
+                   camera,
+                   fence,
+                   semaphore,
+                   scene}
+[ - ] Struct info ordering {meta,
+                            path,
+                            id,
+                            resource,
+                            transform}
+-------------------------------------------------------------------------------------------------------------------------
+METHODS
+-------------------------------------------------------------------------------------------------------------------------
+[ - ] Common methods - create, get, is, ready, delete, dump, cleanUp, pick, update, import
+[ - ] Return objects/literals methods start with get
+[ - ] Return boolean methods start with is
+[ - ] Return via parameter only if returning multiple variables
+[ - ] Verify id validity
+[ - ] private/public/protected methods are placed appropriately
+[ - ] Clean ups should remove entry from pool
+[ - ] When deleting resources stored in vectors make sure to clear the vector as well example - frame buffers
+[ - ] All vkCmd calls reside in VKCmd
+[ - ] Avoid directly passing in vectors as {}
+[ - ] Use const and/or reference in function params when passing vectors
+[ - ] Use const and/or pointer in function params when passing structs, allows us to pass nullptr
+[ X ] some places we pass infoid, some places we pass in dereferenced info parameter - need uniformity 
+[ - ] getInfo calls ordering based on id ordering
+-------------------------------------------------------------------------------------------------------------------------
+LOG
+-------------------------------------------------------------------------------------------------------------------------
+[ - ] Primary log handle must match class name
+[ - ] Check log configs for every file
+[ - ] log_info, log_error, log_warning used appropriately
+[ - ] log_error followed by runtime error throwing same message
+[ - ] In log statements, make sure we are outputting related ids and vars like device info id, buffer info id etc.
+[ - ] Check spacing in log statements; no spacing at the end if you are not logging any variables
+[ - ] Dump ordering must match relative member orders
+[ - ] Turn off delete empty and go through all log outputs when you run
+-------------------------------------------------------------------------------------------------------------------------
+MISC
+-------------------------------------------------------------------------------------------------------------------------
+[ - ] [a-z]<                                    search all “no space before <”
+[ - ] ->[^ ]                                    search all “no space after ->”
+[ - ] [^ ] \(\)                                 search all “space before ()”
+[ - ] [^ ]\([a-z]                               search all “”no space before (a-z)”
+[ - ] [^ ] \[                                   search all “space before [”
+[ - ] [a-z>]&                                   use of references
+[ - ] [a-z]\*                                   use of pointers
+[ - ] \) [a-z]                                  no use of C-style casting
+[ - ] \) &                                      no use of C-style casting
+[ - ] [0-9]\.[0-9]                              float values end with f
+[ - ] () {                                      void parameter
+[ - ] auto                                      use of auto for vectors, structs etc.
+[ - ] = get                                     use of auto
+[ - ] = create                                  use of auto
+[ - ] const char*                               use const char* for string literals
+[ - ] std::string                               use only if you require std::string features like concat, size etc.
+[ - ] .size()                                   make sure it is casted from size_t to required types
+[ - ] c_str()                                   when passing it to const char* parameter
+[ - ] size_t                                    only used for size of an object and in fns that accept size_t
+[ - ] std::endl                                 in new line
+[ - ] #endif  //                                all endifs should have comment
+[ - ] " [", "[ ", " [ ", " ]", "] ", " ] "      spacing around log brackets
+[ X ] [ X ]                                     to do list
+-------------------------------------------------------------------------------------------------------------------------

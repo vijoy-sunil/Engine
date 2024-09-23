@@ -1,5 +1,5 @@
 /* The geometry that is formed by the vertices from the vertex shader fills an area on the screen with fragments. The 
- * fragment shader is invoked on these fragments to produce a color and depth for the framebuffer (or framebuffers)
+ * fragment shader is invoked on these fragments to produce a color and depth for the frame buffer (or frame buffers)
 */
 #version 450
 /* This extension adds a "nonuniform" type qualifier and constructor, which is required by the Vulkan API to be used when
@@ -40,8 +40,8 @@ layout (binding = 1) uniform sampler2D texSampler[];
 void main (void) {
     /* Colors in GLSL are 4-component vectors with the R, G, B and alpha channels within the [0, 1] range. Unlike 
      * gl_Position in the vertex shader, there is no built-in variable to output a color for the current fragment. You 
-     * have to specify your own output variable for each framebuffer where the layout modifier specifies the index of 
-     * the framebuffer. The color is written to the variable that is linked to the framebuffer at index specified above
+     * have to specify your own output variable for each frame buffer where the layout modifier specifies the index of 
+     * the frame buffer. The color is written to the variable that is linked to the frame buffer at index specified above
      *
      * The texture coordinate values will be smoothly interpolated across the area of the geometry by the rasterizer. We 
      * can visualize this by having the fragment shader output the texture coordinates as colors. Note that, visualizing

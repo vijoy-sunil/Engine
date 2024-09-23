@@ -32,7 +32,7 @@
  * that are clipped are discarded, so the remaining coordinates will end up as fragments visible on your screen. This is 
  * also where clip space gets its name from. Because specifying all the visible coordinates to be within the range -1.0 
  * and 1.0 isn't really intuitive, we specify our own coordinate set to work in and convert those back to NDC (normalized 
- * device coordinates are homogeneous coordinates that map the framebuffer to -1.0 and +1.0 for all axes)
+ * device coordinates are homogeneous coordinates that map the frame buffer to -1.0 and +1.0 for all axes)
  *
  * normalized device coordinate looks like this (ex: 2D):
  *                                  (-1, -1)-------------------------(1,-1)
