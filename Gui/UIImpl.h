@@ -63,7 +63,7 @@ namespace Gui {
                 IMGUI_CHECKVERSION();
                 ImGui::CreateContext();
 
-                auto io         = ImGui::GetIO();
+                auto& io        = ImGui::GetIO();
                 io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;   /* Enable Keyboard Controls */
                 /* The .ini file is used to save persistent window configuration between launches of the application
                  * (such as positions of windows that you have moved, or panels that have been opened/closed, etc). By
@@ -128,12 +128,12 @@ namespace Gui {
              * imgui, and hide them from your application based on these flags
             */
             bool isMouseCapturedByUI (void) {
-                auto io = ImGui::GetIO();
+                auto& io = ImGui::GetIO();
                 return io.WantCaptureMouse;
             }
 
             bool isKeyBoardCapturedByUI (void) {
-                auto io = ImGui::GetIO();
+                auto& io = ImGui::GetIO();
                 return io.WantCaptureKeyboard;
             }
 
