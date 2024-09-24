@@ -12,7 +12,7 @@ Source: [StackOverflow](https://stackoverflow.com/questions/39557141/what-is-the
 
 > `VkFramebuffer` binds a `VkImageView` with an attachment
 
-> `VkRenderpass` defines which attachment will be drawn into
+> `VkRenderPass` defines which attachment will be drawn into
 
 > `VkFramebuffer` + `VkRenderPass` defines the render target
 

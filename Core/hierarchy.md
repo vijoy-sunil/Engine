@@ -141,8 +141,9 @@
 
 
     |<----------------------|{VKDeviceMgr}
-    |                       |(protected)
     |
+    |
+    |(protected)
     |VKCmdBuffer
 
 
@@ -158,18 +159,18 @@
 
 
     |<----------------------|{VKDeviceMgr}
-    |                       |(protected)
     |
     |
+    |(protected)
     |VKCameraMgr
 
 
     |<----------------------|{VKDeviceMgr}
-    |                       |(protected)
     |
     |<......................|VKLogHelper
     |
     |
+    |(protected)
     |VKSyncObject
 
 

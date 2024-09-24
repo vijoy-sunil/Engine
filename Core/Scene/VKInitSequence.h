@@ -308,7 +308,7 @@ namespace Core {
                  * the full multi-sampled attachment does not need to be written to memory, which can save a lot of 
                  * bandwidth
                  * 
-                 * Note that, multisampled images cannot be presented directly. We first need to resolve them to a 
+                 * Note that, multi sampled images cannot be presented directly. We first need to resolve them to a 
                  * regular image
                 */
                 createAttachment    (sceneInfo->id.multiSampleImageInfo,
@@ -441,7 +441,7 @@ namespace Core {
                 /* Define attachments for every frame buffer
                  * In MSAA, each pixel is sampled in an offscreen buffer which is then rendered to the screen. This 
                  * new buffer is slightly different from regular images we've been rendering to - they have to be able
-                 * to store more than one sample per pixel. Once a multisampled buffer is created, it has to be 
+                 * to store more than one sample per pixel. Once a multi sampled buffer is created, it has to be 
                  * resolved to the default frame buffer (which stores only a single sample per pixel). This is why we 
                  * have to create an additional render target. We only need one render target since only one drawing 
                  * operation is active at a time, just like with the depth buffer

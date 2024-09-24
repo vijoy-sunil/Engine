@@ -3,11 +3,11 @@
 
 <pre>
     |<----------------------|{VKWindow}
-    |                       |(protected)
     |
     |<......................|UIConfig
     |
     |
+    |(protected)
     |UIInput
 
 

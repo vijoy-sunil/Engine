@@ -2,21 +2,22 @@
 FILES/FOLDERS
 -------------------------------------------------------------------------------------------------------------------------
 [ - ] Include guards match file name
-[ X ] namespace comment at end
+[ - ] namespace comment at end
 [ - ] Class name match file name
 [ - ] File name has to be singular, not a plural
-[ X ] Parent folder/Sub folder names have to be singular
-[ - ] hierarchy graph, mark virtual
+[ - ] Parent folder/Sub folder names have to be singular
 [ - ] Make sure every header file is necessary
 [ - ] include order match inheritance order and hierarchy graph
+[ - ] mark virtual, mark inheritance in hierarchy graph
 [ - ] include <> paths before “” paths
 [ - ] Check if you need to update readme
-[ X ] Trim trailing whitespaces
-[ X ] Global ordering {Library files like map etc.
+[ - ] Trim trailing whitespaces
+[ - ] Global ordering {Library files like map etc.
                        Dependency,
                        Core,
+                       Gui,
                        Extension,
-                       Control,
+                       Controller,
                        Misc files like config etc.}
 -------------------------------------------------------------------------------------------------------------------------
 VARIABLES
@@ -38,7 +39,7 @@ VARIABLES
 [ - ] populate info structure by reference via local variable at the end
 [ - ] use unordered map instead of map if you don't need inputs to be inherently sorted
 [ - ] ID ordering {device,
-                   model, 
+                   model,
                    image,
                    buffer,
                    renderPass,
@@ -52,6 +53,8 @@ VARIABLES
                             id,
                             resource,
                             transform}
+[ - ] ID naming in higher level modules like extension, gui etc. will have prefix to indicate its usage like
+      uiRenderPassInfoId etc. No prefix means it is a base info id
 -------------------------------------------------------------------------------------------------------------------------
 METHODS
 -------------------------------------------------------------------------------------------------------------------------
@@ -67,7 +70,7 @@ METHODS
 [ - ] Avoid directly passing in vectors as {}
 [ - ] Use const and/or reference in function params when passing vectors
 [ - ] Use const and/or pointer in function params when passing structs, allows us to pass nullptr
-[ X ] some places we pass infoid, some places we pass in dereferenced info parameter - need uniformity 
+[ - ] some places we pass infoid, some places we pass in dereferenced info parameter - need uniformity
 [ - ] getInfo calls ordering based on id ordering
 -------------------------------------------------------------------------------------------------------------------------
 LOG
@@ -83,27 +86,28 @@ LOG
 -------------------------------------------------------------------------------------------------------------------------
 MISC
 -------------------------------------------------------------------------------------------------------------------------
-[ - ] [a-z]<                                    search all “no space before <”
-[ - ] ->[^ ]                                    search all “no space after ->”
-[ - ] [^ ] \(\)                                 search all “space before ()”
-[ - ] [^ ]\([a-z]                               search all “”no space before (a-z)”
-[ - ] [^ ] \[                                   search all “space before [”
-[ - ] [a-z>]&                                   use of references
-[ - ] [a-z]\*                                   use of pointers
-[ - ] \) [a-z]                                  no use of C-style casting
-[ - ] \) &                                      no use of C-style casting
-[ - ] [0-9]\.[0-9]                              float values end with f
-[ - ] () {                                      void parameter
-[ - ] auto                                      use of auto for vectors, structs etc.
-[ - ] = get                                     use of auto
-[ - ] = create                                  use of auto
-[ - ] const char*                               use const char* for string literals
-[ - ] std::string                               use only if you require std::string features like concat, size etc.
-[ - ] .size()                                   make sure it is casted from size_t to required types
-[ - ] c_str()                                   when passing it to const char* parameter
-[ - ] size_t                                    only used for size of an object and in fns that accept size_t
-[ - ] std::endl                                 in new line
-[ - ] #endif  //                                all endifs should have comment
-[ - ] " [", "[ ", " [ ", " ]", "] ", " ] "      spacing around log brackets
+[ X ] [a-z]<                                    search all “no space before <”
+[ X ] ->[^ ]                                    search all “no space after ->”
+[ X ] [^ ] \(\)                                 search all “space before ()”
+[ X ] [^ ]\([a-z]                               search all “”no space before (a-z)”
+[ X ] [^ ] \[                                   search all “space before [”
+[ X ] [a-z>]&                                   use of references
+[ X ] [a-z]\*                                   use of pointers
+[ X ] \) [a-z]                                  no use of C-style casting
+[ X ] \) &                                      no use of C-style casting
+[ X ] [0-9]\.[0-9]                              float values end with f
+[ X ] () {                                      void parameter
+[ X ] auto                                      use of auto for vectors, structs etc.
+[ X ] = get                                     use of auto
+[ X ] = create                                  use of auto
+[ X ] const char*                               use const char* for string literals
+[ X ] std::string                               use only if you require std::string features like concat, size etc.
+[ X ] .size()                                   make sure it is casted from size_t to required types
+[ X ] c_str()                                   when passing it to const char* parameter
+[ X ] size_t                                    only used for size of an object and in fns that accept size_t
+[ X ] std::endl                                 in new line
+[ X ] #endif  //                                all endifs should have comment
+[ X ] " [", "[ ", " [ ", " ]", "] ", " ] "      spacing around log brackets
+[ X ] }   // namespace <name>                   every file has to have one
 [ X ] [ X ]                                     to do list
 -------------------------------------------------------------------------------------------------------------------------

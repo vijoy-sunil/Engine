@@ -2,34 +2,75 @@
 <i>Classes within {} are virtual inheritance</i>
 
 <pre>
-    ENEnum
-    :
-    :
-    |---------------------->|Config/ENEnvConfig
+    |<----------------------|{VKAttachment}
     |
-    |---------------------->|Config/ENModelConfig
+    |<----------------------|{VKSubPass}
+    |
+    |<----------------------|{VKFrameBuffer}
+    |
+    |<----------------------|{VKCmd}
+    |
+    |<----------------------|{VKDescriptor}
+    |
+    |<----------------------|{UIImpl}
+    |
+    |                       |ENEnum
+    |                       :
+    |                       :
+    |<......................|ENConfig
+    |
+    |
+    |(protected)
+    |ENUI
+
+
+    |<----------------------|{VKVertexInput}
+    |
+    |<----------------------|{VKShaderStage}
+    |
+    |<----------------------|{VKDescriptorSetLayout}
+    |
+    |<----------------------|{VKPushConstantRange}
+    |
+    |<----------------------|{VKPipelineLayout}
+    |
+    |<----------------------|{VKCmd}
+    |
+    |<----------------------|{VKCameraMgr}
+    |
+    |<----------------------|{VKSceneMgr}
+    |
+    |<......................|VKUniform
+    |
+    |<......................|ENConfig
+    |
+    |
+    |(protected)
+    |ENGrid
 
 
     |<----------------------|{VKDeviceMgr}
     |
-    |<----------------------|{Utils/UserInput}
+    |<----------------------|{UIImpl}
     |
-    |<......................|ENEnvConfig
+    |<......................|ENConfig
     |
     |
-    |Control/ENGenericControl
+    |(protected)
+    |ENGeneric
 
 
     |<----------------------|{VKModelMgr}
     |
     |<----------------------|{VKCameraMgr}
     |
-    |<----------------------|{UserInput}
+    |<----------------------|{UIImpl}
     |
-    |<......................|ENEnvConfig
+    |<......................|ENConfig
     |
     |
-    |Control/ENCameraControl
+    |(protected)
+    |ENCamera
 
 
     |<----------------------|VKInitSequence
@@ -38,14 +79,17 @@
     |
     |<----------------------|VKDeleteSequence
     |
-    |<----------------------|ENGenericControl
+    |<----------------------|ENUI
     |
-    |<----------------------|ENCameraControl
+    |<----------------------|ENGrid
     |
-    |<......................|ENModelConfig
+    |<----------------------|ENGeneric
+    |
+    |<----------------------|ENCamera
     |
     |
-    |SandBox/ENApplication
+    |(protected)
+    |ENApplication
     :
     :
     |main
