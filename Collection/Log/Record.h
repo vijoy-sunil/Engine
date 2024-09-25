@@ -40,10 +40,10 @@ namespace Log {
 
             std::unordered_map <e_level, e_sink> m_levelConfig;
             std::fstream m_saveFileImmediate;
-            std::fstream m_saveFileBuffered; 
+            std::fstream m_saveFileBuffered;
             /* std::endl is a template function, and this is the signature of that function
             */
-            using endl_type = std::ostream& (std::ostream&); 
+            using endl_type = std::ostream& (std::ostream&);
             /* Variable to hold entry in buffered sink
             */
             std::string m_bufferedSinkHolder;
@@ -59,14 +59,10 @@ namespace Log {
 
             const char* getLevelString (e_level level) {
                 switch (level) {
-                    case INFO:
-                        return "INFO";
-                    case WARNING:
-                        return "WARN";
-                    case ERROR:
-                        return "ERRO";
-                    default:
-                        return "UNDF";
+                    case INFO:      return "INFO";
+                    case WARNING:   return "WARN";
+                    case ERROR:     return "ERRO";
+                    default:        return "UNDF";
                 }
             }
 
@@ -75,9 +71,9 @@ namespace Log {
                  * were a stream like cin
                 */
                 std::stringstream stream;
-                
-                std::chrono::time_point <std::chrono::system_clock> now = std::chrono::system_clock::now();
-                std::time_t t_c = std::chrono::system_clock::to_time_t (now);
+
+                auto now = std::chrono::system_clock::now();
+                auto t_c = std::chrono::system_clock::to_time_t (now);
                 /* https://en.cppreference.com/w/cpp/io/manip/put_time
                 */
                 stream << std::put_time (std::localtime (&t_c), "%F %T");
@@ -86,14 +82,14 @@ namespace Log {
 
             /* These 2 methods helps us to convert everything to string type
             */
-            std::string to_string (const std::string& r) const { 
-                return r; 
+            std::string to_string (const std::string& r) const {
+                return r;
             }
 
             template <typename T>
-            typename std::enable_if <!std::is_convertible <T, std::string>::value, 
-                                      std::string>::type to_string (T r) const { 
-                return std::to_string (r); 
+            typename std::enable_if <!std::is_convertible <T, std::string>::value,
+                                      std::string>::type to_string (T r) const {
+                return std::to_string (r);
             }
 
             void deleteEmptyFile (std::fstream& file, const char* filePath) {
@@ -115,7 +111,7 @@ namespace Log {
             }
 
         public:
-            Record (uint32_t instanceId, 
+            Record (uint32_t instanceId,
                     std::string callingFile,
                     std::string saveDir,
                     size_t bufferCapacity,
@@ -127,9 +123,9 @@ namespace Log {
                 m_bufferCapacity = bufferCapacity;
                 m_format         = format;
 
-                m_levelConfig.insert ({INFO,    TO_NONE}); 
-                m_levelConfig.insert ({WARNING, TO_NONE}); 
-                m_levelConfig.insert ({ERROR,   TO_NONE}); 
+                m_levelConfig.insert ({INFO,    TO_NONE});
+                m_levelConfig.insert ({WARNING, TO_NONE});
+                m_levelConfig.insert ({ERROR,   TO_NONE});
 
                 m_activeSink         = TO_NONE;
                 m_fileImmediateReady = false;
@@ -142,7 +138,7 @@ namespace Log {
                 m_callingFile      = m_callingFile.substr (strip_start, strip_end - strip_start);
             }
 
-            ~Record (void) { 
+            ~Record (void) {
                 clearConfig();
             }
 
@@ -150,39 +146,39 @@ namespace Log {
                 m_levelConfig[level] = sink;
                 /* Open file, note that for this sink we are in append mode
                 */
-                if (!m_fileImmediateReady && (sink & TO_FILE_IMMEDIATE)) { 
-                    m_saveFilePathImmediate = m_saveDir + "i_" + 
+                if (!m_fileImmediateReady && (sink & TO_FILE_IMMEDIATE)) {
+                    m_saveFilePathImmediate = m_saveDir + "i_" +
                                               std::to_string (m_instanceId) + "_" +
                                               m_callingFile +
                                               nameExtension +
                                               m_format;
 
-                    m_saveFileImmediate.open (m_saveFilePathImmediate, 
+                    m_saveFileImmediate.open (m_saveFilePathImmediate,
                                               std::ios_base::app | std::ios_base::out);
 
                     if (!m_saveFileImmediate.is_open())
                         throw std::runtime_error ("Failed to open file for TO_FILE_IMMEDIATE sink");
-                    
+
                     m_fileImmediateReady = true;
                 }
 
                 if (!m_fileBufferedReady && (sink & TO_FILE_BUFFER_CIRCULAR)) {
                     if (m_bufferCapacity == 0)
-                        throw std::runtime_error ("Buffer capacity invalid for TO_FILE_BUFFER_CIRCULAR sink");    
+                        throw std::runtime_error ("Buffer capacity invalid for TO_FILE_BUFFER_CIRCULAR sink");
 
-                    BUFFER_INIT (RESERVED_ID_LOG_SINK + m_instanceId, 
-                                 Buffer::WITH_OVERFLOW, 
-                                 std::string, 
-                                 m_bufferCapacity);   
+                    BUFFER_INIT (RESERVED_ID_LOG_SINK + m_instanceId,
+                                 Buffer::WITH_OVERFLOW,
+                                 std::string,
+                                 m_bufferCapacity);
 
-                    m_saveFilePathBuffered  = m_saveDir + "b_" + 
+                    m_saveFilePathBuffered  = m_saveDir + "b_" +
                                               std::to_string (m_instanceId) + "_" +
                                               m_callingFile +
                                               m_format;
 
-                    m_saveFileBuffered.open (m_saveFilePathBuffered, 
+                    m_saveFileBuffered.open (m_saveFilePathBuffered,
                                               std::ios_base::out);
-                                              
+
                     if (!m_saveFileBuffered.is_open())
                         throw std::runtime_error ("Failed to open file for TO_FILE_BUFFER_CIRCULAR sink");
 
@@ -229,7 +225,7 @@ namespace Log {
             }
 
             e_sink getSink (void) {
-                e_sink allSinks = TO_NONE;
+                auto allSinks = TO_NONE;
                 for (auto const& [level, sink]: m_levelConfig)
                     allSinks = allSinks | sink;
 
@@ -237,7 +233,7 @@ namespace Log {
             }
 
             e_level getLevel (void) {
-                e_level allLevels = NONE;
+                auto allLevels = NONE;
                 for (auto const& [level, sink]: m_levelConfig) {
                     if (sink != TO_NONE)
                         allLevels = allLevels | level;
@@ -247,7 +243,7 @@ namespace Log {
             }
 
             std::string getHeader (e_level level,
-                                   const char* callingFunction, 
+                                   const char* callingFunction,
                                    uint32_t line,
                                    bool enHeader) {
                 /* Skip header for lightweight logging
@@ -261,15 +257,15 @@ namespace Log {
                 if (m_instanceId < 10)
                     instanceId.insert (0, 1, '0');
 
-                std::string header = "[" + instanceId + "]" + 
+                std::string header = "[" + instanceId + "]" +
                                      " " +
-                                     getLocalTimestamp() + 
+                                     getLocalTimestamp() +
                                      " " +
-                                     "[" + getLevelString (level) + "]" 
+                                     "[" + getLevelString (level) + "]"
                                      + " " +
-                                     callingFunction + 
+                                     callingFunction +
                                      " " +
-                                     std::to_string (line) +  
+                                     std::to_string (line) +
                                      " ";
 
                 return header;
@@ -290,7 +286,7 @@ namespace Log {
 
                 if (m_activeSink & TO_CONSOLE)
                     std::cout << endl;
-                
+
                 /* For buffered sink, instead of inserting a new line we push the log entry into the buffer
                 */
                 if (m_activeSink & TO_FILE_BUFFER_CIRCULAR) {
@@ -304,7 +300,7 @@ namespace Log {
                 return *this;
             }
 
-            /* Templated overload operator, 
+            /* Templated overload operator,
              * reference: https://stackoverflow.com/questions/17595957/operator-overloading-in-c-for-logging-purposes
             */
             template <typename T>
@@ -319,7 +315,7 @@ namespace Log {
                 */
                 if (m_activeSink & TO_FILE_BUFFER_CIRCULAR)
                     m_bufferedSinkHolder += to_string (data);
-            
+
                 return *this;
             }
     };

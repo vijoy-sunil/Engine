@@ -8,8 +8,8 @@ using namespace Collection;
 ## Directory structure
 <pre>
     Collection
-    |-- Buffer             
-    |-- Log          
+    |-- Buffer
+    |-- Log
 </pre>
 
 ## Namespaces
@@ -26,12 +26,12 @@ using namespace Collection;
 
     // create a new buffer ('myBuffer' is a pointer to the buffer instance created)
     auto myBuffer = BUFFER_INIT (0,                                 // instance id
-                                 Buffer::WITH_OVERFLOW,             // circular buffer type        
+                                 Buffer::WITH_OVERFLOW,             // circular buffer type
                                  int,                               // holds integer
                                  capacity);                         // buffer capacity
 
     // push to buffer
-    for (auto const& i: input) 
+    for (auto const& i: input)
         myBuffer->BUFFER_PUSH (i);
 
     // dump buffer contents
@@ -48,7 +48,7 @@ using namespace Collection;
     #include "path to Log/Log.h"
 
     // create log instance
-    auto myLog = LOG_INIT (0,                                       // instance id 
+    auto myLog = LOG_INIT (0,                                       // instance id
                            "path to save dir",                      // file save location
                            5);                                      // circular buffer log file capacity
     // add configs
@@ -61,13 +61,13 @@ using namespace Collection;
     LOG_ADD_CONFIG   (0, Log::INFO, Log::TO_CONSOLE);
 
     // log an info level message
-    LOG_INFO (myLog) << "Hello World! " 
-                     << "This is a test message. " 
-                     << 123 
-                     << "," 
-                     << 10.1010 
+    LOG_INFO (myLog) << "Hello World! "
+                     << "This is a test message. "
+                     << 123
+                     << ","
+                     << 10.1010
                      << std::endl;
 
-    // close this log using its instance id 
+    // close this log using its instance id
     LOG_CLOSE (0);
 </pre>

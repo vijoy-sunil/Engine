@@ -25,7 +25,7 @@ namespace Buffer {
 
             inline bool isEmpty (void) {
                 return m_numItems == 0;
-            } 
+            }
 
             inline bool isFull (void) {
                 return m_numItems == m_capacity;
@@ -46,7 +46,7 @@ namespace Buffer {
             ~BufferImpl (void) {
                 delete[] m_buffer;
             }
-            
+
             void push (const T& data) {
                 /* Always push when in overflow enabled mode
                 */
@@ -81,8 +81,8 @@ namespace Buffer {
                     /* When tail pointer is at the end of the buffer
                     */
                     m_tail = m_tail == m_end ? m_buffer: m_tail + 1;
-                }   
-                return data; 
+                }
+                return data;
             }
 
             T* popLast (void) {
@@ -102,17 +102,17 @@ namespace Buffer {
             void flush (std::ostream& ost) {
                 while (!isEmpty())
                     ost << *popFirst() << "\n";
-                
+
                 ost.flush();
             }
-            
+
             inline T* getFirst (void) {
                 return isEmpty() ? nullptr: m_tail;
             }
 
             inline T* getLast (void) {
-                return isEmpty() ? nullptr: 
-                /* Head pointer will be at the start either when the buffer is empty, or when an item has been inserted at 
+                return isEmpty() ? nullptr:
+                /* Head pointer will be at the start either when the buffer is empty, or when an item has been inserted at
                  * the end and wrap around is complete
                 */
                 m_head == m_buffer ? m_end: (m_head - 1);
@@ -129,13 +129,13 @@ namespace Buffer {
             }
 
             /* Buffer is displayed in the following format
-             * Buffer: 
+             * Buffer:
              *          {                               <L1>
              *              Id: ?                       <L2>
              *              Availability: ?
              *              First: ?
              *              Last: ?
-             *              Data: 
+             *              Data:
              *                      {                   <L3>
              *                          ?               <L4>
              *                          ?
@@ -143,9 +143,9 @@ namespace Buffer {
              *                      }                   <L3>
              *          }                               <L1>
             */
-            void dump (std::ostream& ost, 
-                       void (*lambda) (T*, std::ostream&) = [](T* readPtr, std::ostream& ost) { 
-                                                                ost << *readPtr; 
+            void dump (std::ostream& ost,
+                       void (*lambda) (T*, std::ostream&) = [](T* readPtr, std::ostream& ost) {
+                                                                ost << *readPtr;
                                                             }) {
                 T* readPtr = m_tail;
                 size_t numItems = m_numItems;
@@ -156,15 +156,15 @@ namespace Buffer {
                 ost << TAB_L2 << "Id: "             << m_instanceId         << "\n";
                 ost << TAB_L2 << "Availability: "   << getAvailability()    << "\n";
 
-                ost << TAB_L2 << "First: ";        
-                if (m_numItems != 0)            lambda (getFirst(), ost); 
-                else                            ost << "NULL";                       
-                ost << "\n"; 
+                ost << TAB_L2 << "First: ";
+                if (m_numItems != 0)            lambda (getFirst(), ost);
+                else                            ost << "NULL";
+                ost << "\n";
 
-                ost << TAB_L2 << "Last: ";        
+                ost << TAB_L2 << "Last: ";
                 if (m_numItems != 0)            lambda (getLast(), ost);
-                else                            ost << "NULL";                       
-                ost << "\n"; 
+                else                            ost << "NULL";
+                ost << "\n";
 
                 ost << TAB_L2 << "Data: "           << "\n";
                 ost << OPEN_L3;
@@ -174,7 +174,7 @@ namespace Buffer {
                 readPtr = readPtr == m_end ? m_buffer: readPtr + 1;
                 }
                 ost << CLOSE_L3;
-                
+
                 ost << CLOSE_L1;
             }
     };

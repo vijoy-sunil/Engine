@@ -7,16 +7,16 @@ namespace Collection {
 namespace Log {
     class RecordMgr: public Admin::InstanceMgr {
         public:
-            Record* createRecord (uint32_t instanceId, 
+            Record* createRecord (uint32_t instanceId,
                                   std::string callingFile,
                                   std::string saveDir       = "",
                                   size_t bufferCapacity     = 0,
                                   const char* format        = ".txt") {
-            
+
                 /* Add record object to pool
                 */
                 if (m_instancePool.find (instanceId) == m_instancePool.end()) {
-                    Record* c_record = new Record (instanceId, 
+                    Record* c_record = new Record (instanceId,
                                                    callingFile,
                                                    saveDir,
                                                    bufferCapacity,
@@ -32,12 +32,12 @@ namespace Log {
             }
 
             void closeRecord (uint32_t instanceId) {
-                if (m_instancePool.find (instanceId) != m_instancePool.end()) { 
+                if (m_instancePool.find (instanceId) != m_instancePool.end()) {
                     Record* c_record = static_cast <Record*> (m_instancePool[instanceId]);
                     delete c_record;
                     /* Remove from map, so you are able to reuse the instance id
                     */
-                    m_instancePool.erase (instanceId);   
+                    m_instancePool.erase (instanceId);
                     /* Close log buffer
                     */
                     BUFFER_CLOSE (RESERVED_ID_LOG_SINK + instanceId);
@@ -62,7 +62,7 @@ namespace Log {
             */
             void clearAllConfigs (void) {
                 for (auto const& [key, val]: m_instancePool) {
-                    Record* c_record = static_cast <Record*> (val);                        
+                    Record* c_record = static_cast <Record*> (val);
                     c_record->clearConfig();
                 }
             }

@@ -17,7 +17,7 @@
 #define LOG_INIT_B(id, saveDir)                 Log::g_recordMgr.createRecord (id,                                      \
                                                                                LOG_GET_FILE,                            \
                                                                                saveDir);
-    
+
 #define LOG_CLOSE(id)                           Log::g_recordMgr.closeRecord (id)
 #define LOG_CLOSE_ALL                           Log::g_recordMgr.closeAllRecords()
 #define LOG_ADD_CONFIG_A(id, level, sink, nameExt)                                                                      \
@@ -46,9 +46,9 @@
 #define LOG_ERROR(c_record)                     LOG(c_record, Log::ERROR, true)
 /* Lightweight logging method with header disabled
 */
-#define LOG_LITE(c_record)                      LOG(c_record, Log::INFO, false)      
+#define LOG_LITE(c_record)                      LOG(c_record, Log::INFO, false)
 /* Under the hood
-*/   
+*/
 #define GET_LOG(id)                             static_cast <Log::Record*>                                              \
                                                 (Log::g_recordMgr.getInstance (id))
 #define LOG_GET_FILE                            __FILE__
