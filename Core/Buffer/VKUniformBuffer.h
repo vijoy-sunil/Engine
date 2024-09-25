@@ -18,13 +18,13 @@ namespace Core {
                 LOG_CLOSE (m_instanceId);
             }
 
-        protected:  
-            void createUniformBuffer (uint32_t deviceInfoId, 
-                                      uint32_t bufferInfoId, 
+        protected:
+            void createUniformBuffer (uint32_t deviceInfoId,
+                                      uint32_t bufferInfoId,
                                       VkDeviceSize size) {
-                /* Note that, this method doesn't accept a data pointer. This is because we're going to copy new data to 
-                 * the uniform buffer every time we call the update function. In addition, it doesn't really make any 
-                 * sense to have a staging buffer since it would just add extra overhead in this case and likely degrade 
+                /* Note that, this method doesn't accept a data pointer. This is because we're going to copy new data to
+                 * the uniform buffer every time we call the update function. In addition, it doesn't really make any
+                 * sense to have a staging buffer since it would just add extra overhead in this case and likely degrade
                  * performance instead of improving it
                 */
                 auto deviceInfo = getDeviceInfo (deviceInfoId);
@@ -32,33 +32,33 @@ namespace Core {
                     deviceInfo->meta.graphicsFamilyIndex.value()
                 };
 
-                createBuffer (deviceInfoId, 
+                createBuffer (deviceInfoId,
                               bufferInfoId,
                               UNIFORM_BUFFER,
                               size,
-                              VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, 
-                              VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | 
-                              VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, 
+                              VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                              VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+                              VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
                               bufferShareQueueFamilyIndices);
 
                 auto bufferInfo = getBufferInfo (bufferInfoId, UNIFORM_BUFFER);
-                /* We map the buffer right after creation using vkMapMemory to get a pointer to which we can write the 
-                 * data later on. The buffer stays mapped to this pointer for the application's whole lifetime. This 
-                 * technique is called "persistent mapping" and works on all Vulkan implementations. Not having to map 
+                /* We map the buffer right after creation using vkMapMemory to get a pointer to which we can write the
+                 * data later on. The buffer stays mapped to this pointer for the application's whole lifetime. This
+                 * technique is called "persistent mapping" and works on all Vulkan implementations. Not having to map
                  * the buffer every time we need to update it increases performances, as mapping is not free
                 */
-                vkMapMemory (deviceInfo->resource.logDevice, 
-                             bufferInfo->resource.bufferMemory, 
-                             0, 
-                             size, 
-                             0, 
+                vkMapMemory (deviceInfo->resource.logDevice,
+                             bufferInfo->resource.bufferMemory,
+                             0,
+                             size,
+                             0,
                              &bufferInfo->meta.bufferMapped);
             }
 
-            void updateUniformBuffer (uint32_t bufferInfoId, 
-                                      VkDeviceSize size, 
+            void updateUniformBuffer (uint32_t bufferInfoId,
+                                      VkDeviceSize size,
                                       const void* data) {
-                                        
+
                 auto bufferInfo = getBufferInfo (bufferInfoId, UNIFORM_BUFFER);
                 memcpy (bufferInfo->meta.bufferMapped, data, static_cast <size_t> (size));
             }

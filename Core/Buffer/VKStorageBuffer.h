@@ -18,9 +18,9 @@ namespace Core {
                 LOG_CLOSE (m_instanceId);
             }
 
-        protected:  
-            void createStorageBuffer (uint32_t deviceInfoId, 
-                                      uint32_t bufferInfoId, 
+        protected:
+            void createStorageBuffer (uint32_t deviceInfoId,
+                                      uint32_t bufferInfoId,
                                       VkDeviceSize size) {
 
                 auto deviceInfo = getDeviceInfo (deviceInfoId);
@@ -29,27 +29,27 @@ namespace Core {
                 };
 
                 createBuffer (deviceInfoId,
-                              bufferInfoId, 
+                              bufferInfoId,
                               STORAGE_BUFFER,
                               size,
-                              VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, 
-                              VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | 
-                              VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, 
+                              VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+                              VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+                              VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
                               bufferShareQueueFamilyIndices);
 
                 auto bufferInfo = getBufferInfo (bufferInfoId, STORAGE_BUFFER);
-                vkMapMemory (deviceInfo->resource.logDevice, 
-                             bufferInfo->resource.bufferMemory, 
-                             0, 
-                             size, 
-                             0, 
+                vkMapMemory (deviceInfo->resource.logDevice,
+                             bufferInfo->resource.bufferMemory,
+                             0,
+                             size,
+                             0,
                              &bufferInfo->meta.bufferMapped);
             }
 
-            void updateStorageBuffer (uint32_t bufferInfoId, 
-                                      VkDeviceSize size, 
+            void updateStorageBuffer (uint32_t bufferInfoId,
+                                      VkDeviceSize size,
                                       const void* data) {
-                                        
+
                 auto bufferInfo = getBufferInfo (bufferInfoId, STORAGE_BUFFER);
                 memcpy (bufferInfo->meta.bufferMapped, data, static_cast <size_t> (size));
             }
