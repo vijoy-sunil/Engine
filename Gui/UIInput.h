@@ -84,9 +84,6 @@ namespace Gui {
             }
 
             void cleanUp (uint32_t deviceInfoId) {
-                getKeyEventInfoPool().  clear();
-                getMouseEventInfoPool().clear();
-
                 deleteKeyCallBack            (deviceInfoId);
                 deleteCursorPositionCallBack (deviceInfoId);
                 deleteScrollOffsetCallBack   (deviceInfoId);

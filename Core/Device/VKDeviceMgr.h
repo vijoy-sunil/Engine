@@ -13,20 +13,20 @@ namespace Core {
             struct DeviceInfo {
                 struct Meta {
                     uint32_t memoryAllocationCount;
-                    /* It's not really possible to use a magic value to indicate the nonexistence of a queue family, 
+                    /* It's not really possible to use a magic value to indicate the nonexistence of a queue family,
                      * since any value of uint32_t could in theory be a valid queue family index including 0. We will be
                      * using std::optional which is a wrapper that contains no value until you assign something to it
                     */
                     std::optional <uint32_t> graphicsFamilyIndex;
-                    /* The presentation is a queue-specific feature, we need to find a queue family that supports 
-                     * presenting to the surface we created. It's actually possible that the queue families supporting 
+                    /* The presentation is a queue-specific feature, we need to find a queue family that supports
+                     * presenting to the surface we created. It's actually possible that the queue families supporting
                      * drawing (graphic) commands and the ones supporting presentation do not overlap
                     */
                     std::optional <uint32_t> presentFamilyIndex;
-                    /* Note that any queue family with VK_QUEUE_GRAPHICS_BIT (graphics queue) or VK_QUEUE_COMPUTE_BIT 
-                     * capabilities already implicitly support VK_QUEUE_TRANSFER_BIT (transfer queue) operations. 
-                     * However, if the application needs a transfer queue that is different from the graphics queue for 
-                     * some reason, it should queury a queue family with VK_QUEUE_TRANSFER_BIT and without 
+                    /* Note that any queue family with VK_QUEUE_GRAPHICS_BIT (graphics queue) or VK_QUEUE_COMPUTE_BIT
+                     * capabilities already implicitly support VK_QUEUE_TRANSFER_BIT (transfer queue) operations.
+                     * However, if the application needs a transfer queue that is different from the graphics queue for
+                     * some reason, it should queury a queue family with VK_QUEUE_TRANSFER_BIT and without
                      * VK_QUEUE_GRAPHICS_BIT
                     */
                     std::optional <uint32_t> transferFamilyIndex;
@@ -34,8 +34,8 @@ namespace Core {
 
                 struct Resource {
                     VkInstance instance;
-                    /* The graphics card that we'll end up selecting will be stored in a VkPhysicalDevice handle. This 
-                     * object will be implicitly destroyed when the VkInstance is destroyed, so we won't need to do 
+                    /* The graphics card that we'll end up selecting will be stored in a VkPhysicalDevice handle. This
+                     * object will be implicitly destroyed when the VkInstance is destroyed, so we won't need to do
                      * anything new in the cleanup function
                     */
                     VkPhysicalDevice phyDevice;
@@ -60,13 +60,13 @@ namespace Core {
                     /* Sample points for MSAA (multi sample anit aliasing)
                     */
                     VkSampleCountFlagBits maxSampleCount;
-                    /* The maximum value that can be specified in the range member of a VkDescriptorBufferInfo structure 
+                    /* The maximum value that can be specified in the range member of a VkDescriptorBufferInfo structure
                      * for storage buffer/dynamic descriptors
                     */
                     uint32_t maxStorageBufferRange;
                     uint32_t maxPushConstantsSize;
                     uint32_t maxMemoryAllocationCount;
-                    /* maxAnisotropy is the anisotropy value clamp used by the sampler, it limits the amount of texel 
+                    /* maxAnisotropy is the anisotropy value clamp used by the sampler, it limits the amount of texel
                      * samples that can be used to calculate the final color
                     */
                     float maxSamplerAnisotropy;
@@ -80,15 +80,15 @@ namespace Core {
 #if __APPLE__
                 "VK_KHR_portability_subset",
 #endif  // __APPLE__
-                /* Extensions for enabling swap chain, since image presentation is heavily tied into the window 
+                /* Extensions for enabling swap chain, since image presentation is heavily tied into the window
                  * system and the surfaces associated with windows, it is not actually part of the Vulkan core
                 */
                 VK_KHR_SWAPCHAIN_EXTENSION_NAME,
-                /* Extensions to enable descriptor indexing and bindless (run time) descriptor arrays. With 
-                 * bindless, the shader author does not need to know the upper limit of the array, and from the 
-                 * application side the implementer only needs to be sure they do not cause the shader to index 
+                /* Extensions to enable descriptor indexing and bindless (run time) descriptor arrays. With
+                 * bindless, the shader author does not need to know the upper limit of the array, and from the
+                 * application side the implementer only needs to be sure they do not cause the shader to index
                  * outside of a valid range of bound descriptors
-                 * 
+                 *
                  * Features supported by this extension include
                  * (1) Update after bind            [application side]
                  * (2) Partially bound              [application side]
@@ -97,8 +97,8 @@ namespace Core {
                 */
                 VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME,
                 VK_KHR_MAINTENANCE_3_EXTENSION_NAME
-            }; 
-            
+            };
+
             Log::Record* m_VKDeviceMgrLog;
             const uint32_t m_instanceId = g_collectionSettings.instanceId++;
 
@@ -109,7 +109,7 @@ namespace Core {
                 }
 
                 LOG_ERROR (m_VKDeviceMgrLog) << "Failed to delete device info "
-                                             << "[" << deviceInfoId << "]"          
+                                             << "[" << deviceInfoId << "]"
                                              << std::endl;
                 throw std::runtime_error ("Failed to delete device info");
             }
@@ -145,25 +145,25 @@ namespace Core {
             DeviceInfo* getDeviceInfo (uint32_t deviceInfoId) {
                 if (m_deviceInfoPool.find (deviceInfoId) != m_deviceInfoPool.end())
                     return &m_deviceInfoPool[deviceInfoId];
-                
+
                 LOG_ERROR (m_VKDeviceMgrLog) << "Failed to find device info "
                                              << "[" << deviceInfoId << "]"
                                              << std::endl;
-                throw std::runtime_error ("Failed to find device info"); 
-            }    
+                throw std::runtime_error ("Failed to find device info");
+            }
 
             void dumpDeviceInfoPool (void) {
                 LOG_INFO (m_VKDeviceMgrLog) << "Dumping device info pool"
                                             << std::endl;
 
                 for (auto const& [key, val]: m_deviceInfoPool) {
-                    LOG_INFO (m_VKDeviceMgrLog) << "Device info id " 
+                    LOG_INFO (m_VKDeviceMgrLog) << "Device info id "
                                                 << "[" << key << "]"
-                                                << std::endl; 
-             
+                                                << std::endl;
+
                     LOG_INFO (m_VKDeviceMgrLog) << "Memory allocation count "
                                                 << "[" << val.meta.memoryAllocationCount << "]"
-                                                << std::endl; 
+                                                << std::endl;
 
                     LOG_INFO (m_VKDeviceMgrLog) << "Graphics queue family index "
                                                 << "[" << val.meta.graphicsFamilyIndex.value() << "]"
@@ -171,36 +171,36 @@ namespace Core {
 
                     LOG_INFO (m_VKDeviceMgrLog) << "Present queue family index "
                                                 << "[" << val.meta.presentFamilyIndex.value() << "]"
-                                                << std::endl;  
+                                                << std::endl;
 
                     LOG_INFO (m_VKDeviceMgrLog) << "Transfer queue family index "
                                                 << "[" << val.meta.transferFamilyIndex.value() << "]"
-                                                << std::endl;  
+                                                << std::endl;
 
                     LOG_INFO (m_VKDeviceMgrLog) << "Swap chain size "
                                                 << "[" << val.params.swapChainSize << "]"
-                                                << std::endl; 
+                                                << std::endl;
 
                     LOG_INFO (m_VKDeviceMgrLog) << "Swap chain format "
                                                 << "[" << string_VkFormat (val.params.swapChainFormat) << "]"
-                                                << std::endl;  
+                                                << std::endl;
 
                     LOG_INFO (m_VKDeviceMgrLog) << "Swap chain present mode "
                                                 << "[" << string_VkPresentModeKHR (val.params.swapChainPresentMode) << "]"
-                                                << std::endl;                                                  
+                                                << std::endl;
 
                     LOG_INFO (m_VKDeviceMgrLog) << "Swap chain extent "
                                                 << "[" << val.params.swapChainExtent.width  << ", "
                                                        << val.params.swapChainExtent.height << "]"
-                                                << std::endl;  
+                                                << std::endl;
 
                     LOG_INFO (m_VKDeviceMgrLog) << "Min swap chain image count "
                                                 << "[" << val.params.minSwapChainImageCount << "]"
-                                                << std::endl; 
+                                                << std::endl;
 
                     LOG_INFO (m_VKDeviceMgrLog) << "Max sample count "
                                                 << "[" << string_VkSampleCountFlagBits (val.params.maxSampleCount) << "]"
-                                                << std::endl; 
+                                                << std::endl;
 
                     LOG_INFO (m_VKDeviceMgrLog) << "Max storage buffer range "
                                                 << "[" << val.params.maxStorageBufferRange << "]"
@@ -212,7 +212,7 @@ namespace Core {
 
                     LOG_INFO (m_VKDeviceMgrLog) << "Max memory allocation count "
                                                 << "[" << val.params.maxMemoryAllocationCount << "]"
-                                                << std::endl;   
+                                                << std::endl;
 
                     LOG_INFO (m_VKDeviceMgrLog) << "Max sampler anisotropy "
                                                 << "[" << val.params.maxSamplerAnisotropy << "]"
@@ -222,8 +222,8 @@ namespace Core {
 
             void cleanUpSwapChain (uint32_t deviceInfoId) {
                 auto deviceInfo = getDeviceInfo (deviceInfoId);
-                vkDestroySwapchainKHR (deviceInfo->resource.logDevice, 
-                                       deviceInfo->resource.swapChain, 
+                vkDestroySwapchainKHR (deviceInfo->resource.logDevice,
+                                       deviceInfo->resource.swapChain,
                                        VK_NULL_HANDLE);
             }
 

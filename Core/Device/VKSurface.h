@@ -11,11 +11,11 @@ namespace Core {
 
         public:
             VKSurface (void) {
-                m_VKSurfaceLog = LOG_INIT (m_instanceId, g_collectionSettings.logSaveDirPath); 
-                LOG_ADD_CONFIG (m_instanceId, Log::ERROR, Log::TO_FILE_IMMEDIATE | Log::TO_CONSOLE); 
+                m_VKSurfaceLog = LOG_INIT (m_instanceId, g_collectionSettings.logSaveDirPath);
+                LOG_ADD_CONFIG (m_instanceId, Log::ERROR, Log::TO_FILE_IMMEDIATE | Log::TO_CONSOLE);
             }
 
-            ~VKSurface (void) { 
+            ~VKSurface (void) {
                 LOG_CLOSE (m_instanceId);
             }
 
@@ -24,27 +24,27 @@ namespace Core {
                 auto deviceInfo = getDeviceInfo (deviceInfoId);
 
                 VkSurfaceKHR surface;
-                VkResult result = glfwCreateWindowSurface (deviceInfo->resource.instance, 
-                                                           deviceInfo->resource.window, 
-                                                           VK_NULL_HANDLE, 
+                VkResult result = glfwCreateWindowSurface (deviceInfo->resource.instance,
+                                                           deviceInfo->resource.window,
+                                                           VK_NULL_HANDLE,
                                                            &surface);
                 if (result != VK_SUCCESS) {
                     LOG_ERROR (m_VKSurfaceLog) << "Failed to create surface "
                                                << "[" << deviceInfoId << "]"
-                                               << " " 
-                                               << "[" << string_VkResult (result) << "]" 
+                                               << " "
+                                               << "[" << string_VkResult (result) << "]"
                                                << std::endl;
                     throw std::runtime_error ("Failed to create surface");
                 }
-                
+
                 deviceInfo->resource.surface = surface;
             }
 
             void cleanUp (uint32_t deviceInfoId) {
                 auto deviceInfo = getDeviceInfo (deviceInfoId);
-                vkDestroySurfaceKHR (deviceInfo->resource.instance, 
-                                     deviceInfo->resource.surface, 
-                                     VK_NULL_HANDLE);               
+                vkDestroySurfaceKHR (deviceInfo->resource.instance,
+                                     deviceInfo->resource.surface,
+                                     VK_NULL_HANDLE);
             }
     };
 }   // namespace Core

@@ -14,11 +14,11 @@ namespace Core {
             struct KeyEventInfo {
                 struct Meta {
                     bool isPressed;
-                    /* std::function is an example of a broader concept called type erasure. For example, 
-                     * std::function <void (void)> represents any callable that can be invoked with no arguments. It 
-                     * could be a function pointer or a function object that has a concrete type, or a closure built 
-                     * from a lambda. It doesn't matter what the source type is, as long as it fits the contract - it 
-                     * just works. Instead of using the concrete source type, we "erase" it - and we just deal with 
+                    /* std::function is an example of a broader concept called type erasure. For example,
+                     * std::function <void (void)> represents any callable that can be invoked with no arguments. It
+                     * could be a function pointer or a function object that has a concrete type, or a closure built
+                     * from a lambda. It doesn't matter what the source type is, as long as it fits the contract - it
+                     * just works. Instead of using the concrete source type, we "erase" it - and we just deal with
                      * std::function
                     */
                     std::function <void (float)> binding;
@@ -39,7 +39,7 @@ namespace Core {
             };
             std::unordered_map <e_mouseEventType, MouseEventInfo> m_mouseEventInfoPool;
 
-            /* Although many drivers and platforms trigger VK_ERROR_OUT_OF_DATE_KHR automatically after a window resize, 
+            /* Although many drivers and platforms trigger VK_ERROR_OUT_OF_DATE_KHR automatically after a window resize,
              * it is not guaranteed to happen. That's why we'll add some extra code to also handle resizes explicitly
              * using this boolean
             */
@@ -49,10 +49,10 @@ namespace Core {
             Log::Record* m_VKWindowLog;
             const uint32_t m_instanceId = g_collectionSettings.instanceId++;
 
-            /* The reason that we're creating a static function as a callback is because GLFW does not know how to 
-             * properly call a member function with the right 'this' pointer to our VKWindow class instance. However, 
-             * we do get a reference to the GLFWwindow in the callback and glfwSetWindowUserPointer function allows you 
-             * to store an arbitrary pointer inside of it. The 'this' pointer can then be used to properly set the 
+            /* The reason that we're creating a static function as a callback is because GLFW does not know how to
+             * properly call a member function with the right 'this' pointer to our VKWindow class instance. However,
+             * we do get a reference to the GLFWwindow in the callback and glfwSetWindowUserPointer function allows you
+             * to store an arbitrary pointer inside of it. The 'this' pointer can then be used to properly set the
              * boolean to indicate that a resize has happened
             */
             static void frameBufferResizeCallback (GLFWwindow* window, int width, int height) {
@@ -82,31 +82,31 @@ namespace Core {
             }
 
         protected:
-            /* GLFW provides many kinds of input. While some can only be polled, like time, or only received via 
-             * callbacks, like scrolling, many provide both callbacks and polling. Callbacks are more work to use than 
+            /* GLFW provides many kinds of input. While some can only be polled, like time, or only received via
+             * callbacks, like scrolling, many provide both callbacks and polling. Callbacks are more work to use than
              * polling but is less CPU intensive and guarantees that you do not miss state changes
-             * 
-             * If you wish to be notified when a physical key is pressed or released or when it repeats, set a key 
-             * callback. The callback function receives the keyboard key, platform-specific scancode, key action and 
+             *
+             * If you wish to be notified when a physical key is pressed or released or when it repeats, set a key
+             * callback. The callback function receives the keyboard key, platform-specific scancode, key action and
              * modifier bits
-             * 
-             * The action is one of GLFW_PRESS, GLFW_REPEAT or GLFW_RELEASE. Events with GLFW_PRESS and GLFW_RELEASE 
-             * actions are emitted for every key press. Most keys will also emit events with GLFW_REPEAT actions while a 
+             *
+             * The action is one of GLFW_PRESS, GLFW_REPEAT or GLFW_RELEASE. Events with GLFW_PRESS and GLFW_RELEASE
+             * actions are emitted for every key press. Most keys will also emit events with GLFW_REPEAT actions while a
              * key is held down
-             * 
+             *
              * The scancode is unique for every key, regardless of whether it has a key token. Scancodes are platform-
-             * specific but consistent over time, so keys will have different scancodes depending on the platform but 
-             * they are safe to save to disk. You can query the scancode for any key token supported on the current 
+             * specific but consistent over time, so keys will have different scancodes depending on the platform but
+             * they are safe to save to disk. You can query the scancode for any key token supported on the current
              * platform with glfwGetKeyScancode. For example,
-             * 
+             *
              *      const int scancode = glfwGetKeyScancode (GLFW_KEY_X);
              *      set_key_mapping (scancode, swap_weapons);
-             * 
+             *
              * If you wish to know what the state of the Caps Lock and Num Lock keys was when input events were generated,
              * set the GLFW_LOCK_KEY_MODS input mode using
-             * 
+             *
              *      glfwSetInputMode (window, GLFW_LOCK_KEY_MODS, GLFW_TRUE);
-             * 
+             *
              * When this input mode is enabled, any callback that receives modifier bits will have the GLFW_MOD_CAPS_LOCK
              * bit set if Caps Lock was on when the event occurred and the GLFW_MOD_NUM_LOCK bit set if Num Lock was on
             */
@@ -132,13 +132,13 @@ namespace Core {
                 }
             }
 
-            /* If you wish to be notified when the cursor moves over the window, set a cursor position callback. The 
-             * callback functions receives the cursor position, measured in screen coordinates but relative to the 
-             * top-left corner of the window content area. On platforms that provide it, the full sub-pixel cursor 
+            /* If you wish to be notified when the cursor moves over the window, set a cursor position callback. The
+             * callback functions receives the cursor position, measured in screen coordinates but relative to the
+             * top-left corner of the window content area. On platforms that provide it, the full sub-pixel cursor
              * position is passed on
-             * 
+             *
              * Note that, as of now on Windows the callback performs as expected where once the mouse leaves the window's
-             * area the callback stops firing. For OSX the window never loses focus and therefore the cursor callback is 
+             * area the callback stops firing. For OSX the window never loses focus and therefore the cursor callback is
              * always being called
             */
             static void cursorPositionCallBack (GLFWwindow* window, double xPos, double yPos) {
@@ -149,7 +149,7 @@ namespace Core {
                 thisPtr->m_mouseEventInfoPool[CURSOR_POSITION].meta.binding (xPos, yPos);
             }
 
-            /* If you wish to be notified when the user scrolls, whether with a mouse wheel or touchpad gesture, set a 
+            /* If you wish to be notified when the user scrolls, whether with a mouse wheel or touchpad gesture, set a
              * scroll callback. The callback function receives two-dimensional scroll offsets. Note that, a normal mouse
              * wheel, being vertical, provides offsets along the Y-axis
             */
@@ -183,7 +183,7 @@ namespace Core {
 
             void createWindow (uint32_t deviceInfoId, int width, int height, bool enResizing = true) {
                 auto deviceInfo = getDeviceInfo (deviceInfoId);
-                /* First, initialize the GLFW library. Because GLFW was originally designed to create an OpenGL context, 
+                /* First, initialize the GLFW library. Because GLFW was originally designed to create an OpenGL context,
                  * we need to tell it to not create an OpenGL context with a subsequent call
                 */
                 glfwInit();
@@ -191,15 +191,15 @@ namespace Core {
                 if (!enResizing)
                     glfwWindowHint (GLFW_RESIZABLE, GLFW_FALSE);
 
-                /* Create window, note that the fourth parameter allows you to optionally specify a monitor to open the 
+                /* Create window, note that the fourth parameter allows you to optionally specify a monitor to open the
                  * window on and the last parameter is only relevant to OpenGL
                 */
                 std::string windowTitle = g_windowSettings.title + std::to_string (deviceInfoId);
-                GLFWwindow *window = glfwCreateWindow (width, 
-                                                       height, 
-                                                       windowTitle.c_str(), 
-                                                       VK_NULL_HANDLE, 
-                                                       VK_NULL_HANDLE);
+                GLFWwindow *window = glfwCreateWindow (width,
+                                                       height,
+                                                       windowTitle.c_str(),
+                                                       NULL,
+                                                       NULL);
                 /* Set user pointer of window, this pointer is used in the callback function
                 */
                 glfwSetWindowUserPointer       (window, this);
@@ -210,10 +210,13 @@ namespace Core {
 
             void cleanUp (uint32_t deviceInfoId) {
                 auto deviceInfo = getDeviceInfo (deviceInfoId);
+
+                getKeyEventInfoPool().  clear();
+                getMouseEventInfoPool().clear();
                 /* Once the window is closed, we need to clean up resources by destroying it and terminating GLFW itself
                 */
                 glfwDestroyWindow (deviceInfo->resource.window);
-                glfwTerminate();                
+                glfwTerminate();
             }
     };
 }   // namespace Core

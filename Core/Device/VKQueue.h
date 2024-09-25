@@ -13,7 +13,7 @@ namespace Core {
 
             bool isQueueFamilyIndicesComplete (uint32_t deviceInfoId) {
                 auto deviceInfo = getDeviceInfo (deviceInfoId);
-                return deviceInfo->meta.graphicsFamilyIndex.has_value() && 
+                return deviceInfo->meta.graphicsFamilyIndex.has_value() &&
                        deviceInfo->meta.presentFamilyIndex. has_value() &&
                        deviceInfo->meta.transferFamilyIndex.has_value();
             }
@@ -29,8 +29,8 @@ namespace Core {
             }
 
         protected:
-            /* Almost every operation in Vulkan, anything from drawing to uploading textures, requires commands to be 
-             * submitted to a queue. There are different types of queues that originate from different queue families 
+            /* Almost every operation in Vulkan, anything from drawing to uploading textures, requires commands to be
+             * submitted to a queue. There are different types of queues that originate from different queue families
              * and each family of queues allows only a subset of commands
             */
             bool pickQueueFamilyIndices (uint32_t deviceInfoId, VkPhysicalDevice phyDevice) {
@@ -38,49 +38,49 @@ namespace Core {
                 /* Query list of available queue families
                 */
                 uint32_t queueFamiliesCount = 0;
-                vkGetPhysicalDeviceQueueFamilyProperties (phyDevice, 
-                                                          &queueFamiliesCount, 
+                vkGetPhysicalDeviceQueueFamilyProperties (phyDevice,
+                                                          &queueFamiliesCount,
                                                           VK_NULL_HANDLE);
 
                 std::vector <VkQueueFamilyProperties> queueFamilies (queueFamiliesCount);
-                vkGetPhysicalDeviceQueueFamilyProperties (phyDevice, 
-                                                          &queueFamiliesCount, 
+                vkGetPhysicalDeviceQueueFamilyProperties (phyDevice,
+                                                          &queueFamiliesCount,
                                                           queueFamilies.data());
 
                 LOG_INFO (m_VKQueueLog) << "Queue families count "
                                         << "[" << deviceInfoId << "]"
                                         << " "
-                                        << "[" << queueFamiliesCount << "]" 
+                                        << "[" << queueFamiliesCount << "]"
                                         << std::endl;
 
                 uint32_t queueFamilyIndex = 0;
                 for (auto const& queueFamily: queueFamilies) {
                     LOG_INFO (m_VKQueueLog) << "Queue family index "
-                                            << "[" << queueFamilyIndex << "]" 
-                                            << std::endl; 
-                                            
-                    LOG_INFO (m_VKQueueLog) << "Queue family supported flags" 
-                                            << std::endl;  
+                                            << "[" << queueFamilyIndex << "]"
+                                            << std::endl;
+
+                    LOG_INFO (m_VKQueueLog) << "Queue family supported flags"
+                                            << std::endl;
                     auto flags = getSplitString (string_VkQueueFlags (queueFamily.queueFlags), "|");
                     for (auto const& flag: flags)
-                    LOG_INFO (m_VKQueueLog) << "[" << flag << "]" 
+                    LOG_INFO (m_VKQueueLog) << "[" << flag << "]"
                                             << std::endl;
 
 #if ENABLE_AUTO_PICK_QUEUE_FAMILY_INDICES
-                    if ((queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) && 
+                    if ((queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) &&
                        !deviceInfo->meta.graphicsFamilyIndex.has_value())
                         deviceInfo->meta.graphicsFamilyIndex = queueFamilyIndex;
 
                     VkBool32 presentSupport = false;
-                    vkGetPhysicalDeviceSurfaceSupportKHR (phyDevice, 
-                                                          queueFamilyIndex, 
-                                                          deviceInfo->resource.surface, 
+                    vkGetPhysicalDeviceSurfaceSupportKHR (phyDevice,
+                                                          queueFamilyIndex,
+                                                          deviceInfo->resource.surface,
                                                           &presentSupport);
                     if (presentSupport &&
                         !deviceInfo->meta.presentFamilyIndex.has_value())
                          deviceInfo->meta.presentFamilyIndex = queueFamilyIndex;
 
-                    if ((queueFamily.queueFlags & VK_QUEUE_TRANSFER_BIT) && 
+                    if ((queueFamily.queueFlags & VK_QUEUE_TRANSFER_BIT) &&
                        !deviceInfo->meta.transferFamilyIndex.has_value())
                         deviceInfo->meta.transferFamilyIndex = queueFamilyIndex;
 #else
@@ -97,7 +97,7 @@ namespace Core {
                 /* Convert the vector into set
                 */
                 std::set <uint32_t> setContainer;
-                for (size_t i = 0; i < queueFamilyIndices.size(); i++) 
+                for (size_t i = 0; i < queueFamilyIndices.size(); i++)
                     setContainer.insert (queueFamilyIndices[i]);
 
                 std::vector <uint32_t> vectorContainer;
