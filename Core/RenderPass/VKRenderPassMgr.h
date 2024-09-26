@@ -19,7 +19,7 @@ namespace Core {
 
             Log::Record* m_VKRenderPassMgrLog;
             const uint32_t m_instanceId = g_collectionSettings.instanceId++;
-            
+
             void deleteRenderPassInfo (uint32_t renderPassInfoId) {
                 if (m_renderPassInfoPool.find (renderPassInfoId) != m_renderPassInfoPool.end()) {
                     m_renderPassInfoPool.erase (renderPassInfoId);
@@ -27,19 +27,19 @@ namespace Core {
                 }
 
                 LOG_ERROR (m_VKRenderPassMgrLog) << "Failed to delete render pass info "
-                                                 << "[" << renderPassInfoId << "]"          
+                                                 << "[" << renderPassInfoId << "]"
                                                  << std::endl;
-                throw std::runtime_error ("Failed to delete render pass info");              
+                throw std::runtime_error ("Failed to delete render pass info");
             }
 
         public:
             VKRenderPassMgr (void) {
                 m_VKRenderPassMgrLog = LOG_INIT (m_instanceId, g_collectionSettings.logSaveDirPath);
                 LOG_ADD_CONFIG (m_instanceId, Log::INFO,  Log::TO_FILE_IMMEDIATE);
-                LOG_ADD_CONFIG (m_instanceId, Log::ERROR, Log::TO_FILE_IMMEDIATE | Log::TO_CONSOLE); 
+                LOG_ADD_CONFIG (m_instanceId, Log::ERROR, Log::TO_FILE_IMMEDIATE | Log::TO_CONSOLE);
             }
 
-            ~VKRenderPassMgr (void) { 
+            ~VKRenderPassMgr (void) {
                 LOG_CLOSE (m_instanceId);
             }
 
@@ -72,9 +72,9 @@ namespace Core {
                 createInfo.pDependencies   = renderPassInfo->resource.dependencies.data();
 
                 VkRenderPass renderPass;
-                VkResult result = vkCreateRenderPass (deviceInfo->resource.logDevice, 
-                                                      &createInfo, 
-                                                      VK_NULL_HANDLE, 
+                VkResult result = vkCreateRenderPass (deviceInfo->resource.logDevice,
+                                                      &createInfo,
+                                                      VK_NULL_HANDLE,
                                                       &renderPass);
                 if (result != VK_SUCCESS) {
                     LOG_ERROR (m_VKRenderPassMgrLog) << "Failed to create render pass "
@@ -91,7 +91,7 @@ namespace Core {
             RenderPassInfo* getRenderPassInfo (uint32_t renderPassInfoId) {
                 if (m_renderPassInfoPool.find (renderPassInfoId) != m_renderPassInfoPool.end())
                     return &m_renderPassInfoPool[renderPassInfoId];
-                
+
                 LOG_ERROR (m_VKRenderPassMgrLog) << "Failed to find render pass info "
                                                  << "[" << renderPassInfoId << "]"
                                                  << std::endl;
@@ -103,23 +103,23 @@ namespace Core {
                                                 << std::endl;
 
                 for (auto const& [key, val]: m_renderPassInfoPool) {
-                    LOG_INFO (m_VKRenderPassMgrLog) << "Render pass info id " 
+                    LOG_INFO (m_VKRenderPassMgrLog) << "Render pass info id "
                                                     << "[" << key << "]"
                                                     << std::endl;
 
-                    LOG_INFO (m_VKRenderPassMgrLog) << "Attachments count " 
+                    LOG_INFO (m_VKRenderPassMgrLog) << "Attachments count "
                                                     << "[" << val.resource.attachments.size() << "]"
                                                     << std::endl;
 
-                    LOG_INFO (m_VKRenderPassMgrLog) << "Sub passes count " 
+                    LOG_INFO (m_VKRenderPassMgrLog) << "Sub passes count "
                                                     << "[" << val.resource.subPasses.size() << "]"
-                                                    << std::endl; 
+                                                    << std::endl;
 
-                    LOG_INFO (m_VKRenderPassMgrLog) << "Dependencies count " 
+                    LOG_INFO (m_VKRenderPassMgrLog) << "Dependencies count "
                                                     << "[" << val.resource.dependencies.size() << "]"
                                                     << std::endl;
 
-                    LOG_INFO (m_VKRenderPassMgrLog) << "Frame buffers count " 
+                    LOG_INFO (m_VKRenderPassMgrLog) << "Frame buffers count "
                                                     << "[" << val.resource.frameBuffers.size() << "]"
                                                     << std::endl;
                 }
@@ -129,8 +129,8 @@ namespace Core {
                 auto deviceInfo     = getDeviceInfo     (deviceInfoId);
                 auto renderPassInfo = getRenderPassInfo (renderPassInfoId);
 
-                vkDestroyRenderPass  (deviceInfo->resource.logDevice, 
-                                      renderPassInfo->resource.renderPass, 
+                vkDestroyRenderPass  (deviceInfo->resource.logDevice,
+                                      renderPassInfo->resource.renderPass,
                                       VK_NULL_HANDLE);
                 deleteRenderPassInfo (renderPassInfoId);
             }
