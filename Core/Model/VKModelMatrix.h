@@ -31,11 +31,11 @@ namespace Core {
 
                 auto modelInfo = getModelInfo (modelInfoId);
                 if (modelInstanceId >= modelInfo->meta.instancesCount) {
-                    LOG_ERROR (m_VKModelMatrixLog) << "Invalid model instance id " 
+                    LOG_ERROR (m_VKModelMatrixLog) << "Invalid model instance id "
                                                    << "[" << modelInstanceId << "]"
                                                    << "->"
                                                    << "[" << modelInfo->meta.instancesCount << "]"
-                                                   << std::endl; 
+                                                   << std::endl;
                     throw std::runtime_error ("Invalid model instance id");
                 }
 
@@ -43,28 +43,28 @@ namespace Core {
                 /* https://www.opengl-tutorial.org/beginners-tutorials/tutorial-3-matrices/#an-introduction-to-matrices
                  * Translation matrix looks like this
                  * 1 0 0 tx             vx          vx + tx
-                 * 0 1 0 ty     *       vy      =   vx + ty        
+                 * 0 1 0 ty     *       vy      =   vx + ty
                  * 0 0 1 tz             vz          vz + tz
                  * 0 0 0 1              w           w
-                 * 
+                 *
                  * Scaling matrix looks like this
                  * sx 0 0 0             vx          vx * sz
                  * 0 sy 0 0     *       vy      =   vy * sy
                  * 0 0 sz 0             vz          vz * sz
-                 * 0 0 0  1             w           w           
-                 * 
-                 * Note that, 
+                 * 0 0 0  1             w           w
+                 *
+                 * Note that,
                  * If w == 1, then the vector (x,y,z,1) is a position in space
                  * If w == 0, then the vector (x,y,z,0) is a direction
                 */
 
-                /* Cumulating transformations, note that we perform scaling FIRST, and THEN the rotation, and THEN the 
+                /* Cumulating transformations, note that we perform scaling FIRST, and THEN the rotation, and THEN the
                  * translation. This is how matrix multiplication works
                 */
                 modelMatrix = glm::translate (glm::mat4 (1.0f), translate) *
                               glm::rotate    (glm::mat4 (1.0f), glm::radians (rotateAngleDeg), rotateAxis) *
                               glm::scale     (glm::mat4 (1.0f), scale);
-                              
+
                 modelInfo->meta.instances[modelInstanceId].modelMatrix = modelMatrix;
             }
     };

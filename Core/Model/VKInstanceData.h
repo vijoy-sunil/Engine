@@ -8,7 +8,7 @@ namespace Core {
     class VKInstanceData: protected VKModelMatrix {
         private:
             Log::Record* m_VKInstanceDataLog;
-            const uint32_t m_instanceId = g_collectionSettings.instanceId++; 
+            const uint32_t m_instanceId = g_collectionSettings.instanceId++;
 
         public:
             VKInstanceData (void) {
@@ -25,16 +25,16 @@ namespace Core {
         protected:
             void updateTexIdLUT (uint32_t modelInfoId,
                                  uint32_t modelInstanceId,
-                                 uint32_t oldTexId, 
+                                 uint32_t oldTexId,
                                  uint32_t newTexId) {
 
                 auto modelInfo = getModelInfo (modelInfoId);
                 if (modelInstanceId >= modelInfo->meta.instancesCount) {
-                    LOG_ERROR (m_VKInstanceDataLog) << "Invalid model instance id " 
+                    LOG_ERROR (m_VKInstanceDataLog) << "Invalid model instance id "
                                                     << "[" << modelInstanceId << "]"
                                                     << "->"
                                                     << "[" << modelInfo->meta.instancesCount << "]"
-                                                    << std::endl; 
+                                                    << std::endl;
                     throw std::runtime_error ("Invalid model instance id");
                 }
 
@@ -46,7 +46,7 @@ namespace Core {
                 }
 
                 if (!oldTexIdValid || !newTexIdValid) {
-                    LOG_WARNING (m_VKInstanceDataLog) << "Invalid texture id " 
+                    LOG_WARNING (m_VKInstanceDataLog) << "Invalid texture id "
                                                       << "[" << oldTexId << "]"
                                                       << " "
                                                       << "[" << newTexId << "]"
@@ -88,10 +88,10 @@ namespace Core {
                     */
                     modelInfo->meta.instances.resize (1);
                     modelInfo->meta.instancesCount = 1;
-                    createModelMatrix (modelInfoId, 
-                                       modelInstanceId, 
-                                       translate, 
-                                       rotateAxis, 
+                    createModelMatrix (modelInfoId,
+                                       modelInstanceId,
+                                       translate,
+                                       rotateAxis,
                                        scale,
                                        rotateAngleDeg);
                 }
@@ -105,7 +105,7 @@ namespace Core {
                         scale      = {instance["scale"][0],      instance["scale"][1],      instance["scale"][2]};
 
                         modelInstanceId = instance["id"];
-                        rotateAngleDeg  = instance["rotateAngleDeg"]; 
+                        rotateAngleDeg  = instance["rotateAngleDeg"];
 #if ENABLE_PARSED_INSTANCE_DATA_DUMP
                         LOG_INFO (m_VKInstanceDataLog) << "Model instance id "
                                                        << "[" << modelInstanceId << "]"
@@ -114,32 +114,32 @@ namespace Core {
                         LOG_INFO (m_VKInstanceDataLog) << "Translate "
                                                        << "[" << translate.x << ", "
                                                               << translate.y << ", "
-                                                              << translate.z  
+                                                              << translate.z
                                                        << "]"
                                                        << std::endl;
 
                         LOG_INFO (m_VKInstanceDataLog) << "Rotate axis "
                                                        << "[" << rotateAxis.x << ", "
                                                               << rotateAxis.y << ", "
-                                                              << rotateAxis.z  
+                                                              << rotateAxis.z
                                                        << "]"
                                                        << std::endl;
 
                         LOG_INFO (m_VKInstanceDataLog) << "Scale "
                                                        << "[" << scale.x << ", "
                                                               << scale.y << ", "
-                                                              << scale.z  
+                                                              << scale.z
                                                        << "]"
-                                                       << std::endl;  
+                                                       << std::endl;
 
                         LOG_INFO (m_VKInstanceDataLog) << "Rotate angle deg "
                                                        << "[" << rotateAngleDeg << "]"
                                                        << std::endl;
 #endif  // ENABLE_PARSED_INSTANCE_DATA_DUMP
                         createModelMatrix (modelInfoId,
-                                           modelInstanceId, 
-                                           translate, 
-                                           rotateAxis, 
+                                           modelInstanceId,
+                                           translate,
+                                           rotateAxis,
                                            scale,
                                            rotateAngleDeg);
                     }

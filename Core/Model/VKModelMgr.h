@@ -12,12 +12,12 @@ namespace Core {
         private:
             struct ModelInfo {
                 struct Meta {
-                    /* The attributes are combined into one array of vertices, this is known as interleaving vertex 
+                    /* The attributes are combined into one array of vertices, this is known as interleaving vertex
                      * attributes
                     */
                     std::vector <Vertex> vertices;
                     /* Note that it is possible to use either uint16_t or uint32_t for your index buffer depending on the
-                     * number of entries in vertices, you also have to specify the correct type when binding the index 
+                     * number of entries in vertices, you also have to specify the correct type when binding the index
                      * buffer
                     */
                     std::vector <uint32_t> indices;
@@ -30,8 +30,8 @@ namespace Core {
 
                 struct Path {
                     const char* model;
-                    const char* mtlFileDir; 
-                    std::vector <std::string> diffuseTextureImages; 
+                    const char* mtlFileDir;
+                    std::vector <std::string> diffuseTextureImages;
                 } path;
 
                 struct Id {
@@ -42,9 +42,9 @@ namespace Core {
             };
             std::unordered_map <uint32_t, ModelInfo>   m_modelInfoPool;
             std::unordered_map <std::string, uint32_t> m_textureImagePool;
-            
+
             Log::Record* m_VKModelMgrLog;
-            const uint32_t m_instanceId = g_collectionSettings.instanceId++; 
+            const uint32_t m_instanceId = g_collectionSettings.instanceId++;
 
             void deleteModelInfo (uint32_t modelInfoId) {
                 if (m_modelInfoPool.find (modelInfoId) != m_modelInfoPool.end()) {
@@ -56,9 +56,9 @@ namespace Core {
                 }
 
                 LOG_ERROR (m_VKModelMgrLog) << "Failed to delete model info "
-                                            << "[" << modelInfoId << "]"          
+                                            << "[" << modelInfoId << "]"
                                             << std::endl;
-                throw std::runtime_error ("Failed to delete model info");   
+                throw std::runtime_error ("Failed to delete model info");
             }
 
             void dumpParsedData (uint32_t modelInfoId) {
@@ -72,7 +72,7 @@ namespace Core {
                 LOG_INFO (parsedDataLog) << "Vertex data"
                                          << std::endl;
                 for (auto const& vertex: modelInfo->meta.vertices) {
-                LOG_INFO (parsedDataLog) << "[" << vertex.pos.x      << ", " << vertex.pos.y      << ", " 
+                LOG_INFO (parsedDataLog) << "[" << vertex.pos.x      << ", " << vertex.pos.y      << ", "
                                                 << vertex.pos.z      << "]"
                                          << " "
                                          << "[" << vertex.texCoord.x << ", " << vertex.texCoord.y << "]"
@@ -112,7 +112,7 @@ namespace Core {
             void readyModelInfo (uint32_t modelInfoId,
                                  const char* modelPath,
                                  const char* mtlFileDirPath) {
-                
+
                 if (m_modelInfoPool.find (modelInfoId) != m_modelInfoPool.end()) {
                     LOG_ERROR (m_VKModelMgrLog) << "Model info id already exists "
                                                 << "[" << modelInfoId << "]"
@@ -124,7 +124,7 @@ namespace Core {
                 info.meta.parsedDataLogInstanceId = g_collectionSettings.instanceId++;
                 info.path.model                   = modelPath;
                 info.path.mtlFileDir              = mtlFileDirPath;
-                /* Add default diffuse texture as the fist entry in the group of textures. This way, faces with no 
+                /* Add default diffuse texture as the fist entry in the group of textures. This way, faces with no
                  * texture can sample from this default texture
                 */
                 info.path.diffuseTextureImages.push_back (g_coreSettings.defaultDiffuseTexturePath);
@@ -133,9 +133,9 @@ namespace Core {
                 */
                 std::string nameExtension = "_PD_" + std::to_string (modelInfoId);
                 LOG_INIT       (info.meta.parsedDataLogInstanceId, g_collectionSettings.logSaveDirPath);
-                LOG_ADD_CONFIG (info.meta.parsedDataLogInstanceId, 
-                                Log::INFO, 
-                                Log::TO_FILE_IMMEDIATE, 
+                LOG_ADD_CONFIG (info.meta.parsedDataLogInstanceId,
+                                Log::INFO,
+                                Log::TO_FILE_IMMEDIATE,
                                 nameExtension.c_str());
             }
 
@@ -152,82 +152,82 @@ namespace Core {
             }
 
             /* OBJ file format
-             * The first character of each line specifies the type of command. If the first character is a pound sign, #, 
-             * the line is a comment and the rest of the line is ignored. Any blank lines are also ignored. The file is 
-             * read in by a tool and parsed from top to bottom just like you would read it. In the descriptions that 
-             * follow, the first character is a command, followed by any arguments. Anything shown in square brackets is 
+             * The first character of each line specifies the type of command. If the first character is a pound sign, #,
+             * the line is a comment and the rest of the line is ignored. Any blank lines are also ignored. The file is
+             * read in by a tool and parsed from top to bottom just like you would read it. In the descriptions that
+             * follow, the first character is a command, followed by any arguments. Anything shown in square brackets is
              * optional
-             * 
+             *
              * # a comment line
              * These are always ignored. Usually the first line of every OBJ file will be a comment that says what program
-             * wrote the file out. Also, its quite common for comments to contain the number of verticies and/or faces an 
+             * wrote the file out. Also, its quite common for comments to contain the number of verticies and/or faces an
              * object used
-             * 
+             *
              * v x y z
-             * The vertex command, this specifies a vertex by its three coordinates. The vertex is implicitly named by 
-             * the order it is found in the file. For example, the first vertex in the file is referenced as '1', the 
-             * second as '2' and so on. None of the vertex commands actually specify any geometry, they are just points in 
+             * The vertex command, this specifies a vertex by its three coordinates. The vertex is implicitly named by
+             * the order it is found in the file. For example, the first vertex in the file is referenced as '1', the
+             * second as '2' and so on. None of the vertex commands actually specify any geometry, they are just points in
              * space
-             * 
+             *
              * vt u v [w]
-             * The vertex texture command specifies the UV (and optionally W) mapping. These will be floating point values 
-             * between 0 and 1 which say how to map the texture. They really don't tell you anything by themselves, they 
+             * The vertex texture command specifies the UV (and optionally W) mapping. These will be floating point values
+             * between 0 and 1 which say how to map the texture. They really don't tell you anything by themselves, they
              * must be grouped with a vertex in a 'f' face command
-             * 
+             *
              * vn x y z
-             * The vertex normal command specifies a normal vector. A lot of times these aren't used, because the 'f' 
-             * face command will use the order the 'v' commands are given to determine the normal instead. Like the 'vt' 
+             * The vertex normal command specifies a normal vector. A lot of times these aren't used, because the 'f'
+             * face command will use the order the 'v' commands are given to determine the normal instead. Like the 'vt'
              * commands, they don't mean anything until grouped with a vertex in the 'f' face command
-             * 
+             *
              * f v1[/vt1][/vn1] v2[/vt2][/vn2] v3[/vt3][/vn3] ...
-             * The face command specifies a polygon made from the verticies listed. You may have as many verticies as you 
-             * like. To reference a vertex you just give its index in the file, for example 'f 54 55 56 57' means a face 
-             * built from vertecies 54 - 57. For each vertex, there may also be an associated vt, which says how to map 
-             * the texture at this point, and/or a vn, which specifies a normal at this point. If you specify a vt or vn 
-             * for one vertex, you must specify one for all. If you want to have a vertex and a vertex normal, but no 
-             * vertex texture, it will look like: 'f v1//vt1'. The normal is what tells it which way the polygon faces. 
-             * If you don't give one, it is determined by the order the verticies are given. They are assumed to be in 
+             * The face command specifies a polygon made from the verticies listed. You may have as many verticies as you
+             * like. To reference a vertex you just give its index in the file, for example 'f 54 55 56 57' means a face
+             * built from vertecies 54 - 57. For each vertex, there may also be an associated vt, which says how to map
+             * the texture at this point, and/or a vn, which specifies a normal at this point. If you specify a vt or vn
+             * for one vertex, you must specify one for all. If you want to have a vertex and a vertex normal, but no
+             * vertex texture, it will look like: 'f v1//vt1'. The normal is what tells it which way the polygon faces.
+             * If you don't give one, it is determined by the order the verticies are given. They are assumed to be in
              * counter-clockwise direction
-             * 
-             * Faces consist of an arbitrary amount of vertices, where each vertex refers to a position, normal and/or 
-             * texture coordinate by index. This makes it possible to not just reuse entire vertices, but also individual 
+             *
+             * Faces consist of an arbitrary amount of vertices, where each vertex refers to a position, normal and/or
+             * texture coordinate by index. This makes it possible to not just reuse entire vertices, but also individual
              * attributes
-             * 
+             *
              * usemtl name
-             * The use material command lets you name a material to use. All 'f' face commands that follow will use the 
+             * The use material command lets you name a material to use. All 'f' face commands that follow will use the
              * same material, until another usemtl command is encountered
             */
 
-            /* Note that, you should run your program with optimization enabled (with the -O3 compiler flag). This is 
+            /* Note that, you should run your program with optimization enabled (with the -O3 compiler flag). This is
              * necessary, because otherwise loading the model will be very slow
             */
             void importOBJModel (uint32_t modelInfoId) {
                 auto modelInfo = getModelInfo (modelInfoId);
-                /* The attrib container holds all of the positions, normals and texture coordinates in its 
+                /* The attrib container holds all of the positions, normals and texture coordinates in its
                  * attrib.vertices, attrib.normals, attrib.texcoords vectors
                 */
                 tinyobj::attrib_t attrib;
-                /* The shapes container contains all of the separate objects and their faces. Each face consists of an 
-                 * array of vertices, and each vertex contains the indices of the position, normal and texture coordinate 
+                /* The shapes container contains all of the separate objects and their faces. Each face consists of an
+                 * array of vertices, and each vertex contains the indices of the position, normal and texture coordinate
                  * attributes
                 */
                 std::vector <tinyobj::shape_t> shapes;
                 std::vector <tinyobj::material_t> materials;
-                /* The err string contains errors and the warn string contains warnings that occurred while loading the 
-                 * file, like a missing material definition. Loading only really failed if the LoadObj function returns 
+                /* The err string contains errors and the warn string contains warnings that occurred while loading the
+                 * file, like a missing material definition. Loading only really failed if the LoadObj function returns
                  * false.
-                 * 
-                 * As mentioned before, faces in OBJ files can actually contain an arbitrary number of vertices, whereas 
-                 * our application can only render triangles. Luckily the LoadObj has an optional parameter to 
+                 *
+                 * As mentioned before, faces in OBJ files can actually contain an arbitrary number of vertices, whereas
+                 * our application can only render triangles. Luckily the LoadObj has an optional parameter to
                  * automatically triangulate such faces, which is enabled by default
                 */
                 std::string warn, err;
 
-                if (!tinyobj::LoadObj (&attrib, &shapes, &materials, 
-                                       &warn, &err, 
-                                       modelInfo->path.model, 
+                if (!tinyobj::LoadObj (&attrib, &shapes, &materials,
+                                       &warn, &err,
+                                       modelInfo->path.model,
                                        modelInfo->path.mtlFileDir)) {
-                
+
                     LOG_ERROR (m_VKModelMgrLog) << "Failed to import model "
                                                 << "[" << modelInfoId << "]"
                                                 << " "
@@ -244,7 +244,7 @@ namespace Core {
                                                   << " "
                                                   << "[" << modelInfo->path.mtlFileDir << "]"
                                                   << std::endl;
-                } 
+                }
                 /* Extract texture image paths from .mtl file if any
                  * [ - ] Diffuse texure
                  * [ X ] Other textures like specular, emission etc.
@@ -259,23 +259,23 @@ namespace Core {
                                                           << " "
                                                           << "[" << modelInfo->path.mtlFileDir << "]"
                                                           << std::endl;
-                    } 
-                }  
+                    }
+                }
                 /* Populate texture image pool, which contains all the textures used across models along with their
                  * respective texture image info ids
                 */
                 for (auto const& path: modelInfo->path.diffuseTextureImages)
                     updateTextureImagePool (modelInfoId, path);
-           
+
                 /* Map to take advantage of indices vector (index buffer). Note that, to be able to use std::unordered_map
                  * with a user-defined key-type, you need to define two thing:
                  * (1) A hash function; this must be a class that overrides operator() and calculates the hash value given
-                 * an object of the key-type. One particularly straight-forward way of doing this is to specialize the 
+                 * an object of the key-type. One particularly straight-forward way of doing this is to specialize the
                  * std::hash template for your key-type
-                 * 
-                 * (2) A comparison function for equality; this is required because the hash cannot rely on the fact that 
-                 * the hash function will always provide a unique hash value for every distinct key (i.e., it needs to be 
-                 * able to deal with collisions), so it needs a way to compare two given keys for an exact match. You can 
+                 *
+                 * (2) A comparison function for equality; this is required because the hash cannot rely on the fact that
+                 * the hash function will always provide a unique hash value for every distinct key (i.e., it needs to be
+                 * able to deal with collisions), so it needs a way to compare two given keys for an exact match. You can
                  * implement this by overloading operator==() for your key type
                 */
                 std::unordered_map <Vertex, uint32_t> uniqueVertices;
@@ -285,11 +285,11 @@ namespace Core {
                     {0.0f, 0.0f}, {0.0f, 1.0f}, {1.0f, 0.0f},
                     {0.0f, 1.0f}, {1.0f, 1.0f}, {1.0f, 0.0f}
                 };
-                /* Iterate overall all faces (may belong to different objects in a scene) and populate the vertex and 
+                /* Iterate overall all faces (may belong to different objects in a scene) and populate the vertex and
                  * index vectors
                 */
                 for (auto const& shape: shapes) {
-                    /* Note that, the triangulation feature has already made sure that there are three vertices per face, 
+                    /* Note that, the triangulation feature has already made sure that there are three vertices per face,
                      * so we can now directly iterate over the vertices and dump them straight into our vertices vector
                     */
                     const uint32_t verticesPerFace = 3;
@@ -297,14 +297,14 @@ namespace Core {
                     uint32_t faceIndex             = 0;
                     uint32_t quadIndex             = 0;
                     uint32_t indexProcessedCount   = 0;
-                    
+
                     for (auto const& index: shape.mesh.indices) {
                         Vertex vertex;
-                        /* The index variable is of type tinyobj::index_t, which contains the vertex_index, normal_index 
-                         * and texcoord_index members. We need to use these indices to look up the actual vertex 
-                         * attributes in the attrib arrays. Unfortunately the attrib.vertices array is an array of float 
-                         * values instead of something like glm::vec3, so you need to multiply the index by 3. Similarly, 
-                         * there are two texture coordinate components per entry. The offsets of 0, 1 and 2 are used to 
+                        /* The index variable is of type tinyobj::index_t, which contains the vertex_index, normal_index
+                         * and texcoord_index members. We need to use these indices to look up the actual vertex
+                         * attributes in the attrib arrays. Unfortunately the attrib.vertices array is an array of float
+                         * values instead of something like glm::vec3, so you need to multiply the index by 3. Similarly,
+                         * there are two texture coordinate components per entry. The offsets of 0, 1 and 2 are used to
                          * access the X, Y and Z components, or the U and V components in the case of texture coordinates
                         */
                         vertex.pos = {
@@ -312,18 +312,18 @@ namespace Core {
                                         attrib.vertices[3 * index.vertex_index + 1],
                                         attrib.vertices[3 * index.vertex_index + 2]
                                      };
-                        /* The OBJ format assumes a coordinate system where a vertical coordinate of 0 means the bottom 
+                        /* The OBJ format assumes a coordinate system where a vertical coordinate of 0 means the bottom
                          * of the image, however we've uploaded our image into Vulkan in a top to bottom orientation where
-                         * 0 means the top of the image. Solve this by flipping the vertical component of the texture 
+                         * 0 means the top of the image. Solve this by flipping the vertical component of the texture
                          * coordinates
-                         * 
+                         *
                          * (0, 0)-----------(1, 0)  top ^
                          * |                |
                          * |     (u, v)     |
                          * |                |
                          * (0, 1)-----------(1, 1)  bottom v
-                         * 
-                         * In Vulkan, 
+                         *
+                         * In Vulkan,
                          * the u coordinate goes from 0.0 to 1.0, left to right
                          * the v coordinate goes from 0.0 to 1.0, top to bottom
                         */
@@ -337,7 +337,7 @@ namespace Core {
                                             attrib.normals[3 * index.normal_index + 0],
                                             attrib.normals[3 * index.normal_index + 1],
                                             attrib.normals[3 * index.normal_index + 2]
-                                          }; 
+                                          };
                         /* We will handle missing texture faces (material_ids = -1) by adding +1 to all material_ids, this
                          * will allow us to use the default texture whose texture id is 0. Note that, this local texture
                          * id is an index into the current model's texture array embedded with in the model file. What
@@ -345,7 +345,7 @@ namespace Core {
                          * shader can sample from the correct texture from the global pool of textures
                         */
                         uint32_t localTexId = shape.mesh.material_ids[faceIndex] + 1;
-                        auto texturePath    = modelInfo->path.diffuseTextureImages[localTexId]; 
+                        auto texturePath    = modelInfo->path.diffuseTextureImages[localTexId];
                         vertex.texId        = m_textureImagePool[texturePath];
                         /* Manual uv mapping of default texture
                         */
@@ -353,13 +353,13 @@ namespace Core {
                             vertex.texCoord = defaultTexCoords[quadIndex];
                             quadIndex       == verticesPerQuad - 1 ? quadIndex = 0: quadIndex++;
                         }
-                        /* To take advantage of the index buffer, we should keep only the unique vertices and use the 
-                         * index buffer to reuse them whenever they come up. Every time we read a vertex from the OBJ 
-                         * file, we check if we've already seen a vertex with the exact same attributes before. If not, 
-                         * we add it to vertices array and store its index in the map container. After that we add the 
+                        /* To take advantage of the index buffer, we should keep only the unique vertices and use the
+                         * index buffer to reuse them whenever they come up. Every time we read a vertex from the OBJ
+                         * file, we check if we've already seen a vertex with the exact same attributes before. If not,
+                         * we add it to vertices array and store its index in the map container. After that we add the
                          * index of the new vertex to indices array
-                         * 
-                         * If we've seen the exact same vertex before, then we look up its index in the map container and 
+                         *
+                         * If we've seen the exact same vertex before, then we look up its index in the map container and
                          * store that index in indices array
                         */
                         if (uniqueVertices.count (vertex) == 0) {
@@ -399,7 +399,7 @@ namespace Core {
             ModelInfo* getModelInfo (uint32_t modelInfoId) {
                 if (m_modelInfoPool.find (modelInfoId) != m_modelInfoPool.end())
                     return &m_modelInfoPool[modelInfoId];
-                
+
                 LOG_ERROR (m_VKModelMgrLog) << "Failed to find model info "
                                             << "[" << modelInfoId << "]"
                                             << std::endl;
@@ -411,13 +411,13 @@ namespace Core {
                                            << std::endl;
 
                 for (auto const& [key, val]: m_modelInfoPool) {
-                    LOG_INFO (m_VKModelMgrLog) << "Model info id " 
+                    LOG_INFO (m_VKModelMgrLog) << "Model info id "
                                                << "[" << key << "]"
                                                << std::endl;
 
                     uint32_t modelInstanceId = 0;
                     for (auto const& instance: val.meta.instances) {
-                        LOG_INFO (m_VKModelMgrLog) << "Model instance id " 
+                        LOG_INFO (m_VKModelMgrLog) << "Model instance id "
                                                    << "[" << modelInstanceId << "]"
                                                    << std::endl;
 
@@ -451,35 +451,35 @@ namespace Core {
                         modelInstanceId++;
                     }
 
-                    LOG_INFO (m_VKModelMgrLog) << "Vertices count " 
+                    LOG_INFO (m_VKModelMgrLog) << "Vertices count "
                                                << "[" << val.meta.verticesCount << "]"
                                                << std::endl;
 
-                    LOG_INFO (m_VKModelMgrLog) << "Indices count " 
+                    LOG_INFO (m_VKModelMgrLog) << "Indices count "
                                                << "[" << val.meta.indicesCount << "]"
                                                << std::endl;
 
-                    LOG_INFO (m_VKModelMgrLog) << "Instances count " 
+                    LOG_INFO (m_VKModelMgrLog) << "Instances count "
                                                << "[" << val.meta.instancesCount << "]"
                                                << std::endl;
 
-                    LOG_INFO (m_VKModelMgrLog) << "Parsed data log instance id " 
+                    LOG_INFO (m_VKModelMgrLog) << "Parsed data log instance id "
                                                << "[" << val.meta.parsedDataLogInstanceId << "]"
                                                << std::endl;
 
-                    LOG_INFO (m_VKModelMgrLog) << "Model path " 
+                    LOG_INFO (m_VKModelMgrLog) << "Model path "
                                                << "[" << val.path.model << "]"
                                                << std::endl;
 
-                    LOG_INFO (m_VKModelMgrLog) << "Material file directory path " 
+                    LOG_INFO (m_VKModelMgrLog) << "Material file directory path "
                                                << "[" << val.path.mtlFileDir << "]"
                                                << std::endl;
 
-                    LOG_INFO (m_VKModelMgrLog) << "Diffuse texture image paths" 
+                    LOG_INFO (m_VKModelMgrLog) << "Diffuse texture image paths"
                                                << std::endl;
                     for (auto const& path: val.path.diffuseTextureImages)
                     LOG_INFO (m_VKModelMgrLog) << "[" << path << "]"
-                                               << std::endl;  
+                                               << std::endl;
 
                     LOG_INFO (m_VKModelMgrLog) << "Diffuse texture image info ids"
                                                << std::endl;
@@ -493,7 +493,7 @@ namespace Core {
                     LOG_INFO (m_VKModelMgrLog) << "[" << infoId << "]"
                                                << std::endl;
 
-                    LOG_INFO (m_VKModelMgrLog) << "Index buffer info id " 
+                    LOG_INFO (m_VKModelMgrLog) << "Index buffer info id "
                                                << "[" << val.id.indexBufferInfo << "]"
                                                << std::endl;
                 }
@@ -504,7 +504,7 @@ namespace Core {
                 LOG_INFO (m_VKModelMgrLog) << "[" << path << "]"
                                            << " "
                                            << "[" << infoId << "]"
-                                           << std::endl;  
+                                           << std::endl;
             }
 
             void cleanUp (uint32_t modelInfoId) {

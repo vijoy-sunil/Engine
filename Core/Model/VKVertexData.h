@@ -1,7 +1,7 @@
 #ifndef VK_VERTEX_DATA_H
 #define VK_VERTEX_DATA_H
 /* GLM library provides us with linear algebra related types like vectors and matrices. The hash functions are defined in
- * the gtx folder, which means that it is technically still an experimental extension to GLM. Therefore you need to define 
+ * the gtx folder, which means that it is technically still an experimental extension to GLM. Therefore you need to define
  * GLM_ENABLE_EXPERIMENTAL to use it
 */
 #define GLM_ENABLE_EXPERIMENTAL
@@ -21,24 +21,24 @@ namespace Core {
         uint32_t  texId;
 
         bool operator == (const Vertex& other) const {
-            return pos      == other.pos      && 
+            return pos      == other.pos      &&
                    texCoord == other.texCoord &&
                    normal   == other.normal   &&
                    texId    == other.texId;
         }
-    };     
+    };
 }   // namespace Core
 
 namespace std {
     /* Hash function for Vertex struct
     */
-    template <> 
+    template <>
     struct hash <Core::Vertex> {
         size_t operator() (const Core::Vertex& vertex) const {
-            /* The difficulty with the hash function is that if your key type consists of several members, you will 
-             * usually have the hash function calculate hash values for the individual members, and then somehow combine 
-             * them into one hash value for the entire object. For good performance (i.e., few collisions) you should 
-             * think carefully about how to combine the individual hash values to ensure you avoid getting the same output 
+            /* The difficulty with the hash function is that if your key type consists of several members, you will
+             * usually have the hash function calculate hash values for the individual members, and then somehow combine
+             * them into one hash value for the entire object. For good performance (i.e., few collisions) you should
+             * think carefully about how to combine the individual hash values to ensure you avoid getting the same output
              * for different objects too often
             */
             size_t h1 = hash <glm::vec3>() (vertex.pos);
@@ -71,22 +71,22 @@ namespace Core {
             ~VKVertexData (void) {
                 LOG_CLOSE (m_instanceId);
             }
-        
+
         protected:
-            /* We need to tell Vulkan how to pass the vertices array to the vertex shader once it's been uploaded into 
+            /* We need to tell Vulkan how to pass the vertices array to the vertex shader once it's been uploaded into
              * GPU memory. There are two types of structures needed to convey this information:
              * (1) VkVertexInputBindingDescription
              * (2) VkVertexInputAttributeDescription
-             * 
-             * A vertex binding describes at which rate to load data from memory throughout the vertices. It specifies 
-             * the number of bytes between data entries and whether to move to the next data entry after each vertex or 
+             *
+             * A vertex binding describes at which rate to load data from memory throughout the vertices. It specifies
+             * the number of bytes between data entries and whether to move to the next data entry after each vertex or
              * after each instance
             */
             VkVertexInputBindingDescription getBindingDescription (uint32_t bindingNumber,
                                                                    uint32_t stride,
                                                                    VkVertexInputRate inputRate) {
                 VkVertexInputBindingDescription bindingDescription;
-                /* If all of our per-vertex data is packed together in one array, then we're only going to have one 
+                /* If all of our per-vertex data is packed together in one array, then we're only going to have one
                  * binding. The binding parameter specifies the index of the binding in the array of bindings
                 */
                 bindingDescription.binding = bindingNumber;
@@ -99,9 +99,9 @@ namespace Core {
                 */
                 bindingDescription.inputRate = inputRate;
                 return bindingDescription;
-            }  
+            }
 
-            /* An attribute description struct describes how to extract a vertex attribute from a chunk of vertex data 
+            /* An attribute description struct describes how to extract a vertex attribute from a chunk of vertex data
              * originating from a binding description
             */
             VkVertexInputAttributeDescription getAttributeDescription (uint32_t bindingNumber,
@@ -115,25 +115,25 @@ namespace Core {
                 /* The location parameter references the location directive of the input in the vertex shader
                 */
                 attributeDescription.location = location;
-                /* The offset parameter specifies the number of bytes since the start of the per-vertex data to read 
-                 * from. The binding is loading one Vertex at a time and the position attribute (pos) is at an offset of 
+                /* The offset parameter specifies the number of bytes since the start of the per-vertex data to read
+                 * from. The binding is loading one Vertex at a time and the position attribute (pos) is at an offset of
                  * 0 bytes from the beginning of this struct, for example
                 */
                 attributeDescription.offset = offset;
-                /* The format parameter describes the type of data for the attribute. A bit confusingly, the formats are 
+                /* The format parameter describes the type of data for the attribute. A bit confusingly, the formats are
                  * specified using the same enumeration as color formats
                  *
                  * float: VK_FORMAT_R32_SFLOAT
                  * vec2:  VK_FORMAT_R32G32_SFLOAT
                  * vec3:  VK_FORMAT_R32G32B32_SFLOAT
                  * vec4:  VK_FORMAT_R32G32B32A32_SFLOAT
-                 * 
-                 * As you can see, you should use the format where the amount of color channels matches the number of 
-                 * components in the shader data type. It is allowed to use more channels than the number of components 
-                 * in the shader, but they will be silently discarded. If the number of channels is lower than the number 
+                 *
+                 * As you can see, you should use the format where the amount of color channels matches the number of
+                 * components in the shader data type. It is allowed to use more channels than the number of components
+                 * in the shader, but they will be silently discarded. If the number of channels is lower than the number
                  * of components, then the BGA components will use default values of (0, 0, 1)
-                 * 
-                 * The color type (SFLOAT, UINT, SINT) and bit width should also match the type of the shader input. See 
+                 *
+                 * The color type (SFLOAT, UINT, SINT) and bit width should also match the type of the shader input. See
                  * the following examples:
                  * ivec2:  VK_FORMAT_R32G32_SINT, a 2-component vector of 32-bit signed integers
                  * uvec4:  VK_FORMAT_R32G32B32A32_UINT, a 4-component vector of 32-bit unsigned integers
