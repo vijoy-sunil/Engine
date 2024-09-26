@@ -8,23 +8,23 @@ namespace Core {
         private:
             Log::Record* m_VKViewPortLog;
             const uint32_t m_instanceId = g_collectionSettings.instanceId++;
-            
+
         public:
             VKViewPort (void) {
                 m_VKViewPortLog = LOG_INIT (m_instanceId, g_collectionSettings.logSaveDirPath);
             }
 
-            ~VKViewPort (void) { 
+            ~VKViewPort (void) {
                 LOG_CLOSE (m_instanceId);
             }
 
         protected:
             void createViewPortState (uint32_t pipelineInfoId) {
                 auto pipelineInfo = getPipelineInfo (pipelineInfoId);
-                /* Without dynamic state, the viewport and scissor rectangle need to be set in the pipeline using the 
-                 * VkPipelineViewportStateCreateInfo struct. This makes the viewport and scissor rectangle for this 
-                 * pipeline immutable. Any changes required to these values would require a new pipeline to be created 
-                 * with the new values. Note that, it's is possible to use multiple viewports and scissor rectangles on 
+                /* Without dynamic state, the viewport and scissor rectangle need to be set in the pipeline using the
+                 * VkPipelineViewportStateCreateInfo struct. This makes the viewport and scissor rectangle for this
+                 * pipeline immutable. Any changes required to these values would require a new pipeline to be created
+                 * with the new values. Note that, it's is possible to use multiple viewports and scissor rectangles on
                  * some graphics cards, so the structure members reference an array of them
                 */
                 VkPipelineViewportStateCreateInfo createInfo;

@@ -8,14 +8,14 @@ namespace Core {
         private:
             Log::Record* m_VKDescriptorSetLayoutLog;
             const uint32_t m_instanceId = g_collectionSettings.instanceId++;
-            
+
         public:
             VKDescriptorSetLayout (void) {
                 m_VKDescriptorSetLayoutLog = LOG_INIT (m_instanceId, g_collectionSettings.logSaveDirPath);
-                LOG_ADD_CONFIG (m_instanceId, Log::ERROR, Log::TO_FILE_IMMEDIATE | Log::TO_CONSOLE); 
+                LOG_ADD_CONFIG (m_instanceId, Log::ERROR, Log::TO_FILE_IMMEDIATE | Log::TO_CONSOLE);
             }
 
-            ~VKDescriptorSetLayout (void) { 
+            ~VKDescriptorSetLayout (void) {
                 LOG_CLOSE (m_instanceId);
             }
 
@@ -26,11 +26,11 @@ namespace Core {
                                                            VkShaderStageFlags shaderStages,
                                                            const VkSampler* immutableSamplers) {
                 VkDescriptorSetLayoutBinding layoutBinding;
-                /* The binding field specifies the binding number of this entry and corresponds to a resource of the same 
+                /* The binding field specifies the binding number of this entry and corresponds to a resource of the same
                  * binding number in the shader stages
                 */
                 layoutBinding.binding = bindingNumber;
-                /* It is possible for the shader variable to represent an array of descriptors, and descriptorCount 
+                /* It is possible for the shader variable to represent an array of descriptors, and descriptorCount
                  * specifies the number of values in the array. This could be used to specify a transformation for each of
                  * the bones in a skeleton for skeletal animation, for example
                 */
@@ -41,10 +41,10 @@ namespace Core {
                 */
                 layoutBinding.stageFlags = shaderStages;
                 /* If descriptorType specifies a VK_DESCRIPTOR_TYPE_SAMPLER or VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER
-                 * type descriptor, then pImmutableSamplers can be used to initialize a set of immutable samplers. 
+                 * type descriptor, then pImmutableSamplers can be used to initialize a set of immutable samplers.
                  * Immutable samplers are permanently bound into the set layout and must not be changed
-                 * 
-                 * If pImmutableSamplers is not null, then it is a pointer to an array of sampler handles that will be 
+                 *
+                 * If pImmutableSamplers is not null, then it is a pointer to an array of sampler handles that will be
                  * copied into the set layout and used for the corresponding binding. If pImmutableSamplers is null, then
                  * the sampler slots are dynamic and sampler handles must be bound into descriptor sets using this layout
                 */
@@ -52,9 +52,9 @@ namespace Core {
                 return layoutBinding;
             }
 
-            /* The descriptor layout specifies the types of resources that are going to be accessed by the pipeline, just 
-             * like a render pass specifies the types of attachments that will be accessed. We need to provide details 
-             * about every descriptor binding used in the shaders for pipeline creation, just like we had to do for every 
+            /* The descriptor layout specifies the types of resources that are going to be accessed by the pipeline, just
+             * like a render pass specifies the types of attachments that will be accessed. We need to provide details
+             * about every descriptor binding used in the shaders for pipeline creation, just like we had to do for every
              * vertex attribute and its location index, through a VkDescriptorSetLayoutBinding struct
             */
             void createDescriptorSetLayout (uint32_t deviceInfoId,
@@ -81,9 +81,9 @@ namespace Core {
                 createInfo.pBindings    = layoutBindings.data();
 
                 VkDescriptorSetLayout descriptorSetLayout;
-                VkResult result = vkCreateDescriptorSetLayout (deviceInfo->resource.logDevice, 
-                                                               &createInfo, 
-                                                               VK_NULL_HANDLE, 
+                VkResult result = vkCreateDescriptorSetLayout (deviceInfo->resource.logDevice,
+                                                               &createInfo,
+                                                               VK_NULL_HANDLE,
                                                                &descriptorSetLayout);
                 if (result != VK_SUCCESS) {
                     LOG_ERROR (m_VKDescriptorSetLayoutLog) << "Failed to create descriptor set layout "
@@ -95,8 +95,8 @@ namespace Core {
                 }
 
                 pipelineInfo->resource.descriptorSetLayouts.push_back (descriptorSetLayout);
-                /* Note that, we need to specify the descriptor set layout during pipeline creation to tell Vulkan which 
-                 * descriptors the shaders will be using. Descriptor set layouts are specified in the pipeline layout 
+                /* Note that, we need to specify the descriptor set layout during pipeline creation to tell Vulkan which
+                 * descriptors the shaders will be using. Descriptor set layouts are specified in the pipeline layout
                  * object
                 */
             }

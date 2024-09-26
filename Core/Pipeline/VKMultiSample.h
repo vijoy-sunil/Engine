@@ -10,37 +10,37 @@ namespace Core {
         private:
             Log::Record* m_VKMultiSampleLog;
             const uint32_t m_instanceId = g_collectionSettings.instanceId++;
-            
+
         public:
             VKMultiSample (void) {
                 m_VKMultiSampleLog = LOG_INIT (m_instanceId, g_collectionSettings.logSaveDirPath);
             }
 
-            ~VKMultiSample (void) { 
+            ~VKMultiSample (void) {
                 LOG_CLOSE (m_instanceId);
             }
 
         protected:
-            void createMultiSampleState (uint32_t imageInfoId, 
+            void createMultiSampleState (uint32_t imageInfoId,
                                          uint32_t pipelineInfoId,
-                                         VkBool32 sampleShadingEnable, 
+                                         VkBool32 sampleShadingEnable,
                                          float minSampleShading) {
 
-                auto imageInfo    = getImageInfo    (imageInfoId, MULTI_SAMPLE_IMAGE);                
+                auto imageInfo    = getImageInfo    (imageInfoId, MULTI_SAMPLE_IMAGE);
                 auto pipelineInfo = getPipelineInfo (pipelineInfoId);
 
                 VkPipelineMultisampleStateCreateInfo createInfo;
                 createInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
                 createInfo.pNext = VK_NULL_HANDLE;
                 createInfo.flags = 0;
-                /* There are certain limitations of our current MSAA implementation which may impact the quality of the 
-                 * output image in more detailed scenes. For example, we're currently not solving potential problems 
-                 * caused by shader aliasing, i.e. MSAA only smoothens out the edges of geometry but not the interior 
-                 * filling. This may lead to a situation when you get a smooth polygon rendered on screen but the applied 
-                 * texture will still look aliased if it contains high contrasting colors. One way to approach this 
-                 * problem is to enable sample shading which will improve the image quality even further, though at an 
+                /* There are certain limitations of our current MSAA implementation which may impact the quality of the
+                 * output image in more detailed scenes. For example, we're currently not solving potential problems
+                 * caused by shader aliasing, i.e. MSAA only smoothens out the edges of geometry but not the interior
+                 * filling. This may lead to a situation when you get a smooth polygon rendered on screen but the applied
+                 * texture will still look aliased if it contains high contrasting colors. One way to approach this
+                 * problem is to enable sample shading which will improve the image quality even further, though at an
                  * additional performance cost
-                 * 
+                 *
                  * Note that, we need to enable sample shading when creating the logic device in addition to enabling it
                  * in the pipeline
                 */
@@ -49,9 +49,9 @@ namespace Core {
                 */
                 createInfo.minSampleShading      = minSampleShading;
                 createInfo.rasterizationSamples  = imageInfo->params.sampleCount;
-                createInfo.pSampleMask           = VK_NULL_HANDLE; 
-                createInfo.alphaToCoverageEnable = VK_FALSE; 
-                createInfo.alphaToOneEnable      = VK_FALSE; 
+                createInfo.pSampleMask           = VK_NULL_HANDLE;
+                createInfo.alphaToCoverageEnable = VK_FALSE;
+                createInfo.alphaToOneEnable      = VK_FALSE;
 
                 pipelineInfo->state.multiSample  = createInfo;
             }
