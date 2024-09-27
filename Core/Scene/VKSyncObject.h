@@ -5,9 +5,9 @@
 #include "../VKLogHelper.h"
 
 namespace Core {
-    /* A core design philosophy in Vulkan is that synchronization of execution on the GPU is explicit. The order of 
-     * operations is up to us to define using various synchronization primitives which tell the driver the order we want 
-     * things to run in. This means that many Vulkan API calls which start executing work on the GPU are asynchronous, 
+    /* A core design philosophy in Vulkan is that synchronization of execution on the GPU is explicit. The order of
+     * operations is up to us to define using various synchronization primitives which tell the driver the order we want
+     * things to run in. This means that many Vulkan API calls which start executing work on the GPU are asynchronous,
      * the functions will return before the operation has finished and there are a number of events that we need to order
      * explicitly
     */
@@ -32,7 +32,7 @@ namespace Core {
                 struct Meta {
                     uint32_t id;
                 } meta;
-                
+
                 struct Resource {
                     VkSemaphore semaphore;
                 } resource;
@@ -57,9 +57,9 @@ namespace Core {
                 LOG_ERROR (m_VKSyncObjectLog) << "Failed to delete fence info "
                                               << "[" << fenceInfo->meta.id << "]"
                                               << " "
-                                              << "[" << getSyncTypeString (type) << "]"            
+                                              << "[" << getSyncTypeString (type) << "]"
                                               << std::endl;
-                throw std::runtime_error ("Failed to delete fence info");              
+                throw std::runtime_error ("Failed to delete fence info");
             }
 
             void deleteSemaphoreInfo (SemaphoreInfo* semaphoreInfo, e_syncType type) {
@@ -73,16 +73,16 @@ namespace Core {
                 LOG_ERROR (m_VKSyncObjectLog) << "Failed to delete semaphore info "
                                               << "[" << semaphoreInfo->meta.id << "]"
                                               << " "
-                                              << "[" << getSyncTypeString (type) << "]"            
+                                              << "[" << getSyncTypeString (type) << "]"
                                               << std::endl;
-                throw std::runtime_error ("Failed to delete semaphore info");              
+                throw std::runtime_error ("Failed to delete semaphore info");
             }
 
         public:
             VKSyncObject (void) {
                 m_VKSyncObjectLog = LOG_INIT (m_instanceId, g_collectionSettings.logSaveDirPath);
                 LOG_ADD_CONFIG (m_instanceId, Log::INFO,  Log::TO_FILE_IMMEDIATE);
-                LOG_ADD_CONFIG (m_instanceId, Log::ERROR, Log::TO_FILE_IMMEDIATE | Log::TO_CONSOLE); 
+                LOG_ADD_CONFIG (m_instanceId, Log::ERROR, Log::TO_FILE_IMMEDIATE | Log::TO_CONSOLE);
             }
 
             ~VKSyncObject (void) {
@@ -91,14 +91,14 @@ namespace Core {
 
         protected:
             void createFence (uint32_t deviceInfoId,
-                              uint32_t fenceInfoId, 
+                              uint32_t fenceInfoId,
                               e_syncType type,
                               VkFenceCreateFlags fenceCreateFlags) {
 
                 auto deviceInfo = getDeviceInfo (deviceInfoId);
                 for (auto const& info: m_fenceInfoPool[type]) {
                     if (info.meta.id == fenceInfoId) {
-                        LOG_ERROR (m_VKSyncObjectLog) << "Fence info id already exists " 
+                        LOG_ERROR (m_VKSyncObjectLog) << "Fence info id already exists "
                                                       << "[" << fenceInfoId << "]"
                                                       << " "
                                                       << "[" << getSyncTypeString (type) << "]"
@@ -106,16 +106,16 @@ namespace Core {
                         throw std::runtime_error ("Fence info id already exists");
                     }
                 }
-                /* A fence has a similar purpose, in that it is used to synchronize execution, but it is for ordering the 
-                 * execution on the CPU, otherwise known as the host. Simply put, if the host needs to know when the GPU 
+                /* A fence has a similar purpose, in that it is used to synchronize execution, but it is for ordering the
+                 * execution on the CPU, otherwise known as the host. Simply put, if the host needs to know when the GPU
                  * has finished something, we use a fence
-                 * 
-                 * Whenever we submit work to execute, we can attach a fence to that work. When the work is finished, the 
-                 * fence will be signaled. Then we can make the host wait for the fence to be signaled, guaranteeing that 
+                 *
+                 * Whenever we submit work to execute, we can attach a fence to that work. When the work is finished, the
+                 * fence will be signaled. Then we can make the host wait for the fence to be signaled, guaranteeing that
                  * the work has finished before the host continues
-                 * 
-                 * Fences must be reset manually to put them back into the unsignaled state. This is because fences are 
-                 * used to control the execution of the host, and so the host gets to decide when to reset the fence. 
+                 *
+                 * Fences must be reset manually to put them back into the unsignaled state. This is because fences are
+                 * used to control the execution of the host, and so the host gets to decide when to reset the fence.
                  * Contrast this to semaphores which are used to order work on the GPU without the host being involved
                 */
                 VkFenceCreateInfo createInfo;
@@ -124,17 +124,17 @@ namespace Core {
                 createInfo.flags = fenceCreateFlags;
 
                 VkFence fence;
-                VkResult result = vkCreateFence (deviceInfo->resource.logDevice, 
-                                                 &createInfo, 
-                                                 VK_NULL_HANDLE, 
+                VkResult result = vkCreateFence (deviceInfo->resource.logDevice,
+                                                 &createInfo,
+                                                 VK_NULL_HANDLE,
                                                  &fence);
                 if (result != VK_SUCCESS) {
-                    LOG_ERROR (m_VKSyncObjectLog) << "Failed to create fence " 
+                    LOG_ERROR (m_VKSyncObjectLog) << "Failed to create fence "
                                                   << "[" << fenceInfoId << "]"
                                                   << " "
                                                   << "[" << getSyncTypeString (type) << "]"
                                                   << " "
-                                                  << "[" << string_VkResult (result) << "]" 
+                                                  << "[" << string_VkResult (result) << "]"
                                                   << std::endl;
                     throw std::runtime_error ("Failed to create fence");
                 }
@@ -149,7 +149,7 @@ namespace Core {
                 auto deviceInfo = getDeviceInfo (deviceInfoId);
                 for (auto const& info: m_semaphoreInfoPool[type]) {
                     if (info.meta.id == semaphoreInfoId) {
-                        LOG_ERROR (m_VKSyncObjectLog) << "Semaphore info id already exists " 
+                        LOG_ERROR (m_VKSyncObjectLog) << "Semaphore info id already exists "
                                                       << "[" << semaphoreInfoId << "]"
                                                       << " "
                                                       << "[" << getSyncTypeString (type) << "]"
@@ -157,18 +157,18 @@ namespace Core {
                         throw std::runtime_error ("Semaphore info id already exists");
                     }
                 }
-                /* A semaphore is used to add order between queue operations. Queue operations refer to the work we 
-                 * submit to a queue, either in a command buffer or from within a function. Semaphores are used both to 
+                /* A semaphore is used to add order between queue operations. Queue operations refer to the work we
+                 * submit to a queue, either in a command buffer or from within a function. Semaphores are used both to
                  * order work inside the same queue and between different queues
-                 * 
-                 * The way we use a semaphore to order queue operations is by providing the same semaphore as a 'signal' 
-                 * semaphore in one queue operation and as a 'wait' semaphore in another queue operation. For example, 
-                 * lets say we have semaphore S and queue operations A and B that we want to execute in order. What we 
-                 * tell Vulkan is that operation A will 'signal' semaphore S when it finishes executing, and operation B 
-                 * will 'wait' on semaphore S before it begins executing. When operation A finishes, semaphore S will be 
-                 * signaled, while operation B wont start until S is signaled. After operation B begins executing, 
+                 *
+                 * The way we use a semaphore to order queue operations is by providing the same semaphore as a 'signal'
+                 * semaphore in one queue operation and as a 'wait' semaphore in another queue operation. For example,
+                 * lets say we have semaphore S and queue operations A and B that we want to execute in order. What we
+                 * tell Vulkan is that operation A will 'signal' semaphore S when it finishes executing, and operation B
+                 * will 'wait' on semaphore S before it begins executing. When operation A finishes, semaphore S will be
+                 * signaled, while operation B wont start until S is signaled. After operation B begins executing,
                  * semaphore S is automatically reset back to being unsignaled, allowing it to be used again
-                 * 
+                 *
                  * Note that, the waiting only happens on the GPU. The CPU continues running without blocking
                 */
                 VkSemaphoreCreateInfo createInfo;
@@ -177,12 +177,12 @@ namespace Core {
                 createInfo.flags = 0;
 
                 VkSemaphore semaphore;
-                VkResult result = vkCreateSemaphore (deviceInfo->resource.logDevice, 
-                                                     &createInfo, 
-                                                     VK_NULL_HANDLE, 
+                VkResult result = vkCreateSemaphore (deviceInfo->resource.logDevice,
+                                                     &createInfo,
+                                                     VK_NULL_HANDLE,
                                                      &semaphore);
                 if (result != VK_SUCCESS) {
-                    LOG_ERROR (m_VKSyncObjectLog) << "Failed to create semaphore " 
+                    LOG_ERROR (m_VKSyncObjectLog) << "Failed to create semaphore "
                                                   << "[" << semaphoreInfoId << "]"
                                                   << " "
                                                   << "[" << getSyncTypeString (type) << "]"
@@ -209,9 +209,9 @@ namespace Core {
                 LOG_ERROR (m_VKSyncObjectLog) << "Failed to find fence info "
                                               << "[" << fenceInfoId << "]"
                                               << " "
-                                              << "[" << getSyncTypeString (type) << "]"             
+                                              << "[" << getSyncTypeString (type) << "]"
                                               << std::endl;
-                throw std::runtime_error ("Failed to find fence info"); 
+                throw std::runtime_error ("Failed to find fence info");
             }
 
             SemaphoreInfo* getSemaphoreInfo (uint32_t semaphoreInfoId, e_syncType type) {
@@ -225,9 +225,9 @@ namespace Core {
                 LOG_ERROR (m_VKSyncObjectLog) << "Failed to find semaphore info "
                                               << "[" << semaphoreInfoId << "]"
                                               << " "
-                                              << "[" << getSyncTypeString (type) << "]"           
+                                              << "[" << getSyncTypeString (type) << "]"
                                               << std::endl;
-                throw std::runtime_error ("Failed to find semaphore info");                
+                throw std::runtime_error ("Failed to find semaphore info");
             }
 
             void dumpFenceInfoPool (void) {
@@ -238,13 +238,13 @@ namespace Core {
                     LOG_INFO (m_VKSyncObjectLog) << "Type "
                                                  << "[" << getSyncTypeString (key) << "]"
                                                  << std::endl;
-                    
+
                     for (auto const& info: val) {
                         LOG_INFO (m_VKSyncObjectLog) << "Id "
                                                      << "[" << info.meta.id << "]"
-                                                     << std::endl; 
-                    }                                                                                                                                                                                                                                                                                    
-                }  
+                                                     << std::endl;
+                    }
+                }
             }
 
             void dumpSemaphoreInfoPool (void) {
@@ -255,31 +255,31 @@ namespace Core {
                     LOG_INFO (m_VKSyncObjectLog) << "Type "
                                                  << "[" << getSyncTypeString (key) << "]"
                                                  << std::endl;
-                    
+
                     for (auto const& info: val) {
                         LOG_INFO (m_VKSyncObjectLog) << "Id "
                                                      << "[" << info.meta.id << "]"
-                                                     << std::endl; 
-                    }                                                                                                                                                                                                                                                                                    
-                }    
+                                                     << std::endl;
+                    }
+                }
             }
-            
+
             void cleanUpFence (uint32_t deviceInfoId, uint32_t fenceInfoId, e_syncType type) {
                 auto deviceInfo = getDeviceInfo (deviceInfoId);
                 auto fenceInfo  = getFenceInfo  (fenceInfoId, type);
 
-                vkDestroyFence  (deviceInfo->resource.logDevice, 
-                                 fenceInfo->resource.fence, 
+                vkDestroyFence  (deviceInfo->resource.logDevice,
+                                 fenceInfo->resource.fence,
                                  VK_NULL_HANDLE);
-                deleteFenceInfo (fenceInfo, type); 
+                deleteFenceInfo (fenceInfo, type);
             }
 
             void cleanUpSemaphore (uint32_t deviceInfoId, uint32_t semaphoreInfoId, e_syncType type) {
                 auto deviceInfo    = getDeviceInfo    (deviceInfoId);
                 auto semaphoreInfo = getSemaphoreInfo (semaphoreInfoId, type);
 
-                vkDestroySemaphore  (deviceInfo->resource.logDevice, 
-                                     semaphoreInfo->resource.semaphore, 
+                vkDestroySemaphore  (deviceInfo->resource.logDevice,
+                                     semaphoreInfo->resource.semaphore,
                                      VK_NULL_HANDLE);
                 deleteSemaphoreInfo (semaphoreInfo, type);
             }

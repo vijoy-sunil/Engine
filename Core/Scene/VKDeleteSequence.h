@@ -45,9 +45,9 @@ namespace Core {
 
         protected:
             template <typename T>
-            void runSequence (uint32_t deviceInfoId, 
-                              const std::vector <uint32_t>& modelInfoIds, 
-                              const std::vector <uint32_t>& renderPassInfoIds, 
+            void runSequence (uint32_t deviceInfoId,
+                              const std::vector <uint32_t>& modelInfoIds,
+                              const std::vector <uint32_t>& renderPassInfoIds,
                               const std::vector <uint32_t>& pipelineInfoIds,
                               uint32_t cameraInfoId,
                               uint32_t sceneInfoId,
@@ -66,9 +66,9 @@ namespace Core {
                  * |------------------------------------------------------------------------------------------------|
                 */
                 for (uint32_t i = 0; i < g_coreSettings.maxFramesInFlight; i++) {
-                    uint32_t renderDoneSemaphoreInfoId = sceneInfo->id.renderDoneSemaphoreInfoBase + i; 
+                    uint32_t renderDoneSemaphoreInfoId = sceneInfo->id.renderDoneSemaphoreInfoBase + i;
                     cleanUpSemaphore (deviceInfoId, renderDoneSemaphoreInfoId, SEM_RENDER_DONE);
-                    LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Draw ops semaphore " 
+                    LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Draw ops semaphore "
                                                      << "[" << renderDoneSemaphoreInfoId << "]"
                                                      << std::endl;
                 }
@@ -76,7 +76,7 @@ namespace Core {
                 for (uint32_t i = 0; i < g_coreSettings.maxFramesInFlight; i++) {
                     uint32_t imageAvailableSemaphoreInfoId = sceneInfo->id.imageAvailableSemaphoreInfoBase + i;
                     cleanUpSemaphore (deviceInfoId, imageAvailableSemaphoreInfoId, SEM_IMAGE_AVAILABLE);
-                    LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Draw ops semaphore " 
+                    LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Draw ops semaphore "
                                                      << "[" << imageAvailableSemaphoreInfoId << "]"
                                                      << std::endl;
                 }
@@ -84,7 +84,7 @@ namespace Core {
                 for (uint32_t i = 0; i < g_coreSettings.maxFramesInFlight; i++) {
                     uint32_t inFlightFenceInfoId = sceneInfo->id.inFlightFenceInfoBase + i;
                     cleanUpFence (deviceInfoId, inFlightFenceInfoId, FEN_IN_FLIGHT);
-                    LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Draw ops fence " 
+                    LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Draw ops fence "
                                                      << "[" << inFlightFenceInfoId << "]"
                                                      << std::endl;
                 }
@@ -95,30 +95,30 @@ namespace Core {
                 VKCmdBuffer::cleanUp (deviceInfoId, sceneInfo->resource.commandPool);
                 LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Draw ops command pool "
                                                  << "[" << sceneInfoId << "]"
-                                                 << std::endl; 
+                                                 << std::endl;
                 /* |------------------------------------------------------------------------------------------------|
                  * | DESTROY DESCRIPTOR POOL                                                                        |
                  * |------------------------------------------------------------------------------------------------|
                 */
                 VKDescriptor::cleanUp (deviceInfoId, sceneInfoId);
-                LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Descriptor pool " 
+                LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Descriptor pool "
                                                  << "[" << sceneInfoId << "]"
-                                                 << std::endl; 
+                                                 << std::endl;
                 /* |------------------------------------------------------------------------------------------------|
                  * | DESTROY TEXTURE SAMPLER                                                                        |
                  * |------------------------------------------------------------------------------------------------|
                 */
                 VKTextureSampler::cleanUp (deviceInfoId, sceneInfoId);
-                LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Texture sampler " 
+                LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Texture sampler "
                                                  << "[" << sceneInfoId << "]"
-                                                 << std::endl; 
+                                                 << std::endl;
                 /* |------------------------------------------------------------------------------------------------|
                  * | DESTROY PIPELINE                                                                               |
                  * |------------------------------------------------------------------------------------------------|
                 */
                 for (auto const& infoId: pipelineInfoIds) {
                     VKPipelineMgr::cleanUp (deviceInfoId, infoId);
-                    LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Pipeline " 
+                    LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Pipeline "
                                                      << "[" << infoId << "]"
                                                      << std::endl;
                 }
@@ -128,7 +128,7 @@ namespace Core {
                 */
                 for (auto const& infoId: renderPassInfoIds) {
                     VKFrameBuffer::cleanUp (deviceInfoId, infoId);
-                    LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Frame buffers " 
+                    LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Frame buffers "
                                                      << "[" << infoId << "]"
                                                      << " "
                                                      << "[" << deviceInfoId << "]"
@@ -140,7 +140,7 @@ namespace Core {
                 */
                 for (auto const& infoId: renderPassInfoIds) {
                     VKRenderPassMgr::cleanUp (deviceInfoId, infoId);
-                    LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Render pass " 
+                    LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Render pass "
                                                      << "[" << infoId << "]"
                                                      << std::endl;
                 }
@@ -149,11 +149,11 @@ namespace Core {
                  * |------------------------------------------------------------------------------------------------|
                 */
                 for (uint32_t i = 0; i < g_coreSettings.maxFramesInFlight; i++) {
-                    uint32_t storageBufferInfoId = sceneInfo->id.storageBufferInfoBase + i; 
+                    uint32_t storageBufferInfoId = sceneInfo->id.storageBufferInfoBase + i;
                     VKBufferMgr::cleanUp (deviceInfoId, storageBufferInfoId, STORAGE_BUFFER);
-                    LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Storage buffer " 
+                    LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Storage buffer "
                                                      << "[" << storageBufferInfoId << "]"
-                                                     << std::endl; 
+                                                     << std::endl;
                 }
                 /* |------------------------------------------------------------------------------------------------|
                  * | DESTROY INDEX BUFFER                                                                           |
@@ -163,44 +163,44 @@ namespace Core {
                  * statically loaded models' index buffers are owned by the base id model
                 */
                 VKBufferMgr::cleanUp (deviceInfoId, modelInfoBase->id.indexBufferInfo, INDEX_BUFFER);
-                LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Index buffer " 
+                LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Index buffer "
                                                  << "[" << modelInfoBase->id.indexBufferInfo << "]"
-                                                 << std::endl; 
+                                                 << std::endl;
                 /* |------------------------------------------------------------------------------------------------|
                  * | DESTROY VERTEX BUFFERS                                                                         |
                  * |------------------------------------------------------------------------------------------------|
                 */
                 for (auto const& infoId: modelInfoBase->id.vertexBufferInfos) {
                     VKBufferMgr::cleanUp (deviceInfoId, infoId, VERTEX_BUFFER);
-                    LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Vertex buffer " 
+                    LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Vertex buffer "
                                                      << "[" << infoId << "]"
-                                                     << std::endl; 
+                                                     << std::endl;
                 }
                 /* |------------------------------------------------------------------------------------------------|
                  * | DESTROY MULTI SAMPLE RESOURCES                                                                 |
                  * |------------------------------------------------------------------------------------------------|
                 */
                 VKImageMgr::cleanUp (deviceInfoId, sceneInfo->id.multiSampleImageInfo, MULTI_SAMPLE_IMAGE);
-                LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Multi sample resources " 
+                LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Multi sample resources "
                                                  << "[" << sceneInfo->id.multiSampleImageInfo << "]"
-                                                 << std::endl; 
+                                                 << std::endl;
                 /* |------------------------------------------------------------------------------------------------|
                  * | DESTROY DEPTH RESOURCES                                                                        |
                  * |------------------------------------------------------------------------------------------------|
                 */
                 VKImageMgr::cleanUp (deviceInfoId, sceneInfo->id.depthImageInfo, DEPTH_IMAGE);
-                LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Depth resources " 
+                LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Depth resources "
                                                  << "[" << sceneInfo->id.depthImageInfo << "]"
-                                                 << std::endl; 
+                                                 << std::endl;
                 /* |------------------------------------------------------------------------------------------------|
                  * | DESTROY TEXTURE RESOURCES - DIFFUSE TEXTURE                                                    |
                  * |------------------------------------------------------------------------------------------------|
                 */
                 for (auto const& [path, infoId]: getTextureImagePool()) {
                     VKImageMgr::cleanUp (deviceInfoId, infoId, TEXTURE_IMAGE);
-                    LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Texture resources " 
+                    LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Texture resources "
                                                      << "[" << infoId << "]"
-                                                     << std::endl; 
+                                                     << std::endl;
                 }
                 /* |------------------------------------------------------------------------------------------------|
                  * | DESTROY SWAP CHAIN RESOURCES                                                                   |
@@ -209,11 +209,11 @@ namespace Core {
                 for (uint32_t i = 0; i < deviceInfo->params.swapChainSize; i++) {
                     uint32_t swapChainImageInfoId = sceneInfo->id.swapChainImageInfoBase + i;
                     VKImageMgr::cleanUp (deviceInfoId, swapChainImageInfoId, SWAP_CHAIN_IMAGE);
-                    LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Swap chain resources " 
+                    LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Swap chain resources "
                                                      << "[" << swapChainImageInfoId << "]"
                                                      << " "
                                                      << "[" << deviceInfoId << "]"
-                                                     << std::endl; 
+                                                     << std::endl;
                 }
                 /* |------------------------------------------------------------------------------------------------|
                  * | DESTROY SWAP CHAIN                                                                             |
@@ -228,47 +228,47 @@ namespace Core {
                  * |------------------------------------------------------------------------------------------------|
                 */
                 VKLogDevice::cleanUp (deviceInfoId);
-                LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Log device " 
+                LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Log device "
                                                  << "[" << deviceInfoId << "]"
-                                                 << std::endl;                
+                                                 << std::endl;
                 /* |------------------------------------------------------------------------------------------------|
                  * | DESTROY SURFACE                                                                                |
                  * |------------------------------------------------------------------------------------------------|
                 */
                 VKSurface::cleanUp (deviceInfoId);
-                LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Surface " 
+                LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Surface "
                                                  << "[" << deviceInfoId << "]"
-                                                 << std::endl;   
+                                                 << std::endl;
                 /* |------------------------------------------------------------------------------------------------|
                  * | DESTROY DEBUG MESSENGER                                                                        |
                  * |------------------------------------------------------------------------------------------------|
                 */
                 VKValidation::cleanUp (deviceInfoId);
                 LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Debug messenger "
-                                                 << "[" << deviceInfoId << "]" 
-                                                 << std::endl;                 
+                                                 << "[" << deviceInfoId << "]"
+                                                 << std::endl;
                 /* |------------------------------------------------------------------------------------------------|
                  * | DESTROY INSTANCE                                                                               |
                  * |------------------------------------------------------------------------------------------------|
                 */
                 VKInstance::cleanUp (deviceInfoId);
                 LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Instance "
-                                                 << "[" << deviceInfoId << "]" 
-                                                 << std::endl;                 
+                                                 << "[" << deviceInfoId << "]"
+                                                 << std::endl;
                 /* |------------------------------------------------------------------------------------------------|
                  * | DESTROY WINDOW                                                                                 |
                  * |------------------------------------------------------------------------------------------------|
                 */
                 VKWindow::cleanUp (deviceInfoId);
-                LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Window " 
+                LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Window "
                                                  << "[" << deviceInfoId << "]"
-                                                 << std::endl;   
+                                                 << std::endl;
                 /* |------------------------------------------------------------------------------------------------|
                  * | DESTROY SCENE INFO                                                                             |
                  * |------------------------------------------------------------------------------------------------|
                 */
                 VKSceneMgr::cleanUp (sceneInfoId);
-                LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Scene info " 
+                LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Scene info "
                                                  << "[" << sceneInfoId << "]"
                                                  << std::endl;
                 /* |------------------------------------------------------------------------------------------------|
@@ -276,27 +276,27 @@ namespace Core {
                  * |------------------------------------------------------------------------------------------------|
                 */
                 VKCameraMgr::cleanUp (cameraInfoId);
-                LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Camera info " 
+                LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Camera info "
                                                  << "[" << cameraInfoId << "]"
-                                                 << std::endl; 
+                                                 << std::endl;
                 /* |------------------------------------------------------------------------------------------------|
                  * | DESTROY MODEL INFO                                                                             |
                  * |------------------------------------------------------------------------------------------------|
                 */
                 for (auto const& infoId: modelInfoIds) {
                     VKModelMgr::cleanUp (infoId);
-                    LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Model info " 
+                    LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Model info "
                                                      << "[" << infoId << "]"
-                                                     << std::endl; 
+                                                     << std::endl;
                 }
                 /* |------------------------------------------------------------------------------------------------|
                  * | DESTROY DEVICE INFO                                                                            |
                  * |------------------------------------------------------------------------------------------------|
                 */
                 VKDeviceMgr::cleanUp (deviceInfoId);
-                LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Device info " 
+                LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Device info "
                                                  << "[" << deviceInfoId << "]"
-                                                 << std::endl; 
+                                                 << std::endl;
                 /* |------------------------------------------------------------------------------------------------|
                  * | DUMP METHODS                                                                                   |
                  * |------------------------------------------------------------------------------------------------|

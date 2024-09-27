@@ -75,7 +75,7 @@ namespace Core {
             VKInitSequence (void) {
                 m_VKInitSequenceLog = LOG_INIT (m_instanceId, g_collectionSettings.logSaveDirPath);
                 LOG_ADD_CONFIG (m_instanceId, Log::INFO,  Log::TO_FILE_IMMEDIATE);
-                LOG_ADD_CONFIG (m_instanceId, Log::ERROR, Log::TO_FILE_IMMEDIATE | Log::TO_CONSOLE); 
+                LOG_ADD_CONFIG (m_instanceId, Log::ERROR, Log::TO_FILE_IMMEDIATE | Log::TO_CONSOLE);
             }
 
             ~VKInitSequence (void) {
@@ -88,7 +88,7 @@ namespace Core {
                               const std::vector <uint32_t>& modelInfoIds,
                               uint32_t renderPassInfoId,
                               uint32_t pipelineInfoId,
-                              uint32_t sceneInfoId, 
+                              uint32_t sceneInfoId,
                               T extensions) {
 
                 auto deviceInfo    = getDeviceInfo (deviceInfoId);
@@ -97,7 +97,7 @@ namespace Core {
 #if ENABLE_LOGGING
                 enableValidationLayers();
 #else
-                LOG_INFO (m_VKInitSequenceLog) << "Disabling validation layers and logging" 
+                LOG_INFO (m_VKInitSequenceLog) << "Disabling validation layers and logging"
                                                << std::endl;
                 disableValidationLayers();
                 LOG_CLEAR_ALL_CONFIGS;
@@ -107,7 +107,7 @@ namespace Core {
                  * |------------------------------------------------------------------------------------------------|
                 */
                 createWindow (deviceInfoId, g_windowSettings.width, g_windowSettings.height);
-                LOG_INFO (m_VKInitSequenceLog) << "[OK] Window " 
+                LOG_INFO (m_VKInitSequenceLog) << "[OK] Window "
                                                << "[" << deviceInfoId << "]"
                                                << std::endl;
                 /* |------------------------------------------------------------------------------------------------|
@@ -116,22 +116,22 @@ namespace Core {
                 */
                 createInstance (deviceInfoId);
                 LOG_INFO (m_VKInitSequenceLog) << "[OK] Instance "
-                                               << "[" << deviceInfoId << "]" 
-                                               << std::endl; 
+                                               << "[" << deviceInfoId << "]"
+                                               << std::endl;
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG DEBUG MESSENGER                                                                         |
                  * |------------------------------------------------------------------------------------------------|
                 */
                 createDebugMessenger (deviceInfoId);
                 LOG_INFO (m_VKInitSequenceLog) << "[OK] Debug messenger "
-                                               << "[" << deviceInfoId << "]" 
-                                               << std::endl; 
+                                               << "[" << deviceInfoId << "]"
+                                               << std::endl;
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG SURFACE                                                                                 |
                  * |------------------------------------------------------------------------------------------------|
-                */          
+                */
                 createSurface (deviceInfoId);
-                LOG_INFO (m_VKInitSequenceLog) << "[OK] Surface " 
+                LOG_INFO (m_VKInitSequenceLog) << "[OK] Surface "
                                                << "[" << deviceInfoId << "]"
                                                << std::endl;
                 /* |------------------------------------------------------------------------------------------------|
@@ -140,14 +140,14 @@ namespace Core {
                 */
                 pickPhyDevice (deviceInfoId);
                 LOG_INFO (m_VKInitSequenceLog) << "[OK] Phy device "
-                                               << "[" << deviceInfoId << "]" 
+                                               << "[" << deviceInfoId << "]"
                                                << std::endl;
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG LOG DEVICE                                                                              |
                  * |------------------------------------------------------------------------------------------------|
                 */
                 createLogDevice (deviceInfoId);
-                LOG_INFO (m_VKInitSequenceLog) << "[OK] Log device " 
+                LOG_INFO (m_VKInitSequenceLog) << "[OK] Log device "
                                                << "[" << deviceInfoId << "]"
                                                << std::endl;
                 /* |------------------------------------------------------------------------------------------------|
@@ -163,7 +163,7 @@ namespace Core {
                         for (auto const& texId: modelInfo->id.diffuseTextureImageInfos)
                             updateTexIdLUT (infoId, i, texId, texId);
                     }
-                    LOG_INFO (m_VKInitSequenceLog) << "[OK] Import model " 
+                    LOG_INFO (m_VKInitSequenceLog) << "[OK] Import model "
                                                    << "[" << infoId << "]"
                                                    << std::endl;
                 }
@@ -172,40 +172,40 @@ namespace Core {
                  * |------------------------------------------------------------------------------------------------|
                 */
                 createSwapChainResources (deviceInfoId, sceneInfo->id.swapChainImageInfoBase);
-                LOG_INFO (m_VKInitSequenceLog) << "[OK] Swap chain resources " 
+                LOG_INFO (m_VKInitSequenceLog) << "[OK] Swap chain resources "
                                                << "[" << sceneInfo->id.swapChainImageInfoBase << "]"
                                                << " "
                                                << "[" << deviceInfoId << "]"
-                                               << std::endl;   
+                                               << std::endl;
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG TEXTURE RESOURCES - DIFFUSE TEXTURE                                                     |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                /* Create texture resources from the texture image pool, this is to ensure that duplicate texture images 
+                /* Create texture resources from the texture image pool, this is to ensure that duplicate texture images
                  * across models are not loaded again
                 */
                 for (auto const& [path, infoId]: getTextureImagePool()) {
                     createTextureResources (deviceInfoId, infoId, path.c_str());
-                    LOG_INFO (m_VKInitSequenceLog) << "[OK] Texture resources " 
+                    LOG_INFO (m_VKInitSequenceLog) << "[OK] Texture resources "
                                                    << "[" << infoId << "]"
-                                                   << std::endl; 
+                                                   << std::endl;
                 }
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG DEPTH RESOURCES                                                                         |
                  * |------------------------------------------------------------------------------------------------|
                 */
                 createDepthResources (deviceInfoId, sceneInfo->id.depthImageInfo);
-                LOG_INFO (m_VKInitSequenceLog) << "[OK] Depth resources " 
+                LOG_INFO (m_VKInitSequenceLog) << "[OK] Depth resources "
                                                << "[" << sceneInfo->id.depthImageInfo << "]"
-                                               << std::endl;  
+                                               << std::endl;
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG MULTI SAMPLE RESOURCES                                                                  |
                  * |------------------------------------------------------------------------------------------------|
                 */
                 createMultiSampleResources (deviceInfoId, sceneInfo->id.multiSampleImageInfo);
-                LOG_INFO (m_VKInitSequenceLog) << "[OK] Multi sample resources " 
+                LOG_INFO (m_VKInitSequenceLog) << "[OK] Multi sample resources "
                                                << "[" << sceneInfo->id.multiSampleImageInfo << "]"
-                                               << std::endl;    
+                                               << std::endl;
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG VERTEX BUFFERS                                                                          |
                  * |------------------------------------------------------------------------------------------------|
@@ -213,8 +213,8 @@ namespace Core {
                 std::vector <Vertex> combinedVertices;
                 size_t combinedVerticesCount = 0;
                 uint32_t vertexBufferInfoId  = getNextInfoIdFromBufferType (STAGING_BUFFER);
-                /* Combine all vertex buffers to a single buffer. Note that, only the first model will have access to 
-                 * the vertex buffer info id, and the remaining models will have it set to UINT32_MAX to indicate that 
+                /* Combine all vertex buffers to a single buffer. Note that, only the first model will have access to
+                 * the vertex buffer info id, and the remaining models will have it set to UINT32_MAX to indicate that
                  * their vertex buffers are owned by another model
                 */
                 for (auto const& infoId: modelInfoIds) {
@@ -224,19 +224,19 @@ namespace Core {
                     combinedVertices.reserve (combinedVerticesCount);
                     combinedVertices.insert  (combinedVertices.end(), modelInfo->meta.vertices.begin(),
                                                                       modelInfo->meta.vertices.end());
-   
+
                     infoId == modelInfoIds[0] ? modelInfo->id.vertexBufferInfos.push_back (vertexBufferInfoId):
                                                 modelInfo->id.vertexBufferInfos.push_back (UINT32_MAX);
                 }
-                
-                createVertexBuffer (deviceInfoId, 
+
+                createVertexBuffer (deviceInfoId,
                                     vertexBufferInfoId,
                                     combinedVerticesCount * sizeof (Vertex),
                                     combinedVertices.data());
 
-                LOG_INFO (m_VKInitSequenceLog) << "[OK] Vertex buffer " 
+                LOG_INFO (m_VKInitSequenceLog) << "[OK] Vertex buffer "
                                                << "[" << vertexBufferInfoId << "]"
-                                               << std::endl; 
+                                               << std::endl;
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG INDEX BUFFER                                                                            |
                  * |------------------------------------------------------------------------------------------------|
@@ -252,46 +252,46 @@ namespace Core {
                     combinedIndices.reserve (combinedIndicesCount);
                     combinedIndices.insert  (combinedIndices.end(), modelInfo->meta.indices.begin(),
                                                                     modelInfo->meta.indices.end());
-                    
+
                     infoId == modelInfoIds[0] ? modelInfo->id.indexBufferInfo = indexBufferInfoId:
                                                 modelInfo->id.indexBufferInfo = UINT32_MAX;
                 }
 
-                createIndexBuffer (deviceInfoId, 
+                createIndexBuffer (deviceInfoId,
                                    indexBufferInfoId,
                                    combinedIndicesCount * sizeof (uint32_t),
                                    combinedIndices.data());
-                
-                LOG_INFO (m_VKInitSequenceLog) << "[OK] Index buffer " 
+
+                LOG_INFO (m_VKInitSequenceLog) << "[OK] Index buffer "
                                                << "[" << indexBufferInfoId << "]"
-                                               << std::endl; 
+                                               << std::endl;
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG STORAGE BUFFERS                                                                         |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                /* Uniform buffers are great for small, read only data. But what if you want data you don’t know the 
-                 * size of in the shader? Or data that can be writeable. You use storage buffers for that. Storage 
-                 * buffers are usually slightly slower than uniform buffers, but they can be much, much bigger. With 
-                 * storage buffers, you can have an unsized array in a shader with whatever data you want. A common use 
-                 * for them is to store the transformation data of all the models in the scene. Shader storage buffers 
-                 * are created in the same way as uniform buffers. They also work in mostly the same way, they just have 
+                /* Uniform buffers are great for small, read only data. But what if you want data you don’t know the
+                 * size of in the shader? Or data that can be writeable. You use storage buffers for that. Storage
+                 * buffers are usually slightly slower than uniform buffers, but they can be much, much bigger. With
+                 * storage buffers, you can have an unsized array in a shader with whatever data you want. A common use
+                 * for them is to store the transformation data of all the models in the scene. Shader storage buffers
+                 * are created in the same way as uniform buffers. They also work in mostly the same way, they just have
                  * different properties like increased maximum size, and being writeable in shaders
                 */
 
-                /* We should have multiple buffers, because multiple frames may be in flight at the same time and we 
+                /* We should have multiple buffers, because multiple frames may be in flight at the same time and we
                  * don't want to update the buffer in preparation of the next frame while a previous one is still reading
                  * from it. Thus, we need to have as many buffers as we have frames in flight, and write to a buffer that
                  * is not currently being read by the GPU
                 */
-                for (uint32_t i = 0; i < g_coreSettings.maxFramesInFlight; i++) { 
+                for (uint32_t i = 0; i < g_coreSettings.maxFramesInFlight; i++) {
                     uint32_t storageBufferInfoId = sceneInfo->id.storageBufferInfoBase + i;
                     createStorageBuffer (deviceInfoId,
                                          storageBufferInfoId,
                                          sceneInfo->meta.totalInstancesCount * sizeof (InstanceDataSSBO));
 
-                    LOG_INFO (m_VKInitSequenceLog) << "[OK] Storage buffer " 
+                    LOG_INFO (m_VKInitSequenceLog) << "[OK] Storage buffer "
                                                    << "[" << storageBufferInfoId << "]"
-                                                   << std::endl; 
+                                                   << std::endl;
                 }
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG RENDER PASS ATTACHMENTS                                                                 |
@@ -299,16 +299,16 @@ namespace Core {
                 */
                 readyRenderPassInfo (renderPassInfoId);
                 /* For multi-sampled rendering in Vulkan, the multi-sampled image is treated separately from the final
-                 * single-sampled image. This provides separate control over what values need to reach memory, since 
-                 * like the depth buffer, the multi-sampled image may only need to be accessed during the processing of 
-                 * a tile. For this reason, if the multi-sampled image is not required after the render pass, it can be 
-                 * created with VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT and bound to an allocation created with 
-                 * VK_MEMORY_PROPERTY_LAZILY_ALLOCATED_BIT. The multi-sampled attachment storeOp can then be set to 
+                 * single-sampled image. This provides separate control over what values need to reach memory, since
+                 * like the depth buffer, the multi-sampled image may only need to be accessed during the processing of
+                 * a tile. For this reason, if the multi-sampled image is not required after the render pass, it can be
+                 * created with VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT and bound to an allocation created with
+                 * VK_MEMORY_PROPERTY_LAZILY_ALLOCATED_BIT. The multi-sampled attachment storeOp can then be set to
                  * VK_ATTACHMENT_STORE_OP_DONT_CARE in the VkAttachmentDescription, so that (at least on tiled renderers)
-                 * the full multi-sampled attachment does not need to be written to memory, which can save a lot of 
+                 * the full multi-sampled attachment does not need to be written to memory, which can save a lot of
                  * bandwidth
-                 * 
-                 * Note that, multi sampled images cannot be presented directly. We first need to resolve them to a 
+                 *
+                 * Note that, multi sampled images cannot be presented directly. We first need to resolve them to a
                  * regular image
                 */
                 createAttachment    (sceneInfo->id.multiSampleImageInfo,
@@ -320,7 +320,7 @@ namespace Core {
                                      VK_IMAGE_LAYOUT_UNDEFINED,         VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
 
                 /* Create depth attachment. Note that, the format should be the same as the depth image itself. We don't
-                 * care about storing the depth data (storeOp), because it will not be used after drawing has finished. 
+                 * care about storing the depth data (storeOp), because it will not be used after drawing has finished.
                  * This may allow the hardware to perform additional optimizations
                 */
                 createAttachment    (sceneInfo->id.depthImageInfo,
@@ -330,9 +330,7 @@ namespace Core {
                                      VK_ATTACHMENT_LOAD_OP_CLEAR,       VK_ATTACHMENT_STORE_OP_DONT_CARE,
                                      VK_ATTACHMENT_LOAD_OP_DONT_CARE,   VK_ATTACHMENT_STORE_OP_DONT_CARE,
                                      VK_IMAGE_LAYOUT_UNDEFINED,         VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
-                /* Note that, the finalLayout is not set to VK_IMAGE_LAYOUT_PRESENT_SRC_KHR since this is not the
-                 * final render pass
-                */
+
                 createAttachment    (sceneInfo->id.swapChainImageInfoBase,
                                      renderPassInfoId,
                                      SWAP_CHAIN_IMAGE,
@@ -344,9 +342,9 @@ namespace Core {
                  * | CONFIG SUB PASS                                                                                |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                /* The first transition for an attached image of a render pass will be from the initialLayout for the 
-                 * render pass to the reference layout for the first sub pass that uses the image. The last transition 
-                 * for an attached image will be from reference layout of the final sub pass that uses the attachment to 
+                /* The first transition for an attached image of a render pass will be from the initialLayout for the
+                 * render pass to the reference layout for the first sub pass that uses the image. The last transition
+                 * for an attached image will be from reference layout of the final sub pass that uses the attachment to
                  * the finalLayout for the render pass
                 */
                 auto inputAttachmentRefs       = std::vector <VkAttachmentReference> {
@@ -354,7 +352,7 @@ namespace Core {
                 auto colorAttachmentRefs       = std::vector {
                     getAttachmentReference (0, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL)
                 };
-                auto depthStencilAttachmentRef = 
+                auto depthStencilAttachmentRef =
                     getAttachmentReference (1, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
                 auto resolveAttachmentRefs     = std::vector {
                     getAttachmentReference (2, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL)
@@ -368,91 +366,91 @@ namespace Core {
                  * | CONFIG SUB PASS DEPENDENCIES                                                                   |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                /* It is possible that multiple frames are rendered simultaneously by the GPU. This is a problem when 
-                 * using a single depth buffer, because one frame could overwrite the depth buffer while a previous 
-                 * frame is still rendering to it. To prevent this, we add a sub pass dependency that synchronizes 
+                /* It is possible that multiple frames are rendered simultaneously by the GPU. This is a problem when
+                 * using a single depth buffer, because one frame could overwrite the depth buffer while a previous
+                 * frame is still rendering to it. To prevent this, we add a sub pass dependency that synchronizes
                  * accesses to the depth attachment
-                 *  
-                 * This dependency tells vulkan that the depth attachment in a render pass cannot be used before previous 
+                 *
+                 * This dependency tells vulkan that the depth attachment in a render pass cannot be used before previous
                  * render passes have finished using it
-                 * 
-                 * Note that, the depth image is first accessed in the early fragment test pipeline stage and we need to 
+                 *
+                 * Note that, the depth image is first accessed in the early fragment test pipeline stage and we need to
                  * make sure that there is no conflict between the transitioning of the depth image and it being cleared
                  * as part of its load operation (VK_ATTACHMENT_LOAD_OP_CLEAR)
                 */
-                createDependency (renderPassInfoId, 
-                                  0, 
+                createDependency (renderPassInfoId,
+                                  0,
                                   VK_SUBPASS_EXTERNAL, 0,
                                   VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT |
-                                  VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,     
+                                  VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
                                   VK_ACCESS_NONE,
                                   VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT |
                                   VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
                                   VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT);
-                /* Remember that the sub passes in a render pass automatically take care of image layout transitions. 
-                 * These transitions are controlled by sub pass dependencies, which specify memory and execution 
-                 * dependencies between sub passes. Note that, the operations right before and right after a sub pass 
+                /* Remember that the sub passes in a render pass automatically take care of image layout transitions.
+                 * These transitions are controlled by sub pass dependencies, which specify memory and execution
+                 * dependencies between sub passes. Note that, the operations right before and right after a sub pass
                  * also count as implicit "sub passes"
-                 * 
-                 * There are two built-in dependencies that take care of the transition at the start of the render pass 
-                 * and at the end of the render pass, but the former does not occur at the right time. It assumes that 
-                 * the transition occurs at the start of the pipeline, but we haven't acquired the image yet at that 
+                 *
+                 * There are two built-in dependencies that take care of the transition at the start of the render pass
+                 * and at the end of the render pass, but the former does not occur at the right time. It assumes that
+                 * the transition occurs at the start of the pipeline, but we haven't acquired the image yet at that
                  * point (see sync object wait operation)
-                 * 
+                 *
                  * Solution: (We choose option #2)
-                 * (1) We could change the waitStages for the image available semaphore to 
-                 * VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT to ensure that the render passes don't begin until the image is 
+                 * (1) We could change the waitStages for the image available semaphore to
+                 * VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT to ensure that the render passes don't begin until the image is
                  * available
-                 * 
-                 * (2) We can make the render pass wait for the VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT stage 
-                 * (this stage specifies the stage of the pipeline after blending where the final color values are 
+                 *
+                 * (2) We can make the render pass wait for the VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT stage
+                 * (this stage specifies the stage of the pipeline after blending where the final color values are
                  * output from the pipeline)
-                 * 
+                 *
                  * Image layout transition
-                 * Before the render pass, the layout of the image will be transitioned to the layout you specify, for 
-                 * example VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL. However, by default this happens at the beginning 
-                 * of the pipeline at which point we haven't acquired the image yet (we acquire it in the 
-                 * VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT stage per the sync object wait operation). That means 
-                 * that we need to change the behaviour of the render pass to also only change the layout once we've 
+                 * Before the render pass, the layout of the image will be transitioned to the layout you specify, for
+                 * example VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL. However, by default this happens at the beginning
+                 * of the pipeline at which point we haven't acquired the image yet (we acquire it in the
+                 * VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT stage per the sync object wait operation). That means
+                 * that we need to change the behaviour of the render pass to also only change the layout once we've
                  * come to that stage
-                 * 
-                 * The stage masks in the sub pass dependency allow the sub pass to already begin before the image is 
+                 *
+                 * The stage masks in the sub pass dependency allow the sub pass to already begin before the image is
                  * available up until the point where it needs to write to it
                 */
-                createDependency (renderPassInfoId, 
-                                  0, 
+                createDependency (renderPassInfoId,
+                                  0,
                                   VK_SUBPASS_EXTERNAL, 0,
-                                  VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, 
+                                  VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
                                   VK_ACCESS_NONE,
-                                  VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, 
+                                  VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
                                   VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT);
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG RENDER PASS                                                                             |
                  * |------------------------------------------------------------------------------------------------|
                 */
                 createRenderPass (deviceInfoId, renderPassInfoId);
-                LOG_INFO (m_VKInitSequenceLog) << "[OK] Render pass " 
+                LOG_INFO (m_VKInitSequenceLog) << "[OK] Render pass "
                                                << "[" << renderPassInfoId << "]"
-                                               << std::endl; 
+                                               << std::endl;
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG FRAME BUFFERS                                                                           |
                  * |------------------------------------------------------------------------------------------------|
                 */
                 /* Define attachments for every frame buffer
-                 * In MSAA, each pixel is sampled in an offscreen buffer which is then rendered to the screen. This 
+                 * In MSAA, each pixel is sampled in an offscreen buffer which is then rendered to the screen. This
                  * new buffer is slightly different from regular images we've been rendering to - they have to be able
-                 * to store more than one sample per pixel. Once a multi sampled buffer is created, it has to be 
-                 * resolved to the default frame buffer (which stores only a single sample per pixel). This is why we 
-                 * have to create an additional render target. We only need one render target since only one drawing 
+                 * to store more than one sample per pixel. Once a multi sampled buffer is created, it has to be
+                 * resolved to the default frame buffer (which stores only a single sample per pixel). This is why we
+                 * have to create an additional render target. We only need one render target since only one drawing
                  * operation is active at a time, just like with the depth buffer
-                 * 
-                 * Note that, we are using the same depth image on each of the swap chain frame buffers. This is because 
-                 * we do not need to change the depth image between frames (in flight), we can just keep clearing and 
+                 *
+                 * Note that, we are using the same depth image on each of the swap chain frame buffers. This is because
+                 * we do not need to change the depth image between frames (in flight), we can just keep clearing and
                  * reusing the same depth image for every frame (see sub pass dependency)
                 */
                 auto multiSampleImageInfo = getImageInfo (sceneInfo->id.multiSampleImageInfo, MULTI_SAMPLE_IMAGE);
                 auto depthImageInfo       = getImageInfo (sceneInfo->id.depthImageInfo,       DEPTH_IMAGE);
-                /* Create a frame buffer for all of the images in the swap chain and use the one that corresponds to the 
+                /* Create a frame buffer for all of the images in the swap chain and use the one that corresponds to the
                  * retrieved image at drawing time
                 */
                 for (uint32_t i = 0; i < deviceInfo->params.swapChainSize; i++) {
@@ -464,12 +462,12 @@ namespace Core {
                         depthImageInfo->resource.imageView,
                         swapChainImageInfo->resource.imageView
                     };
-                    createFrameBuffer (deviceInfoId, renderPassInfoId, attachments);                    
-                    LOG_INFO (m_VKInitSequenceLog) << "[OK] Frame buffer " 
+                    createFrameBuffer (deviceInfoId, renderPassInfoId, attachments);
+                    LOG_INFO (m_VKInitSequenceLog) << "[OK] Frame buffer "
                                                    << "[" << renderPassInfoId << "]"
                                                    << " "
                                                    << "[" << deviceInfoId << "]"
-                                                   << std::endl; 
+                                                   << std::endl;
                 }
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG PIPELINE STATE - VERTEX INPUT                                                           |
@@ -503,22 +501,22 @@ namespace Core {
                  * | CONFIG PIPELINE STATE - INPUT ASSEMBLY                                                         |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                createInputAssemblyState (pipelineInfoId, 
-                                          g_pipelineSettings.inputAssembly.topology, 
+                createInputAssemblyState (pipelineInfoId,
+                                          g_pipelineSettings.inputAssembly.topology,
                                           g_pipelineSettings.inputAssembly.restartEnable);
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG PIPELINE STATE - SHADERS                                                                |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                auto vertexShaderModule   = createShaderStage (deviceInfoId, 
+                auto vertexShaderModule   = createShaderStage (deviceInfoId,
                                                                pipelineInfoId,
-                                                               VK_SHADER_STAGE_VERTEX_BIT, 
-                                                               g_pipelineSettings.shaderStage.vertexShaderBinaryPath, 
+                                                               VK_SHADER_STAGE_VERTEX_BIT,
+                                                               g_pipelineSettings.shaderStage.vertexShaderBinaryPath,
                                                                "main");
 
-                auto fragmentShaderModule = createShaderStage (deviceInfoId, 
+                auto fragmentShaderModule = createShaderStage (deviceInfoId,
                                                                pipelineInfoId,
-                                                               VK_SHADER_STAGE_FRAGMENT_BIT, 
+                                                               VK_SHADER_STAGE_FRAGMENT_BIT,
                                                                g_pipelineSettings.shaderStage.fragmentShaderBinaryPath,
                                                                "main");
                 /* |------------------------------------------------------------------------------------------------|
@@ -530,7 +528,7 @@ namespace Core {
                  * | CONFIG PIPELINE STATE - RASTERIZATION                                                          |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                createRasterizationState (pipelineInfoId, 
+                createRasterizationState (pipelineInfoId,
                                           g_pipelineSettings.rasterization.polygonMode,
                                           g_pipelineSettings.rasterization.lineWidth,
                                           g_pipelineSettings.rasterization.cullMode,
@@ -541,7 +539,7 @@ namespace Core {
                 */
                 createMultiSampleState (sceneInfo->id.multiSampleImageInfo,
                                         pipelineInfoId,
-                                        g_pipelineSettings.multiSample.sampleShadingEnable, 
+                                        g_pipelineSettings.multiSample.sampleShadingEnable,
                                         g_pipelineSettings.multiSample.minSampleShading);
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG PIPELINE STATE - DEPTH STENCIL                                                          |
@@ -550,10 +548,10 @@ namespace Core {
                 createDepthStencilState (pipelineInfoId,
                                          g_pipelineSettings.depthStencil.depthTestEnable,
                                          g_pipelineSettings.depthStencil.depthWriteEnable,
-                                         g_pipelineSettings.depthStencil.depthBoundsTestEnable, 
-                                         g_pipelineSettings.depthStencil.minDepthBounds, 
+                                         g_pipelineSettings.depthStencil.depthBoundsTestEnable,
+                                         g_pipelineSettings.depthStencil.minDepthBounds,
                                          g_pipelineSettings.depthStencil.maxDepthBounds,
-                                         g_pipelineSettings.depthStencil.stencilTestEnable, 
+                                         g_pipelineSettings.depthStencil.stencilTestEnable,
                                          VK_NULL_HANDLE, VK_NULL_HANDLE);
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG PIPELINE STATE - COLOR BLEND                                                            |
@@ -566,7 +564,7 @@ namespace Core {
                     g_pipelineSettings.colorBlend.blendConstantR,
                     g_pipelineSettings.colorBlend.blendConstantG,
                     g_pipelineSettings.colorBlend.blendConstantB,
-                    g_pipelineSettings.colorBlend.blendConstantA 
+                    g_pipelineSettings.colorBlend.blendConstantA
                 };
                 createColorBlendState (pipelineInfoId,
                                        g_pipelineSettings.colorBlend.logicOpEnable,
@@ -587,16 +585,16 @@ namespace Core {
                  * |------------------------------------------------------------------------------------------------|
                 */
                 auto layoutBindings = std::vector {
-                    getLayoutBinding (0, 
+                    getLayoutBinding (0,
                                       1,
                                       VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
                                       VK_SHADER_STAGE_VERTEX_BIT,
                                       VK_NULL_HANDLE),
 
-                    /* Another commonly used type of descriptor is the combined image sampler, which is a single 
-                     * descriptor type associated with both a sampler and an image resource, combining both a sampler 
-                     * and sampled image descriptor into a single descriptor. Note that, it is possible to use texture 
-                     * sampling in the vertex shader, for example to dynamically deform a grid of vertices by a 
+                    /* Another commonly used type of descriptor is the combined image sampler, which is a single
+                     * descriptor type associated with both a sampler and an image resource, combining both a sampler
+                     * and sampled image descriptor into a single descriptor. Note that, it is possible to use texture
+                     * sampling in the vertex shader, for example to dynamically deform a grid of vertices by a
                      * heightmap
                     */
                     getLayoutBinding (1,
@@ -607,49 +605,49 @@ namespace Core {
                 };
                 /* Info on some of the available binding flags
                  * (1) VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT
-                 * This flag indicates that if descriptors in this binding are updated between when the descriptor set is 
-                 * bound in a command buffer and when that command buffer is submitted to a queue, then the submission 
-                 * will use the most recently set descriptors for this binding and the updates do not invalidate the 
+                 * This flag indicates that if descriptors in this binding are updated between when the descriptor set is
+                 * bound in a command buffer and when that command buffer is submitted to a queue, then the submission
+                 * will use the most recently set descriptors for this binding and the updates do not invalidate the
                  * command buffer
-                 * 
-                 * After enabling the desired feature support for updating after bind, an application needs to setup the 
+                 *
+                 * After enabling the desired feature support for updating after bind, an application needs to setup the
                  * following in order to use a descriptor that can update after bind
-                 * (a) The VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT_EXT flag for any 
+                 * (a) The VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT_EXT flag for any
                  * VkDescriptorSetLayout the descriptor is from
-                 * (b) The VK_DESCRIPTOR_POOL_CREATE_UPDATE_AFTER_BIND_BIT_EXT flag for any VkDescriptorPool the 
+                 * (b) The VK_DESCRIPTOR_POOL_CREATE_UPDATE_AFTER_BIND_BIT_EXT flag for any VkDescriptorPool the
                  * descriptor is allocated from
-                 * (c) The VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT_EXT for each binding in the VkDescriptorSetLayout 
+                 * (c) The VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT_EXT for each binding in the VkDescriptorSetLayout
                  * that the descriptor will use
-                 * 
+                 *
                  * More info:
                  * https://docs.vulkan.org/guide/latest/extensions/VK_EXT_descriptor_indexing.html#:~:text=The%20key%20
                  * word%20here%20is,dynamic%20uniform%20indexing%20in%20GLSL
-                 * 
+                 *
                  * (2) VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT
                  * With the partially bound feature an application developer isn’t required to update all the descriptors
                  * at time of use. An example would be if an application’s GLSL has
-                 * 
+                 *
                  * layout (set = 0, binding = 0) uniform sampler2D textureSampler[64];
-                 * 
-                 * but only binds the first 32 slots in the array. This also relies on the the application knowing that 
+                 *
+                 * but only binds the first 32 slots in the array. This also relies on the the application knowing that
                  * it will not index into the unbound slots in the array
                 */
                 auto bindingFlags = std::vector <VkDescriptorBindingFlags> {
                     g_pipelineSettings.descriptorSetLayout.bindingFlagsSSBO,
                     g_pipelineSettings.descriptorSetLayout.bindingFlagsCIS
                 };
-                createDescriptorSetLayout (deviceInfoId, 
-                                           pipelineInfoId, 
-                                           layoutBindings, 
-                                           bindingFlags, 
+                createDescriptorSetLayout (deviceInfoId,
+                                           pipelineInfoId,
+                                           layoutBindings,
+                                           bindingFlags,
                                            g_pipelineSettings.descriptorSetLayout.layoutCreateFlags);
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG PUSH CONSTANT RANGES                                                                    |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                createPushConstantRange (pipelineInfoId, 
+                createPushConstantRange (pipelineInfoId,
                                          VK_SHADER_STAGE_VERTEX_BIT,
-                                         0, 
+                                         0,
                                          sizeof (SceneDataVertPC));
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG PIPELINE LAYOUT                                                                         |
@@ -662,44 +660,44 @@ namespace Core {
                 */
                 createGraphicsPipeline (deviceInfoId,
                                         renderPassInfoId,
-                                        pipelineInfoId, 
-                                        0, -1, 
-                                        VK_NULL_HANDLE, 
+                                        pipelineInfoId,
+                                        0, -1,
+                                        VK_NULL_HANDLE,
                                         g_pipelineSettings.pipelineCreateFlags);
 
-                LOG_INFO (m_VKInitSequenceLog) << "[OK] Pipeline " 
+                LOG_INFO (m_VKInitSequenceLog) << "[OK] Pipeline "
                                                << "[" << pipelineInfoId << "]"
                                                << " "
                                                << "[" << renderPassInfoId << "]"
-                                               << std::endl;  
+                                               << std::endl;
                 /* |------------------------------------------------------------------------------------------------|
                  * | DESTROY SHADER MODULES                                                                         |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                /* The compilation and linking of the SPIR-V bytecode to machine code for execution by the GPU doesn't 
-                 * happen until the graphics pipeline is created. That means that we're allowed to destroy the shader 
+                /* The compilation and linking of the SPIR-V bytecode to machine code for execution by the GPU doesn't
+                 * happen until the graphics pipeline is created. That means that we're allowed to destroy the shader
                  * modules as soon as pipeline creation is finished
                 */
                 vkDestroyShaderModule (deviceInfo->resource.logDevice, vertexShaderModule,   VK_NULL_HANDLE);
                 vkDestroyShaderModule (deviceInfo->resource.logDevice, fragmentShaderModule, VK_NULL_HANDLE);
-                LOG_INFO (m_VKInitSequenceLog) << "[DELETE] Shader modules" 
-                                               << std::endl;  
+                LOG_INFO (m_VKInitSequenceLog) << "[DELETE] Shader modules"
+                                               << std::endl;
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG TEXTURE SAMPLER                                                                         |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                createTextureSampler (deviceInfoId, 
+                createTextureSampler (deviceInfoId,
                                       sceneInfoId,
                                       g_textureSamplerSettings.filter,
                                       g_textureSamplerSettings.addressMode,
                                       g_textureSamplerSettings.anisotropyEnable,
                                       g_textureSamplerSettings.mipMapMode,
-                                      g_textureSamplerSettings.mipLodBias, 
-                                      g_textureSamplerSettings.minLod, 
+                                      g_textureSamplerSettings.mipLodBias,
+                                      g_textureSamplerSettings.minLod,
                                       g_textureSamplerSettings.maxLod);
-                LOG_INFO (m_VKInitSequenceLog) << "[OK] Texture sampler " 
+                LOG_INFO (m_VKInitSequenceLog) << "[OK] Texture sampler "
                                                << "[" << sceneInfoId << "]"
-                                               << std::endl;  
+                                               << std::endl;
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG DESCRIPTOR POOL                                                                         |
                  * |------------------------------------------------------------------------------------------------|
@@ -707,33 +705,33 @@ namespace Core {
                 auto poolSizes = std::vector {
                     getPoolSize (VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, g_coreSettings.maxFramesInFlight),
 
-                    getPoolSize (VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, static_cast <uint32_t> 
+                    getPoolSize (VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, static_cast <uint32_t>
                                 (getTextureImagePool().size()) * g_coreSettings.maxFramesInFlight)
                 };
                 createDescriptorPool (deviceInfoId,
-                                      sceneInfoId, 
-                                      poolSizes, 
-                                      g_coreSettings.maxFramesInFlight, 
+                                      sceneInfoId,
+                                      poolSizes,
+                                      g_coreSettings.maxFramesInFlight,
                                       g_descriptorSettings.poolCreateFlags);
-                LOG_INFO (m_VKInitSequenceLog) << "[OK] Descriptor pool " 
+                LOG_INFO (m_VKInitSequenceLog) << "[OK] Descriptor pool "
                                                << "[" << sceneInfoId << "]"
-                                               << std::endl;  
+                                               << std::endl;
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG DESCRIPTOR SETS                                                                         |
                  * |------------------------------------------------------------------------------------------------|
                 */
                 uint32_t descriptorSetLayoutId = 0;
-                createDescriptorSets (deviceInfoId, 
-                                      pipelineInfoId, 
+                createDescriptorSets (deviceInfoId,
+                                      pipelineInfoId,
                                       sceneInfoId,
-                                      descriptorSetLayoutId, 
+                                      descriptorSetLayoutId,
                                       g_coreSettings.maxFramesInFlight);
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG DESCRIPTOR SETS UPDATE                                                                  |
                  * |------------------------------------------------------------------------------------------------|
                 */
                 for (uint32_t i = 0; i < g_coreSettings.maxFramesInFlight; i++) {
-                    uint32_t storageBufferInfoId = sceneInfo->id.storageBufferInfoBase + i; 
+                    uint32_t storageBufferInfoId = sceneInfo->id.storageBufferInfoBase + i;
                     auto bufferInfo              = getBufferInfo (storageBufferInfoId, STORAGE_BUFFER);
                     auto descriptorBufferInfos   = std::vector {
                         getDescriptorBufferInfo (bufferInfo->resource.buffer,
@@ -750,9 +748,9 @@ namespace Core {
                                                                                VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
                     }
 
-                    /* The configuration of descriptors is updated using the vkUpdateDescriptorSets function, which takes 
+                    /* The configuration of descriptors is updated using the vkUpdateDescriptorSets function, which takes
                      * an array of VkWriteDescriptorSet structs as parameter
-                    */                    
+                    */
                     auto writeDescriptorSets = std::vector {
                         getWriteBufferDescriptorSetInfo (VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
                                                          sceneInfo->resource.descriptorSets[i],
@@ -767,7 +765,7 @@ namespace Core {
 
                     updateDescriptorSets (deviceInfoId, writeDescriptorSets);
                 }
-                LOG_INFO (m_VKInitSequenceLog) << "[OK] Descriptor sets " 
+                LOG_INFO (m_VKInitSequenceLog) << "[OK] Descriptor sets "
                                                << "[" << sceneInfoId << "]"
                                                << " "
                                                << "[" << pipelineInfoId << "]"
@@ -778,20 +776,20 @@ namespace Core {
                  * | CONFIG TRANSFER OPS - COMMAND POOL AND BUFFER                                                  |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                /* Note that the command buffers that we will be submitting to the transfer queue will be short lived, so 
-                 * we will choose the VK_COMMAND_POOL_CREATE_TRANSIENT_BIT flag. And, this buffer copy command requires a 
+                /* Note that the command buffers that we will be submitting to the transfer queue will be short lived, so
+                 * we will choose the VK_COMMAND_POOL_CREATE_TRANSIENT_BIT flag. And, this buffer copy command requires a
                  * queue family that supports transfer operations, which is indicated using VK_QUEUE_TRANSFER_BIT
                 */
-                auto transferOpsCommandPool = getCommandPool (deviceInfoId, 
+                auto transferOpsCommandPool = getCommandPool (deviceInfoId,
                                                               VK_COMMAND_POOL_CREATE_TRANSIENT_BIT,
                                                               deviceInfo->meta.transferFamilyIndex.value());
                 LOG_INFO (m_VKInitSequenceLog) << "[OK] Transfer ops command pool "
                                                << "[" << deviceInfoId << "]"
                                                << std::endl;
-                /* Note that we are only requesting one command buffer from the pool, since it is recommended to combine 
-                 * all the transfer operations in a single command buffer and execute them asynchronously for higher 
+                /* Note that we are only requesting one command buffer from the pool, since it is recommended to combine
+                 * all the transfer operations in a single command buffer and execute them asynchronously for higher
                  * throughput
-                */                                            
+                */
                 auto transferOpsCommandBuffers = std::vector {
                     getCommandBuffers (deviceInfoId, transferOpsCommandPool, 1, VK_COMMAND_BUFFER_LEVEL_PRIMARY)
                 };
@@ -801,7 +799,7 @@ namespace Core {
                 */
                 uint32_t transferOpsFenceInfoId = 0;
                 createFence (deviceInfoId, transferOpsFenceInfoId, FEN_TRANSFER_DONE, 0);
-                LOG_INFO (m_VKInitSequenceLog) << "[OK] Transfer ops fence " 
+                LOG_INFO (m_VKInitSequenceLog) << "[OK] Transfer ops fence "
                                                << "[" << transferOpsFenceInfoId << "]"
                                                << std::endl;
                 /* |------------------------------------------------------------------------------------------------|
@@ -809,17 +807,17 @@ namespace Core {
                  * |------------------------------------------------------------------------------------------------|
                 */
                 /* We're only going to use the command buffer once and wait (vkQueueWaitIdle/vkWaitForFences) until the
-                 * copy operation has finished executing. It's good practice to tell the driver about our intent using 
+                 * copy operation has finished executing. It's good practice to tell the driver about our intent using
                  * VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT
-                */ 
+                */
                 beginRecording (transferOpsCommandBuffers[0],
                                 VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
                                 VK_NULL_HANDLE);
 
                 for (auto const& [path, infoId]: getTextureImagePool()) {
-                    copyBufferToImage (infoId, infoId, 
+                    copyBufferToImage (infoId, infoId,
                                        STAGING_BUFFER_TEX, TEXTURE_IMAGE,
-                                       0, 
+                                       0,
                                        VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
                                        transferOpsCommandBuffers[0]);
                 }
@@ -831,7 +829,7 @@ namespace Core {
                                         transferOpsCommandBuffers[0]);
                 }
 
-                copyBufferToBuffer (modelInfoBase->id.indexBufferInfo, 
+                copyBufferToBuffer (modelInfoBase->id.indexBufferInfo,
                                     modelInfoBase->id.indexBufferInfo,
                                     STAGING_BUFFER, INDEX_BUFFER,
                                     0, 0,
@@ -843,56 +841,56 @@ namespace Core {
                 transferOpsSubmitInfo.sType              = VK_STRUCTURE_TYPE_SUBMIT_INFO;
                 transferOpsSubmitInfo.commandBufferCount = static_cast <uint32_t> (transferOpsCommandBuffers.size());
                 transferOpsSubmitInfo.pCommandBuffers    = transferOpsCommandBuffers.data();
-                VkResult result = vkQueueSubmit (deviceInfo->resource.transferQueue, 
-                                                 1, 
-                                                 &transferOpsSubmitInfo, 
+                VkResult result = vkQueueSubmit (deviceInfo->resource.transferQueue,
+                                                 1,
+                                                 &transferOpsSubmitInfo,
                                                  getFenceInfo (transferOpsFenceInfoId, FEN_TRANSFER_DONE)->resource.fence);
 
                 if (result != VK_SUCCESS) {
                     LOG_ERROR (m_VKInitSequenceLog) << "Failed to submit transfer ops command buffer "
                                                     << "[" << deviceInfoId << "]"
-                                                    << " " 
+                                                    << " "
                                                     << "[" << string_VkResult (result) << "]"
-                                                    << std::endl; 
-                    throw std::runtime_error ("Failed to submit transfer ops command buffer");                    
-                } 
+                                                    << std::endl;
+                    throw std::runtime_error ("Failed to submit transfer ops command buffer");
+                }
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG TRANSFER OPS - WAIT                                                                     |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                /* Wait for fence 
+                /* Wait for fence
                  * Unlike the draw commands, there are no events we need to wait on. We just want to execute the transfer
                  * on the buffers immediately. There are again two possible ways to wait on this transfer to complete
-                 * 
-                 * (1) We could use a fence and wait with vkWaitForFences, or 
+                 *
+                 * (1) We could use a fence and wait with vkWaitForFences, or
                  * (2) Simply wait for the transfer queue to become idle via vkQueueWaitIdle (getTransferQueue());
-                 * 
-                 * A fence would allow you to schedule multiple transfers simultaneously and wait for all of them 
+                 *
+                 * A fence would allow you to schedule multiple transfers simultaneously and wait for all of them
                  * complete, instead of executing one at a time. That may give the driver more opportunities to optimize
-                */ 
-                LOG_INFO (m_VKInitSequenceLog) << "[WAITING] Transfer ops fence " 
+                */
+                LOG_INFO (m_VKInitSequenceLog) << "[WAITING] Transfer ops fence "
                                                << "[" << transferOpsFenceInfoId << "]"
                                                << std::endl;
-                vkWaitForFences (deviceInfo->resource.logDevice, 
-                                 1, 
-                                 &getFenceInfo (transferOpsFenceInfoId, FEN_TRANSFER_DONE)->resource.fence, 
-                                 VK_TRUE, 
+                vkWaitForFences (deviceInfo->resource.logDevice,
+                                 1,
+                                 &getFenceInfo (transferOpsFenceInfoId, FEN_TRANSFER_DONE)->resource.fence,
+                                 VK_TRUE,
                                  UINT64_MAX);
 
-                vkResetFences   (deviceInfo->resource.logDevice, 
-                                 1, 
+                vkResetFences   (deviceInfo->resource.logDevice,
+                                 1,
                                  &getFenceInfo (transferOpsFenceInfoId, FEN_TRANSFER_DONE)->resource.fence);
                 LOG_INFO (m_VKInitSequenceLog) << "[OK] Transfer ops fence reset "
                                                << "[" << transferOpsFenceInfoId << "]"
-                                               << std::endl;    
+                                               << std::endl;
                 /* |------------------------------------------------------------------------------------------------|
                  * | DESTROY STAGING BUFFERS                                                                        |
                  * |------------------------------------------------------------------------------------------------|
                 */
                 VKBufferMgr::cleanUp (deviceInfoId, modelInfoBase->id.indexBufferInfo, STAGING_BUFFER);
-                LOG_INFO (m_VKInitSequenceLog) << "[DELETE] Staging buffer " 
+                LOG_INFO (m_VKInitSequenceLog) << "[DELETE] Staging buffer "
                                                << "[" << modelInfoBase->id.indexBufferInfo << "]"
-                                               << std::endl;  
+                                               << std::endl;
 
                 for (auto const& infoId: modelInfoBase->id.vertexBufferInfos) {
                     VKBufferMgr::cleanUp (deviceInfoId, infoId, STAGING_BUFFER);
@@ -903,16 +901,16 @@ namespace Core {
 
                 for (auto const& [path, infoId]: getTextureImagePool()) {
                     VKBufferMgr::cleanUp (deviceInfoId, infoId, STAGING_BUFFER_TEX);
-                    LOG_INFO (m_VKInitSequenceLog) << "[DELETE] Staging buffer (Tex) " 
+                    LOG_INFO (m_VKInitSequenceLog) << "[DELETE] Staging buffer (Tex) "
                                                    << "[" << infoId << "]"
                                                    << std::endl;
-                }              
+                }
                 /* |------------------------------------------------------------------------------------------------|
                  * | DESTROY TRANSFER OPS - FENCE                                                                   |
                  * |------------------------------------------------------------------------------------------------|
                 */
                 cleanUpFence (deviceInfoId, transferOpsFenceInfoId, FEN_TRANSFER_DONE);
-                LOG_INFO (m_VKInitSequenceLog) << "[DELETE] Transfer ops fence " 
+                LOG_INFO (m_VKInitSequenceLog) << "[DELETE] Transfer ops fence "
                                                << "[" << transferOpsFenceInfoId << "]"
                                                << std::endl;
                 /* |------------------------------------------------------------------------------------------------|
@@ -926,13 +924,13 @@ namespace Core {
                  * | CONFIG BLIT OPS - COMMAND POOL AND BUFFER                                                      |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                auto blitOpsCommandPool = getCommandPool (deviceInfoId, 
+                auto blitOpsCommandPool = getCommandPool (deviceInfoId,
                                                           VK_COMMAND_POOL_CREATE_TRANSIENT_BIT,
                                                           deviceInfo->meta.graphicsFamilyIndex.value());
-                LOG_INFO (m_VKInitSequenceLog) << "[OK] Blit ops command pool " 
+                LOG_INFO (m_VKInitSequenceLog) << "[OK] Blit ops command pool "
                                                << "[" << deviceInfoId << "]"
                                                << std::endl;
-                                            
+
                 auto blitOpsCommandBuffers = std::vector {
                     getCommandBuffers (deviceInfoId, blitOpsCommandPool, 1, VK_COMMAND_BUFFER_LEVEL_PRIMARY)
                 };
@@ -942,9 +940,9 @@ namespace Core {
                 */
                 uint32_t blitOpsFenceInfoId = 0;
                 createFence (deviceInfoId, blitOpsFenceInfoId, FEN_BLIT_DONE, 0);
-                LOG_INFO (m_VKInitSequenceLog) << "[OK] Blit ops fence " 
+                LOG_INFO (m_VKInitSequenceLog) << "[OK] Blit ops fence "
                                                << "[" << blitOpsFenceInfoId << "]"
-                                               << std::endl;    
+                                               << std::endl;
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG BLIT OPS - RECORD AND SUBMIT                                                            |
                  * |------------------------------------------------------------------------------------------------|
@@ -963,44 +961,44 @@ namespace Core {
                 blitOpsSubmitInfo.sType              = VK_STRUCTURE_TYPE_SUBMIT_INFO;
                 blitOpsSubmitInfo.commandBufferCount = static_cast <uint32_t> (blitOpsCommandBuffers.size());
                 blitOpsSubmitInfo.pCommandBuffers    = blitOpsCommandBuffers.data();
-                result = vkQueueSubmit (deviceInfo->resource.graphicsQueue, 
-                                        1, 
-                                        &blitOpsSubmitInfo, 
+                result = vkQueueSubmit (deviceInfo->resource.graphicsQueue,
+                                        1,
+                                        &blitOpsSubmitInfo,
                                         getFenceInfo (blitOpsFenceInfoId, FEN_BLIT_DONE)->resource.fence);
 
                 if (result != VK_SUCCESS) {
                     LOG_ERROR (m_VKInitSequenceLog) << "Failed to submit blit ops command buffer "
                                                     << "[" << deviceInfoId << "]"
-                                                    << " " 
+                                                    << " "
                                                     << "[" << string_VkResult (result) << "]"
-                                                    << std::endl; 
-                    throw std::runtime_error ("Failed to submit blit ops command buffer");                    
+                                                    << std::endl;
+                    throw std::runtime_error ("Failed to submit blit ops command buffer");
                 }
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG BLIT OPS - WAIT                                                                         |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                LOG_INFO (m_VKInitSequenceLog) << "[WAITING] Blit ops fence " 
+                LOG_INFO (m_VKInitSequenceLog) << "[WAITING] Blit ops fence "
                                                << "[" << blitOpsFenceInfoId << "]"
                                                << std::endl;
-                vkWaitForFences (deviceInfo->resource.logDevice, 
-                                 1, 
-                                 &getFenceInfo (blitOpsFenceInfoId, FEN_BLIT_DONE)->resource.fence, 
-                                 VK_TRUE, 
+                vkWaitForFences (deviceInfo->resource.logDevice,
+                                 1,
+                                 &getFenceInfo (blitOpsFenceInfoId, FEN_BLIT_DONE)->resource.fence,
+                                 VK_TRUE,
                                  UINT64_MAX);
 
-                vkResetFences   (deviceInfo->resource.logDevice, 
-                                 1, 
+                vkResetFences   (deviceInfo->resource.logDevice,
+                                 1,
                                  &getFenceInfo (blitOpsFenceInfoId, FEN_BLIT_DONE)->resource.fence);
                 LOG_INFO (m_VKInitSequenceLog) << "[OK] Blit ops fence reset "
                                                << "[" << blitOpsFenceInfoId << "]"
-                                               << std::endl;  
+                                               << std::endl;
                 /* |------------------------------------------------------------------------------------------------|
                  * | DESTROY BLIT OPS - FENCE                                                                       |
                  * |------------------------------------------------------------------------------------------------|
                 */
                 cleanUpFence (deviceInfoId, blitOpsFenceInfoId, FEN_BLIT_DONE);
-                LOG_INFO (m_VKInitSequenceLog) << "[DELETE] Blit ops fence " 
+                LOG_INFO (m_VKInitSequenceLog) << "[DELETE] Blit ops fence "
                                                << "[" << blitOpsFenceInfoId << "]"
                                                << std::endl;
                 /* |------------------------------------------------------------------------------------------------|
@@ -1009,27 +1007,27 @@ namespace Core {
                 */
                 VKCmdBuffer::cleanUp (deviceInfoId, blitOpsCommandPool);
                 LOG_INFO (m_VKInitSequenceLog) << "[DELETE] Blit ops command pool"
-                                               << std::endl;           
+                                               << std::endl;
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG DRAW OPS - COMMAND POOL AND BUFFERS                                                     |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                /* We will be recording a command buffer every frame, so we want to be able to reset and rerecord over 
-                 * it. Thus, we need to set the VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT flag bit for our command 
-                 * pool. And, we're going to record commands for drawing, which is why we've chosen the graphics queue 
+                /* We will be recording a command buffer every frame, so we want to be able to reset and rerecord over
+                 * it. Thus, we need to set the VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT flag bit for our command
+                 * pool. And, we're going to record commands for drawing, which is why we've chosen the graphics queue
                  * family
                 */
-                auto drawOpsCommandPool = getCommandPool (deviceInfoId, 
+                auto drawOpsCommandPool = getCommandPool (deviceInfoId,
                                                           VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT,
                                                           deviceInfo->meta.graphicsFamilyIndex.value());
-                LOG_INFO (m_VKInitSequenceLog) << "[OK] Draw ops command pool " 
+                LOG_INFO (m_VKInitSequenceLog) << "[OK] Draw ops command pool "
                                                << "[" << deviceInfoId << "]"
                                                << std::endl;
-                                            
+
                 auto drawOpsCommandBuffers = std::vector {
                     getCommandBuffers (deviceInfoId,
-                                       drawOpsCommandPool, 
-                                       g_coreSettings.maxFramesInFlight, 
+                                       drawOpsCommandPool,
+                                       g_coreSettings.maxFramesInFlight,
                                        VK_COMMAND_BUFFER_LEVEL_PRIMARY)
                 };
 
@@ -1039,33 +1037,33 @@ namespace Core {
                  * | CONFIG DRAW OPS - FENCE AND SEMAPHORES                                                         |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                /* We'll need one fence to make sure only one frame is rendering at a time, one semaphore to signal that 
-                 * an image has been acquired from the swap chain and is ready for rendering, another one to signal that 
-                 * rendering has finished and presentation can happen, but since we can handle multiple frames in flight, 
+                /* We'll need one fence to make sure only one frame is rendering at a time, one semaphore to signal that
+                 * an image has been acquired from the swap chain and is ready for rendering, another one to signal that
+                 * rendering has finished and presentation can happen, but since we can handle multiple frames in flight,
                  * each frame should have its own set of semaphores and fence
                 */
                 for (uint32_t i = 0; i < g_coreSettings.maxFramesInFlight; i++) {
-                    /* On the very first frame, we immediately wait on in flight fence to be signaled. This fence is only 
-                     * signaled after a frame has finished rendering, yet since this is the first frame, there are no 
-                     * previous frames in which to signal the fence! Thus vkWaitForFences() blocks indefinitely, waiting 
-                     * on something which will never happen. To combat this, create the fence in the signaled state, so 
+                    /* On the very first frame, we immediately wait on in flight fence to be signaled. This fence is only
+                     * signaled after a frame has finished rendering, yet since this is the first frame, there are no
+                     * previous frames in which to signal the fence! Thus vkWaitForFences() blocks indefinitely, waiting
+                     * on something which will never happen. To combat this, create the fence in the signaled state, so
                      * that the first call to vkWaitForFences() returns immediately since the fence is already signaled
                     */
                     uint32_t drawOpsInFlightFenceInfoId = sceneInfo->id.inFlightFenceInfoBase + i;
                     createFence (deviceInfoId, drawOpsInFlightFenceInfoId, FEN_IN_FLIGHT, VK_FENCE_CREATE_SIGNALED_BIT);
-                    LOG_INFO (m_VKInitSequenceLog) << "[OK] Draw ops fence " 
+                    LOG_INFO (m_VKInitSequenceLog) << "[OK] Draw ops fence "
                                                    << "[" << drawOpsInFlightFenceInfoId << "]"
                                                    << std::endl;
 
                     uint32_t drawOpsImageAvailableSemaphoreInfoId = sceneInfo->id.imageAvailableSemaphoreInfoBase + i;
                     createSemaphore (deviceInfoId, drawOpsImageAvailableSemaphoreInfoId, SEM_IMAGE_AVAILABLE);
-                    LOG_INFO (m_VKInitSequenceLog) << "[OK] Draw ops semaphore " 
+                    LOG_INFO (m_VKInitSequenceLog) << "[OK] Draw ops semaphore "
                                                    << "[" << drawOpsImageAvailableSemaphoreInfoId << "]"
                                                    << std::endl;
 
                     uint32_t drawOpsRenderDoneSemaphoreInfoId = sceneInfo->id.renderDoneSemaphoreInfoBase + i;
                     createSemaphore (deviceInfoId, drawOpsRenderDoneSemaphoreInfoId, SEM_RENDER_DONE);
-                    LOG_INFO (m_VKInitSequenceLog) << "[OK] Draw ops semaphore " 
+                    LOG_INFO (m_VKInitSequenceLog) << "[OK] Draw ops semaphore "
                                                    << "[" << drawOpsRenderDoneSemaphoreInfoId << "]"
                                                    << std::endl;
                 }
