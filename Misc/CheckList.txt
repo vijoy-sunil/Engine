@@ -7,7 +7,7 @@ FILES/FOLDERS
 [ - ] File name has to be singular, not a plural
 [ - ] Parent folder/Sub folder names have to be singular
 [ - ] Make sure every header file is necessary
-[ - ] include order match inheritance order and hierarchy graph
+[ - ] include order match inheritance order
 [ - ] mark virtual, mark inheritance in hierarchy graph
 [ - ] include <> paths before “” paths
 [ - ] Check if you need to update readme

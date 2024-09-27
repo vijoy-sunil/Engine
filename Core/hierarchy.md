@@ -1,6 +1,7 @@
 # Class/file hierarchy
 <i>Classes within {} are virtual inheritance</i>
 
+## Device/
 <pre>
     |VKConfig, Log
     :
@@ -33,8 +34,10 @@
                             |                       |
                             |                       |
                             |---------------------->|VKLogDevice
+</pre>
 
-
+## Model/
+<pre>
     |VKConfig, Log
     :
     :
@@ -51,8 +54,10 @@
     |
     |
     |VKInstanceData
+</pre>
 
-
+## Image/
+<pre>
     |{VKPhyDevice}
     |(protected)
     |
@@ -71,8 +76,10 @@
     |---------------------->|VKDepthImage
     |
     |---------------------->|VKMultiSampleImage
+</pre>
 
-
+## Buffer/
+<pre>
     |{VKPhyDevice}
     |(protected)
     |
@@ -87,8 +94,10 @@
     |---------------------->|VKUniformBuffer
     |
     |---------------------->|VKStorageBuffer
+</pre>
 
-
+## RenderPass/
+<pre>
     |{VKDeviceMgr}
     |(protected)
     |
@@ -102,8 +111,10 @@
     |---------------------->|VKSubPass
     |
     |---------------------->|VKFrameBuffer
+</pre>
 
-
+## Pipeline/
+<pre>
     |{VKRenderPassMgr}
     |(protected)
     |
@@ -138,8 +149,10 @@
     |---------------------->|VKPushConstantRange
     |
     |---------------------->|VKPipelineLayout
+</pre>
 
-
+## Cmd/
+<pre>
     |<----------------------|{VKDeviceMgr}
     |
     |
@@ -156,8 +169,10 @@
     |
     |(protected)
     |VKCmd
+</pre>
 
-
+## Scene/
+<pre>
     |<----------------------|{VKDeviceMgr}
     |
     |

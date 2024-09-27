@@ -1,7 +1,7 @@
 # Vulkan Diagrams
 Helpful links: [David-DiGioia](https://github.com/David-DiGioia/vulkan-diagrams?tab=readme-ov-file)
 
-### Simplified flow
+## Simplified flow
 Source: [StackOverflow](https://stackoverflow.com/questions/39557141/what-is-the-difference-between-framebuffer-and-image-in-vulkan)
 
 > `VkDeviceMemory` is just a sequence of N bytes in memory
