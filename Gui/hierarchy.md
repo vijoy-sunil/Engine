@@ -1,6 +1,7 @@
 # Class/file hierarchy
 <i>Classes within {} are virtual inheritance</i>
 
+## Gui/
 <pre>
     |<----------------------|{VKWindow}
     |

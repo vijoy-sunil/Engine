@@ -1,6 +1,7 @@
 # Class/file hierarchy
 <i>Classes within {} are virtual inheritance</i>
 
+## Extension/
 <pre>
     |<----------------------|{VKAttachment}
     |
@@ -47,8 +48,10 @@
     |
     |(protected)
     |ENGrid
+</pre>
 
-
+## Controller/
+<pre>
     |<----------------------|{VKDeviceMgr}
     |
     |<----------------------|{UIImpl}
@@ -71,8 +74,10 @@
     |
     |(protected)
     |ENCamera
+</pre>
 
-
+## SandBox/
+<pre>
     |<----------------------|VKInitSequence
     |
     |<----------------------|VKDrawSequence

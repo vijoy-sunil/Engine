@@ -9,6 +9,7 @@ FILES/FOLDERS
 [ - ] Make sure every header file is necessary
 [ - ] include order match inheritance order
 [ - ] mark virtual, mark inheritance in hierarchy graph
+[ - ] hierarchy graph split by parent directory <pre> </pre> tags
 [ - ] include <> paths before “” paths
 [ - ] Check if you need to update readme
 [ - ] Trim trailing whitespaces
