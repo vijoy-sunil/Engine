@@ -21,12 +21,14 @@ namespace SandBox {
     typedef enum {
         DRONE                       = 0,
         SPOILER                     = 1,
-        FPV                         = 2,
-        TOP_DOWN                    = 3,
+        LEFT_PROFILE                = 2,
+        REVERSE                     = 3,
         RIGHT_PROFILE               = 4,
-        LEFT_PROFILE                = 5,
-        STADIUM                     = 6,
-        UNDEFINED                   = 7
+        REAR_AXLE                   = 5,
+        TOP_DOWN                    = 6,
+        FRONT_AXLE                  = 7,
+        STADIUM                     = 8,
+        UNDEFINED                   = 9
     } e_cameraType;
 }   // namespace SandBox
 #endif  // EN_ENUM_H

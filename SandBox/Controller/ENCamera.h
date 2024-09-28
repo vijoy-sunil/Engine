@@ -89,20 +89,20 @@ namespace SandBox {
                 updateCameraType   (SPOILER);
             }
 
-            void switchToFpv (float deltaTime) {
+            void switchToLeftProfile (float deltaTime) {
                 if (isKeyBoardCapturedByUI())
                     return;
 
                 static_cast <void> (deltaTime);
-                updateCameraType   (FPV);
+                updateCameraType   (LEFT_PROFILE);
             }
 
-            void switchToTopDown (float deltaTime) {
+            void switchToReverse (float deltaTime) {
                 if (isKeyBoardCapturedByUI())
                     return;
 
                 static_cast <void> (deltaTime);
-                updateCameraType   (TOP_DOWN);
+                updateCameraType   (REVERSE);
             }
 
             void switchToRightProfile (float deltaTime) {
@@ -113,12 +113,28 @@ namespace SandBox {
                 updateCameraType   (RIGHT_PROFILE);
             }
 
-            void switchToLeftProfile (float deltaTime) {
+            void switchToRearAxle (float deltaTime) {
                 if (isKeyBoardCapturedByUI())
                     return;
 
                 static_cast <void> (deltaTime);
-                updateCameraType   (LEFT_PROFILE);
+                updateCameraType   (REAR_AXLE);
+            }
+
+            void switchToTopDown (float deltaTime) {
+                if (isKeyBoardCapturedByUI())
+                    return;
+
+                static_cast <void> (deltaTime);
+                updateCameraType   (TOP_DOWN);
+            }
+
+            void switchToFrontAxle (float deltaTime) {
+                if (isKeyBoardCapturedByUI())
+                    return;
+
+                static_cast <void> (deltaTime);
+                updateCameraType   (FRONT_AXLE);
             }
 
             void switchToStadium (float deltaTime) {
@@ -304,17 +320,23 @@ namespace SandBox {
                 createKeyEventBinding (g_keyMapSettings.spoiler,                [this](float deltaTime) {
                     this->switchToSpoiler               (deltaTime);
                 });
-                createKeyEventBinding (g_keyMapSettings.fpv,                    [this](float deltaTime) {
-                    this->switchToFpv                   (deltaTime);
+                createKeyEventBinding (g_keyMapSettings.leftProfile,            [this](float deltaTime) {
+                    this->switchToLeftProfile           (deltaTime);
                 });
-                createKeyEventBinding (g_keyMapSettings.topDown,                [this](float deltaTime) {
-                    this->switchToTopDown               (deltaTime);
+                createKeyEventBinding (g_keyMapSettings.reverse,                [this](float deltaTime) {
+                    this->switchToReverse               (deltaTime);
                 });
                 createKeyEventBinding (g_keyMapSettings.rightProfile,           [this](float deltaTime) {
                     this->switchToRightProfile          (deltaTime);
                 });
-                createKeyEventBinding (g_keyMapSettings.leftProfile,            [this](float deltaTime) {
-                    this->switchToLeftProfile           (deltaTime);
+                createKeyEventBinding (g_keyMapSettings.rearAxle,               [this](float deltaTime) {
+                    this->switchToRearAxle              (deltaTime);
+                });
+                createKeyEventBinding (g_keyMapSettings.topDown,                [this](float deltaTime) {
+                    this->switchToTopDown               (deltaTime);
+                });
+                createKeyEventBinding (g_keyMapSettings.frontAxle,              [this](float deltaTime) {
+                    this->switchToFrontAxle             (deltaTime);
                 });
                 createKeyEventBinding (g_keyMapSettings.stadium,                [this](float deltaTime) {
                     this->switchToStadium               (deltaTime);

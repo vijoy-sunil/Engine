@@ -113,13 +113,13 @@ namespace SandBox {
          *      Z                   |===============|   Front       : {0.0, 0.0, 0.9}
          *      |                   |               |
          *      |                   |---|       |---|
-         *     -Y-------X               |       |
+         *     -Y-------X               |       |       Front Axle  : {0.0, 0.0, 0.5}
          *                          |---|       |---|
          *                          |               |
          *                          |       X       |   Origin(*)   : {0.0, 0.0, 0.0}
          *                          |               |
          *                          |---|       |---|
-         *                              |       |
+         *                              |       |       Rear Axle   : {0.0, 0.0, -0.5}
          *                          |---|       |---|
          *                          |               |
          *                          |---------------|   Rear        : {0.0, 0.0, -0.8}
@@ -129,23 +129,27 @@ namespace SandBox {
 
         /* Dummy values for drone mode, since we will be using previous state info to move around
         */
-        {DRONE,         {{  0.0f,   0.0f,   0.0f},  {0.0f,  0.0f,  0.0f},   0.0f}},
-        {SPOILER,       {{  0.0f,  -0.87f, -3.0f},  {0.0f,  0.0f,  0.0f},   50.0f}},
-        {FPV,           {{  0.0f,  -0.17f,  0.9f},  {0.0f, -0.17f, 1.0f},   80.0f}},
-        {TOP_DOWN,      {{  0.0f,  -6.37f,  0.0f},  {0.0f,  0.0f,  0.2f},   50.0f}},
-        {RIGHT_PROFILE, {{  2.0f,   0.0f,   0.0f},  {0.0f,  0.0f,  0.0f},   80.0f}},
-        {LEFT_PROFILE,  {{ -2.0f,   0.0f,   0.0f},  {0.0f,  0.0f,  0.0f},   80.0f}},
-        {STADIUM,       {{-10.0f, -10.0f, -10.0f},  {0.0f,  0.0f,  0.0f},   80.0f}}
+        {DRONE,         {{  0.0f,   0.0f,   0.0f},  {0.0f,  0.0f,   0.0f},      0.0f}},
+        {SPOILER,       {{  0.0f,  -0.87f, -2.0f},  {0.0f,  0.0f,   0.5f},      50.0f}},
+        {LEFT_PROFILE,  {{ -2.0f,   0.0f,   0.0f},  {0.0f,  0.0f,   0.0f},      80.0f}},
+        {REVERSE,       {{  0.0f,  -0.87f,  2.0f},  {0.0f,  0.0f,  -0.5f},      50.0f}},
+        {RIGHT_PROFILE, {{  2.0f,   0.0f,   0.0f},  {0.0f,  0.0f,   0.0f},      80.0f}},
+        {REAR_AXLE,     {{  0.0f,  -0.47f,  0.0f},  {0.0f, -0.17f, -0.5f},      80.0f}},
+        {TOP_DOWN,      {{  0.0f,  -6.37f,  0.0f},  {0.0f,  0.0f,   0.2f},      50.0f}},
+        {FRONT_AXLE,    {{  0.0f,  -0.47f,  0.0f},  {0.0f, -0.17f,  0.5f},      80.0f}},
+        {STADIUM,       {{-10.0f, -10.0f, -10.0f},  {0.0f,  0.0f,   0.0f},      80.0f}}
     };
 
     struct KeyMapSettings {
         const int drone                                              = '0';
         const int spoiler                                            = '1';
-        const int fpv                                                = '2';
-        const int topDown                                            = '3';
+        const int leftProfile                                        = '2';
+        const int reverse                                            = '3';
         const int rightProfile                                       = '4';
-        const int leftProfile                                        = '5';
-        const int stadium                                            = '6';
+        const int rearAxle                                           = '5';
+        const int topDown                                            = '6';
+        const int frontAxle                                          = '7';
+        const int stadium                                            = '8';
         const int moveLeft                                           = 'A';
         const int moveRight                                          = 'D';
         const int moveBackward                                       = 'S';
