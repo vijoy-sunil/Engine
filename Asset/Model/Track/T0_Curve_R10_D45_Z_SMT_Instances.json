@@ -3,14 +3,14 @@
     "instances": [
         {
             "id":         0,
-            "translate":  [16.0, -2.92893, 20.9289],
+            "position":   [16.0, -2.92893, 20.9289],
             "rotateAxis": [ 0.0,  1.0,      0.0],
             "scale":      [ 1.0,  1.0,      1.0],
             "rotateAngleDeg": 0.0
         },
         {
             "id":         1,
-            "translate":  [16.0, -2.92893, 6.7868],
+            "position":   [16.0, -2.92893, 6.7868],
             "rotateAxis": [ 0.0,  1.0,     0.0],
             "scale":      [ 1.0,  1.0,     1.0],
             "rotateAngleDeg": -180.0

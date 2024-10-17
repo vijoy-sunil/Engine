@@ -1,8 +1,19 @@
 # Dependency repos
-> https://github.com/ocornut/imgui/tree/master
 
-> https://github.com/nlohmann/json
+## Icon fonts
+> https://github.com/juliettef/IconFontCppHeaders.git
 
-> https://github.com/nothings/stb
+## Dear imgui
+> https://github.com/ocornut/imgui.git
 
-> https://github.com/tinyobjloader/tinyobjloader
+## Implot
+> https://github.com/epezent/implot.git
+
+## Json parser
+> https://github.com/nlohmann/json.git
+
+## Image loader
+> https://github.com/nothings/stb.git
+
+## Model loader
+> https://github.com/tinyobjloader/tinyobjloader.git

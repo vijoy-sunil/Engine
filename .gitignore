@@ -2,7 +2,9 @@
 .vscode
 Asset/Model/*.blend
 Asset/Model/*.blend1
+Dependency/IconFontCppHeaders/
 Dependency/imgui/
+Dependency/implot/
 Dependency/json/
 Dependency/stb/
 Dependency/tinyobjloader/
