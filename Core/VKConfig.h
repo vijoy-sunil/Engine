@@ -8,7 +8,6 @@
 namespace Core {
     #define ENABLE_LOGGING                                           (true)
     #define ENABLE_AUTO_PICK_QUEUE_FAMILY_INDICES                    (true)
-    #define ENABLE_PARSED_INSTANCE_DATA_DUMP                         (true)
 
     struct CollectionSettings {
         /* Collection instance id range assignments

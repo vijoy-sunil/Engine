@@ -13,7 +13,6 @@ namespace Core {
         public:
             VKInstanceData (void) {
                 m_VKInstanceDataLog = LOG_INIT (m_instanceId, g_collectionSettings.logSaveDirPath);
-                LOG_ADD_CONFIG (m_instanceId, Log::INFO,    Log::TO_FILE_IMMEDIATE);
                 LOG_ADD_CONFIG (m_instanceId, Log::WARNING, Log::TO_FILE_IMMEDIATE | Log::TO_CONSOLE);
                 LOG_ADD_CONFIG (m_instanceId, Log::ERROR,   Log::TO_FILE_IMMEDIATE | Log::TO_CONSOLE);
             }
@@ -72,11 +71,6 @@ namespace Core {
                 auto json = nlohmann::json::parse (stream.str());
 
                 uint32_t instancesCount  = json["instancesCount"];
-                uint32_t modelInstanceId = 0;
-                glm::vec3 translate      = {0.0f, 0.0f, 0.0f};
-                glm::vec3 rotateAxis     = {0.0f, 1.0f, 0.0f};
-                glm::vec3 scale          = {1.0f, 1.0f, 1.0f};
-                float rotateAngleDeg     = 0.0f;
 
                 if (instancesCount == 0) {
                     LOG_WARNING (m_VKInstanceDataLog) << "Failed to import instance data "
@@ -86,62 +80,42 @@ namespace Core {
                                                       << std::endl;
                     /* Set default instance data
                     */
-                    modelInfo->meta.instances.resize (1);
+                    modelInfo->meta.instances.resize     (1);
+                    modelInfo->meta.instanceDatas.resize (1);
                     modelInfo->meta.instancesCount = 1;
-                    createModelMatrix (modelInfoId,
-                                       modelInstanceId,
-                                       translate,
-                                       rotateAxis,
-                                       scale,
-                                       rotateAngleDeg);
+                    uint32_t modelInstanceId       = 0;
+
+                    modelInfo->meta.instanceDatas[modelInstanceId].position       = {0.0f, 0.0f, 0.0f};
+                    modelInfo->meta.instanceDatas[modelInstanceId].rotateAxis     = {0.0f, 1.0f, 0.0f};
+                    modelInfo->meta.instanceDatas[modelInstanceId].scale          = {1.0f, 1.0f, 1.0f};
+                    modelInfo->meta.instanceDatas[modelInstanceId].rotateAngleDeg = 0.0f;
+                    createModelMatrix (modelInfoId, modelInstanceId);
                 }
                 else {
-                    modelInfo->meta.instances.resize (instancesCount);
+                    modelInfo->meta.instances.resize     (instancesCount);
+                    modelInfo->meta.instanceDatas.resize (instancesCount);
                     modelInfo->meta.instancesCount = instancesCount;
 
                     for (auto const& instance: json["instances"]) {
-                        translate  = {instance["translate"][0],  instance["translate"][1],  instance["translate"][2]};
-                        rotateAxis = {instance["rotateAxis"][0], instance["rotateAxis"][1], instance["rotateAxis"][2]};
-                        scale      = {instance["scale"][0],      instance["scale"][1],      instance["scale"][2]};
+                        uint32_t modelInstanceId = instance["id"];
 
-                        modelInstanceId = instance["id"];
-                        rotateAngleDeg  = instance["rotateAngleDeg"];
-#if ENABLE_PARSED_INSTANCE_DATA_DUMP
-                        LOG_INFO (m_VKInstanceDataLog) << "Model instance id "
-                                                       << "[" << modelInstanceId << "]"
-                                                       << std::endl;
-
-                        LOG_INFO (m_VKInstanceDataLog) << "Translate "
-                                                       << "[" << translate.x << ", "
-                                                              << translate.y << ", "
-                                                              << translate.z
-                                                       << "]"
-                                                       << std::endl;
-
-                        LOG_INFO (m_VKInstanceDataLog) << "Rotate axis "
-                                                       << "[" << rotateAxis.x << ", "
-                                                              << rotateAxis.y << ", "
-                                                              << rotateAxis.z
-                                                       << "]"
-                                                       << std::endl;
-
-                        LOG_INFO (m_VKInstanceDataLog) << "Scale "
-                                                       << "[" << scale.x << ", "
-                                                              << scale.y << ", "
-                                                              << scale.z
-                                                       << "]"
-                                                       << std::endl;
-
-                        LOG_INFO (m_VKInstanceDataLog) << "Rotate angle deg "
-                                                       << "[" << rotateAngleDeg << "]"
-                                                       << std::endl;
-#endif  // ENABLE_PARSED_INSTANCE_DATA_DUMP
-                        createModelMatrix (modelInfoId,
-                                           modelInstanceId,
-                                           translate,
-                                           rotateAxis,
-                                           scale,
-                                           rotateAngleDeg);
+                        modelInfo->meta.instanceDatas[modelInstanceId].position       = {
+                            instance["position"][0],
+                            instance["position"][1],
+                            instance["position"][2]
+                        };
+                        modelInfo->meta.instanceDatas[modelInstanceId].rotateAxis     = {
+                            instance["rotateAxis"][0],
+                            instance["rotateAxis"][1],
+                            instance["rotateAxis"][2]
+                        };
+                        modelInfo->meta.instanceDatas[modelInstanceId].scale          = {
+                            instance["scale"][0],
+                            instance["scale"][1],
+                            instance["scale"][2]
+                        };
+                        modelInfo->meta.instanceDatas[modelInstanceId].rotateAngleDeg = instance["rotateAngleDeg"];
+                        createModelMatrix (modelInfoId, modelInstanceId);
                     }
                 }
                 return modelInfo->meta.instancesCount;

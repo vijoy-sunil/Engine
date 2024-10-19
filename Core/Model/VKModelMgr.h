@@ -10,6 +10,13 @@
 namespace Core {
     class VKModelMgr: protected VKVertexData {
         private:
+            struct InstanceData {
+                glm::vec3 position;
+                glm::vec3 rotateAxis;
+                glm::vec3 scale;
+                float rotateAngleDeg;
+            };
+
             struct ModelInfo {
                 struct Meta {
                     /* The attributes are combined into one array of vertices, this is known as interleaving vertex
@@ -22,6 +29,7 @@ namespace Core {
                     */
                     std::vector <uint32_t> indices;
                     std::vector <InstanceDataSSBO> instances;
+                    std::vector <InstanceData>     instanceDatas;
                     uint32_t verticesCount;
                     uint32_t indicesCount;
                     uint32_t instancesCount;
@@ -41,6 +49,8 @@ namespace Core {
                 } id;
             };
             std::unordered_map <uint32_t, ModelInfo>   m_modelInfoPool;
+
+            uint32_t m_textureImageInfoId;
             std::unordered_map <std::string, uint32_t> m_textureImagePool;
 
             Log::Record* m_VKModelMgrLog;
@@ -129,6 +139,7 @@ namespace Core {
                 */
                 info.path.diffuseTextureImages.push_back (g_coreSettings.defaultDiffuseTexturePath);
                 m_modelInfoPool[modelInfoId]      = info;
+                m_textureImageInfoId              = 0;
                 /* Config log for parsed data
                 */
                 std::string nameExtension = "_PD_" + std::to_string (modelInfoId);
@@ -384,10 +395,9 @@ namespace Core {
             void updateTextureImagePool (uint32_t modelInfoId, const std::string& texturePath) {
                 auto modelInfo = getModelInfo (modelInfoId);
 
-                static uint32_t textureImageInfoId = 0;
                 if (m_textureImagePool.find (texturePath) == m_textureImagePool.end()) {
-                    m_textureImagePool[texturePath] = textureImageInfoId;
-                    textureImageInfoId++;
+                    m_textureImagePool[texturePath] = m_textureImageInfoId;
+                    m_textureImageInfoId++;
                 }
                 modelInfo->id.diffuseTextureImageInfos.push_back (m_textureImagePool[texturePath]);
             }
@@ -448,6 +458,35 @@ namespace Core {
                                                        << std::endl;
                             rowIdx++;
                         }
+
+                        LOG_INFO (m_VKModelMgrLog) << "Position"
+                                                   << std::endl;
+                        LOG_INFO (m_VKModelMgrLog) << "[" << val.meta.instanceDatas[modelInstanceId].position.x << ", "
+                                                          << val.meta.instanceDatas[modelInstanceId].position.y << ", "
+                                                          << val.meta.instanceDatas[modelInstanceId].position.z
+                                                   << "]"
+                                                   << std::endl;
+
+                        LOG_INFO (m_VKModelMgrLog) << "Rotate axis"
+                                                   << std::endl;
+                        LOG_INFO (m_VKModelMgrLog) << "[" << val.meta.instanceDatas[modelInstanceId].rotateAxis.x << ", "
+                                                          << val.meta.instanceDatas[modelInstanceId].rotateAxis.y << ", "
+                                                          << val.meta.instanceDatas[modelInstanceId].rotateAxis.z
+                                                   << "]"
+                                                   << std::endl;
+
+                        LOG_INFO (m_VKModelMgrLog) << "Scale"
+                                                   << std::endl;
+                        LOG_INFO (m_VKModelMgrLog) << "[" << val.meta.instanceDatas[modelInstanceId].scale.x << ", "
+                                                          << val.meta.instanceDatas[modelInstanceId].scale.y << ", "
+                                                          << val.meta.instanceDatas[modelInstanceId].scale.z
+                                                   << "]"
+                                                   << std::endl;
+
+                        LOG_INFO (m_VKModelMgrLog) << "Rotate angle deg "
+                                                   << "[" << val.meta.instanceDatas[modelInstanceId].rotateAngleDeg
+                                                   << "]"
+                                                   << std::endl;
                         modelInstanceId++;
                     }
 
