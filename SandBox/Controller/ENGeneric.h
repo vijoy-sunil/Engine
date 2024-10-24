@@ -2,12 +2,14 @@
 #define EN_GENERIC_H
 
 #include "../../Core/Device/VKDeviceMgr.h"
-#include "../../Gui/UIImpl.h"
+#include "../../Gui/UIInput.h"
+#include "../../Gui/UIUtil.h"
 #include "../ENConfig.h"
 
 namespace SandBox {
     class ENGeneric: protected virtual Core::VKDeviceMgr,
-                     protected virtual Gui::UIImpl {
+                     protected virtual Gui::UIInput,
+                     protected virtual Gui::UIUtil {
         private:
             uint32_t m_deviceInfoId;
 

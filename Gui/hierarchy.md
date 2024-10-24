@@ -1,6 +1,40 @@
 # Class/file hierarchy
 <i>Classes within {} are virtual inheritance</i>
 
+## Wrapper/
+<pre>
+                            |UIEnum
+                            :
+                            :
+    |<......................|UIConfig
+    :
+    :
+    |UIPrimitive
+
+
+                            |UIEnum
+                            :
+                            :
+    |<......................|UILogHelper
+    :
+    |<......................|UIConfig
+    :
+    :
+    |UITree
+
+
+    |<......................|UIConfig
+    :
+    :
+    |UIOverlay
+
+
+    |<......................|UIConfig
+    :
+    :
+    |UIPlot
+</pre>
+
 ## Gui/
 <pre>
     |<----------------------|{VKWindow}
@@ -12,11 +46,36 @@
     |UIInput
 
 
-    |<----------------------|{VKRenderPassMgr}
+    |<......................|UIConfig
+    :
+    :
+    |UIUtil
+
+
+    |<----------------------|{VKImageMgr}
     |
     |<----------------------|{VKSceneMgr}
     |
-    |<----------------------|UIInput
+    |<----------------------|UIPrimitive
+    |
+    |<----------------------|UITree
+    |
+    |<----------------------|UIOverlay
+    |
+    |<----------------------|UIPlot
+    |
+    |<----------------------|ENCamera
+    |
+    |<......................|ENLogHelper
+    |
+    |
+    |(protected)
+    |UIWindow
+
+
+    |<----------------------|{VKRenderPassMgr}
+    |
+    |<----------------------|UIWindow
     |
     |
     |(protected)

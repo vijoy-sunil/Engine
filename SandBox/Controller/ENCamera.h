@@ -3,13 +3,15 @@
 
 #include "../../Core/Model/VKModelMgr.h"
 #include "../../Core/Scene/VKCameraMgr.h"
-#include "../../Gui/UIImpl.h"
+#include "../../Gui/UIInput.h"
+#include "../../Gui/UIUtil.h"
 #include "../ENConfig.h"
 
 namespace SandBox {
     class ENCamera: protected virtual Core::VKModelMgr,
                     protected virtual Core::VKCameraMgr,
-                    protected virtual Gui::UIImpl {
+                    protected virtual Gui::UIInput,
+                    protected virtual Gui::UIUtil {
         private:
             uint32_t m_deviceInfoId;
             uint32_t m_cameraInfoId;
@@ -41,6 +43,7 @@ namespace SandBox {
                     readyScrollOffsetCallBack       (m_deviceInfoId);
 
                     ImGui_ImplGlfw_InstallCallbacks (deviceInfo->resource.window);
+                    disableMouseInputsToUI();
                 }
                 /* Delete mouse event callbacks if the camera is not in drone mode
                 */
@@ -52,11 +55,8 @@ namespace SandBox {
                     deleteScrollOffsetCallBack      (m_deviceInfoId);
 
                     ImGui_ImplGlfw_InstallCallbacks (deviceInfo->resource.window);
+                    enableMouseInputsToUI();
                 }
-            }
-
-            e_cameraType getCameraType (void) {
-                return m_currentType;
             }
 
             float getYawDeg (glm::vec3 direction) {
@@ -68,81 +68,6 @@ namespace SandBox {
                  * input vector before calling this function
                 */
                 return glm::degrees (asin (direction.y));
-            }
-
-            void switchToDrone (float deltaTime) {
-                if (isKeyBoardCapturedByUI())
-                    return;
-
-                static_cast <void> (deltaTime);
-                updateCameraType   (DRONE);
-                /* Reset boolean whenever we switch to drone mode
-                */
-                m_firstCursorEvent = true;
-            }
-
-            void switchToSpoiler (float deltaTime) {
-                if (isKeyBoardCapturedByUI())
-                    return;
-
-                static_cast <void> (deltaTime);
-                updateCameraType   (SPOILER);
-            }
-
-            void switchToLeftProfile (float deltaTime) {
-                if (isKeyBoardCapturedByUI())
-                    return;
-
-                static_cast <void> (deltaTime);
-                updateCameraType   (LEFT_PROFILE);
-            }
-
-            void switchToReverse (float deltaTime) {
-                if (isKeyBoardCapturedByUI())
-                    return;
-
-                static_cast <void> (deltaTime);
-                updateCameraType   (REVERSE);
-            }
-
-            void switchToRightProfile (float deltaTime) {
-                if (isKeyBoardCapturedByUI())
-                    return;
-
-                static_cast <void> (deltaTime);
-                updateCameraType   (RIGHT_PROFILE);
-            }
-
-            void switchToRearAxle (float deltaTime) {
-                if (isKeyBoardCapturedByUI())
-                    return;
-
-                static_cast <void> (deltaTime);
-                updateCameraType   (REAR_AXLE);
-            }
-
-            void switchToTopDown (float deltaTime) {
-                if (isKeyBoardCapturedByUI())
-                    return;
-
-                static_cast <void> (deltaTime);
-                updateCameraType   (TOP_DOWN);
-            }
-
-            void switchToFrontAxle (float deltaTime) {
-                if (isKeyBoardCapturedByUI())
-                    return;
-
-                static_cast <void> (deltaTime);
-                updateCameraType   (FRONT_AXLE);
-            }
-
-            void switchToStadium (float deltaTime) {
-                if (isKeyBoardCapturedByUI())
-                    return;
-
-                static_cast <void> (deltaTime);
-                updateCameraType   (STADIUM);
             }
 
             /* Whenever we press one of the camera movement keys, the camera's position is updated accordingly. If we
@@ -360,6 +285,85 @@ namespace SandBox {
                 createMouseEventBinding (Core::SCROLL_OFFSET,                   [this](float xOffset, float yOffset) {
                     this->updateFov                     (xOffset, yOffset);
                 });
+            }
+
+            void switchToDrone (float deltaTime) {
+                if (isKeyBoardCapturedByUI())
+                    return;
+
+                static_cast <void> (deltaTime);
+                updateCameraType   (DRONE);
+                /* Reset boolean whenever we switch to drone mode
+                */
+                m_firstCursorEvent = true;
+            }
+
+            void switchToSpoiler (float deltaTime) {
+                if (isKeyBoardCapturedByUI())
+                    return;
+
+                static_cast <void> (deltaTime);
+                updateCameraType   (SPOILER);
+            }
+
+            void switchToLeftProfile (float deltaTime) {
+                if (isKeyBoardCapturedByUI())
+                    return;
+
+                static_cast <void> (deltaTime);
+                updateCameraType   (LEFT_PROFILE);
+            }
+
+            void switchToReverse (float deltaTime) {
+                if (isKeyBoardCapturedByUI())
+                    return;
+
+                static_cast <void> (deltaTime);
+                updateCameraType   (REVERSE);
+            }
+
+            void switchToRightProfile (float deltaTime) {
+                if (isKeyBoardCapturedByUI())
+                    return;
+
+                static_cast <void> (deltaTime);
+                updateCameraType   (RIGHT_PROFILE);
+            }
+
+            void switchToRearAxle (float deltaTime) {
+                if (isKeyBoardCapturedByUI())
+                    return;
+
+                static_cast <void> (deltaTime);
+                updateCameraType   (REAR_AXLE);
+            }
+
+            void switchToTopDown (float deltaTime) {
+                if (isKeyBoardCapturedByUI())
+                    return;
+
+                static_cast <void> (deltaTime);
+                updateCameraType   (TOP_DOWN);
+            }
+
+            void switchToFrontAxle (float deltaTime) {
+                if (isKeyBoardCapturedByUI())
+                    return;
+
+                static_cast <void> (deltaTime);
+                updateCameraType   (FRONT_AXLE);
+            }
+
+            void switchToStadium (float deltaTime) {
+                if (isKeyBoardCapturedByUI())
+                    return;
+
+                static_cast <void> (deltaTime);
+                updateCameraType   (STADIUM);
+            }
+
+            e_cameraType getCameraType (void) {
+                return m_currentType;
             }
 
             void updateCameraState (uint32_t modelInfoId, uint32_t modelInstanceId) {

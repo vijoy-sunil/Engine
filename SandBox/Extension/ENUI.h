@@ -1,6 +1,7 @@
 #ifndef EN_UI_H
 #define EN_UI_H
 
+#include "../../Core/Model/VKModelMgr.h"
 #include "../../Core/RenderPass/VKAttachment.h"
 #include "../../Core/RenderPass/VKSubPass.h"
 #include "../../Core/RenderPass/VKFrameBuffer.h"
@@ -10,12 +11,13 @@
 #include "../ENConfig.h"
 
 namespace SandBox {
-    class ENUI: protected virtual Core::VKAttachment,
+    class ENUI: protected virtual Core::VKModelMgr,
+                protected virtual Core::VKAttachment,
                 protected virtual Core::VKSubPass,
                 protected virtual Core::VKFrameBuffer,
                 protected virtual Core::VKCmd,
                 protected virtual Core::VKDescriptor,
-                protected virtual Gui::UIImpl {
+                protected Gui::UIImpl {
         private:
             Log::Record* m_ENUILog;
             const uint32_t m_instanceId = g_collectionSettings.instanceId++;
@@ -38,6 +40,7 @@ namespace SandBox {
 
                 readySceneInfo (uiSceneInfoId, 0);
                 auto deviceInfo  = getDeviceInfo (deviceInfoId);
+                auto uiSceneInfo = getSceneInfo  (uiSceneInfoId);
                 auto sceneInfo   = getSceneInfo  (sceneInfoId);
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG RENDER PASS ATTACHMENTS                                                                 |
@@ -135,25 +138,31 @@ namespace SandBox {
                                          << std::endl;
                 }
                 /* |------------------------------------------------------------------------------------------------|
+                 * | CONFIG TEXTURE SAMPLER                                                                         |
+                 * |------------------------------------------------------------------------------------------------|
+                */
+                uiSceneInfo->resource.textureSampler = sceneInfo->resource.textureSampler;
+                /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG DESCRIPTOR POOL                                                                         |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                /* Imgui require a single combined image sampler descriptor for the font image and only uses one
-                 * descriptor set for that. If we wish to load additional textures we may need to alter pools sizes
+                /* Imgui requires a single combined image sampler descriptor and a descriptor set per font image. In
+                 * addition to this, we need a descriptor set per texture for use in imgui. Note that, the pool should
+                 * be created with VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT, and must contain a pool size large
+                 * enough to hold the required number of descriptors
                  *
-                 * Note that, the pool should be created with VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT, and
-                 * must contain a pool size large enough to hold a VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER
-                 * descriptor. VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT specifies that descriptor sets
-                 * can return their individual allocations to the pool. Otherwise, descriptor sets allocated from the
-                 * pool must not be individually freed back to the pool
+                 * VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT specifies that descriptor sets can return their
+                 * individual allocations to the pool. Otherwise, descriptor sets allocated from the pool must not be
+                 * individually freed back to the pool
                 */
                 auto poolSizes = std::vector {
-                    getPoolSize (VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1)
+                    getPoolSize (VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+                                 1 + static_cast <uint32_t> (getTextureImagePool().size())),
                 };
                 createDescriptorPool (deviceInfoId,
                                       uiSceneInfoId,
                                       poolSizes,
-                                      1,
+                                      1 + static_cast <uint32_t> (getTextureImagePool().size()),
                                       VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT);
                 LOG_INFO (m_ENUILog) << "[OK] Descriptor pool "
                                      << "[" << uiSceneInfoId << "]"
@@ -164,7 +173,8 @@ namespace SandBox {
                                 uint32_t uiRenderPassInfoId,
                                 uint32_t sceneInfoId,
                                 uint32_t currentFrameInFlight,
-                                uint32_t swapChainImageId) {
+                                uint32_t swapChainImageId,
+                                float frameDelta) {
 
                 auto sceneInfo   = getSceneInfo (sceneInfoId);
                 auto clearValues = std::vector {
@@ -177,7 +187,7 @@ namespace SandBox {
                     }
                 };
 
-                createUIFrame();
+                createUIFrame   (frameDelta);
                 beginRenderPass (deviceInfoId,
                                  uiRenderPassInfoId,
                                  swapChainImageId,

@@ -6,6 +6,7 @@ GLM_DIR				:= /opt/homebrew/Cellar/glm/1.0.1
 GLFW_DIR			:= /opt/homebrew/Cellar/glfw/3.4
 DEPENDENCY_DIR		:= ./Dependency
 IMGUI_DIR			:= $(DEPENDENCY_DIR)/imgui
+IMPLOT_DIR			:= $(DEPENDENCY_DIR)/implot
 IMGUI_BACKEND_DIR	:= $(IMGUI_DIR)/backends
 APP_DIR				:= ./SandBox
 SHADER_DIR			:= $(APP_DIR)/Shader
@@ -22,6 +23,9 @@ APP_SRCS			:= $(APP_DIR)/main.cpp									\
 					   $(IMGUI_DIR)/imgui_draw.cpp 							\
 					   $(IMGUI_DIR)/imgui_tables.cpp						\
 					   $(IMGUI_DIR)/imgui_widgets.cpp						\
+					   $(IMPLOT_DIR)/implot.cpp								\
+					   $(IMPLOT_DIR)/implot_items.cpp						\
+					   $(IMPLOT_DIR)/implot_demo.cpp						\
 					   $(IMGUI_BACKEND_DIR)/imgui_impl_glfw.cpp				\
 					   $(IMGUI_BACKEND_DIR)/imgui_impl_vulkan.cpp
 VERT_SHADER_SRCS	:= $(wildcard $(SHADER_DIR)/*.vert)
@@ -56,6 +60,7 @@ INCLUDES			:= -I$(VULKAN_SDK)/include								\
 				   	   -I$(GLFW_DIR)/include								\
 					   -I$(DEPENDENCY_DIR)									\
 					   -I$(IMGUI_DIR)										\
+					   -I$(IMPLOT_DIR)										\
 					   -I$(IMGUI_BACKEND_DIR)
 # Setup glslc compiler path
 GLSLC				:= $(VULKAN_SDK)/bin/glslc
@@ -67,6 +72,10 @@ $(OBJ_DIR)/%.o: $(APP_DIR)/%.cpp
 	@echo "[OK] compile" $<
 
 $(OBJ_DIR)/%.o: $(IMGUI_DIR)/%.cpp
+	@$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -MMD -o $@
+	@echo "[OK] compile" $<
+
+$(OBJ_DIR)/%.o: $(IMPLOT_DIR)/%.cpp
 	@$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -MMD -o $@
 	@echo "[OK] compile" $<
 
@@ -92,7 +101,7 @@ $(APP_TARGET): $(OBJS)
 # |-------------------------------------------------------------------------|
 .PHONY: all directories shaders app clean run
 
-all: directories shaders app 
+all: directories shaders app
 
 directories:
 	@mkdir -p $(BIN_DIR)
@@ -107,7 +116,7 @@ shaders: $(VERT_SHADER_TARGET) $(FRAG_SHADER_TARGET)
 app: $(APP_TARGET)
 
 clean:
-	@$(RMDIR) $(BUILD_DIR)/* 
+	@$(RMDIR) $(BUILD_DIR)/*
 	@echo "[OK] clean"
 
 run:

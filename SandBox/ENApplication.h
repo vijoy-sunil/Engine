@@ -7,7 +7,6 @@
 #include "Extension/ENUI.h"
 #include "Extension/ENGrid.h"
 #include "Controller/ENGeneric.h"
-#include "Controller/ENCamera.h"
 
 namespace SandBox {
     class ENApplication: protected Core::VKInitSequence,
@@ -15,8 +14,7 @@ namespace SandBox {
                          protected Core::VKDeleteSequence,
                          protected ENUI,
                          protected ENGrid,
-                         protected ENGeneric,
-                         protected ENCamera {
+                         protected ENGeneric {
         private:
             uint32_t m_deviceInfoId;
             std::vector <uint32_t> m_modelInfoIds;
@@ -115,7 +113,7 @@ namespace SandBox {
                                              m_renderPassInfoId,
                                              m_pipelineInfoId,
                                              m_sceneInfoId,
-                                             [&](void) {
+                [&](void) {
                 {
 #if ENABLE_SAMPLE_MODELS_IMPORT
 #else
@@ -133,8 +131,13 @@ namespace SandBox {
                                              m_uiSceneInfoId,
                                              m_sceneInfoId);
 
+                    auto cameraInfoIds = std::vector <uint32_t> {
+                        m_cameraInfoId
+                    };
                     readyUI                 (m_deviceInfoId,
+                                             m_modelInfoIds,
                                              m_uiRenderPassInfoId,
+                                             cameraInfoIds,
                                              m_uiSceneInfoId);
                 }
                 {
@@ -153,7 +156,8 @@ namespace SandBox {
             }
 
             void runScene (void) {
-                auto deviceInfo = getDeviceInfo (m_deviceInfoId);
+                auto deviceInfo  = getDeviceInfo (m_deviceInfoId);
+                float frameDelta = 0.0f;
                 /* |------------------------------------------------------------------------------------------------|
                  * | EVENT LOOP                                                                                     |
                  * |------------------------------------------------------------------------------------------------|
@@ -174,22 +178,16 @@ namespace SandBox {
                  * | MOTION UPDATE                                                                                  |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                    /* Calculate the time in seconds since rendering has started with floating point accuracy
-                    */
-                    static auto startTime = std::chrono::high_resolution_clock::now();
-                    auto currentTime      = std::chrono::high_resolution_clock::now();
-                    float deltaTime       = std::chrono::duration <float, std::chrono::seconds::period>
-                                            (currentTime - startTime).count();
-
-                    handleKeyEvents    (currentTime);
+                    auto startOfFrameTime = std::chrono::high_resolution_clock::now();
+                    handleKeyEvents   (startOfFrameTime);
                     /* [ X ] Update vehicle state here before camera state so that the model matrix is ready to be
                      * used by camera vectors in the same frame
                     */
-                    static_cast <void> (deltaTime);
+
 #if ENABLE_SAMPLE_MODELS_IMPORT
-                    updateCameraState  (SAMPLE_1, 0);
+                    updateCameraState (SAMPLE_1, 0);
 #else
-                    updateCameraState  (VEHICLE_BASE, 0);
+                    updateCameraState (VEHICLE_BASE, 0);
 #endif  // ENABLE_SAMPLE_MODELS_IMPORT
                 /* |------------------------------------------------------------------------------------------------|
                  * | RUN SEQUENCE - DRAW                                                                            |
@@ -203,28 +201,36 @@ namespace SandBox {
                                                      m_sceneInfoId,
                                                      m_currentFrameInFlight,
                                                      m_swapChainImageId,
-                                                     [&](void) {
+                    [&](void) {
                     {   /* Extension to base render pass */
                         ENGrid::drawExtension       (m_gridPipelineInfoId,
                                                      m_cameraInfoId,
                                                      m_sceneInfoId,
                                                      m_currentFrameInFlight);
-                    }}
-                    , [&](void) {
+                    }},
+                    [&](void) {
                     {   /* Extension to secondary render pass, base command buffer */
                         ENUI::drawExtension         (m_deviceInfoId,
                                                      m_uiRenderPassInfoId,
                                                      m_sceneInfoId,
                                                      m_currentFrameInFlight,
-                                                     m_swapChainImageId);
-                    }}
-                    , [&](void) {
+                                                     m_swapChainImageId,
+                                                     frameDelta);
+                    }},
+                    [&](void) {
                     {   /* Extension to recreate swap chain deps */
                         ENUI::recreateSwapChainDeps (m_deviceInfoId,
                                                      m_uiRenderPassInfoId,
                                                      m_sceneInfoId);
                     }
                     });
+                /* |------------------------------------------------------------------------------------------------|
+                 * | FRAME DELTA                                                                                    |
+                 * |------------------------------------------------------------------------------------------------|
+                */
+                    auto endOfFrameTime = std::chrono::high_resolution_clock::now();
+                    frameDelta          = std::chrono::duration <float, std::chrono::seconds::period>
+                                          (endOfFrameTime - startOfFrameTime).count();
                 }
                 /* Remember that all of the operations in the above render method are asynchronous. That means that when
                  * we exit the render loop, drawing and presentation operations may still be going on. Cleaning up
@@ -253,7 +259,7 @@ namespace SandBox {
                                                  pipelineInfoIds,
                                                  m_cameraInfoId,
                                                  m_sceneInfoId,
-                                                 [&](void) {
+                [&](void) {
                 {
                     UIImpl::cleanUp             (m_deviceInfoId);
                     ENUI::deleteExtension       (m_deviceInfoId,
