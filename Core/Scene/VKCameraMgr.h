@@ -183,12 +183,14 @@ namespace Core {
                                                 << "[" << val.meta.farPlane << "]"
                                                 << std::endl;
 
+                    std::string boolString = val.meta.updateViewMatrix       == true ? "TRUE": "FALSE";
                     LOG_INFO (m_VKCameraMgrLog) << "Update view matrix "
-                                                << "[" << getBoolString (val.meta.updateViewMatrix) << "]"
+                                                << "[" << boolString << "]"
                                                 << std::endl;
 
+                    boolString             = val.meta.updateProjectionMatrix == true ? "TRUE": "FALSE";
                     LOG_INFO (m_VKCameraMgrLog) << "Update projection matrix "
-                                                << "[" << getBoolString (val.meta.updateProjectionMatrix) << "]"
+                                                << "[" << boolString << "]"
                                                 << std::endl;
 
                     LOG_INFO (m_VKCameraMgrLog) << "View matrix"

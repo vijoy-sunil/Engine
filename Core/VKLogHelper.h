@@ -23,10 +23,6 @@ namespace Core {
         return outputStrings;
     }
 
-    const char* getBoolString (bool val) {
-        return val == true ? "TRUE": "FALSE";
-    }
-
     const char* getImageTypeString (e_imageType type) {
         switch (type)
         {
