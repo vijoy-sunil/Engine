@@ -355,9 +355,9 @@ namespace Core {
                          * we need is a texture id that can be used to index into the global texture pool, so that the
                          * shader can sample from the correct texture from the global pool of textures
                         */
-                        uint32_t localTexId = shape.mesh.material_ids[faceIndex] + 1;
-                        auto texturePath    = modelInfo->path.diffuseTextureImages[localTexId];
-                        vertex.texId        = m_textureImagePool[texturePath];
+                        uint32_t localTexId     = shape.mesh.material_ids[faceIndex] + 1;
+                        std::string texturePath = modelInfo->path.diffuseTextureImages[localTexId];
+                        vertex.texId            = m_textureImagePool[texturePath];
                         /* Manual uv mapping of default texture
                         */
                         if (vertex.texId == 0) {

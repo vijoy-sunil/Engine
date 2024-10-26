@@ -20,35 +20,35 @@ namespace Gui {
             }
 
         protected:
-            void readyKeyCallBack               (uint32_t deviceInfoId) {
+            void readyKeyCallback               (uint32_t deviceInfoId) {
                 auto deviceInfo = getDeviceInfo (deviceInfoId);
-                glfwSetKeyCallback              (deviceInfo->resource.window, keyCallBack);
+                glfwSetKeyCallback              (deviceInfo->resource.window, keyCallback);
             }
 
-            void deleteKeyCallBack              (uint32_t deviceInfoId) {
+            void deleteKeyCallback              (uint32_t deviceInfoId) {
                 auto deviceInfo = getDeviceInfo (deviceInfoId);
                 glfwSetKeyCallback              (deviceInfo->resource.window, NULL);
             }
 
-            void readyCursorPositionCallBack    (uint32_t deviceInfoId) {
+            void readyCursorPositionCallback    (uint32_t deviceInfoId) {
                 auto deviceInfo = getDeviceInfo (deviceInfoId);
-                glfwSetCursorPosCallback        (deviceInfo->resource.window, cursorPositionCallBack);
+                glfwSetCursorPosCallback        (deviceInfo->resource.window, cursorPositionCallback);
                 glfwSetInputMode                (deviceInfo->resource.window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
             }
 
-            void deleteCursorPositionCallBack   (uint32_t deviceInfoId) {
+            void deleteCursorPositionCallback   (uint32_t deviceInfoId) {
                 auto deviceInfo = getDeviceInfo (deviceInfoId);
                 glfwSetCursorPosCallback        (deviceInfo->resource.window, NULL);
                 glfwSetInputMode                (deviceInfo->resource.window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
             }
 
-            void readyScrollOffsetCallBack      (uint32_t deviceInfoId) {
+            void readyScrollOffsetCallback      (uint32_t deviceInfoId) {
                 auto deviceInfo = getDeviceInfo (deviceInfoId);
-                glfwSetScrollCallback           (deviceInfo->resource.window, scrollOffsetCallBack);
+                glfwSetScrollCallback           (deviceInfo->resource.window, scrollOffsetCallback);
                 glfwSetInputMode                (deviceInfo->resource.window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
             }
 
-            void deleteScrollOffsetCallBack     (uint32_t deviceInfoId) {
+            void deleteScrollOffsetCallback     (uint32_t deviceInfoId) {
                 auto deviceInfo = getDeviceInfo (deviceInfoId);
                 glfwSetScrollCallback           (deviceInfo->resource.window, NULL);
                 glfwSetInputMode                (deviceInfo->resource.window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
@@ -84,9 +84,9 @@ namespace Gui {
             }
 
             void cleanUp (uint32_t deviceInfoId) {
-                deleteKeyCallBack            (deviceInfoId);
-                deleteCursorPositionCallBack (deviceInfoId);
-                deleteScrollOffsetCallBack   (deviceInfoId);
+                deleteKeyCallback            (deviceInfoId);
+                deleteCursorPositionCallback (deviceInfoId);
+                deleteScrollOffsetCallback   (deviceInfoId);
             }
     };
 }   // namespace Gui

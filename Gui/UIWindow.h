@@ -62,7 +62,7 @@ namespace Gui {
                 m_selectedNodeInfoId       = g_defaultStateSettings.treeNode.worldCollectionSample;
 #else
                 m_selectedNodeInfoId       = g_defaultStateSettings.treeNode.worldCollection;
-#endif
+#endif  // ENABLE_SAMPLE_MODELS_IMPORT
                 m_selectedPropertyLabelIdx = g_defaultStateSettings.button.propertyEditor;
 
                 m_UIWindowLog = LOG_INIT (m_instanceId, g_collectionSettings.logSaveDirPath);
@@ -366,7 +366,7 @@ namespace Gui {
                                        0,
                                        ImGuiWindowFlags_NoBackground)) {
 
-                    const auto icons = std::vector <const char*> {
+                    auto icons = std::vector <const char*> {
                         ICON_FA_ANCHOR,         /* Transform    */
                         ICON_FA_EYE,            /* View         */
                         ICON_FA_PALETTE,        /* Texture      */
@@ -375,7 +375,7 @@ namespace Gui {
                         ICON_FA_PLUG,           /* Debug        */
                     };
 
-                    const auto labels = std::vector <const char*> {
+                    auto labels = std::vector <const char*> {
                         "Transform",
                         "View",
                         "Texture",

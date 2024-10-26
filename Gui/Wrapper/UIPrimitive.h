@@ -91,7 +91,7 @@ namespace Gui {
                                      ImVec2 uvMax = ImVec2 (1.0f, 1.0f)) {
 
                 ImGui::SetCursorPosX ((ImGui::GetContentRegionAvail().x - imageSize.x) * 0.5f);
-                ImGui::Image         ((ImTextureID)imageDescriptorSet,
+                ImGui::Image         ((ImTextureID) imageDescriptorSet,
                                       imageSize,
                                       uvMin, uvMax,
                                       ImVec4(1.0f, 1.0f, 1.0f, 1.0f),
@@ -122,7 +122,7 @@ namespace Gui {
                         if (isSelected) ImGui::PushStyleColor (ImGuiCol_Button, tabActiveColor);
                         else            ImGui::PushStyleColor (ImGuiCol_Button, tabInactiveColor);
 
-                        if (ImGui::Button(icons[i], tabSize))
+                        if (ImGui::Button (icons[i], tabSize))
                             selectedLabelIdx = static_cast <uint32_t> (i);
 
                         if (ImGui::IsItemHovered (ImGuiHoveredFlags_DelayShort | ImGuiHoveredFlags_NoSharedDelay))

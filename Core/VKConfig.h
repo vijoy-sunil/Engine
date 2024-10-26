@@ -21,7 +21,7 @@ namespace Core {
     struct WindowSettings {
         const int width                                              = 1280;
         const int height                                             = 720;
-        const char* title                                            = "WINDOW_";
+        const char* titlePrefix                                      = "WINDOW_";
     } g_windowSettings;
 
     struct QueueSettings {

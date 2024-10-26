@@ -110,7 +110,7 @@ namespace Core {
              * When this input mode is enabled, any callback that receives modifier bits will have the GLFW_MOD_CAPS_LOCK
              * bit set if Caps Lock was on when the event occurred and the GLFW_MOD_NUM_LOCK bit set if Num Lock was on
             */
-            static void keyCallBack (GLFWwindow* window, int key, int scanCode, int action, int mods) {
+            static void keyCallback (GLFWwindow* window, int key, int scanCode, int action, int mods) {
                 static_cast <void>  (scanCode);
                 auto thisPtr = reinterpret_cast <VKWindow*> (glfwGetWindowUserPointer (window));
                 /* Do not save event info if the key doesn't exist in pool
@@ -141,7 +141,7 @@ namespace Core {
              * area the callback stops firing. For OSX the window never loses focus and therefore the cursor callback is
              * always being called
             */
-            static void cursorPositionCallBack (GLFWwindow* window, double xPos, double yPos) {
+            static void cursorPositionCallback (GLFWwindow* window, double xPos, double yPos) {
                 auto thisPtr = reinterpret_cast <VKWindow*> (glfwGetWindowUserPointer (window));
                 if (thisPtr->m_mouseEventInfoPool.find (CURSOR_POSITION) == thisPtr->m_mouseEventInfoPool.end())
                     return;
@@ -153,7 +153,7 @@ namespace Core {
              * scroll callback. The callback function receives two-dimensional scroll offsets. Note that, a normal mouse
              * wheel, being vertical, provides offsets along the Y-axis
             */
-            static void scrollOffsetCallBack (GLFWwindow* window, double xOffset, double yOffset) {
+            static void scrollOffsetCallback (GLFWwindow* window, double xOffset, double yOffset) {
                 auto thisPtr = reinterpret_cast <VKWindow*> (glfwGetWindowUserPointer (window));
                 if (thisPtr->m_mouseEventInfoPool.find (SCROLL_OFFSET) == thisPtr->m_mouseEventInfoPool.end())
                     return;
@@ -194,7 +194,7 @@ namespace Core {
                 /* Create window, note that the fourth parameter allows you to optionally specify a monitor to open the
                  * window on and the last parameter is only relevant to OpenGL
                 */
-                std::string windowTitle = g_windowSettings.title + std::to_string (deviceInfoId);
+                std::string windowTitle = g_windowSettings.titlePrefix + std::to_string (deviceInfoId);
                 GLFWwindow *window = glfwCreateWindow (width,
                                                        height,
                                                        windowTitle.c_str(),

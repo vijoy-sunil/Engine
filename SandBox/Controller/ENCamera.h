@@ -39,8 +39,8 @@ namespace SandBox {
                     auto deviceInfo = getDeviceInfo (m_deviceInfoId);
                     ImGui_ImplGlfw_RestoreCallbacks (deviceInfo->resource.window);
 
-                    readyCursorPositionCallBack     (m_deviceInfoId);
-                    readyScrollOffsetCallBack       (m_deviceInfoId);
+                    readyCursorPositionCallback     (m_deviceInfoId);
+                    readyScrollOffsetCallback       (m_deviceInfoId);
 
                     ImGui_ImplGlfw_InstallCallbacks (deviceInfo->resource.window);
                     disableMouseInputsToUI();
@@ -51,8 +51,8 @@ namespace SandBox {
                     auto deviceInfo = getDeviceInfo (m_deviceInfoId);
                     ImGui_ImplGlfw_RestoreCallbacks (deviceInfo->resource.window);
 
-                    deleteCursorPositionCallBack    (m_deviceInfoId);
-                    deleteScrollOffsetCallBack      (m_deviceInfoId);
+                    deleteCursorPositionCallback    (m_deviceInfoId);
+                    deleteScrollOffsetCallback      (m_deviceInfoId);
 
                     ImGui_ImplGlfw_InstallCallbacks (deviceInfo->resource.window);
                     enableMouseInputsToUI();

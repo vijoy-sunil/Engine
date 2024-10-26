@@ -27,7 +27,7 @@ namespace Gui {
             static Log::Record* m_UIImplLog;
             const uint32_t m_instanceId = g_collectionSettings.instanceId++;
 
-            static void errorHandlerCallBack (VkResult result) {
+            static void errorHandlerCallback (VkResult result) {
                 if (result != VK_SUCCESS) {
                     LOG_ERROR (m_UIImplLog) << "Failed to ready ui "
                                             << "[" << string_VkResult (result) << "]"
@@ -72,7 +72,7 @@ namespace Gui {
                  * there may be cases where callbacks would need to be initialized after, in such cases use imgui
                  * _RestoreCallbacks and _InstallCallbacks() methods to reinstall callbacks
                 */
-                readyKeyCallBack (deviceInfoId);
+                readyKeyCallback (deviceInfoId);
                 /* Setup imgui context and style
                 */
                 IMGUI_CHECKVERSION();
@@ -233,7 +233,7 @@ namespace Gui {
                  * by imgui. You can pass nullptr if you don’t have any
                 */
                 info.Allocator       = nullptr;
-                info.CheckVkResultFn = errorHandlerCallBack;
+                info.CheckVkResultFn = errorHandlerCallback;
 
                 ImGui_ImplVulkan_Init (&info);
                 /* |------------------------------------------------------------------------------------------------|

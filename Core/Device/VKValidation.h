@@ -14,6 +14,10 @@ namespace Core {
             /* This boolean indicates that the required list of validation layers are supported
             */
             bool m_validationLayersSupported;
+            /* Logging to a circular buffer requires us to specify the buffer capacity. A multiple of 3 will allow us to
+             * save the validation message as a whole (msg, severity and type)
+            */
+            size_t m_logBufferCapacity;
             /* Handle to the debug callback
             */
             VkDebugUtilsMessengerEXT m_debugMessenger;
@@ -28,10 +32,6 @@ namespace Core {
 
             static Log::Record* m_VKValidationLog;
             const uint32_t m_instanceId = g_collectionSettings.instanceId++;
-            /* Logging to a circular buffer requires us to specify the buffer capacity. A multiple of 3 will allow us to
-             * save the validation message as a whole (msg, severity and type)
-            */
-            const size_t m_logBufferCapacity = 3;
 
             /* Check if required validation layers are supported
             */
@@ -130,6 +130,8 @@ namespace Core {
             VKValidation (void) {
                 m_enableValidationLayers    = false;
                 m_validationLayersSupported = false;
+                m_logBufferCapacity         = 3;
+
                 m_VKValidationLog = LOG_INIT (m_instanceId, g_collectionSettings.logSaveDirPath, m_logBufferCapacity);
                 LOG_ADD_CONFIG (m_instanceId, Log::INFO,    Log::TO_FILE_IMMEDIATE);
                 LOG_ADD_CONFIG (m_instanceId, Log::WARNING, Log::TO_FILE_IMMEDIATE | Log::TO_CONSOLE |

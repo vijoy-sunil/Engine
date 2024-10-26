@@ -62,7 +62,7 @@ namespace Core {
             */
             void createTextureResources (uint32_t deviceInfoId,
                                          uint32_t imageInfoId,
-                                         const char* imageFilePath) {
+                                         const char* texturePath) {
 
                 auto deviceInfo = getDeviceInfo (deviceInfoId);
                 int width, height, channels;
@@ -73,7 +73,7 @@ namespace Core {
                  *
                  * The pointer that is returned is the first element in an array of pixel values
                 */
-                stbi_uc* pixels = stbi_load (imageFilePath,
+                stbi_uc* pixels = stbi_load (texturePath,
                                              &width,
                                              &height,
                                              &channels,
@@ -91,7 +91,7 @@ namespace Core {
                     LOG_ERROR (m_VKTextureImageLog) << "Failed to load texture image "
                                                     << "[" << imageInfoId << "]"
                                                     << " "
-                                                    << "[" << imageFilePath << "]"
+                                                    << "[" << texturePath << "]"
                                                     << std::endl;
                     throw std::runtime_error ("Failed to load texture image");
                 }
