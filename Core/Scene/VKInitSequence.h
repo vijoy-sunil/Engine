@@ -816,7 +816,7 @@ namespace Core {
 
                 for (auto const& [path, infoId]: getTextureImagePool()) {
                     copyBufferToImage (infoId, infoId,
-                                       STAGING_BUFFER_TEX, TEXTURE_IMAGE,
+                                       STAGING_BUFFER, TEXTURE_IMAGE,
                                        0,
                                        VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
                                        transferOpsCommandBuffers[0]);
@@ -900,8 +900,8 @@ namespace Core {
                 }
 
                 for (auto const& [path, infoId]: getTextureImagePool()) {
-                    VKBufferMgr::cleanUp (deviceInfoId, infoId, STAGING_BUFFER_TEX);
-                    LOG_INFO (m_VKInitSequenceLog) << "[DELETE] Staging buffer (Tex) "
+                    VKBufferMgr::cleanUp (deviceInfoId, infoId, STAGING_BUFFER);
+                    LOG_INFO (m_VKInitSequenceLog) << "[DELETE] Staging buffer "
                                                    << "[" << infoId << "]"
                                                    << std::endl;
                 }

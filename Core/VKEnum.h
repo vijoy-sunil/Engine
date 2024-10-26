@@ -13,11 +13,10 @@ namespace Core {
     typedef enum {
         VOID_BUFFER         = 0,
         STAGING_BUFFER      = 1,
-        STAGING_BUFFER_TEX  = 2,
-        VERTEX_BUFFER       = 3,
-        INDEX_BUFFER        = 4,
-        UNIFORM_BUFFER      = 5,
-        STORAGE_BUFFER      = 6
+        VERTEX_BUFFER       = 2,
+        INDEX_BUFFER        = 3,
+        UNIFORM_BUFFER      = 4,
+        STORAGE_BUFFER      = 5
     } e_bufferType;
 
     typedef enum {

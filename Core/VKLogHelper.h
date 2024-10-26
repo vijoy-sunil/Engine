@@ -40,7 +40,6 @@ namespace Core {
         {
             case VOID_BUFFER:           return "VOID_BUFFER";
             case STAGING_BUFFER:        return "STAGING_BUFFER";
-            case STAGING_BUFFER_TEX:    return "STAGING_BUFFER_TEX";
             case VERTEX_BUFFER:         return "VERTEX_BUFFER";
             case INDEX_BUFFER:          return "INDEX_BUFFER";
             case UNIFORM_BUFFER:        return "UNIFORM_BUFFER";

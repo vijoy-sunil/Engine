@@ -108,7 +108,7 @@ namespace Core {
                 */
                 createBuffer (deviceInfoId,
                               imageInfoId,
-                              STAGING_BUFFER_TEX,
+                              STAGING_BUFFER,
                               size,
                               VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
                               VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
@@ -117,7 +117,7 @@ namespace Core {
 
                 /* Now, we can directly copy the pixel values that we got from the image loading library to the buffer
                 */
-                auto bufferInfo = getBufferInfo (imageInfoId, STAGING_BUFFER_TEX);
+                auto bufferInfo = getBufferInfo (imageInfoId, STAGING_BUFFER);
                 vkMapMemory (deviceInfo->resource.logDevice,
                              bufferInfo->resource.bufferMemory,
                              0,
