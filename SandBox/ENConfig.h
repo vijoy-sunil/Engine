@@ -7,6 +7,7 @@
 
 namespace SandBox {
     #define ENABLE_SAMPLE_MODELS_IMPORT                              (false)
+    #define ENABLE_MOTION_UPDATE_TEST                                (true)
 
     struct CollectionSettings {
         /* Collection instance id range assignments
@@ -126,10 +127,6 @@ namespace SandBox {
          *                                              Length      : 1.7 units
          *                                              Width       : 0.6 units
         */
-
-        /* Dummy values for drone mode, since we will be using previous state info to move around
-        */
-        {DRONE,         {{  0.0f,   0.0f,   0.0f},  {0.0f,  0.0f,   0.0f},      0.0f}},
         {SPOILER,       {{  0.0f,  -0.87f, -2.0f},  {0.0f,  0.0f,   0.5f},      50.0f}},
         {LEFT_PROFILE,  {{ -2.0f,   0.0f,   0.0f},  {0.0f,  0.0f,   0.0f},      80.0f}},
         {REVERSE,       {{  0.0f,  -0.87f,  2.0f},  {0.0f,  0.0f,  -0.5f},      50.0f}},
@@ -137,11 +134,10 @@ namespace SandBox {
         {REAR_AXLE,     {{  0.0f,  -0.47f,  0.0f},  {0.0f, -0.17f, -0.5f},      80.0f}},
         {TOP_DOWN,      {{  0.0f,  -6.37f,  0.0f},  {0.0f,  0.0f,   0.2f},      50.0f}},
         {FRONT_AXLE,    {{  0.0f,  -0.47f,  0.0f},  {0.0f, -0.17f,  0.5f},      80.0f}},
-        {STADIUM,       {{-10.0f, -10.0f, -10.0f},  {0.0f,  0.0f,   0.0f},      80.0f}}
+        {DRONE_FOLLOW,  {{  0.0f,   0.0f,   0.0f},  {0.0f,  0.0f,   0.0f},       0.0f}}
     };
 
     struct KeyMapSettings {
-        const int drone                                              = '0';
         const int spoiler                                            = '1';
         const int leftProfile                                        = '2';
         const int reverse                                            = '3';
@@ -149,7 +145,9 @@ namespace SandBox {
         const int rearAxle                                           = '5';
         const int topDown                                            = '6';
         const int frontAxle                                          = '7';
-        const int stadium                                            = '8';
+        const int droneLock                                          = '8';
+        const int droneFollow                                        = '9';
+        const int droneFly                                           = '0';
         const int moveLeft                                           = 'A';
         const int moveRight                                          = 'D';
         const int moveBackward                                       = 'S';

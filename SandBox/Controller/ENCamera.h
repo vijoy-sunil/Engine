@@ -20,6 +20,7 @@ namespace SandBox {
             e_cameraType m_currentType;
 
             bool m_firstCursorEvent;
+            bool m_modelTransformRemoved;
 
             float m_lastCursorX;
             float m_lastCursorY;
@@ -28,36 +29,6 @@ namespace SandBox {
 
             Log::Record* m_ENCameraLog;
             const uint32_t m_instanceId = g_collectionSettings.instanceId++;
-
-            void updateCameraType (e_cameraType type) {
-                m_previousType = m_currentType;
-                m_currentType  = type;
-                /* Note that, we need to reinstall application callbacks with imgui using _RestoreCallbacks() and
-                 * _InstallCallbacks() methods so that imgui can chain glfw callbacks
-                */
-                if (m_previousType != DRONE  && m_currentType == DRONE) {
-                    auto deviceInfo = getDeviceInfo (m_deviceInfoId);
-                    ImGui_ImplGlfw_RestoreCallbacks (deviceInfo->resource.window);
-
-                    readyCursorPositionCallback     (m_deviceInfoId);
-                    readyScrollOffsetCallback       (m_deviceInfoId);
-
-                    ImGui_ImplGlfw_InstallCallbacks (deviceInfo->resource.window);
-                    disableMouseInputsToUI();
-                }
-                /* Delete mouse event callbacks if the camera is not in drone mode
-                */
-                if (m_previousType == DRONE && m_currentType != DRONE) {
-                    auto deviceInfo = getDeviceInfo (m_deviceInfoId);
-                    ImGui_ImplGlfw_RestoreCallbacks (deviceInfo->resource.window);
-
-                    deleteCursorPositionCallback    (m_deviceInfoId);
-                    deleteScrollOffsetCallback      (m_deviceInfoId);
-
-                    ImGui_ImplGlfw_InstallCallbacks (deviceInfo->resource.window);
-                    enableMouseInputsToUI();
-                }
-            }
 
             float getYawDeg (glm::vec3 direction) {
                 return glm::degrees (atan2 (direction.x, direction.z));
@@ -68,6 +39,91 @@ namespace SandBox {
                  * input vector before calling this function
                 */
                 return glm::degrees (asin (direction.y));
+            }
+
+            void switchToSpoiler (float deltaTime) {
+                if (isKeyBoardCapturedByUI())
+                    return;
+
+                static_cast <void> (deltaTime);
+                setCameraType      (SPOILER);
+            }
+
+            void switchToLeftProfile (float deltaTime) {
+                if (isKeyBoardCapturedByUI())
+                    return;
+
+                static_cast <void> (deltaTime);
+                setCameraType      (LEFT_PROFILE);
+            }
+
+            void switchToReverse (float deltaTime) {
+                if (isKeyBoardCapturedByUI())
+                    return;
+
+                static_cast <void> (deltaTime);
+                setCameraType      (REVERSE);
+            }
+
+            void switchToRightProfile (float deltaTime) {
+                if (isKeyBoardCapturedByUI())
+                    return;
+
+                static_cast <void> (deltaTime);
+                setCameraType      (RIGHT_PROFILE);
+            }
+
+            void switchToRearAxle (float deltaTime) {
+                if (isKeyBoardCapturedByUI())
+                    return;
+
+                static_cast <void> (deltaTime);
+                setCameraType      (REAR_AXLE);
+            }
+
+            void switchToTopDown (float deltaTime) {
+                if (isKeyBoardCapturedByUI())
+                    return;
+
+                static_cast <void> (deltaTime);
+                setCameraType      (TOP_DOWN);
+            }
+
+            void switchToFrontAxle (float deltaTime) {
+                if (isKeyBoardCapturedByUI())
+                    return;
+
+                static_cast <void> (deltaTime);
+                setCameraType      (FRONT_AXLE);
+            }
+
+            void switchToDroneLock (float deltaTime) {
+                if (isKeyBoardCapturedByUI())
+                    return;
+
+                static_cast <void> (deltaTime);
+                setCameraType      (DRONE_LOCK);
+            }
+
+            void switchToDroneFollow (float deltaTime) {
+                if (isKeyBoardCapturedByUI())
+                    return;
+                /* Note that, we can only switch to drone follow if we are in either of the drone modes. Drone follow
+                 * mode would not make sense otherwise
+                */
+                if (getCameraType() != DRONE_LOCK && getCameraType() != DRONE_FLY)
+                    return;
+
+                static_cast <void> (deltaTime);
+                setCameraType      (DRONE_FOLLOW);
+            }
+
+            void switchToDroneFly (float deltaTime) {
+                if (isKeyBoardCapturedByUI())
+                    return;
+
+                static_cast <void> (deltaTime);
+                setCameraType      (DRONE_FLY);
             }
 
             /* Whenever we press one of the camera movement keys, the camera's position is updated accordingly. If we
@@ -83,7 +139,7 @@ namespace SandBox {
              * so each user will have the same experience
             */
             void moveLeft (float deltaTime) {
-                if (isKeyBoardCapturedByUI() || getCameraType() != DRONE)
+                if (isKeyBoardCapturedByUI() || getCameraType() != DRONE_FLY)
                     return;
 
                 auto cameraInfo = getCameraInfo (m_cameraInfoId);
@@ -99,7 +155,7 @@ namespace SandBox {
             }
 
             void moveRight (float deltaTime) {
-                if (isKeyBoardCapturedByUI() || getCameraType() != DRONE)
+                if (isKeyBoardCapturedByUI() || getCameraType() != DRONE_FLY)
                     return;
 
                 auto cameraInfo = getCameraInfo (m_cameraInfoId);
@@ -111,7 +167,7 @@ namespace SandBox {
             }
 
             void moveBackward (float deltaTime) {
-                if (isKeyBoardCapturedByUI() || getCameraType() != DRONE)
+                if (isKeyBoardCapturedByUI() || getCameraType() != DRONE_FLY)
                     return;
 
                 auto cameraInfo = getCameraInfo (m_cameraInfoId);
@@ -122,7 +178,7 @@ namespace SandBox {
             }
 
             void moveForward (float deltaTime) {
-                if (isKeyBoardCapturedByUI() || getCameraType() != DRONE)
+                if (isKeyBoardCapturedByUI() || getCameraType() != DRONE_FLY)
                     return;
 
                 auto cameraInfo = getCameraInfo (m_cameraInfoId);
@@ -132,13 +188,13 @@ namespace SandBox {
                 cameraInfo->meta.updateViewMatrix = true;
             }
 
-            /* Note that, the direction update binding returns immediately if the camera state is not in drone
-             * mode. This is to lock camera movement unless you are in drone mode. However, the cursor position
+            /* Note that, the direction update binding returns immediately if the camera type is not in drone fly
+             * mode. This is to lock camera movement unless you are in drone fly mode. However, the cursor position
              * callback is still triggered even though the binding function returns immediately. To prevent this, we
-             * will clear the cursor position callback whenever we switch out of drone mode
+             * will clear the cursor position callback whenever we switch out of drone fly mode
             */
-            void updateDirection (double xPosIn, double yPosIn) {
-                if (getCameraType() != DRONE)
+            void setDirection (double xPosIn, double yPosIn) {
+                if (getCameraType() != DRONE_FLY)
                     return;
 
                 auto cameraInfo = getCameraInfo  (m_cameraInfoId);
@@ -198,8 +254,8 @@ namespace SandBox {
              * smaller, the scene's projected space gets smaller. This smaller space is projected over the same NDC,
              * giving the illusion of zooming in
             */
-            void updateFov (double xOffsetIn, double yOffsetIn) {
-                if (getCameraType() != DRONE)
+            void setFov (double xOffsetIn, double yOffsetIn) {
+                if (getCameraType() != DRONE_FLY)
                     return;
 
                 static_cast <void> (xOffsetIn);
@@ -235,13 +291,10 @@ namespace SandBox {
                 m_cameraInfoId = cameraInfoId;
                 m_currentType  = UNDEFINED;
 
-                updateCameraType (type);
+                setCameraType (type);
                 /* Note that, we are attempting to pass non-static class methods, which require an object instance to call
                  * them on, hence we use a lambda expression as shown below
                 */
-                createKeyEventBinding (g_keyMapSettings.drone,                  [this](float deltaTime) {
-                    this->switchToDrone                 (deltaTime);
-                });
                 createKeyEventBinding (g_keyMapSettings.spoiler,                [this](float deltaTime) {
                     this->switchToSpoiler               (deltaTime);
                 });
@@ -263,8 +316,14 @@ namespace SandBox {
                 createKeyEventBinding (g_keyMapSettings.frontAxle,              [this](float deltaTime) {
                     this->switchToFrontAxle             (deltaTime);
                 });
-                createKeyEventBinding (g_keyMapSettings.stadium,                [this](float deltaTime) {
-                    this->switchToStadium               (deltaTime);
+                createKeyEventBinding (g_keyMapSettings.droneLock,              [this](float deltaTime) {
+                    this->switchToDroneLock             (deltaTime);
+                });
+                createKeyEventBinding (g_keyMapSettings.droneFollow,            [this](float deltaTime) {
+                    this->switchToDroneFollow           (deltaTime);
+                });
+                createKeyEventBinding (g_keyMapSettings.droneFly,               [this](float deltaTime) {
+                    this->switchToDroneFly              (deltaTime);
                 });
                 createKeyEventBinding (g_keyMapSettings.moveLeft,               [this](float deltaTime) {
                     this->moveLeft                      (deltaTime);
@@ -280,94 +339,57 @@ namespace SandBox {
                 });
 
                 createMouseEventBinding (Core::CURSOR_POSITION,                 [this](float xPos, float yPos) {
-                    this->updateDirection               (xPos, yPos);
+                    this->setDirection                  (xPos, yPos);
                 });
                 createMouseEventBinding (Core::SCROLL_OFFSET,                   [this](float xOffset, float yOffset) {
-                    this->updateFov                     (xOffset, yOffset);
+                    this->setFov                        (xOffset, yOffset);
                 });
-            }
-
-            void switchToDrone (float deltaTime) {
-                if (isKeyBoardCapturedByUI())
-                    return;
-
-                static_cast <void> (deltaTime);
-                updateCameraType   (DRONE);
-                /* Reset boolean whenever we switch to drone mode
-                */
-                m_firstCursorEvent = true;
-            }
-
-            void switchToSpoiler (float deltaTime) {
-                if (isKeyBoardCapturedByUI())
-                    return;
-
-                static_cast <void> (deltaTime);
-                updateCameraType   (SPOILER);
-            }
-
-            void switchToLeftProfile (float deltaTime) {
-                if (isKeyBoardCapturedByUI())
-                    return;
-
-                static_cast <void> (deltaTime);
-                updateCameraType   (LEFT_PROFILE);
-            }
-
-            void switchToReverse (float deltaTime) {
-                if (isKeyBoardCapturedByUI())
-                    return;
-
-                static_cast <void> (deltaTime);
-                updateCameraType   (REVERSE);
-            }
-
-            void switchToRightProfile (float deltaTime) {
-                if (isKeyBoardCapturedByUI())
-                    return;
-
-                static_cast <void> (deltaTime);
-                updateCameraType   (RIGHT_PROFILE);
-            }
-
-            void switchToRearAxle (float deltaTime) {
-                if (isKeyBoardCapturedByUI())
-                    return;
-
-                static_cast <void> (deltaTime);
-                updateCameraType   (REAR_AXLE);
-            }
-
-            void switchToTopDown (float deltaTime) {
-                if (isKeyBoardCapturedByUI())
-                    return;
-
-                static_cast <void> (deltaTime);
-                updateCameraType   (TOP_DOWN);
-            }
-
-            void switchToFrontAxle (float deltaTime) {
-                if (isKeyBoardCapturedByUI())
-                    return;
-
-                static_cast <void> (deltaTime);
-                updateCameraType   (FRONT_AXLE);
-            }
-
-            void switchToStadium (float deltaTime) {
-                if (isKeyBoardCapturedByUI())
-                    return;
-
-                static_cast <void> (deltaTime);
-                updateCameraType   (STADIUM);
             }
 
             e_cameraType getCameraType (void) {
                 return m_currentType;
             }
 
-            void updateCameraState (uint32_t modelInfoId, uint32_t modelInstanceId) {
-                if (getCameraType() == DRONE)
+            void setCameraType (e_cameraType type) {
+                m_previousType = m_currentType;
+                m_currentType  = type;
+                /* Note that, we need to reinstall application callbacks with imgui using _RestoreCallbacks() and
+                 * _InstallCallbacks() methods so that imgui can chain glfw callbacks
+                */
+                if (m_previousType != DRONE_FLY  && m_currentType == DRONE_FLY) {
+                    auto deviceInfo = getDeviceInfo (m_deviceInfoId);
+                    ImGui_ImplGlfw_RestoreCallbacks (deviceInfo->resource.window);
+
+                    readyCursorPositionCallback     (m_deviceInfoId);
+                    readyScrollOffsetCallback       (m_deviceInfoId);
+
+                    ImGui_ImplGlfw_InstallCallbacks (deviceInfo->resource.window);
+                    disableMouseInputsToUI();
+
+                    m_firstCursorEvent = true;
+                }
+                /* Delete mouse event callbacks if the camera is not in drone fly mode
+                */
+                if (m_previousType == DRONE_FLY && m_currentType != DRONE_FLY) {
+                    auto deviceInfo = getDeviceInfo (m_deviceInfoId);
+                    ImGui_ImplGlfw_RestoreCallbacks (deviceInfo->resource.window);
+
+                    deleteCursorPositionCallback    (m_deviceInfoId);
+                    deleteScrollOffsetCallback      (m_deviceInfoId);
+
+                    ImGui_ImplGlfw_InstallCallbacks (deviceInfo->resource.window);
+                    enableMouseInputsToUI();
+                }
+                /* Note that, when we switch to drone follow mode we need to remove the model transformation done to the
+                 * camera vectors before using them. The boolean ensures that the removal/inverse operation is only done
+                 * once after the switch happens
+                */
+                if (m_previousType != DRONE_FOLLOW && m_currentType == DRONE_FOLLOW)
+                    m_modelTransformRemoved = false;
+            }
+
+            void setCameraState (uint32_t modelInfoId, uint32_t modelInstanceId) {
+                if (getCameraType() == DRONE_LOCK || getCameraType() == DRONE_FLY)
                     return;
 
                 auto modelInfo   = getModelInfo  (modelInfoId);
@@ -383,11 +405,27 @@ namespace SandBox {
                     throw std::runtime_error ("Invalid model instance id");
                 }
 
-                /* Note that, we ignore the model matrix if we need a static camera since we do not want it to be
-                 * influenced by the model's current transformation
+                glm::mat4 modelMatrix = modelInfo->meta.instances[modelInstanceId].modelMatrix;
+                /* Why do we need to remove the model transformation that was done to the camera vectors before using
+                 * them in drone follow mode? The reason is, when we switch to drone follow mode, we use the camera
+                 * vectors from the previous mode, which have already been multiplied by the model matrix. But, what
+                 * we need is camera vectors that assumes the model is at the origin (just like the vectors stored in
+                 * the camera info pool). Once we have obtained them, we can then easily apply the model transformation
+                 * to it so that it follows the target
                 */
-                glm::mat4 modelMatrix      = currentType == STADIUM ? glm::mat4 (1.0f):
-                                             modelInfo->meta.instances[modelInstanceId].modelMatrix;
+                if (currentType == DRONE_FOLLOW && !m_modelTransformRemoved) {
+                    glm::mat4 inverseModelMatrix                 = glm::inverse (modelMatrix);
+                    g_cameraStateInfoPool[currentType].position  = glm::vec3    (inverseModelMatrix *
+                                                                   glm::vec4    (cameraInfo->meta.position, 1.0f));
+
+                    g_cameraStateInfoPool[currentType].direction = glm::vec3    (inverseModelMatrix *
+                                                                   glm::vec4    (cameraInfo->meta.direction +
+                                                                                 cameraInfo->meta.position, 1.0f));
+
+                    g_cameraStateInfoPool[m_currentType].fovDeg  = cameraInfo->meta.fovDeg;
+                    m_modelTransformRemoved                      = true;
+                }
+
                 cameraInfo->meta.position  = glm::vec3 (modelMatrix *
                                              glm::vec4 (g_cameraStateInfoPool[currentType].position,  1.0f));
 
@@ -397,8 +435,6 @@ namespace SandBox {
 
                 cameraInfo->meta.fovDeg    = g_cameraStateInfoPool[currentType].fovDeg;
 
-                /* [ X ] Only recompute camera matrices if it has been updated
-                */
                 cameraInfo->meta.updateViewMatrix       = true;
                 cameraInfo->meta.updateProjectionMatrix = true;
             }

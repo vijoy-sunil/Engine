@@ -257,7 +257,7 @@ namespace Gui {
                  * | READY CAMERA TYPE LABELS                                                                       |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                uint32_t cameraTypeCount = 9;
+                uint32_t cameraTypeCount = 10;
                 for (uint32_t i = 0; i < cameraTypeCount; i++)
                     m_cameraTypeLabels.push_back (getCameraTypeString (static_cast <SandBox::e_cameraType> (i)));
                 /* |------------------------------------------------------------------------------------------------|

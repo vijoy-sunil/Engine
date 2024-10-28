@@ -152,7 +152,7 @@ namespace SandBox {
                  * |------------------------------------------------------------------------------------------------|
                 */
                 readyGenericController (m_deviceInfoId);
-                readyCameraController  (m_deviceInfoId, m_cameraInfoId, STADIUM);
+                readyCameraController  (m_deviceInfoId, m_cameraInfoId, SPOILER);
             }
 
             void runScene (void) {
@@ -180,14 +180,25 @@ namespace SandBox {
                 */
                     auto startOfFrameTime = std::chrono::high_resolution_clock::now();
                     handleKeyEvents   (startOfFrameTime);
-                    /* [ X ] Update vehicle state here before camera state so that the model matrix is ready to be
-                     * used by camera vectors in the same frame
+                    /* Update vehicle state before camera state so that the model matrix is ready to be used by camera
+                     * vectors in the same frame
                     */
+#if ENABLE_MOTION_UPDATE_TEST
+#if ENABLE_SAMPLE_MODELS_IMPORT
+                    auto modelInfo = getModelInfo (SAMPLE_1);
+                    modelInfo->meta.instanceDatas[0].position += glm::vec3 (0.0f, 0.0f, 0.01f);
+                    createModelMatrix (SAMPLE_1, 0);
+#else
+                    auto modelInfo = getModelInfo (VEHICLE_BASE);
+                    modelInfo->meta.instanceDatas[0].position += glm::vec3 (0.0f, 0.0f, 0.01f);
+                    createModelMatrix (VEHICLE_BASE, 0);
+#endif  // ENABLE_SAMPLE_MODELS_IMPORT
+#endif  // ENABLE_MOTION_UPDATE_TEST
 
 #if ENABLE_SAMPLE_MODELS_IMPORT
-                    updateCameraState (SAMPLE_1, 0);
+                    setCameraState (SAMPLE_1, 0);
 #else
-                    updateCameraState (VEHICLE_BASE, 0);
+                    setCameraState (VEHICLE_BASE, 0);
 #endif  // ENABLE_SAMPLE_MODELS_IMPORT
                 /* |------------------------------------------------------------------------------------------------|
                  * | RUN SEQUENCE - DRAW                                                                            |

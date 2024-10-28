@@ -27,7 +27,6 @@ namespace SandBox {
     const char* getCameraTypeString (e_cameraType type) {
         switch (type)
         {
-            case DRONE:                     return "DRONE";
             case SPOILER:                   return "SPOILER";
             case LEFT_PROFILE:              return "LEFT_PROFILE";
             case REVERSE:                   return "REVERSE";
@@ -35,7 +34,9 @@ namespace SandBox {
             case REAR_AXLE:                 return "REAR_AXLE";
             case TOP_DOWN:                  return "TOP_DOWN";
             case FRONT_AXLE:                return "FRONT_AXLE";
-            case STADIUM:                   return "STADIUM";
+            case DRONE_LOCK:                return "DRONE_LOCK";
+            case DRONE_FOLLOW:              return "DRONE_FOLLOW";
+            case DRONE_FLY:                 return "DRONE_FLY";
             case UNDEFINED:                 return "UNDEFINED";
             default:                        return "Unhandled e_cameraType";
         }

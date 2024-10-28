@@ -19,7 +19,6 @@ namespace SandBox {
     } e_modelType;
 
     typedef enum {
-        DRONE                       = 0,
         SPOILER                     = 1,
         LEFT_PROFILE                = 2,
         REVERSE                     = 3,
@@ -27,8 +26,10 @@ namespace SandBox {
         REAR_AXLE                   = 5,
         TOP_DOWN                    = 6,
         FRONT_AXLE                  = 7,
-        STADIUM                     = 8,
-        UNDEFINED                   = 9
+        DRONE_LOCK                  = 8,
+        DRONE_FOLLOW                = 9,
+        DRONE_FLY                   = 0,
+        UNDEFINED                   = 10
     } e_cameraType;
 }   // namespace SandBox
 #endif  // EN_ENUM_H
