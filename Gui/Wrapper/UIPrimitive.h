@@ -25,13 +25,13 @@ namespace Gui {
             void createCheckBoxButton (const char* stringId,
                                        const char* preLabel,
                                        const char* postLabel,
-                                       bool& isSelected) {
+                                       bool& selected) {
 
                 ImGui::PushID   (stringId);
                 ImGui::Text     ("%s", preLabel);
                 ImGui::SameLine (g_styleSettings.alignment.inputField);
 
-                ImGui::Checkbox (postLabel, &isSelected);
+                ImGui::Checkbox (postLabel, &selected);
                 ImGui::PopID();
             }
 
@@ -69,13 +69,13 @@ namespace Gui {
                 if (ImGui::BeginCombo (postLabel, labels[selectedLabelIdx].c_str(), ImGuiComboFlags_HeightRegular)) {
 
                     for (size_t i = 0; i < labels.size(); i++) {
-                        bool isSelected = (selectedLabelIdx == i);
+                        bool selected = (selectedLabelIdx == i);
 
-                        if (ImGui::Selectable (labels[i].c_str(), isSelected))
+                        if (ImGui::Selectable (labels[i].c_str(), selected))
                             selectedLabelIdx = static_cast <uint32_t> (i);
                         /* Set the initial focus when opening the combo
                         */
-                        if (isSelected)
+                        if (selected)
                             ImGui::SetItemDefaultFocus();
                     }
                     ImGui::EndCombo();
@@ -116,11 +116,11 @@ namespace Gui {
                         ImGui::TableNextRow();
                         ImGui::TableNextColumn();
 
-                        bool isSelected = (selectedLabelIdx == i);
+                        bool selected = (selectedLabelIdx == i);
 
                         ImGui::PushID (static_cast <int> (i));
-                        if (isSelected) ImGui::PushStyleColor (ImGuiCol_Button, tabActiveColor);
-                        else            ImGui::PushStyleColor (ImGuiCol_Button, tabInactiveColor);
+                        if (selected) ImGui::PushStyleColor (ImGuiCol_Button, tabActiveColor);
+                        else          ImGui::PushStyleColor (ImGuiCol_Button, tabInactiveColor);
 
                         if (ImGui::Button (icons[i], tabSize))
                             selectedLabelIdx = static_cast <uint32_t> (i);

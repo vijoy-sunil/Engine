@@ -75,7 +75,7 @@ namespace Gui {
 
             void handleKeyEvents (std::chrono::steady_clock::time_point currentTime) {
                 for (auto const& [key, info]: getKeyEventInfoPool()) {
-                    if (info.meta.isPressed) {
+                    if (info.meta.pressed) {
                         float deltaTime = std::chrono::duration <float, std::chrono::seconds::period>
                                           (currentTime - info.meta.captureTime).count();
                         info.meta.binding (deltaTime);

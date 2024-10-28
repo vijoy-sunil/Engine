@@ -35,7 +35,7 @@ namespace Gui {
                 } meta;
 
                 struct State {
-                    bool isPlotVsTime;
+                    bool plotVsTime;
                 } state;
 
                 struct Resource {
@@ -92,7 +92,7 @@ namespace Gui {
                                     float history,
                                     float xMin, float xMax,
                                     float yMin, float yMax,
-                                    bool isPlotVsTime,
+                                    bool plotVsTime,
                                     size_t bufferCapacity,
                                     ImPlotFlags plotFlags,
                                     ImPlotAxisFlags plotAxisFlags,
@@ -119,7 +119,7 @@ namespace Gui {
                 info.meta.average         = 0.0f;
                 info.meta.bufferSize      = 0;
 
-                info.state.isPlotVsTime   = isPlotVsTime;
+                info.state.plotVsTime     = plotVsTime;
                 info.resource.buffer.resize (bufferCapacity);
 
                 info.params.plotFlags     = plotFlags;
@@ -195,7 +195,7 @@ namespace Gui {
                                               plotDataInfo->params.plotAxisFlags,
                                               plotDataInfo->params.plotAxisFlags);
 
-                    if (plotDataInfo->state.isPlotVsTime)
+                    if (plotDataInfo->state.plotVsTime)
                     ImPlot::SetupAxisLimits  (ImAxis_X1,
                                               dataPoint.first - plotDataInfo->meta.history,
                                               dataPoint.first,
@@ -271,7 +271,7 @@ namespace Gui {
                                            << "[" << val.meta.bufferSize << "]"
                                            << std::endl;
 
-                    std::string boolString = val.state.isPlotVsTime == true ? "TRUE": "FALSE";
+                    std::string boolString = val.state.plotVsTime == true ? "TRUE": "FALSE";
                     LOG_INFO (m_UIPlotLog) << "Plot vs time state "
                                            << "[" << boolString << "]"
                                            << std::endl;

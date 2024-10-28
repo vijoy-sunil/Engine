@@ -24,9 +24,9 @@ namespace Gui {
                 } meta;
 
                 struct State {
-                    bool isOpen;
-                    bool isSelected;
-                    bool isLeaf;
+                    bool open;
+                    bool selected;
+                    bool leaf;
                 } state;
 
                 struct Parameters {
@@ -58,25 +58,25 @@ namespace Gui {
                     nodeInfo->meta.action = UNDEFINED_ACTION;
                 }
 
-                if (nodeInfo->state.isSelected)
+                if (nodeInfo->state.selected)
                     ImGui::PushStyleColor (ImGuiCol_Text, g_styleSettings.color.textActive);
 
-                nodeInfo->state.isOpen = ImGui::TreeNodeEx ((void*)(intptr_t) nodeInfoId,
-                                                            nodeInfo->params.treeNodeFlags,
-                                                            nodeInfo->meta.label.c_str(),
-                                                            nodeInfoId);
-                if (nodeInfo->state.isSelected)
+                nodeInfo->state.open = ImGui::TreeNodeEx ((void*)(intptr_t) nodeInfoId,
+                                                          nodeInfo->params.treeNodeFlags,
+                                                          nodeInfo->meta.label.c_str(),
+                                                          nodeInfoId);
+                if (nodeInfo->state.selected)
                     ImGui::PopStyleColor();
 
                 if ((ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen()) ||
                      selectedNodeInfoId == nodeInfoId) {
 
                     selectedNodeInfoId              = nodeInfoId;
-                    nodeInfo->state.isSelected      = true;
+                    nodeInfo->state.selected        = true;
                     nodeInfo->params.treeNodeFlags |= ImGuiTreeNodeFlags_Selected;
                 }
                 else {
-                    nodeInfo->state.isSelected      = false;
+                    nodeInfo->state.selected        = false;
                     nodeInfo->params.treeNodeFlags &= ~ImGuiTreeNodeFlags_Selected;
                 }
             }
@@ -99,7 +99,7 @@ namespace Gui {
                                 e_nodeActionType action,
                                 const std::vector <uint32_t>& childInfoIds,
                                 uint32_t coreInfoId,
-                                bool isLeaf,
+                                bool leaf,
                                 ImGuiTreeNodeFlags treeNodeFlags) {
 
                 if (m_nodeInfoPool.find (nodeInfoId) != m_nodeInfoPool.end()) {
@@ -109,7 +109,7 @@ namespace Gui {
                     throw std::runtime_error ("Node info id already exists");
                 }
 
-                if (isLeaf)
+                if (leaf)
                     treeNodeFlags |= ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen;
 
                 NodeInfo info{};
@@ -121,9 +121,9 @@ namespace Gui {
                 info.meta.parentInfoId     = UINT32_MAX;
                 info.meta.coreInfoId       = coreInfoId;
 
-                info.state.isOpen          = false;
-                info.state.isSelected      = false;
-                info.state.isLeaf          = isLeaf;
+                info.state.open            = false;
+                info.state.selected        = false;
+                info.state.leaf            = leaf;
 
                 info.params.treeNodeFlags  = treeNodeFlags;
                 m_nodeInfoPool[nodeInfoId] = info;
@@ -133,7 +133,7 @@ namespace Gui {
                 auto nodeInfo = getNodeInfo (nodeInfoId);
 
                 createNode (nodeInfoId, selectedNodeInfoId);
-                if (nodeInfo->state.isOpen && !nodeInfo->state.isLeaf) {
+                if (nodeInfo->state.open && !nodeInfo->state.leaf) {
                     for (auto const& infoId: nodeInfo->meta.childInfoIds)
                         createTree (infoId, selectedNodeInfoId);
 
@@ -205,17 +205,17 @@ namespace Gui {
                                            << "[" << val.meta.coreInfoId << "]"
                                            << std::endl;
 
-                    std::string boolString = val.state.isOpen     == true ? "TRUE": "FALSE";
+                    std::string boolString = val.state.open     == true ? "TRUE": "FALSE";
                     LOG_INFO (m_UITreeLog) << "Open state "
                                            << "[" << boolString << "]"
                                            << std::endl;
 
-                    boolString             = val.state.isSelected == true ? "TRUE": "FALSE";
+                    boolString             = val.state.selected == true ? "TRUE": "FALSE";
                     LOG_INFO (m_UITreeLog) << "Selected state "
                                            << "[" << boolString << "]"
                                            << std::endl;
 
-                    boolString             = val.state.isLeaf     == true ? "TRUE": "FALSE";
+                    boolString             = val.state.leaf     == true ? "TRUE": "FALSE";
                     LOG_INFO (m_UITreeLog) << "Leaf state "
                                            << "[" << boolString << "]"
                                            << std::endl;

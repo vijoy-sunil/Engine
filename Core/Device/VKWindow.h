@@ -13,7 +13,7 @@ namespace Core {
         private:
             struct KeyEventInfo {
                 struct Meta {
-                    bool isPressed;
+                    bool pressed;
                     /* std::function is an example of a broader concept called type erasure. For example,
                      * std::function <void (void)> represents any callable that can be invoked with no arguments. It
                      * could be a function pointer or a function object that has a concrete type, or a closure built
@@ -118,15 +118,15 @@ namespace Core {
                 if (thisPtr->m_keyEventInfoPool.find (key) == thisPtr->m_keyEventInfoPool.end())
                     return;
 
-                bool isPressed = thisPtr->m_keyEventInfoPool[key].meta.isPressed;
+                bool pressed = thisPtr->m_keyEventInfoPool[key].meta.pressed;
 
-                if (action == GLFW_PRESS && !isPressed) {
-                    thisPtr->m_keyEventInfoPool[key].meta.isPressed   = true;
+                if (action == GLFW_PRESS && !pressed) {
+                    thisPtr->m_keyEventInfoPool[key].meta.pressed     = true;
                     thisPtr->m_keyEventInfoPool[key].meta.captureTime = std::chrono::high_resolution_clock::now();
                     thisPtr->m_keyEventInfoPool[key].params           = {action, mods};
                 }
                 if (action == GLFW_RELEASE) {
-                    thisPtr->m_keyEventInfoPool[key].meta.isPressed   = false;
+                    thisPtr->m_keyEventInfoPool[key].meta.pressed     = false;
                     thisPtr->m_keyEventInfoPool[key].meta.captureTime = std::chrono::high_resolution_clock::now();
                     thisPtr->m_keyEventInfoPool[key].params           = {action, mods};
                 }

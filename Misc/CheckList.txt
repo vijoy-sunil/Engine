@@ -31,6 +31,7 @@ VARIABLES
 [ - ] private member vars indicated by m_
 [ - ] vector names end with s
 [ - ] struct names begin with upper case
+[ - ] bool vars shouldn't start with 'is'
 [ - ] Reduce use of macros, use const instead
 [ - ] use nullptr for null pointers instead of NULL
 [ - ] use VK_NULL_HANDLE instead of nullptr for Vulkan objects
