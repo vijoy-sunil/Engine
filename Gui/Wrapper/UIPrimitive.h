@@ -25,37 +25,49 @@ namespace Gui {
             void createCheckBoxButton (const char* stringId,
                                        const char* preLabel,
                                        const char* postLabel,
+                                       bool buttonDisable,
                                        bool& selected) {
-
-                ImGui::PushID   (stringId);
-                ImGui::Text     ("%s", preLabel);
-                ImGui::SameLine (g_styleSettings.alignment.inputField);
-
-                ImGui::Checkbox (postLabel, &selected);
-                ImGui::PopID();
-            }
-
-            void createFloatTextField (const char* stringId,
-                                       const char* preLabel,
-                                       const char* postLabel,
-                                       const char* precision,
-                                       float fieldWidth,
-                                       float& fieldValue) {
 
                 ImGui::PushID        (stringId);
                 ImGui::Text          ("%s", preLabel);
                 ImGui::SameLine      (g_styleSettings.alignment.inputField);
 
-                ImGui::PushItemWidth (fieldWidth);
-                ImGui::InputFloat    (postLabel, &fieldValue, 0.0f, 0.0f, precision);
-                ImGui::PopItemWidth();
+                ImGui::BeginDisabled (buttonDisable);
+                ImGui::Checkbox      (postLabel, &selected);
+                ImGui::EndDisabled();
                 ImGui::PopID();
+            }
+
+            bool createFloatTextField (const char* stringId,
+                                       const char* preLabel,
+                                       const char* postLabel,
+                                       const char* precision,
+                                       bool fieldDisable,
+                                       float fieldWidth,
+                                       float& fieldValue) {
+
+                bool enterPressed;
+                ImGui::PushID        (stringId);
+                ImGui::Text          ("%s", preLabel);
+                ImGui::SameLine      (g_styleSettings.alignment.inputField);
+
+                ImGui::BeginDisabled (fieldDisable);
+                ImGui::PushItemWidth (fieldWidth);
+                enterPressed = ImGui::InputFloat (postLabel,
+                                                  &fieldValue,
+                                                  0.0f, 0.0f, precision,
+                                                  ImGuiInputTextFlags_EnterReturnsTrue);
+                ImGui::PopItemWidth();
+                ImGui::EndDisabled();
+                ImGui::PopID();
+                return enterPressed;
             }
 
             void createCombo (const char* stringId,
                               const char* preLabel,
                               const char* postLabel,
                               const std::vector <std::string>& labels,
+                              bool fieldDisable,
                               float fieldWidth,
                               uint32_t& selectedLabelIdx) {
 
@@ -64,6 +76,7 @@ namespace Gui {
                 ImGui::PopID();
                 ImGui::SameLine       (g_styleSettings.alignment.inputField);
 
+                ImGui::BeginDisabled  (fieldDisable);
                 ImGui::PushItemWidth  (fieldWidth);
                 ImGui::PushStyleVar   (ImGuiStyleVar_ItemSpacing, g_styleSettings.spacing.list);
                 if (ImGui::BeginCombo (postLabel, labels[selectedLabelIdx].c_str(), ImGuiComboFlags_HeightRegular)) {
@@ -82,6 +95,7 @@ namespace Gui {
                 }
                 ImGui::PopStyleVar();
                 ImGui::PopItemWidth();
+                ImGui::EndDisabled();
             }
 
             void createImagePreview (VkDescriptorSet imageDescriptorSet,

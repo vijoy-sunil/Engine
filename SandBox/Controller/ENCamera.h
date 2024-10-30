@@ -108,11 +108,6 @@ namespace SandBox {
             void switchToDroneFollow (float deltaTime) {
                 if (isKeyBoardCapturedByUI())
                     return;
-                /* Note that, we can only switch to drone follow if we are in either of the drone modes. Drone follow
-                 * mode would not make sense otherwise
-                */
-                if (getCameraType() != DRONE_LOCK && getCameraType() != DRONE_FLY)
-                    return;
 
                 static_cast <void> (deltaTime);
                 setCameraType      (DRONE_FOLLOW);
@@ -346,6 +341,14 @@ namespace SandBox {
                 });
             }
 
+            bool isModelTransformRemoved (void) {
+                return m_modelTransformRemoved;
+            }
+
+            void setModelTransformRemoved (bool val) {
+                m_modelTransformRemoved = val;
+            }
+
             e_cameraType getCameraType (void) {
                 return m_currentType;
             }
@@ -353,6 +356,23 @@ namespace SandBox {
             void setCameraType (e_cameraType type) {
                 m_previousType = m_currentType;
                 m_currentType  = type;
+                /* Note that, we can only switch to drone follow if we are in either of the drone modes. Drone follow
+                 * mode would not make sense otherwise. We need to revert previous and current camera type before
+                 * returning
+                */
+                if ((m_previousType != DRONE_LOCK && m_previousType != DRONE_FLY) &&
+                     m_currentType  == DRONE_FOLLOW) {
+
+                    m_currentType   = m_previousType;
+                    m_previousType  = UNDEFINED;
+                    return;
+                }
+                /* Note that, when we switch to drone follow mode we need to remove the model transformation done to the
+                 * camera vectors before using them. The boolean ensures that the removal/inverse operation is only done
+                 * once after the switch happens
+                */
+                if (m_previousType != DRONE_FOLLOW && m_currentType == DRONE_FOLLOW)
+                    setModelTransformRemoved (false);
                 /* Note that, we need to reinstall application callbacks with imgui using _RestoreCallbacks() and
                  * _InstallCallbacks() methods so that imgui can chain glfw callbacks
                 */
@@ -380,12 +400,6 @@ namespace SandBox {
                     ImGui_ImplGlfw_InstallCallbacks (deviceInfo->resource.window);
                     enableMouseInputsToUI();
                 }
-                /* Note that, when we switch to drone follow mode we need to remove the model transformation done to the
-                 * camera vectors before using them. The boolean ensures that the removal/inverse operation is only done
-                 * once after the switch happens
-                */
-                if (m_previousType != DRONE_FOLLOW && m_currentType == DRONE_FOLLOW)
-                    m_modelTransformRemoved = false;
             }
 
             void setCameraState (uint32_t modelInfoId, uint32_t modelInstanceId) {
@@ -412,8 +426,11 @@ namespace SandBox {
                  * we need is camera vectors that assumes the model is at the origin (just like the vectors stored in
                  * the camera info pool). Once we have obtained them, we can then easily apply the model transformation
                  * to it so that it follows the target
+                 *
+                 * Note that, the boolean is unset when we switch to drone follow mode, and, when we write new data to
+                 * camera vectors via ui
                 */
-                if (currentType == DRONE_FOLLOW && !m_modelTransformRemoved) {
+                if (currentType == DRONE_FOLLOW && !isModelTransformRemoved()) {
                     glm::mat4 inverseModelMatrix                 = glm::inverse (modelMatrix);
                     g_cameraStateInfoPool[currentType].position  = glm::vec3    (inverseModelMatrix *
                                                                    glm::vec4    (cameraInfo->meta.position, 1.0f));
@@ -422,8 +439,8 @@ namespace SandBox {
                                                                    glm::vec4    (cameraInfo->meta.direction +
                                                                                  cameraInfo->meta.position, 1.0f));
 
-                    g_cameraStateInfoPool[m_currentType].fovDeg  = cameraInfo->meta.fovDeg;
-                    m_modelTransformRemoved                      = true;
+                    g_cameraStateInfoPool[currentType].fovDeg    = cameraInfo->meta.fovDeg;
+                    setModelTransformRemoved (true);
                 }
 
                 cameraInfo->meta.position  = glm::vec3 (modelMatrix *

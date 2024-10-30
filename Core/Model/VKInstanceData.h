@@ -5,7 +5,7 @@
 #include "VKModelMatrix.h"
 
 namespace Core {
-    class VKInstanceData: protected VKModelMatrix {
+    class VKInstanceData: protected virtual VKModelMatrix {
         private:
             Log::Record* m_VKInstanceDataLog;
             const uint32_t m_instanceId = g_collectionSettings.instanceId++;

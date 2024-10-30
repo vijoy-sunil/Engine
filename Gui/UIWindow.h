@@ -3,6 +3,7 @@
 
 #include <imgui_impl_vulkan.h>
 #include <IconFontCppHeaders/IconsFontAwesome6.h>
+#include "../Core/Model/VKModelMatrix.h"
 #include "../Core/Image/VKImageMgr.h"
 #include "../Core/Scene/VKSceneMgr.h"
 #include "Wrapper/UIPrimitive.h"
@@ -13,7 +14,8 @@
 #include "../SandBox/ENLogHelper.h"
 
 namespace Gui {
-    class UIWindow: protected virtual Core::VKImageMgr,
+    class UIWindow: protected virtual Core::VKModelMatrix,
+                    protected virtual Core::VKImageMgr,
                     protected virtual Core::VKSceneMgr,
                     protected UIPrimitive,
                     protected UITree,
@@ -42,6 +44,16 @@ namespace Gui {
 
             Log::Record* m_UIWindowLog;
             const uint32_t m_instanceId = g_collectionSettings.instanceId++;
+
+            bool isCameraPropertyWritable (void) {
+                auto cameraType = getCameraType();
+                /* Allow data write to camera properties when camera type is set to either drone lock or drone follow
+                */
+                if (cameraType != SandBox::DRONE_LOCK  && cameraType != SandBox::DRONE_FOLLOW)
+                    return false;
+                else
+                    return true;
+            }
 
             void deleteUIImageInfo (uint32_t uiImageInfoId) {
                 if (m_uiImageInfoPool.find (uiImageInfoId) != m_uiImageInfoPool.end()) {
@@ -419,9 +431,11 @@ namespace Gui {
                             glm::vec3 rotateAxis         = {0.0f, 0.0f, 0.0f};
                             glm::vec3 scale              = {0.0f, 0.0f, 0.0f};
                             float rotateAngleDeg         = 0.0f;
+                            bool fieldDisable            = false;
+                            bool writePending            = false;
 
                             if (nodeInfo->meta.type != MODEL_INSTANCE_NODE)
-                                ImGui::BeginDisabled (true);
+                                fieldDisable             = true;
                             else {
                                 auto parentNodeInfo      = getNodeInfo  (nodeInfo->meta.parentInfoId);
                                 auto modelInfo           = getModelInfo (parentNodeInfo->meta.coreInfoId);
@@ -432,34 +446,58 @@ namespace Gui {
                                 rotateAngleDeg           = modelInfo->meta.instanceDatas[modelInstanceId].rotateAngleDeg;
                             }
 
-                            ImGui::Text          ("%s",              "Position");
-                            createFloatTextField ("##positionX",     "X",     "m",      g_styleSettings.precision,
-                                                  g_styleSettings.size.inputFieldSmall, position.x);
-                            createFloatTextField ("##positionY",     "Y",     "m",      g_styleSettings.precision,
-                                                  g_styleSettings.size.inputFieldSmall, position.y);
-                            createFloatTextField ("##positionZ",     "Z",     "m",      g_styleSettings.precision,
-                                                  g_styleSettings.size.inputFieldSmall, position.z);
+                            ImGui::Text              ("%s",            "Position");
+                            if (createFloatTextField ("##positionX",   "X",     "m",        g_styleSettings.precision,
+                                                      fieldDisable,
+                                                      g_styleSettings.size.inputFieldSmall, position.x)     ||
+                                createFloatTextField ("##positionY",   "Y",     "m",        g_styleSettings.precision,
+                                                      fieldDisable,
+                                                      g_styleSettings.size.inputFieldSmall, position.y)     ||
+                                createFloatTextField ("##positionZ",   "Z",     "m",        g_styleSettings.precision,
+                                                      fieldDisable,
+                                                      g_styleSettings.size.inputFieldSmall, position.z))
+                                writePending = true;
 
-                            ImGui::Text          ("%s",              "Rotate axis");
-                            createFloatTextField ("##rotateAxisX",   "X",     "u",      g_styleSettings.precision,
-                                                  g_styleSettings.size.inputFieldSmall, rotateAxis.x);
-                            createFloatTextField ("##rotateAxisY",   "Y",     "u",      g_styleSettings.precision,
-                                                  g_styleSettings.size.inputFieldSmall, rotateAxis.y);
-                            createFloatTextField ("##rotateAxisZ",   "Z",     "u",      g_styleSettings.precision,
-                                                  g_styleSettings.size.inputFieldSmall, rotateAxis.z);
-                            createFloatTextField ("##rotateAngle",   "Angle", "deg",    g_styleSettings.precision,
-                                                  g_styleSettings.size.inputFieldSmall, rotateAngleDeg);
+                            ImGui::Text              ("%s",            "Rotate axis");
+                            if (createFloatTextField ("##rotateAxisX", "X",     "u",        g_styleSettings.precision,
+                                                      fieldDisable,
+                                                      g_styleSettings.size.inputFieldSmall, rotateAxis.x)   ||
+                                createFloatTextField ("##rotateAxisY", "Y",     "u",        g_styleSettings.precision,
+                                                      fieldDisable,
+                                                      g_styleSettings.size.inputFieldSmall, rotateAxis.y)   ||
+                                createFloatTextField ("##rotateAxisZ", "Z",     "u",        g_styleSettings.precision,
+                                                      fieldDisable,
+                                                      g_styleSettings.size.inputFieldSmall, rotateAxis.z)   ||
+                                createFloatTextField ("##rotateAngle", "Angle", "deg",      g_styleSettings.precision,
+                                                      fieldDisable,
+                                                      g_styleSettings.size.inputFieldSmall, rotateAngleDeg))
+                                writePending = true;
 
-                            ImGui::Text          ("%s",              "Scale");
-                            createFloatTextField ("##scaleX",        "X",     "u",      g_styleSettings.precision,
-                                                  g_styleSettings.size.inputFieldSmall, scale.x);
-                            createFloatTextField ("##scaleY",        "Y",     "u",      g_styleSettings.precision,
-                                                  g_styleSettings.size.inputFieldSmall, scale.y);
-                            createFloatTextField ("##scaleZ",        "Z",     "u",      g_styleSettings.precision,
-                                                  g_styleSettings.size.inputFieldSmall, scale.z);
+                            ImGui::Text              ("%s",            "Scale");
+                            if (createFloatTextField ("##scaleX",      "X",     "u",        g_styleSettings.precision,
+                                                      fieldDisable,
+                                                      g_styleSettings.size.inputFieldSmall, scale.x)        ||
+                                createFloatTextField ("##scaleY",      "Y",     "u",        g_styleSettings.precision,
+                                                      fieldDisable,
+                                                      g_styleSettings.size.inputFieldSmall, scale.y)        ||
+                                createFloatTextField ("##scaleZ",      "Z",     "u",        g_styleSettings.precision,
+                                                      fieldDisable,
+                                                      g_styleSettings.size.inputFieldSmall, scale.z))
+                                writePending = true;
 
-                            if (nodeInfo->meta.type != MODEL_INSTANCE_NODE)
-                                ImGui::EndDisabled();
+                            {   /* Data write */
+                                if (!fieldDisable && writePending) {
+                                    auto parentNodeInfo      = getNodeInfo  (nodeInfo->meta.parentInfoId);
+                                    auto modelInfo           = getModelInfo (parentNodeInfo->meta.coreInfoId);
+                                    uint32_t modelInstanceId = nodeInfo->meta.coreInfoId;
+
+                                    modelInfo->meta.instanceDatas[modelInstanceId].position       = position;
+                                    modelInfo->meta.instanceDatas[modelInstanceId].rotateAxis     = rotateAxis;
+                                    modelInfo->meta.instanceDatas[modelInstanceId].scale          = scale;
+                                    modelInfo->meta.instanceDatas[modelInstanceId].rotateAngleDeg = rotateAngleDeg;
+                                    createModelMatrix (parentNodeInfo->meta.coreInfoId, modelInstanceId);
+                                }
+                            }
                         }
 
                         else if (nodeInfo->meta.type <= CAMERA_INFO_ID_NODE) {
@@ -467,42 +505,67 @@ namespace Gui {
                             glm::vec3 position  = {0.0f, 0.0f, 0.0f};
                             glm::vec3 direction = {0.0f, 0.0f, 0.0f};
                             glm::vec3 upVector  = {0.0f, 0.0f, 0.0f};
+                            bool fieldDisable   = false;
+                            bool writePending   = false;
 
                             if (nodeInfo->meta.type != CAMERA_INFO_ID_NODE)
-                                ImGui::BeginDisabled (true);
+                                fieldDisable    = true;
                             else {
                                 auto cameraInfo = getCameraInfo (nodeInfo->meta.coreInfoId);
                                 position        = cameraInfo->meta.position;
                                 direction       = cameraInfo->meta.direction;
                                 upVector        = cameraInfo->meta.upVector;
+
+                                if (!isCameraPropertyWritable())
+                                    fieldDisable = true;
                             }
 
-                            ImGui::Text          ("%s",           "Position");
-                            createFloatTextField ("##positionX",  "X", "m",             g_styleSettings.precision,
-                                                  g_styleSettings.size.inputFieldSmall, position.x);
-                            createFloatTextField ("##positionY",  "Y", "m",             g_styleSettings.precision,
-                                                  g_styleSettings.size.inputFieldSmall, position.y);
-                            createFloatTextField ("##positionZ",  "Z", "m",             g_styleSettings.precision,
-                                                  g_styleSettings.size.inputFieldSmall, position.z);
+                            ImGui::Text              ("%s",           "Position");
+                            if (createFloatTextField ("##positionX",  "X", "m",             g_styleSettings.precision,
+                                                      fieldDisable,
+                                                      g_styleSettings.size.inputFieldSmall, position.x)     ||
+                                createFloatTextField ("##positionY",  "Y", "m",             g_styleSettings.precision,
+                                                      fieldDisable,
+                                                      g_styleSettings.size.inputFieldSmall, position.y)     ||
+                                createFloatTextField ("##positionZ",  "Z", "m",             g_styleSettings.precision,
+                                                      fieldDisable,
+                                                      g_styleSettings.size.inputFieldSmall, position.z))
+                                writePending = true;
 
-                            ImGui::Text          ("%s",           "Direction");
-                            createFloatTextField ("##directionX", "X", "u",             g_styleSettings.precision,
-                                                  g_styleSettings.size.inputFieldSmall, direction.x);
-                            createFloatTextField ("##directionY", "Y", "u",             g_styleSettings.precision,
-                                                  g_styleSettings.size.inputFieldSmall, direction.y);
-                            createFloatTextField ("##directionZ", "Z", "u",             g_styleSettings.precision,
-                                                  g_styleSettings.size.inputFieldSmall, direction.z);
+                            ImGui::Text              ("%s",           "Direction");
+                            if (createFloatTextField ("##directionX", "X", "u",             g_styleSettings.precision,
+                                                      fieldDisable,
+                                                      g_styleSettings.size.inputFieldSmall, direction.x)    ||
+                                createFloatTextField ("##directionY", "Y", "u",             g_styleSettings.precision,
+                                                      fieldDisable,
+                                                      g_styleSettings.size.inputFieldSmall, direction.y)    ||
+                                createFloatTextField ("##directionZ", "Z", "u",             g_styleSettings.precision,
+                                                      fieldDisable,
+                                                      g_styleSettings.size.inputFieldSmall, direction.z))
+                                writePending = true;
 
-                            ImGui::Text          ("%s",           "Up vector");
-                            createFloatTextField ("##upVectorX",  "X", "u",             g_styleSettings.precision,
-                                                  g_styleSettings.size.inputFieldSmall, upVector.x);
-                            createFloatTextField ("##upVectorY",  "Y", "u",             g_styleSettings.precision,
-                                                  g_styleSettings.size.inputFieldSmall, upVector.y);
-                            createFloatTextField ("##upVectorZ",  "Z", "u",             g_styleSettings.precision,
-                                                  g_styleSettings.size.inputFieldSmall, upVector.z);
+                            ImGui::Text              ("%s",           "Up vector");
+                            if (createFloatTextField ("##upVectorX",  "X", "u",             g_styleSettings.precision,
+                                                      fieldDisable,
+                                                      g_styleSettings.size.inputFieldSmall, upVector.x)     ||
+                                createFloatTextField ("##upVectorY",  "Y", "u",             g_styleSettings.precision,
+                                                      fieldDisable,
+                                                      g_styleSettings.size.inputFieldSmall, upVector.y)     ||
+                                createFloatTextField ("##upVectorZ",  "Z", "u",             g_styleSettings.precision,
+                                                      fieldDisable,
+                                                      g_styleSettings.size.inputFieldSmall, upVector.z))
+                                writePending = true;
 
-                            if (nodeInfo->meta.type != CAMERA_INFO_ID_NODE)
-                                ImGui::EndDisabled();
+                            {   /* Data write */
+                                if (!fieldDisable && writePending) {
+                                    auto cameraInfo                   = getCameraInfo (nodeInfo->meta.coreInfoId);
+                                    cameraInfo->meta.position         = position;
+                                    cameraInfo->meta.direction        = direction;
+                                    cameraInfo->meta.upVector         = upVector;
+                                    cameraInfo->meta.updateViewMatrix = true;
+                                    setModelTransformRemoved (false);
+                                }
+                            }
                         }
                     }
                 /* |------------------------------------------------------------------------------------------------|
@@ -511,44 +574,60 @@ namespace Gui {
                 */
                     else if (m_selectedPropertyLabelIdx == VIEW) {
 
-                        static uint32_t selectedCameraTypeLabelIdx = 0;
-                        static float fovDeg                        = 0.0f;
-                        static float nearPlane                     = 0.0f;
-                        static float farPlane                      = 0.0f;
+                        float fovDeg                        = 0.0f;
+                        float nearPlane                     = 0.0f;
+                        float farPlane                      = 0.0f;
+                        uint32_t selectedCameraTypeLabelIdx = static_cast <uint32_t> (getCameraType());
+                        bool fieldDisable                   = false;
+                        bool writePending                   = false;
 
-                        if (nodeInfo->meta.type == CAMERA_INFO_ID_NODE) {
-                            /* Note that, camera type doesn't depend upon camera info id
-                            */
-                            auto cameraType            = getCameraType();
-                            selectedCameraTypeLabelIdx = static_cast <uint32_t> (cameraType);
+                        if (nodeInfo->meta.type != CAMERA_INFO_ID_NODE)
+                            fieldDisable    = true;
+                        else {
+                            auto cameraInfo = getCameraInfo (nodeInfo->meta.coreInfoId);
+                            fovDeg          = cameraInfo->meta.fovDeg;
+                            nearPlane       = cameraInfo->meta.nearPlane;
+                            farPlane        = cameraInfo->meta.farPlane;
 
-                            auto cameraInfo            = getCameraInfo (nodeInfo->meta.coreInfoId);
-                            fovDeg                     = cameraInfo->meta.fovDeg;
-                            nearPlane                  = cameraInfo->meta.nearPlane;
-                            farPlane                   = cameraInfo->meta.farPlane;
+                            if (!isCameraPropertyWritable())
+                                fieldDisable = true;
                         }
-                        else
-                            ImGui::BeginDisabled (true);
                         /* To prevent showing post label, prefix it with '##'
                         */
                         createCombo          ("##cameraType",
                                               "Camera type",
                                               "##postLabel",
                                               m_cameraTypeLabels,
+                                              false,
                                               g_styleSettings.size.inputFieldLarge,
                                               selectedCameraTypeLabelIdx);
+                        {   /* Data write */
+                            setCameraType    (static_cast <SandBox::e_cameraType> (selectedCameraTypeLabelIdx));
+                        }
 
-                        createFloatTextField ("##fov",       "FOV",         "deg",  g_styleSettings.precision,
-                                              g_styleSettings.size.inputFieldSmall, fovDeg);
-                        createFloatTextField ("##nearPlane", "Near plane",  "m",    g_styleSettings.precision,
-                                              g_styleSettings.size.inputFieldSmall, nearPlane);
-                        createFloatTextField ("##farPlane",  "Far plane",   "m",    g_styleSettings.precision,
-                                              g_styleSettings.size.inputFieldSmall, farPlane);
+                        if (createFloatTextField ("##fov",       "FOV",        "deg",   g_styleSettings.precision,
+                                                  fieldDisable,
+                                                  g_styleSettings.size.inputFieldSmall, fovDeg)     ||
+                            createFloatTextField ("##nearPlane", "Near plane", "m",     g_styleSettings.precision,
+                                                  fieldDisable,
+                                                  g_styleSettings.size.inputFieldSmall, nearPlane)  ||
+                            createFloatTextField ("##farPlane",  "Far plane",  "m",     g_styleSettings.precision,
+                                                  fieldDisable,
+                                                  g_styleSettings.size.inputFieldSmall, farPlane))
+                            writePending = true;
 
-                        if (nodeInfo->meta.type != CAMERA_INFO_ID_NODE)
-                            ImGui::EndDisabled();
+                        {   /* Data write */
+                            if (!fieldDisable && writePending) {
+                                auto cameraInfo                         = getCameraInfo (nodeInfo->meta.coreInfoId);
+                                cameraInfo->meta.fovDeg                 = fovDeg;
+                                cameraInfo->meta.nearPlane              = nearPlane;
+                                cameraInfo->meta.farPlane               = farPlane;
+                                cameraInfo->meta.updateProjectionMatrix = true;
+                                setModelTransformRemoved (false);
+                            }
+                        }
 
-                        createCheckBoxButton ("##overlay", "Metrics", "##postLabel", showMetricsOverlay);
+                        createCheckBoxButton ("##overlay", "Metrics", "##postLabel", false, showMetricsOverlay);
                     }
                 /* |------------------------------------------------------------------------------------------------|
                  * | RIGHT PANEL - TEXTURE                                                                          |
@@ -556,6 +635,7 @@ namespace Gui {
                 */
                     else if (m_selectedPropertyLabelIdx == TEXTURE) {
                         static uint32_t selectedDiffuseLabelIdx = 0;
+                        bool fieldDisable                       = false;
 
                         if (nodeInfo->meta.type == MODEL_TEXTURE_NODE) {
                             uint32_t infoId         = nodeInfo->meta.coreInfoId;
@@ -566,12 +646,14 @@ namespace Gui {
                             selectedDiffuseLabelIdx = std::find (m_diffuseTextureImageInfoIdLabels.begin(),
                                                                  m_diffuseTextureImageInfoIdLabels.end(),
                                                                  label) - m_diffuseTextureImageInfoIdLabels.begin();
+                            fieldDisable            = true;
                         }
 
                         createCombo ("##diffuse",
                                      "Diffuse",
                                      "##postLabel",
                                      m_diffuseTextureImageInfoIdLabels,
+                                     fieldDisable,
                                      g_styleSettings.size.inputFieldLarge,
                                      selectedDiffuseLabelIdx);
 
@@ -601,7 +683,7 @@ namespace Gui {
                 */
                     else if (m_selectedPropertyLabelIdx == LIGHT) {
                         /* [ X ] Pending implementation */
-                        createCheckBoxButton ("##shadow", "Shadow", "##postLabel", showShadow);
+                        createCheckBoxButton ("##shadow", "Shadow", "##postLabel", true, showShadow);
                     }
                 /* |------------------------------------------------------------------------------------------------|
                  * | RIGHT PANEL - PHYSICS                                                                          |
@@ -609,7 +691,7 @@ namespace Gui {
                 */
                     else if (m_selectedPropertyLabelIdx == PHYSICS) {
                         /* [ X ] Pending implementation */
-                        createCheckBoxButton ("##boundingBox", "Bounding box", "##postLabel", showBoundingBox);
+                        createCheckBoxButton ("##boundingBox", "Bounding box", "##postLabel", true, showBoundingBox);
                     }
                 /* |------------------------------------------------------------------------------------------------|
                  * | RIGHT PANEL - DEBUG                                                                            |
