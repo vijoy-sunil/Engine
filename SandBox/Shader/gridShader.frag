@@ -21,9 +21,9 @@ const float highlightMargin = 1.0;
 const float nearPlane       = 0.01;
 const float farPlane        = 100.0;
 
-/* To draw lines instead of just a uniform color, compute the 3D position on the actual xz plane using the near point and 
- * far point calculated earlier and use that position to determine if the point is actually on a line or on the void of 
- * the grid. For anti aliasing, we are going to use screen-space partial derivatives to compute the line width and 
+/* To draw lines instead of just a uniform color, compute the 3D position on the actual xz plane using the near point and
+ * far point calculated earlier and use that position to determine if the point is actually on a line or on the void of
+ * the grid. For anti aliasing, we are going to use screen-space partial derivatives to compute the line width and
  * falloff
 */
 vec4 grid (vec3 fragPosition, float scale, bool drawAxis) {
@@ -39,10 +39,10 @@ vec4 grid (vec3 fragPosition, float scale, bool drawAxis) {
     /* Axis highlight for X and Z axes
     */
     if (drawAxis) {
-        if (fragPosition.z > -highlightMargin * minimumZ && 
+        if (fragPosition.z > -highlightMargin * minimumZ &&
             fragPosition.z <  highlightMargin * minimumZ)       color.x = 1.0;
-        
-        if (fragPosition.x > -highlightMargin * minimumX && 
+
+        if (fragPosition.x > -highlightMargin * minimumX &&
             fragPosition.x <  highlightMargin * minimumX)       color.z = 1.0;
     }
     return color;
@@ -51,14 +51,14 @@ vec4 grid (vec3 fragPosition, float scale, bool drawAxis) {
 /* Manually calculate and output the depth for every fragment
 */
 float computeDepth (vec3 fragPosition) {
-    vec4 clipSpacePosition = sceneData.projectionMatrix * 
-                             sceneData.viewMatrix       * 
+    vec4 clipSpacePosition = sceneData.projectionMatrix *
+                             sceneData.viewMatrix       *
                              vec4 (fragPosition, 1.0);
     return clipSpacePosition.z/clipSpacePosition.w;
 }
 
-/* Add a fading effect so that the grid looks a little better when it’s far away. To do this, we actually need to use 
- * the linear depth to determine the alpha of the lines (the more far away they are, the more transparent they will be). 
+/* Add a fading effect so that the grid looks a little better when it’s far away. To do this, we actually need to use
+ * the linear depth to determine the alpha of the lines (the more far away they are, the more transparent they will be).
  * To get the linear depth we will need our near and far plane values
 */
 float computeLinearDepth (vec3 fragPosition) {
@@ -78,9 +78,9 @@ float computeLinearDepth (vec3 fragPosition) {
 }
 
 void main (void) {
-    /* Since the plane is now drawn on the entire viewport, we need to make some calculation to make sure it’s only 
-     * visible when needed, meaning we only want to see the plane on the floor (when y = 0). We are going to use the far 
-     * and near point calculated earlier to check if the plane intersects with the floor. Given the parametric equation 
+    /* Since the plane is now drawn on the entire viewport, we need to make some calculation to make sure it’s only
+     * visible when needed, meaning we only want to see the plane on the floor (when y = 0). We are going to use the far
+     * and near point calculated earlier to check if the plane intersects with the floor. Given the parametric equation
      * of a line,
      *              y = (far point[y] - near point[y]) * t + near point[y]
      *
@@ -99,5 +99,5 @@ void main (void) {
 
     outColor          = (grid (fragPosition, scale, true)  +
                          grid (fragPosition, scale, true)) * float (t > 0);
-    outColor.a       *= fading; 
+    outColor.a       *= fading;
 }

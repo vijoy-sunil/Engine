@@ -26,18 +26,18 @@ vec3 unProjectPoint (float x, float y, float z, mat4 viewMatrix, mat4 projection
 }
 
 void main (void) {
-    /* We need to use the grid coordinate directly like if it was in clipped space coordinate and unproject it to get the 
-     * 3D world space coordinates. Since we want our points to be at infinity, we need to unproject it on the the near 
+    /* We need to use the grid coordinate directly like if it was in clipped space coordinate and unproject it to get the
+     * 3D world space coordinates. Since we want our points to be at infinity, we need to unproject it on the the near
      * (z = 0) and far (z = 1) planes. At this point, we will have an infinite plane covering the entire viewport
     */
     vec3 inPosition = gridPlane[gl_VertexIndex];
-    gl_Position     = vec4 (inPosition, 1.0); 
+    gl_Position     = vec4 (inPosition, 1.0);
 
-    fragNearPoint   = unProjectPoint (inPosition.x, inPosition.y, 0.0, 
-                                      sceneData.viewMatrix, 
+    fragNearPoint   = unProjectPoint (inPosition.x, inPosition.y, 0.0,
+                                      sceneData.viewMatrix,
                                       sceneData.projectionMatrix);
-    
-    fragFarPoint    = unProjectPoint (inPosition.x, inPosition.y, 1.0, 
-                                      sceneData.viewMatrix, 
-                                      sceneData.projectionMatrix); 
+
+    fragFarPoint    = unProjectPoint (inPosition.x, inPosition.y, 1.0,
+                                      sceneData.viewMatrix,
+                                      sceneData.projectionMatrix);
 }
