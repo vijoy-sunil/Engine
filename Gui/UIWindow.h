@@ -297,7 +297,7 @@ namespace Gui {
                 for (auto const& [key, val]: m_uiImageInfoPool)
                     m_diffuseTextureImageInfoIdLabels.push_back (val.meta.label);
                 /* |------------------------------------------------------------------------------------------------|
-                 * | READY PLOT DATA                                                                                |
+                 * | READY PLOT DATA INFO                                                                           |
                  * |------------------------------------------------------------------------------------------------|
                 */
                 ImPlot::CreateContext();
