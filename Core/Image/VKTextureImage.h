@@ -62,75 +62,78 @@ namespace Core {
             */
             void createTextureResources (uint32_t deviceInfoId,
                                          uint32_t imageInfoId,
-                                         const char* texturePath) {
+                                         uint32_t layerCount,
+                                         const std::vector <const char*>& texturePaths,
+                                         VkImageCreateFlags flags,
+                                         VkImageViewType viewType,
+                                         bool enMipLevels = true) {
 
-                auto deviceInfo = getDeviceInfo (deviceInfoId);
-                int width, height, channels;
-                /* The stbi_load function takes the file path and number of channels to load as arguments. The
-                 * STBI_rgb_alpha value forces the image to be loaded with an alpha channel, even if it doesn't have one,
-                 * which is nice for consistency with other textures (if any). The middle three parameters are outputs
-                 * for the width, height and actual number of channels in the image
-                 *
-                 * The pointer that is returned is the first element in an array of pixel values
-                */
-                stbi_uc* pixels = stbi_load (texturePath,
-                                             &width,
-                                             &height,
-                                             &channels,
-                                             STBI_rgb_alpha);
-                /* Calculate the number of levels in the mip chain. The max function selects the largest dimension. The
-                 * log2 function calculates how many times that dimension can be divided by 2. The floor function handles
-                 * cases where the largest dimension is not a power of 2. 1 is added so that the original image has a mip
-                 * level
-                */
-                uint32_t mipLevels = static_cast <uint32_t> (std::floor
-                                                            (std::log2
-                                                            (std::max (width, height)))) + 1;
+                auto deviceInfo       = getDeviceInfo (deviceInfoId);
+                int width             = 0;
+                int height            = 0;
+                int channels          = 0;
+                uint32_t bufferInfoId = imageInfoId;
 
-                if (!pixels) {
-                    LOG_ERROR (m_VKTextureImageLog) << "Failed to load texture image "
-                                                    << "[" << imageInfoId << "]"
-                                                    << " "
-                                                    << "[" << texturePath << "]"
-                                                    << std::endl;
-                    throw std::runtime_error ("Failed to load texture image");
+                for (auto const& path: texturePaths) {
+                    /* The stbi_load function takes the file path and number of channels to load as arguments. The
+                     * STBI_rgb_alpha value forces the image to be loaded with an alpha channel, even if it doesn't have
+                     * one, which is nice for consistency with other textures (if any). The middle three parameters are
+                     * outputs for the width, height and actual number of channels in the image
+                     *
+                     * The pointer that is returned is the first element in an array of pixel values
+                    */
+                    stbi_uc* pixels = stbi_load (path,
+                                                 &width,
+                                                 &height,
+                                                 &channels,
+                                                 STBI_rgb_alpha);
+
+                    if (!pixels) {
+                        LOG_ERROR (m_VKTextureImageLog) << "Failed to load texture image "
+                                                        << "[" << imageInfoId << "]"
+                                                        << " "
+                                                        << "[" << path << "]"
+                                                        << std::endl;
+                        throw std::runtime_error ("Failed to load texture image");
+                    }
+
+                    /* The pixels are laid out row by row with 4 bytes per pixel in the case of STBI_rgb_alpha for a
+                     * total of width * height * 4 values
+                    */
+                    VkDeviceSize size = static_cast <VkDeviceSize> (width * height * 4);
+                    auto stagingBufferShareQueueFamilyIndices = std::vector {
+                        deviceInfo->meta.transferFamilyIndex.value()
+                    };
+                    /* Create staging buffer, the buffer should be in host visible memory so that we can map it and it
+                    * should be usable as a transfer source so that we can copy it to an image later on
+                    */
+                    createBuffer (deviceInfoId,
+                                  bufferInfoId,
+                                  STAGING_BUFFER,
+                                  size,
+                                  VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                                  VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+                                  VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                                  stagingBufferShareQueueFamilyIndices);
+
+                    /* Now, we can directly copy the pixel values that we got from the image loading library to the
+                     * buffer
+                    */
+                    auto bufferInfo = getBufferInfo (bufferInfoId, STAGING_BUFFER);
+                    vkMapMemory (deviceInfo->resource.logDevice,
+                                 bufferInfo->resource.bufferMemory,
+                                 0,
+                                 size,
+                                 0,
+                                 &bufferInfo->meta.bufferMapped);
+                    memcpy (bufferInfo->meta.bufferMapped, pixels, static_cast <size_t> (size));
+                    vkUnmapMemory (deviceInfo->resource.logDevice, bufferInfo->resource.bufferMemory);
+
+                    /* Clean up the original pixel array
+                    */
+                    stbi_image_free (pixels);
+                    bufferInfoId++;
                 }
-
-                /* The pixels are laid out row by row with 4 bytes per pixel in the case of STBI_rgb_alpha for a total of
-                 * texWidth * texHeight * 4 values
-                */
-                VkDeviceSize size = static_cast <VkDeviceSize> (width * height * 4);
-                auto stagingBufferShareQueueFamilyIndices = std::vector {
-                    deviceInfo->meta.transferFamilyIndex.value()
-                };
-                /* Create staging buffer, the buffer should be in host visible memory so that we can map it and it
-                 * should be usable as a transfer source so that we can copy it to an image later on
-                */
-                createBuffer (deviceInfoId,
-                              imageInfoId,
-                              STAGING_BUFFER,
-                              size,
-                              VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-                              VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
-                              VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-                              stagingBufferShareQueueFamilyIndices);
-
-                /* Now, we can directly copy the pixel values that we got from the image loading library to the buffer
-                */
-                auto bufferInfo = getBufferInfo (imageInfoId, STAGING_BUFFER);
-                vkMapMemory (deviceInfo->resource.logDevice,
-                             bufferInfo->resource.bufferMemory,
-                             0,
-                             size,
-                             0,
-                             &bufferInfo->meta.bufferMapped);
-                memcpy (bufferInfo->meta.bufferMapped, pixels, static_cast <size_t> (size));
-                vkUnmapMemory (deviceInfo->resource.logDevice, bufferInfo->resource.bufferMemory);
-
-                /* Clean up the original pixel array
-                */
-                stbi_image_free (pixels);
-
                 /* Although we could set up the shader to access the pixel values in the buffer, it's better to use image
                  * objects in Vulkan for this purpose. Image objects will make it easier and faster to retrieve colors
                  * by allowing us to use 2D coordinates
@@ -174,12 +177,21 @@ namespace Core {
                     deviceInfo->meta.graphicsFamilyIndex.value(),
                     deviceInfo->meta.transferFamilyIndex.value()
                 };
+                /* Calculate the number of levels in the mip chain. The max function selects the largest dimension. The
+                 * log2 function calculates how many times that dimension can be divided by 2. The floor function handles
+                 * cases where the largest dimension is not a power of 2. 1 is added so that the original image has a mip
+                 * level
+                */
+                uint32_t mipLevels = enMipLevels == true ? static_cast <uint32_t> (std::floor
+                                                                                  (std::log2
+                                                                                  (std::max (width, height)))) + 1: 1;
                 createImageResources (deviceInfoId,
                                       imageInfoId,
                                       TEXTURE_IMAGE,
                                       static_cast <uint32_t> (width),
                                       static_cast <uint32_t> (height),
                                       mipLevels,
+                                      layerCount,
                                       VK_IMAGE_LAYOUT_UNDEFINED,
                                       format,
                                       VK_IMAGE_USAGE_TRANSFER_SRC_BIT |
@@ -189,7 +201,9 @@ namespace Core {
                                       VK_IMAGE_TILING_OPTIMAL,
                                       VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
                                       imageShareQueueFamilyIndices,
-                                      VK_IMAGE_ASPECT_COLOR_BIT);
+                                      VK_IMAGE_ASPECT_COLOR_BIT,
+                                      flags,
+                                      viewType);
             }
     };
 }   // namespace Core

@@ -16,6 +16,7 @@ namespace Core {
                      * The number of mip levels is calculated using image dimensions
                     */
                     uint32_t mipLevels;
+                    uint32_t layerCount;
                 } meta;
 
                 struct Resource {
@@ -133,7 +134,9 @@ namespace Core {
                                   ImageInfo* imageInfo,
                                   e_imageType type,
                                   uint32_t baseMipLevel,
-                                  VkImage image) {
+                                  uint32_t layerCount,
+                                  VkImage image,
+                                  VkImageViewType viewType) {
 
                 auto deviceInfo = getDeviceInfo (deviceInfoId);
                 for (auto const& info: m_imageInfoPool[type]) {
@@ -154,7 +157,7 @@ namespace Core {
                 createInfo.image = image;
                 /* The viewType and format fields specify how the image data should be interpreted (ex: 1D/2D/3D textures)
                 */
-                createInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+                createInfo.viewType = viewType;
                 createInfo.format   = imageInfo->params.format;
                 /* The components field allows you to swizzle (mix) the color channels around. ex: you can map all of the
                  * channels to the red channel for a monochrome texture by setting all channels to VK_COMPONENT_SWIZZLE_R
@@ -168,7 +171,7 @@ namespace Core {
                 createInfo.subresourceRange.baseMipLevel   = baseMipLevel;
                 createInfo.subresourceRange.levelCount     = imageInfo->meta.mipLevels;
                 createInfo.subresourceRange.baseArrayLayer = 0;
-                createInfo.subresourceRange.layerCount     = 1;
+                createInfo.subresourceRange.layerCount     = layerCount;
 
                 VkImageView imageView;
                 VkResult result = vkCreateImageView (deviceInfo->resource.logDevice,
@@ -186,6 +189,7 @@ namespace Core {
                     throw std::runtime_error ("Failed to create image view");
                 }
 
+                imageInfo->meta.layerCount    = layerCount;
                 imageInfo->resource.image     = image;
                 imageInfo->resource.imageView = imageView;
                 m_imageInfoPool[type].push_back (*imageInfo);
@@ -197,6 +201,7 @@ namespace Core {
                                        uint32_t width,
                                        uint32_t height,
                                        uint32_t mipLevels,
+                                       uint32_t layerCount,
                                        VkImageLayout initialLayout,
                                        VkFormat format,
                                        VkImageUsageFlags usage,
@@ -204,7 +209,9 @@ namespace Core {
                                        VkImageTiling tiling,
                                        VkMemoryPropertyFlags property,
                                        const std::vector <uint32_t>& queueFamilyIndices,
-                                       VkImageAspectFlags aspect) {
+                                       VkImageAspectFlags aspect,
+                                       VkImageCreateFlags flags,
+                                       VkImageViewType viewType) {
 
                 auto deviceInfo = getDeviceInfo (deviceInfoId);
                 for (auto const& info: m_imageInfoPool[type]) {
@@ -221,12 +228,7 @@ namespace Core {
                 VkImageCreateInfo createInfo;
                 createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
                 createInfo.pNext = VK_NULL_HANDLE;
-                /* There are some optional flags for images that are related to sparse images. Sparse images are images
-                 * where only certain regions are actually backed by memory. If you were using a 3D texture for a voxel
-                 * terrain, for example, then you could use this to avoid allocating memory to store large volumes of
-                 * "air" values
-                */
-                createInfo.flags = 0;
+                createInfo.flags = flags;
                 /* The image type, specified in the imageType field, tells Vulkan with what kind of coordinate system the
                  * texels in the image are going to be addressed. It is possible to create 1D, 2D and 3D images. One
                  * dimensional images can be used to store an array of data or gradient, two dimensional images are
@@ -244,7 +246,7 @@ namespace Core {
                 createInfo.extent.height = height;
                 createInfo.extent.depth  = 1;
                 createInfo.mipLevels     = mipLevels;
-                createInfo.arrayLayers   = 1;
+                createInfo.arrayLayers   = layerCount;
                 createInfo.format        = format;
                 /* The tiling field can have one of two values
                  * (1) VK_IMAGE_TILING_LINEAR
@@ -352,106 +354,20 @@ namespace Core {
                                  &info,
                                  type,
                                  0,
-                                 image);
+                                 layerCount,
+                                 image,
+                                 viewType);
             }
 
-            /* One of the most common ways to perform layout transitions is using an image memory barrier. A pipeline
-             * barrier like this is generally used to synchronize access to resources, like ensuring that a write to a
-             * buffer completes before reading from it, but it can also be used to transition image layouts and transfer
-             * queue family ownership when VK_SHARING_MODE_EXCLUSIVE is used. There is an equivalent buffer memory
-             * barrier to do this for buffers
-            */
-            void transitionImageLayout (VkImage image,
-                                        VkImageLayout oldLayout,
-                                        VkImageLayout newLayout,
-                                        uint32_t baseMipLevel,
-                                        uint32_t mipLevels,
-                                        VkImageAspectFlags aspect,
-                                        VkImageMemoryBarrier* barrier,
-                                        VkPipelineStageFlags& sourceStage,
-                                        VkPipelineStageFlags& destinationStage) {
-
-                barrier->sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-                barrier->pNext = VK_NULL_HANDLE;
-                /* The first two fields specify layout transition. It is possible to use VK_IMAGE_LAYOUT_UNDEFINED as
-                 * oldLayout if you don't care about the existing contents of the image
-                */
-                barrier->oldLayout = oldLayout;
-                barrier->newLayout = newLayout;
-                /* If you are using the barrier to transfer queue family ownership, then these two fields should be the
-                 * indices of the queue families. They must be set to VK_QUEUE_FAMILY_IGNORED if you don't want to do
-                 * this (not the default value!)
-                */
-                barrier->srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-                barrier->dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-                /* The image and subresourceRange specify the image that is affected and the specific part of the image
-                */
-                barrier->image = image;
-                barrier->subresourceRange.aspectMask     = aspect;
-                barrier->subresourceRange.baseMipLevel   = baseMipLevel;
-                barrier->subresourceRange.levelCount     = mipLevels;
-                barrier->subresourceRange.baseArrayLayer = 0;
-                barrier->subresourceRange.layerCount     = 1;
-                /* Barriers are primarily used for synchronization purposes, so you must specify which types of
-                 * operations that involve the resource 'must happen before the barrier', and which operations that
-                 * involve the resource 'must wait on the barrier'. We need to do that despite already using a fence/
-                 * vkQueueWaitIdle to manually synchronize
-                */
-                if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED &&
-                    newLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL) {
-                    /* Since the transfer writes don't have to wait on anything, you may specify an empty access mask and
-                     * the earliest possible pipeline stage VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT for the pre-barrier
-                     * operations
-                    */
-                    sourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
-                    barrier->srcAccessMask = VK_ACCESS_NONE;
-                    /* Note that, even though at this point we may not have a pipeline bound, we still use the pipeline
-                     * stage VK_PIPELINE_STAGE_TRANSFER_BIT. This is possible because VK_PIPELINE_STAGE_TRANSFER_BIT
-                     * pipeline stage is not a real stage within the graphics and compute pipelines, it is more of a
-                     * pseudo-stage where transfers happen
-                    */
-                    destinationStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
-                    barrier->dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+            uint32_t getNextInfoIdFromImageType (e_imageType type) {
+                uint32_t nextInfoId = 0;
+                if (m_imageInfoPool.find (type) != m_imageInfoPool.end()) {
+                    auto& infos = m_imageInfoPool[type];
+                    for (auto const& info: infos) {
+                        if (info.meta.id >= nextInfoId) nextInfoId = info.meta.id + 1;
+                    }
                 }
-
-                else if (oldLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL &&
-                         newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) {
-
-                    sourceStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
-                    barrier->srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-
-                    destinationStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-                    barrier->dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-                }
-
-                else if (oldLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL &&
-                         newLayout == VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL) {
-
-                    sourceStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
-                    barrier->srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-
-                    destinationStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
-                    barrier->dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
-                }
-
-                else if (oldLayout == VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL &&
-                         newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) {
-
-                    sourceStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
-                    barrier->srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
-
-                    destinationStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-                    barrier->dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-                }
-
-                else {
-                    LOG_ERROR (m_VKImageMgrLog) << "Unsupported layout transition "
-                                                << "[" << string_VkImageLayout (oldLayout) << "]"
-                                                << "->"
-                                                << "[" << string_VkImageLayout (newLayout) << "]"
-                                                << std::endl;
-                    throw std::runtime_error ("Unsupported layout transition");
-                }
+                return nextInfoId;
             }
 
             ImageInfo* getImageInfo (uint32_t imageInfoId, e_imageType type) {
@@ -491,6 +407,10 @@ namespace Core {
 
                         LOG_INFO (m_VKImageMgrLog) << "Mip levels "
                                                    << "[" << info.meta.mipLevels << "]"
+                                                   << std::endl;
+
+                        LOG_INFO (m_VKImageMgrLog) << "Layer count "
+                                                   << "[" << info.meta.layerCount << "]"
                                                    << std::endl;
 
                         LOG_INFO (m_VKImageMgrLog) << "Initial layout "

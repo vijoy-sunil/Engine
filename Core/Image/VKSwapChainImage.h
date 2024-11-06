@@ -291,7 +291,9 @@ namespace Core {
                                      imageInfo,
                                      SWAP_CHAIN_IMAGE,
                                      0,
-                                     swapChainImages[i]);
+                                     1,
+                                     swapChainImages[i],
+                                     VK_IMAGE_VIEW_TYPE_2D);
                 }
 
                 /* Save swap chain info to device info

@@ -75,6 +75,7 @@ namespace Core {
                                       deviceInfo->params.swapChainExtent.width,
                                       deviceInfo->params.swapChainExtent.height,
                                       1,
+                                      1,
                                       VK_IMAGE_LAYOUT_UNDEFINED,
                                       deviceInfo->params.swapChainFormat,
                                       VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT |
@@ -83,7 +84,9 @@ namespace Core {
                                       VK_IMAGE_TILING_OPTIMAL,
                                       VK_MEMORY_PROPERTY_LAZILY_ALLOCATED_BIT,
                                       imageShareQueueFamilyIndices,
-                                      VK_IMAGE_ASPECT_COLOR_BIT);
+                                      VK_IMAGE_ASPECT_COLOR_BIT,
+                                      0,
+                                      VK_IMAGE_VIEW_TYPE_2D);
             }
     };
 }   // namespace Core
