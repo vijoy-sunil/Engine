@@ -232,15 +232,15 @@
     |
     |<----------------------|{VKSwapChainImage}
     |
-    |<----------------------|VKTextureImage
+    |<----------------------|{VKTextureImage}
     |
     |<----------------------|{VKDepthImage}
     |
     |<----------------------|{VKMultiSampleImage}
     |
-    |<----------------------|VKVertexBuffer
+    |<----------------------|{VKVertexBuffer}
     |
-    |<----------------------|VKIndexBuffer
+    |<----------------------|{VKIndexBuffer}
     |
     |<----------------------|{VKStorageBuffer}
     |
@@ -258,11 +258,11 @@
     |
     |<----------------------|VKViewPort
     |
-    |<----------------------|VKRasterization
+    |<----------------------|{VKRasterization}
     |
     |<----------------------|VKMultiSample
     |
-    |<----------------------|VKDepthStencil
+    |<----------------------|{VKDepthStencil}
     |
     |<----------------------|VKColorBlend
     |

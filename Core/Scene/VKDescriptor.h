@@ -195,12 +195,12 @@ namespace Core {
             */
             VkDescriptorImageInfo getDescriptorImageInfo (VkSampler sampler,
                                                           VkImageView imageView,
-                                                          VkImageLayout imageLayout) {
+                                                          VkImageLayout layout) {
 
                 VkDescriptorImageInfo descriptorImageInfo;
                 descriptorImageInfo.sampler     = sampler;
                 descriptorImageInfo.imageView   = imageView;
-                descriptorImageInfo.imageLayout = imageLayout;
+                descriptorImageInfo.imageLayout = layout;
                 return descriptorImageInfo;
             }
 

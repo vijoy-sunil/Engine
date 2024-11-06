@@ -16,6 +16,7 @@ namespace Core {
         public:
             VKCmd (void) {
                 m_VKCmdLog = LOG_INIT (m_instanceId, g_collectionSettings.logSaveDirPath);
+                LOG_ADD_CONFIG (m_instanceId, Log::ERROR, Log::TO_FILE_IMMEDIATE | Log::TO_CONSOLE);
             }
 
             ~VKCmd (void) {
@@ -93,28 +94,109 @@ namespace Core {
                                  &copyRegion);
             }
 
-            void copyBufferToImage (uint32_t srcBufferInfoId,
-                                    uint32_t dstImageInfoId,
-                                    e_bufferType srcBufferType,
-                                    e_imageType dstImageType,
-                                    VkDeviceSize srcOffset,
-                                    VkImageLayout dstImageLayout,
-                                    VkCommandBuffer commandBuffer) {
+            /* One of the most common ways to perform layout transitions is using an image memory barrier. A pipeline
+             * barrier like this is generally used to synchronize access to resources, like ensuring that a write to a
+             * buffer completes before reading from it, but it can also be used to transition image layouts and transfer
+             * queue family ownership when VK_SHARING_MODE_EXCLUSIVE is used. There is an equivalent buffer memory
+             * barrier to do this for buffers
+            */
+            void transitionImageLayout (uint32_t imageInfoId,
+                                        e_imageType type,
+                                        VkImageLayout initialLayout,
+                                        VkImageLayout finalLayout,
+                                        uint32_t baseMipLevel,
+                                        uint32_t mipLevels,
+                                        uint32_t baseArrayLayer,
+                                        uint32_t layerCount,
+                                        VkCommandBuffer commandBuffer) {
 
-                auto dstImageInfo  = getImageInfo  (dstImageInfoId,  dstImageType);
-                auto srcBufferInfo = getBufferInfo (srcBufferInfoId, srcBufferType);
+                auto imageInfo = getImageInfo (imageInfoId, type);
 
                 VkImageMemoryBarrier barrier;
+                barrier.sType                           = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+                barrier.pNext                           = VK_NULL_HANDLE;
+                /* The first two fields specify layout transition. It is possible to use VK_IMAGE_LAYOUT_UNDEFINED as
+                 * oldLayout if you don't care about the existing contents of the image
+                */
+                barrier.oldLayout                       = initialLayout;
+                barrier.newLayout                       = finalLayout;
+                /* If you are using the barrier to transfer queue family ownership, then these two fields should be the
+                 * indices of the queue families. They must be set to VK_QUEUE_FAMILY_IGNORED if you don't want to do
+                 * this (not the default value!)
+                */
+                barrier.srcQueueFamilyIndex             = VK_QUEUE_FAMILY_IGNORED;
+                barrier.dstQueueFamilyIndex             = VK_QUEUE_FAMILY_IGNORED;
+                /* The image and subresourceRange specify the image that is affected and the specific part of the image
+                */
+                barrier.image                           = imageInfo->resource.image;
+                barrier.subresourceRange.aspectMask     = imageInfo->params.aspect;
+                barrier.subresourceRange.baseMipLevel   = baseMipLevel;
+                barrier.subresourceRange.levelCount     = mipLevels;
+                barrier.subresourceRange.baseArrayLayer = baseArrayLayer;
+                barrier.subresourceRange.layerCount     = layerCount;
+
                 VkPipelineStageFlags sourceStage, destinationStage;
-                transitionImageLayout (dstImageInfo->resource.image,
-                                       dstImageInfo->params.initialLayout,
-                                       dstImageLayout,
-                                       0,
-                                       dstImageInfo->meta.mipLevels,
-                                       dstImageInfo->params.aspect,
-                                       &barrier,
-                                       sourceStage,
-                                       destinationStage);
+                /* Barriers are primarily used for synchronization purposes, so you must specify which types of
+                 * operations that involve the resource 'must happen before the barrier', and which operations that
+                 * involve the resource 'must wait on the barrier'. We need to do that despite already using a fence/
+                 * vkQueueWaitIdle to manually synchronize
+                */
+                if (initialLayout        == VK_IMAGE_LAYOUT_UNDEFINED &&
+                    finalLayout          == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL) {
+                    /* Since the transfer writes don't have to wait on anything, you may specify an empty access mask and
+                     * the earliest possible pipeline stage VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT for the pre-barrier
+                     * operations
+                    */
+                    sourceStage           = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+                    barrier.srcAccessMask = VK_ACCESS_NONE;
+                    /* Note that, even though at this point we may not have a pipeline bound, we still use the pipeline
+                     * stage VK_PIPELINE_STAGE_TRANSFER_BIT. This is possible because VK_PIPELINE_STAGE_TRANSFER_BIT
+                     * pipeline stage is not a real stage within the graphics and compute pipelines, it is more of a
+                     * pseudo-stage where transfers happen
+                    */
+                    destinationStage      = VK_PIPELINE_STAGE_TRANSFER_BIT;
+                    barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+                }
+
+                else if (initialLayout   == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL &&
+                         finalLayout     == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) {
+
+                    sourceStage           = VK_PIPELINE_STAGE_TRANSFER_BIT;
+                    barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+
+                    destinationStage      = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+                    barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+                }
+
+                else if (initialLayout   == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL &&
+                         finalLayout     == VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL) {
+
+                    sourceStage           = VK_PIPELINE_STAGE_TRANSFER_BIT;
+                    barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+
+                    destinationStage      = VK_PIPELINE_STAGE_TRANSFER_BIT;
+                    barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+                }
+
+                else if (initialLayout   == VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL &&
+                         finalLayout     == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) {
+
+                    sourceStage           = VK_PIPELINE_STAGE_TRANSFER_BIT;
+                    barrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+
+                    destinationStage      = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+                    barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+                }
+
+                else {
+                    LOG_ERROR (m_VKCmdLog) << "Unsupported layout transition "
+                                           << "[" << string_VkImageLayout (initialLayout) << "]"
+                                           << "->"
+                                           << "[" << string_VkImageLayout (finalLayout) << "]"
+                                           << std::endl;
+                    throw std::runtime_error ("Unsupported layout transition");
+                }
+
                 /* All types of pipeline barriers are submitted using the same function. The first parameter after the
                  * command buffer specifies in which pipeline stage the operations occur that should happen before the
                  * barrier. The second parameter specifies the pipeline stage in which operations will wait on the
@@ -140,6 +222,26 @@ namespace Core {
                                       0, VK_NULL_HANDLE,
                                       0, VK_NULL_HANDLE,
                                       1, &barrier);
+            }
+
+            void copyBufferToImage (uint32_t srcBufferInfoId,
+                                    uint32_t dstImageInfoId,
+                                    e_bufferType srcBufferType,
+                                    e_imageType dstImageType,
+                                    VkDeviceSize srcOffset,
+                                    uint32_t baseArrayLayer,
+                                    VkCommandBuffer commandBuffer) {
+
+                auto dstImageInfo  = getImageInfo  (dstImageInfoId,  dstImageType);
+                auto srcBufferInfo = getBufferInfo (srcBufferInfoId, srcBufferType);
+
+                transitionImageLayout (dstImageInfoId,
+                                       dstImageType,
+                                       VK_IMAGE_LAYOUT_UNDEFINED,
+                                       VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                                       0, dstImageInfo->meta.mipLevels,
+                                       baseArrayLayer, 1,
+                                       commandBuffer);
                 /* Copy buffer containing pixel data to image, just like with buffer copies, you need to specify
                  * which part of the buffer is going to be copied to which part of the image. This happens through
                  * VkBufferImageCopy structs
@@ -157,7 +259,7 @@ namespace Core {
 
                 copyRegion.imageSubresource.aspectMask     = dstImageInfo->params.aspect;
                 copyRegion.imageSubresource.mipLevel       = 0;
-                copyRegion.imageSubresource.baseArrayLayer = 0;
+                copyRegion.imageSubresource.baseArrayLayer = baseArrayLayer;
                 copyRegion.imageSubresource.layerCount     = 1;
 
                 copyRegion.imageOffset = {0, 0, 0};
@@ -176,7 +278,7 @@ namespace Core {
                 vkCmdCopyBufferToImage (commandBuffer,
                                         srcBufferInfo->resource.buffer,
                                         dstImageInfo->resource.image,
-                                        dstImageLayout,
+                                        VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
                                         1,
                                         &copyRegion);
             }
@@ -190,10 +292,11 @@ namespace Core {
              * graphics capability
             */
             void blitImageToMipMaps (uint32_t imageInfoId,
-                                     e_imageType imageType,
+                                     e_imageType type,
+                                     uint32_t baseArrayLayer,
                                      VkCommandBuffer commandBuffer) {
 
-                auto imageInfo = getImageInfo (imageInfoId, imageType);
+                auto imageInfo = getImageInfo (imageInfoId, type);
                 /* Generating mip maps
                  * The input texture image is generated with multiple mip levels, but the staging buffer can only be used
                  * to fill mip level 0. The other levels are still undefined. To fill these levels we need to generate the
@@ -237,9 +340,6 @@ namespace Core {
                  *          .
                  * }
                 */
-                VkImageMemoryBarrier barrier;
-                VkPipelineStageFlags sourceStage, destinationStage;
-
                 int32_t mipWidth  = static_cast <int32_t> (imageInfo->meta.width);
                 int32_t mipHeight = static_cast <int32_t> (imageInfo->meta.height);
                 for (uint32_t i = 1; i < imageInfo->meta.mipLevels; i++) {
@@ -249,24 +349,13 @@ namespace Core {
                      * for level i - 1 to be filled, either from the previous blit command, or from vkCmdCopyBufferToImage.
                      * The current blit command will wait on this transition
                     */
-                    transitionImageLayout (imageInfo->resource.image,
+                    transitionImageLayout (imageInfoId,
+                                           type,
                                            VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
                                            VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-                                           srcMipLevel,
-                                           1,
-                                           imageInfo->params.aspect,
-                                           &barrier,
-                                           sourceStage,
-                                           destinationStage);
-
-                    vkCmdPipelineBarrier (commandBuffer,
-                                          sourceStage,
-                                          destinationStage,
-                                          0,
-                                          0, VK_NULL_HANDLE,
-                                          0, VK_NULL_HANDLE,
-                                          1, &barrier);
-
+                                           srcMipLevel, 1,
+                                           baseArrayLayer, 1,
+                                           commandBuffer);
                     /* Next, we specify the regions that will be used in the blit operation. The source mip level is i - 1
                      * and the destination mip level is i. The two elements of the srcOffsets array determine the 3D region
                      * that data will be blitted from. dstOffsets determines the region that data will be blitted to. The
@@ -284,7 +373,7 @@ namespace Core {
 
                     blit.srcSubresource.aspectMask     = imageInfo->params.aspect;
                     blit.srcSubresource.mipLevel       = srcMipLevel;
-                    blit.srcSubresource.baseArrayLayer = 0;
+                    blit.srcSubresource.baseArrayLayer = baseArrayLayer;
                     blit.srcSubresource.layerCount     = 1;
 
                     blit.dstOffsets[0] = {0, 0, 0};
@@ -296,7 +385,7 @@ namespace Core {
 
                     blit.dstSubresource.aspectMask     = imageInfo->params.aspect;
                     blit.dstSubresource.mipLevel       = dstMipLevel;
-                    blit.dstSubresource.baseArrayLayer = 0;
+                    blit.dstSubresource.baseArrayLayer = baseArrayLayer;
                     blit.dstSubresource.layerCount     = 1;
 
                     /* Note that, the source image is used for both the srcImage and dstImage parameter. This is because
@@ -317,24 +406,13 @@ namespace Core {
                      * prepare it for shader access. Note that, this transition waits on the current blit command to
                      * finish
                     */
-                    transitionImageLayout (imageInfo->resource.image,
+                    transitionImageLayout (imageInfoId,
+                                           type,
                                            VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
                                            VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-                                           srcMipLevel,
-                                           1,
-                                           imageInfo->params.aspect,
-                                           &barrier,
-                                           sourceStage,
-                                           destinationStage);
-
-                    vkCmdPipelineBarrier (commandBuffer,
-                                          sourceStage,
-                                          destinationStage,
-                                          0,
-                                          0, VK_NULL_HANDLE,
-                                          0, VK_NULL_HANDLE,
-                                          1, &barrier);
-
+                                           srcMipLevel, 1,
+                                           baseArrayLayer, 1,
+                                           commandBuffer);
                     /* At the end of the loop, we divide the current mip dimensions by two. We check each dimension before
                      * the division to ensure that dimension never becomes 0. This handles cases where the image is not
                      * square, since one of the mip dimensions would reach 1 before the other dimension. When this happens,
@@ -345,23 +423,13 @@ namespace Core {
                 }
                 /* Transition the last mip level, since the last level was never blitted from
                 */
-                transitionImageLayout (imageInfo->resource.image,
+                transitionImageLayout (imageInfoId,
+                                       type,
                                        VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
                                        VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-                                       imageInfo->meta.mipLevels - 1,
-                                       1,
-                                       imageInfo->params.aspect,
-                                       &barrier,
-                                       sourceStage,
-                                       destinationStage);
-
-                vkCmdPipelineBarrier (commandBuffer,
-                                      sourceStage,
-                                      destinationStage,
-                                      0,
-                                      0, VK_NULL_HANDLE,
-                                      0, VK_NULL_HANDLE,
-                                      1, &barrier);
+                                       imageInfo->meta.mipLevels - 1, 1,
+                                       baseArrayLayer, 1,
+                                       commandBuffer);
             }
 
             void beginRenderPass (uint32_t deviceInfoId,

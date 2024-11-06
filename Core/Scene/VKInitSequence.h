@@ -41,11 +41,11 @@ namespace Core {
                           protected virtual VKLogDevice,
                           protected VKInstanceData,
                           protected virtual VKSwapChainImage,
-                          protected VKTextureImage,
+                          protected virtual VKTextureImage,
                           protected virtual VKDepthImage,
                           protected virtual VKMultiSampleImage,
-                          protected VKVertexBuffer,
-                          protected VKIndexBuffer,
+                          protected virtual VKVertexBuffer,
+                          protected virtual VKIndexBuffer,
                           protected virtual VKStorageBuffer,
                           protected virtual VKAttachment,
                           protected virtual VKSubPass,
@@ -54,9 +54,9 @@ namespace Core {
                           protected VKInputAssembly,
                           protected virtual VKShaderStage,
                           protected VKViewPort,
-                          protected VKRasterization,
+                          protected virtual VKRasterization,
                           protected VKMultiSample,
-                          protected VKDepthStencil,
+                          protected virtual VKDepthStencil,
                           protected VKColorBlend,
                           protected VKDynamicState,
                           protected virtual VKDescriptorSetLayout,
@@ -185,7 +185,15 @@ namespace Core {
                  * across models are not loaded again
                 */
                 for (auto const& [path, infoId]: getTextureImagePool()) {
-                    createTextureResources (deviceInfoId, infoId, path.c_str());
+                    auto texturePaths = std::vector <const char*> {
+                        path.c_str()
+                    };
+                    createTextureResources (deviceInfoId,
+                                            infoId,
+                                            1,
+                                            texturePaths,
+                                            0,
+                                            VK_IMAGE_VIEW_TYPE_2D);
                     LOG_INFO (m_VKInitSequenceLog) << "[OK] Texture resources "
                                                    << "[" << infoId << "]"
                                                    << std::endl;
@@ -294,10 +302,14 @@ namespace Core {
                                                    << std::endl;
                 }
                 /* |------------------------------------------------------------------------------------------------|
-                 * | CONFIG RENDER PASS ATTACHMENTS                                                                 |
+                 * | READY RENDER PASS INFO                                                                         |
                  * |------------------------------------------------------------------------------------------------|
                 */
                 readyRenderPassInfo (renderPassInfoId);
+                /* |------------------------------------------------------------------------------------------------|
+                 * | CONFIG RENDER PASS ATTACHMENTS                                                                 |
+                 * |------------------------------------------------------------------------------------------------|
+                */
                 /* For multi-sampled rendering in Vulkan, the multi-sampled image is treated separately from the final
                  * single-sampled image. This provides separate control over what values need to reach memory, since
                  * like the depth buffer, the multi-sampled image may only need to be accessed during the processing of
@@ -470,11 +482,14 @@ namespace Core {
                                                    << std::endl;
                 }
                 /* |------------------------------------------------------------------------------------------------|
-                 * | CONFIG PIPELINE STATE - VERTEX INPUT                                                           |
+                 * | READY PIPELINE INFO                                                                            |
                  * |------------------------------------------------------------------------------------------------|
                 */
                 readyPipelineInfo (pipelineInfoId);
-
+                /* |------------------------------------------------------------------------------------------------|
+                 * | CONFIG PIPELINE STATE - VERTEX INPUT                                                           |
+                 * |------------------------------------------------------------------------------------------------|
+                */
                 auto bindingDescriptions = std::vector {
                     getBindingDescription (0, sizeof (Vertex), VK_VERTEX_INPUT_RATE_VERTEX)
                 };
@@ -549,6 +564,7 @@ namespace Core {
                                          g_pipelineSettings.depthStencil.depthTestEnable,
                                          g_pipelineSettings.depthStencil.depthWriteEnable,
                                          g_pipelineSettings.depthStencil.depthBoundsTestEnable,
+                                         g_pipelineSettings.depthStencil.depthCompareOp,
                                          g_pipelineSettings.depthStencil.minDepthBounds,
                                          g_pipelineSettings.depthStencil.maxDepthBounds,
                                          g_pipelineSettings.depthStencil.stencilTestEnable,
@@ -818,7 +834,7 @@ namespace Core {
                     copyBufferToImage (infoId, infoId,
                                        STAGING_BUFFER, TEXTURE_IMAGE,
                                        0,
-                                       VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                                       0,
                                        transferOpsCommandBuffers[0]);
                 }
 
@@ -952,7 +968,7 @@ namespace Core {
                                 VK_NULL_HANDLE);
 
                 for (auto const& [path, infoId]: getTextureImagePool()) {
-                    blitImageToMipMaps (infoId, TEXTURE_IMAGE, blitOpsCommandBuffers[0]);
+                    blitImageToMipMaps (infoId, TEXTURE_IMAGE, 0, blitOpsCommandBuffers[0]);
                 }
 
                 endRecording (blitOpsCommandBuffers[0]);
