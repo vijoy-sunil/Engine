@@ -41,34 +41,38 @@ namespace SandBox {
                                 uint32_t gridPipelineInfoId,
                                 uint32_t pipelineInfoId) {
 
+                auto deviceInfo   = getDeviceInfo   (deviceInfoId);
+                auto pipelineInfo = getPipelineInfo (pipelineInfoId);
+                /* |------------------------------------------------------------------------------------------------|
+                 * | READY PIPELINE INFO                                                                            |
+                 * |------------------------------------------------------------------------------------------------|
+                */
                 derivePipelineInfo (gridPipelineInfoId, pipelineInfoId);
-                auto deviceInfo       = getDeviceInfo   (deviceInfoId);
-                auto gridPipelineInfo = getPipelineInfo (gridPipelineInfoId);
-                auto pipelineInfo     = getPipelineInfo (pipelineInfoId);
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG PIPELINE STATE - VERTEX INPUT                                                           |
                  * |------------------------------------------------------------------------------------------------|
                 */
                 auto bindingDescriptions   = std::vector <VkVertexInputBindingDescription>   {};
                 auto attributeDescriptions = std::vector <VkVertexInputAttributeDescription> {};
-                createVertexInputState (gridPipelineInfoId,
-                                        bindingDescriptions,
-                                        attributeDescriptions);
+                createVertexInputState (gridPipelineInfoId, bindingDescriptions, attributeDescriptions);
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG PIPELINE STATE - SHADERS                                                                |
                  * |------------------------------------------------------------------------------------------------|
                 */
+                auto gridPipelineInfo     = getPipelineInfo (gridPipelineInfoId);
                 gridPipelineInfo->state.stages.clear();
                 auto vertexShaderModule   = createShaderStage (deviceInfoId,
                                                                gridPipelineInfoId,
                                                                VK_SHADER_STAGE_VERTEX_BIT,
-                                                               g_pipelineSettings.shaderStage.vertexShaderBinaryPath,
+                                                               g_pipelineSettings.gridShaderStage.
+                                                               vertexShaderBinaryPath,
                                                                "main");
 
                 auto fragmentShaderModule = createShaderStage (deviceInfoId,
                                                                gridPipelineInfoId,
                                                                VK_SHADER_STAGE_FRAGMENT_BIT,
-                                                               g_pipelineSettings.shaderStage.fragmentShaderBinaryPath,
+                                                               g_pipelineSettings.gridShaderStage.
+                                                               fragmentShaderBinaryPath,
                                                                "main");
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG DESCRIPTOR SET LAYOUT                                                                   |

@@ -6,6 +6,7 @@
 #include "../../Core/RenderPass/VKSubPass.h"
 #include "../../Core/RenderPass/VKFrameBuffer.h"
 #include "../../Core/Cmd/VKCmd.h"
+#include "../../Core/Scene/VKTextureSampler.h"
 #include "../../Core/Scene/VKDescriptor.h"
 #include "../../Gui/UIImpl.h"
 #include "../ENConfig.h"
@@ -16,6 +17,7 @@ namespace SandBox {
                 protected virtual Core::VKSubPass,
                 protected virtual Core::VKFrameBuffer,
                 protected virtual Core::VKCmd,
+                protected virtual Core::VKTextureSampler,
                 protected virtual Core::VKDescriptor,
                 protected Gui::UIImpl {
         private:
@@ -38,15 +40,17 @@ namespace SandBox {
                                 uint32_t uiSceneInfoId,
                                 uint32_t sceneInfoId) {
 
-                readySceneInfo (uiSceneInfoId, 0);
                 auto deviceInfo  = getDeviceInfo (deviceInfoId);
-                auto uiSceneInfo = getSceneInfo  (uiSceneInfoId);
                 auto sceneInfo   = getSceneInfo  (sceneInfoId);
+                /* |------------------------------------------------------------------------------------------------|
+                 * | READY RENDER PASS INFO                                                                         |
+                 * |------------------------------------------------------------------------------------------------|
+                */
+                readyRenderPassInfo (uiRenderPassInfoId);
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG RENDER PASS ATTACHMENTS                                                                 |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                readyRenderPassInfo (uiRenderPassInfoId);
                 /* The loadOp should be VK_ATTACHMENT_LOAD_OP_LOAD because we want our gui to be drawn over our
                  * main rendering. This tells Vulkan you don’t want to clear the content of the frame buffer but you
                  * want to draw over it instead. Since we’re going to draw some stuff, we also want initialLayout
@@ -141,7 +145,18 @@ namespace SandBox {
                  * | CONFIG TEXTURE SAMPLER                                                                         |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                uiSceneInfo->resource.textureSampler = sceneInfo->resource.textureSampler;
+                createTextureSampler (deviceInfoId,
+                                      uiSceneInfoId,
+                                      VK_FILTER_LINEAR,
+                                      VK_SAMPLER_ADDRESS_MODE_REPEAT,
+                                      VK_TRUE,
+                                      VK_SAMPLER_MIPMAP_MODE_LINEAR,
+                                      0.0f,
+                                      0.0f,
+                                      13.0f);
+                LOG_INFO (m_ENUILog) << "[OK] Texture sampler "
+                                     << "[" << uiSceneInfoId << "]"
+                                     << std::endl;
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG DESCRIPTOR POOL                                                                         |
                  * |------------------------------------------------------------------------------------------------|
@@ -237,26 +252,6 @@ namespace SandBox {
                  * changed. We need to notify imgui about this change
                 */
                 ImGui_ImplVulkan_SetMinImageCount (deviceInfo->params.minSwapChainImageCount);
-            }
-
-            void deleteExtension (uint32_t deviceInfoId,
-                                  uint32_t uiSceneInfoId) {
-                /* |------------------------------------------------------------------------------------------------|
-                 * | DESTROY DESCRIPTOR POOL                                                                        |
-                 * |------------------------------------------------------------------------------------------------|
-                */
-                VKDescriptor::cleanUp (deviceInfoId, uiSceneInfoId);
-                LOG_INFO (m_ENUILog) << "[DELETE] Descriptor pool "
-                                     << "[" << uiSceneInfoId << "]"
-                                     << std::endl;
-                /* |------------------------------------------------------------------------------------------------|
-                 * | DESTROY SCENE INFO                                                                             |
-                 * |------------------------------------------------------------------------------------------------|
-                */
-                VKSceneMgr::cleanUp (uiSceneInfoId);
-                LOG_INFO (m_ENUILog) << "[DELETE] Scene info "
-                                     << "[" << uiSceneInfoId << "]"
-                                     << std::endl;
             }
     };
 }   // namespace SandBox
