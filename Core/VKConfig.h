@@ -46,7 +46,7 @@ namespace Core {
         struct Rasterization {
             const VkPolygonMode polygonMode                          = VK_POLYGON_MODE_FILL;
             const VkCullModeFlags cullMode                           = VK_CULL_MODE_NONE;
-            const VkFrontFace frontFace                              = VK_FRONT_FACE_CLOCKWISE;
+            const VkFrontFace frontFace                              = VK_FRONT_FACE_COUNTER_CLOCKWISE;
             const float lineWidth                                    = 1.0f;
         } rasterization;
 
@@ -60,6 +60,7 @@ namespace Core {
             const VkBool32 depthWriteEnable                          = VK_TRUE;
             const VkBool32 depthBoundsTestEnable                     = VK_FALSE;
             const VkBool32 stencilTestEnable                         = VK_FALSE;
+            const VkCompareOp depthCompareOp                         = VK_COMPARE_OP_LESS;
             const float minDepthBounds                               = 0.0f;
             const float maxDepthBounds                               = 1.0f;
         } depthStencil;
