@@ -106,6 +106,16 @@ namespace Core {
                 }
             }
 
+            void updateTextureImagePool (uint32_t modelInfoId, const std::string& texturePath) {
+                auto modelInfo = getModelInfo (modelInfoId);
+
+                if (m_textureImagePool.find (texturePath) == m_textureImagePool.end()) {
+                    m_textureImagePool[texturePath] = m_textureImageInfoId;
+                    m_textureImageInfoId++;
+                }
+                modelInfo->id.diffuseTextureImageInfos.push_back (m_textureImagePool[texturePath]);
+            }
+
         public:
             VKModelMgr (void) {
                 m_VKModelMgrLog = LOG_INIT (m_instanceId, g_collectionSettings.logSaveDirPath);
@@ -138,6 +148,8 @@ namespace Core {
                  * texture can sample from this default texture
                 */
                 info.path.diffuseTextureImages.push_back (g_coreSettings.defaultDiffuseTexturePath);
+
+                info.id.indexBufferInfo           = UINT32_MAX;
                 m_modelInfoPool[modelInfoId]      = info;
                 m_textureImageInfoId              = 0;
                 /* Config log for parsed data
@@ -390,16 +402,6 @@ namespace Core {
                 createVertices (modelInfoId, vertices);
                 createIndices  (modelInfoId, indices);
                 dumpParsedData (modelInfoId);
-            }
-
-            void updateTextureImagePool (uint32_t modelInfoId, const std::string& texturePath) {
-                auto modelInfo = getModelInfo (modelInfoId);
-
-                if (m_textureImagePool.find (texturePath) == m_textureImagePool.end()) {
-                    m_textureImagePool[texturePath] = m_textureImageInfoId;
-                    m_textureImageInfoId++;
-                }
-                modelInfo->id.diffuseTextureImageInfos.push_back (m_textureImagePool[texturePath]);
             }
 
             std::unordered_map <std::string, uint32_t>& getTextureImagePool (void) {

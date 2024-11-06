@@ -18,6 +18,7 @@ namespace Core {
                     uint32_t swapChainImageInfoBase;
                     uint32_t depthImageInfo;
                     uint32_t multiSampleImageInfo;
+                    uint32_t uniformBufferInfoBase;
                     uint32_t storageBufferInfoBase;
                     uint32_t inFlightFenceInfoBase;
                     uint32_t imageAvailableSemaphoreInfoBase;
@@ -62,7 +63,17 @@ namespace Core {
             }
 
         protected:
-            void readySceneInfo (uint32_t sceneInfoId, uint32_t totatInstancesCount) {
+            void readySceneInfo (uint32_t sceneInfoId,
+                                 uint32_t totatInstancesCount,
+                                 uint32_t swapChainImageInfoBase          = UINT32_MAX,
+                                 uint32_t depthImageInfo                  = UINT32_MAX,
+                                 uint32_t multiSampleImageInfo            = UINT32_MAX,
+                                 uint32_t uniformBufferInfoBase           = UINT32_MAX,
+                                 uint32_t storageBufferInfoBase           = UINT32_MAX,
+                                 uint32_t inFlightFenceInfoBase           = UINT32_MAX,
+                                 uint32_t imageAvailableSemaphoreInfoBase = UINT32_MAX,
+                                 uint32_t renderDoneSemaphoreInfoBase     = UINT32_MAX) {
+
                 if (m_sceneInfoPool.find (sceneInfoId) != m_sceneInfoPool.end()) {
                     LOG_ERROR (m_VKSceneMgrLog) << "Scene info id already exists "
                                                 << "[" << sceneInfoId << "]"
@@ -71,8 +82,16 @@ namespace Core {
                 }
 
                 SceneInfo info{};
-                info.meta.totalInstancesCount = totatInstancesCount;
-                m_sceneInfoPool[sceneInfoId]  = info;
+                info.meta.totalInstancesCount           = totatInstancesCount;
+                info.id.swapChainImageInfoBase          = swapChainImageInfoBase;
+                info.id.depthImageInfo                  = depthImageInfo;
+                info.id.multiSampleImageInfo            = multiSampleImageInfo;
+                info.id.uniformBufferInfoBase           = uniformBufferInfoBase;
+                info.id.storageBufferInfoBase           = storageBufferInfoBase;
+                info.id.inFlightFenceInfoBase           = inFlightFenceInfoBase;
+                info.id.imageAvailableSemaphoreInfoBase = imageAvailableSemaphoreInfoBase;
+                info.id.renderDoneSemaphoreInfoBase     = renderDoneSemaphoreInfoBase;
+                m_sceneInfoPool[sceneInfoId]            = info;
             }
 
             SceneInfo* getSceneInfo (uint32_t sceneInfoId) {
@@ -108,6 +127,10 @@ namespace Core {
 
                     LOG_INFO (m_VKSceneMgrLog) << "Multi sample image info id "
                                                << "[" << val.id.multiSampleImageInfo << "]"
+                                               << std::endl;
+
+                    LOG_INFO (m_VKSceneMgrLog) << "Uniform buffer info id base "
+                                               << "[" << val.id.uniformBufferInfoBase << "]"
                                                << std::endl;
 
                     LOG_INFO (m_VKSceneMgrLog) << "Storage buffer info id base "
