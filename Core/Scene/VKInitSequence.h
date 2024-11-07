@@ -490,7 +490,7 @@ namespace Core {
                  * | CONFIG PIPELINE STATE - VERTEX INPUT                                                           |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                auto bindingDescriptions = std::vector {
+                auto bindingDescriptions   = std::vector {
                     getBindingDescription (0, sizeof (Vertex), VK_VERTEX_INPUT_RATE_VERTEX)
                 };
                 auto attributeDescriptions = std::vector {
@@ -526,13 +526,15 @@ namespace Core {
                 auto vertexShaderModule   = createShaderStage (deviceInfoId,
                                                                pipelineInfoId,
                                                                VK_SHADER_STAGE_VERTEX_BIT,
-                                                               g_pipelineSettings.shaderStage.vertexShaderBinaryPath,
+                                                               g_pipelineSettings.shaderStage.
+                                                               vertexShaderBinaryPath,
                                                                "main");
 
                 auto fragmentShaderModule = createShaderStage (deviceInfoId,
                                                                pipelineInfoId,
                                                                VK_SHADER_STAGE_FRAGMENT_BIT,
-                                                               g_pipelineSettings.shaderStage.fragmentShaderBinaryPath,
+                                                               g_pipelineSettings.shaderStage.
+                                                               fragmentShaderBinaryPath,
                                                                "main");
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG PIPELINE STATE - VIEW PORT                                                              |
