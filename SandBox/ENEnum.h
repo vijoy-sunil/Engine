@@ -15,8 +15,18 @@ namespace SandBox {
         T0_CURVE_R10_D45_Z_SMT      = 9,
         T0_CURVE_R10_D90            = 10,
         VEHICLE_BASE                = 11,
-        TYRE                        = 12
+        TYRE                        = 12,
+        SKY_BOX                     = 13
     } e_modelType;
+
+    typedef enum {
+        POSITIVE_X                  = 0,
+        NEGATIVE_X                  = 1,
+        POSITIVE_Y                  = 2,
+        NEGATIVE_Y                  = 3,
+        POSITIVE_Z                  = 4,
+        NEGATIVE_Z                  = 5
+    } e_cubeMapTarget;
 
     typedef enum {
         SPOILER                     = 1,

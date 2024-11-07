@@ -83,15 +83,53 @@ namespace SandBox {
                                      "Asset/Model/Vehicle/Tyre_Instances.json"}}
     };
 
+    std::unordered_map <e_modelType, ModelImportInfo> g_skyBoxModelImportInfoPool  = {
+        {SKY_BOX,                   {"Asset/Model/Environment/Sky_Box.obj",
+                                     "Asset/Model/Environment/",
+                                     "Asset/Model/Environment/Sky_Box_Instances.json"}}
+    };
+
+    /* A sky box is a "large" cube that encompasses the entire scene and contains 6 images of a surrounding environment,
+     * giving the player the illusion that the environment they are in is actually much larger than it actually is. The
+     * sky box images usually have the following pattern. If you would fold those 6 sides into a cube you'd get the
+     * completely textured cube that simulates a large landscape
+     *                              |-----------|
+     *                              |           |
+     *                              |     PY    |
+     *                              |           |
+     *                  |-----------|-----------|-----------|-----------|
+     *                  |           |           |           |           |
+     *                  |     NX    |     PZ    |     PX    |     NZ    |
+     *                  |           |           |           |           |
+     *                  |-----------|-----------|-----------|-----------|
+     *                              |           |
+     *                              |     NY    |
+     *                              |           |
+     *                              |-----------|
+    */
+    std::unordered_map <e_cubeMapTarget, const char*> g_skyBoxTextureImagePool     = {
+        {POSITIVE_X,                "Asset/Texture/Environment/tex_2Kx2K_sky_box_px.png"},
+        {NEGATIVE_X,                "Asset/Texture/Environment/tex_2Kx2K_sky_box_nx.png"},
+        {POSITIVE_Y,                "Asset/Texture/Environment/tex_2Kx2K_sky_box_py.png"},
+        {NEGATIVE_Y,                "Asset/Texture/Environment/tex_2Kx2K_sky_box_ny.png"},
+        {POSITIVE_Z,                "Asset/Texture/Environment/tex_2Kx2K_sky_box_pz.png"},
+        {NEGATIVE_Z,                "Asset/Texture/Environment/tex_2Kx2K_sky_box_nz.png"}
+    };
+
     struct PipelineSettings {
-        struct ShaderStage {
+        struct SkyBoxShaderStage {
+            const char* vertexShaderBinaryPath                       = "Build/Bin/skyBoxShaderVert.spv";
+            const char* fragmentShaderBinaryPath                     = "Build/Bin/skyBoxShaderFrag.spv";
+        } skyBoxShaderStage;
+
+        struct GridShaderStage {
             const char* vertexShaderBinaryPath                       = "Build/Bin/gridShaderVert.spv";
             const char* fragmentShaderBinaryPath                     = "Build/Bin/gridShaderFrag.spv";
-        } shaderStage;
+        } gridShaderStage;
     } g_pipelineSettings;
 
     struct CameraSettings {
-        const float movementSpeed                                    = 1.5f;
+        const float movementSpeed                                    = 0.6f;
         const float sensitivity                                      = 0.1f;
         const float minPitchDeg                                      = -89.0f;
         const float maxPitchDeg                                      = 89.0f;

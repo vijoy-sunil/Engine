@@ -20,6 +20,7 @@ namespace SandBox {
             case T0_CURVE_R10_D90:          return "T0_CURVE_R10_D90";
             case VEHICLE_BASE:              return "VEHICLE_BASE";
             case TYRE:                      return "TYRE";
+            case SKY_BOX:                   return "SKY_BOX";
             default:                        return "Unhandled e_modelType";
         }
     }
