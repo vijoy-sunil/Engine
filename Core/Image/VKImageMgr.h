@@ -23,6 +23,11 @@ namespace Core {
                     VkImage image;
                     VkDeviceMemory imageMemory;
                     VkImageView imageView;
+                    /* When an image has multiple layers, the alias vector is used to store each layer separately. Note,
+                     * that this vector has to be populated manually, and the related resources will have to be cleaned
+                     * up as well
+                    */
+                    std::vector <VkImageView> aliasImageViews;
                 } resource;
 
                 struct Parameters {
@@ -478,6 +483,10 @@ namespace Core {
                 vkDestroyImage     (deviceInfo->resource.logDevice, imageInfo->resource.image,       VK_NULL_HANDLE);
                 vkFreeMemory       (deviceInfo->resource.logDevice, imageInfo->resource.imageMemory, VK_NULL_HANDLE);
                 }
+                /* After the resources associated with the alias vector is cleaned up, we can clear the vector to avoid
+                 * storing any references to it
+                */
+                imageInfo->resource.aliasImageViews.clear();
                 deleteImageInfo    (imageInfo, type);
             }
     };

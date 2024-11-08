@@ -25,12 +25,14 @@ namespace Gui {
         private:
             struct UIImageInfo {
                 struct Meta {
+                    uint32_t selectedLayerIdx;
                     std::string label;
-                    std::string fileName;
+                    std::vector <std::string> fileNames;
+                    std::vector <std::string> layerIdxLabels;
                 } meta;
 
                 struct Resource {
-                    VkDescriptorSet descriptorSet;
+                    std::vector <VkDescriptorSet> descriptorSets;
                 } resource;
             };
             std::unordered_map <uint32_t, UIImageInfo> m_uiImageInfoPool;
@@ -55,19 +57,6 @@ namespace Gui {
                     return true;
             }
 
-            void deleteUIImageInfo (uint32_t uiImageInfoId) {
-                if (m_uiImageInfoPool.find (uiImageInfoId) != m_uiImageInfoPool.end()) {
-                    ImGui_ImplVulkan_RemoveTexture (m_uiImageInfoPool[uiImageInfoId].resource.descriptorSet);
-                    m_uiImageInfoPool.erase        (uiImageInfoId);
-                    return;
-                }
-
-                LOG_ERROR (m_UIWindowLog) << "Failed to delete ui image info "
-                                          << "[" << uiImageInfoId << "]"
-                                          << std::endl;
-                throw std::runtime_error ("Failed to delete ui image info");
-            }
-
         public:
             UIWindow (void) {
 #if ENABLE_SAMPLE_MODELS_IMPORT
@@ -90,7 +79,8 @@ namespace Gui {
                                 const std::vector <uint32_t>& cameraInfoIds,
                                 uint32_t uiSceneInfoId,
                                 uint32_t frameDeltaPlotDataInfoId,
-                                uint32_t fpsPlotDataInfoId) {
+                                uint32_t fpsPlotDataInfoId,
+                                const std::unordered_map <uint32_t, std::vector <std::string>>& textureImagePool) {
 
                auto treeNodeFlags          = ImGuiTreeNodeFlags_OpenOnArrow         |
                                              ImGuiTreeNodeFlags_OpenOnDoubleClick   |
@@ -277,19 +267,30 @@ namespace Gui {
                  * |------------------------------------------------------------------------------------------------|
                 */
                 auto sceneInfo = getSceneInfo (uiSceneInfoId);
-                for (auto const& [path, infoId]: getTextureImagePool()) {
-                    auto imageInfo       = getImageInfo (infoId, Core::TEXTURE_IMAGE);
-                    auto descriptorSet   = ImGui_ImplVulkan_AddTexture (sceneInfo->resource.textureSampler,
-                                                                        imageInfo->resource.imageView,
-                                                                        VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-                    std::string label    = "Info id [" + std::to_string (infoId) + "]";
-                    /* Strip path to just the file name
-                    */
-                    size_t stripStart    = path.find_last_of ("\\/") + 1;
-                    std::string fileName = path.substr (stripStart, path.length() - stripStart);
+                for (auto const& [infoId, paths]: textureImagePool) {
+                    auto imageInfo      = getImageInfo (infoId, Core::TEXTURE_IMAGE);
 
-                    m_uiImageInfoPool[infoId].meta     = {label, fileName};
-                    m_uiImageInfoPool[infoId].resource = {descriptorSet};
+                    uint32_t layerCount = imageInfo->meta.layerCount;
+                    std::string label   = "Info id [" + std::to_string (infoId) + "]";
+
+                    for (uint32_t layerIdx = 0; layerIdx < layerCount; layerIdx++) {
+                        /* Strip path to just the file name
+                        */
+                        size_t stripStart    = paths[layerIdx].find_last_of ("\\/") + 1;
+                        std::string fileName = paths[layerIdx].substr (stripStart, paths[layerIdx].length() - stripStart);
+
+                        auto imageView       = layerCount == 1 ? imageInfo->resource.imageView:
+                                                                 imageInfo->resource.aliasImageViews[layerIdx];
+                        auto descriptorSet   = ImGui_ImplVulkan_AddTexture (sceneInfo->resource.textureSampler,
+                                                                            imageView,
+                                                                            VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
+                        m_uiImageInfoPool[infoId].meta.selectedLayerIdx = 0;
+                        m_uiImageInfoPool[infoId].meta.label            = label;
+                        m_uiImageInfoPool[infoId].meta.fileNames.         push_back (fileName);
+                        m_uiImageInfoPool[infoId].meta.layerIdxLabels.    push_back (std::to_string (layerIdx));
+                        m_uiImageInfoPool[infoId].resource.descriptorSets.push_back (descriptorSet);
+                    }
                 }
                 /* Note that, the ordering of data in the map must correspond to the ones in the vector. Hence, why we
                  * populate the vector after the map is completely populated
@@ -651,7 +652,7 @@ namespace Gui {
 
                         createCombo ("##diffuse",
                                      "Diffuse",
-                                     "##postLabel",
+                                     "##postLabelDiffuse",
                                      m_diffuseTextureImageInfoIdLabels,
                                      fieldDisable,
                                      g_styleSettings.size.inputFieldLarge,
@@ -661,20 +662,28 @@ namespace Gui {
                          * the vector. This makes it possible to offset into the map using an index to the vector
                         */
                         auto iter = std::next (m_uiImageInfoPool.begin(), selectedDiffuseLabelIdx);
-                        createImagePreview    (iter->second.resource.descriptorSet,
-                                               g_styleSettings.size.image,
-                                               g_styleSettings.color.border);
+
+                        createCombo ("##layer",
+                                     "Layer",
+                                     "##postLabelLayer",
+                                     iter->second.meta.layerIdxLabels,
+                                     false,
+                                     g_styleSettings.size.inputFieldLarge,
+                                     iter->second.meta.selectedLayerIdx);
+
+                        createImagePreview (iter->second.resource.descriptorSets[iter->second.meta.selectedLayerIdx],
+                                            g_styleSettings.size.image,
+                                            g_styleSettings.color.border);
                         /* Image details
                         */
-                        auto imageInfo        = getImageInfo   (iter->first, Core::TEXTURE_IMAGE);
-                        std::string dims      = std::to_string (imageInfo->meta.width) +
-                                                "x" +
-                                                std::to_string (imageInfo->meta.height);
-                        std::string sizeBytes = std::to_string (imageInfo->allocation.size) + " bytes";
-                        std::string fileName  = iter->second.meta.fileName;
+                        auto imageInfo       = getImageInfo (iter->first, Core::TEXTURE_IMAGE);
+                        std::string dims     = std::to_string (imageInfo->meta.width)  +
+                                               " x " +
+                                               std::to_string (imageInfo->meta.height) +
+                                               "px";
+                        std::string fileName = iter->second.meta.fileNames[iter->second.meta.selectedLayerIdx];
 
                         ImGui::Text ("%s", dims.c_str());
-                        ImGui::Text ("%s", sizeBytes.c_str());
                         ImGui::Text ("%s", fileName.c_str());
                     }
                 /* |------------------------------------------------------------------------------------------------|
@@ -711,8 +720,11 @@ namespace Gui {
             }
 
             void cleanUp (const std::vector <uint32_t>& plotDataInfoIds) {
-                for (auto const& [path, infoId]: getTextureImagePool())
-                    deleteUIImageInfo (infoId);
+                for (auto const& [key, val]: m_uiImageInfoPool) {
+                    for (auto const& descriptorSet: val.resource.descriptorSets)
+                        ImGui_ImplVulkan_RemoveTexture (descriptorSet);
+                }
+                m_uiImageInfoPool.clear();
 
                 UITree::cleanUp (UINT32_MAX);
 

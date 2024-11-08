@@ -1,7 +1,6 @@
 #ifndef EN_UI_H
 #define EN_UI_H
 
-#include "../../Core/Model/VKModelMgr.h"
 #include "../../Core/RenderPass/VKAttachment.h"
 #include "../../Core/RenderPass/VKSubPass.h"
 #include "../../Core/RenderPass/VKFrameBuffer.h"
@@ -12,8 +11,7 @@
 #include "../ENConfig.h"
 
 namespace SandBox {
-    class ENUI: protected virtual Core::VKModelMgr,
-                protected virtual Core::VKAttachment,
+    class ENUI: protected virtual Core::VKAttachment,
                 protected virtual Core::VKSubPass,
                 protected virtual Core::VKFrameBuffer,
                 protected virtual Core::VKCmd,
@@ -38,7 +36,8 @@ namespace SandBox {
             void initExtension (uint32_t deviceInfoId,
                                 uint32_t uiRenderPassInfoId,
                                 uint32_t uiSceneInfoId,
-                                uint32_t sceneInfoId) {
+                                uint32_t sceneInfoId,
+                                uint32_t textureCount) {
 
                 auto deviceInfo  = getDeviceInfo (deviceInfoId);
                 auto sceneInfo   = getSceneInfo  (sceneInfoId);
@@ -171,13 +170,12 @@ namespace SandBox {
                  * individually freed back to the pool
                 */
                 auto poolSizes = std::vector {
-                    getPoolSize (VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-                                 1 + static_cast <uint32_t> (getTextureImagePool().size())),
+                    getPoolSize (VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1 + textureCount),
                 };
                 createDescriptorPool (deviceInfoId,
                                       uiSceneInfoId,
                                       poolSizes,
-                                      1 + static_cast <uint32_t> (getTextureImagePool().size()),
+                                      1 + textureCount,
                                       VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT);
                 LOG_INFO (m_ENUILog) << "[OK] Descriptor pool "
                                      << "[" << uiSceneInfoId << "]"

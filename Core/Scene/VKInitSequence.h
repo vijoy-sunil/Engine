@@ -39,7 +39,7 @@ namespace Core {
                           protected virtual VKInstance,
                           protected virtual VKSurface,
                           protected virtual VKLogDevice,
-                          protected VKInstanceData,
+                          protected virtual VKInstanceData,
                           protected virtual VKSwapChainImage,
                           protected virtual VKTextureImage,
                           protected virtual VKDepthImage,

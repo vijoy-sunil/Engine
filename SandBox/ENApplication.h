@@ -4,18 +4,18 @@
 #include "../Core/Scene/VKInitSequence.h"
 #include "../Core/Scene/VKDrawSequence.h"
 #include "../Core/Scene/VKDeleteSequence.h"
-#include "Extension/ENUI.h"
 #include "Extension/ENSkyBox.h"
 #include "Extension/ENGrid.h"
+#include "Extension/ENUI.h"
 #include "Controller/ENGeneric.h"
 
 namespace SandBox {
     class ENApplication: protected Core::VKInitSequence,
                          protected Core::VKDrawSequence,
                          protected Core::VKDeleteSequence,
-                         protected ENUI,
                          protected ENSkyBox,
                          protected ENGrid,
+                         protected ENUI,
                          protected ENGeneric {
         private:
             uint32_t m_deviceInfoId;
@@ -29,8 +29,8 @@ namespace SandBox {
             uint32_t m_uiRenderPassInfoId;
             uint32_t m_skyBoxPipelineInfoId;
             uint32_t m_gridPipelineInfoId;
-            uint32_t m_uiSceneInfoId;
             uint32_t m_skyBoxSceneInfoId;
+            uint32_t m_uiSceneInfoId;
             /* To use the right objects (command buffers, sync objects etc.) every frame, keep track of the current
              * frame in flight
             */
@@ -48,8 +48,8 @@ namespace SandBox {
                 m_uiRenderPassInfoId   = 1;
                 m_skyBoxPipelineInfoId = 1;
                 m_gridPipelineInfoId   = 2;
-                m_uiSceneInfoId        = 1;
-                m_skyBoxSceneInfoId    = 2;
+                m_skyBoxSceneInfoId    = 1;
+                m_uiSceneInfoId        = 2;
 
                 m_currentFrameInFlight = 0;
             }
@@ -124,8 +124,8 @@ namespace SandBox {
                                 0,                   /* In flight fence info id base           */
                                 0,                   /* Image available semaphore info id base */
                                 0);                  /* Render done semaphore info id base     */
-                readySceneInfo (m_uiSceneInfoId,     0);
                 readySceneInfo (m_skyBoxSceneInfoId, 1);
+                readySceneInfo (m_uiSceneInfoId,     0);
                 /* |------------------------------------------------------------------------------------------------|
                  * | RUN SEQUENCE - INIT                                                                            |
                  * |------------------------------------------------------------------------------------------------|
@@ -148,33 +148,68 @@ namespace SandBox {
 #endif  // ENABLE_SAMPLE_MODELS_IMPORT
                 }
                 {
+                /* |------------------------------------------------------------------------------------------------|
+                 * | EXTENSION INIT - SKY BOX                                                                       |
+                 * |------------------------------------------------------------------------------------------------|
+                */
+                    uint32_t skyBoxImageInfoId = ENSkyBox::initExtension (m_deviceInfoId,
+                                                                          SKY_BOX,
+                                                                          m_renderPassInfoId,
+                                                                          m_skyBoxPipelineInfoId,
+                                                                          m_pipelineInfoId,
+                                                                          m_skyBoxSceneInfoId);
+                /* |------------------------------------------------------------------------------------------------|
+                 * | EXTENSION INIT - GRID                                                                          |
+                 * |------------------------------------------------------------------------------------------------|
+                */
+                    ENGrid::initExtension   (m_deviceInfoId,
+                                             m_renderPassInfoId,
+                                             m_gridPipelineInfoId,
+                                             m_pipelineInfoId);
+                /* |------------------------------------------------------------------------------------------------|
+                 * | EXTENSION INIT - UI                                                                            |
+                 * |------------------------------------------------------------------------------------------------|
+                */
+                    /* Populate texture image pool with textures that will be used in ui. Note that, info ids map to
+                     * vector of paths because images are assumed to have multiple layers
+                    */
+                    std::unordered_map <uint32_t, std::vector <std::string>> uiTextureImagePool;
+                    for (auto const& [path, infoId]: getTextureImagePool())
+                        uiTextureImagePool[infoId].push_back (path);
+
+                    for (auto const& [target, path]: g_skyBoxTextureImagePool)
+                        uiTextureImagePool[skyBoxImageInfoId].push_back (path);
+
+                    /* Calculate number of image textures that will be used in ui, this will be used to create the
+                     * descriptor pool from which the descriptor sets will be allocated
+                    */
+                    uint32_t uiTextureCount = 0;
+                    for (auto const& [infoId, paths]: uiTextureImagePool)
+                            uiTextureCount += static_cast <uint32_t> (paths.size());
+
                     ENUI::initExtension     (m_deviceInfoId,
                                              m_uiRenderPassInfoId,
                                              m_uiSceneInfoId,
-                                             m_sceneInfoId);
+                                             m_sceneInfoId,
+                                             uiTextureCount);
+                /* |------------------------------------------------------------------------------------------------|
+                 * | READY UI                                                                                       |
+                 * |------------------------------------------------------------------------------------------------|
+                */
+                    auto modelInfoIds  = m_modelInfoIds;
+                    modelInfoIds.push_back (
+                        SKY_BOX
+                    );
 
                     auto cameraInfoIds = std::vector <uint32_t> {
                         m_cameraInfoId
                     };
                     readyUI                 (m_deviceInfoId,
-                                             m_modelInfoIds,
+                                             modelInfoIds,
                                              m_uiRenderPassInfoId,
                                              cameraInfoIds,
-                                             m_uiSceneInfoId);
-                }
-                {
-                    ENSkyBox::initExtension (m_deviceInfoId,
-                                             SKY_BOX,
-                                             m_renderPassInfoId,
-                                             m_skyBoxPipelineInfoId,
-                                             m_pipelineInfoId,
-                                             m_skyBoxSceneInfoId);
-                }
-                {
-                    ENGrid::initExtension   (m_deviceInfoId,
-                                             m_renderPassInfoId,
-                                             m_gridPipelineInfoId,
-                                             m_pipelineInfoId);
+                                             m_uiSceneInfoId,
+                                             uiTextureImagePool);
                 }
                 });
                 /* |------------------------------------------------------------------------------------------------|
@@ -244,13 +279,20 @@ namespace SandBox {
                                                      m_swapChainImageId,
                     [&](void) {
                     {   /* Extension to base render pass */
+                /* |------------------------------------------------------------------------------------------------|
+                 * | EXTENSION DRAW - SKY BOX                                                                       |
+                 * |------------------------------------------------------------------------------------------------|
+                */
                         ENSkyBox::drawExtension     (SKY_BOX,
                                                      m_skyBoxPipelineInfoId,
                                                      m_cameraInfoId,
                                                      m_skyBoxSceneInfoId,
                                                      m_sceneInfoId,
                                                      m_currentFrameInFlight);
-
+                /* |------------------------------------------------------------------------------------------------|
+                 * | EXTENSION DRAW - GRID                                                                          |
+                 * |------------------------------------------------------------------------------------------------|
+                */
                         ENGrid::drawExtension       (m_gridPipelineInfoId,
                                                      m_cameraInfoId,
                                                      m_sceneInfoId,
@@ -258,6 +300,10 @@ namespace SandBox {
                     }},
                     [&](void) {
                     {   /* Extension to secondary render pass, base command buffer */
+                /* |------------------------------------------------------------------------------------------------|
+                 * | EXTENSION DRAW - UI                                                                            |
+                 * |------------------------------------------------------------------------------------------------|
+                */
                         ENUI::drawExtension         (m_deviceInfoId,
                                                      m_uiRenderPassInfoId,
                                                      m_sceneInfoId,
@@ -308,8 +354,8 @@ namespace SandBox {
                 };
                 auto sceneInfoIds      = std::vector <uint32_t> {
                     m_sceneInfoId,
-                    m_uiSceneInfoId,
-                    m_skyBoxSceneInfoId
+                    m_skyBoxSceneInfoId,
+                    m_uiSceneInfoId
                 };
                 VKDeleteSequence::runSequence   (m_deviceInfoId,
                                                  modelInfoIds,
@@ -319,8 +365,8 @@ namespace SandBox {
                                                  sceneInfoIds,
                 [&](void) {
                 {
-                    UIImpl::cleanUp             (m_deviceInfoId);
                     ENSkyBox::deleteExtension   (m_deviceInfoId);
+                    UIImpl::cleanUp             (m_deviceInfoId);
                 }
                 });
             }

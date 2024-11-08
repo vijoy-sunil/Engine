@@ -1,7 +1,7 @@
 #ifndef EN_SKY_BOX_H
 #define EN_SKY_BOX_H
 
-#include "../../Core/Model/VKModelMgr.h"
+#include "../../Core/Model/VKInstanceData.h"
 #include "../../Core/Image/VKTextureImage.h"
 #include "../../Core/Buffer/VKVertexBuffer.h"
 #include "../../Core/Buffer/VKIndexBuffer.h"
@@ -21,7 +21,7 @@
 #include "../ENConfig.h"
 
 namespace SandBox {
-    class ENSkyBox: protected virtual Core::VKModelMgr,
+    class ENSkyBox: protected virtual Core::VKInstanceData,
                     protected virtual Core::VKTextureImage,
                     protected virtual Core::VKVertexBuffer,
                     protected virtual Core::VKIndexBuffer,
@@ -40,6 +40,7 @@ namespace SandBox {
                     protected virtual Core::VKSyncObject {
         private:
             uint32_t m_skyBoxImageInfoId;
+            std::unordered_map <std::string, uint32_t> m_textureImagePool;
 
             Log::Record* m_ENSkyBoxLog;
             const uint32_t m_instanceId = g_collectionSettings.instanceId++;
@@ -56,12 +57,12 @@ namespace SandBox {
             }
 
         protected:
-            void initExtension (uint32_t deviceInfoId,
-                                uint32_t skyBoxModelInfoId,
-                                uint32_t renderPassInfoId,
-                                uint32_t skyBoxPipelineInfoId,
-                                uint32_t pipelineInfoId,
-                                uint32_t skyBoxSceneInfoId) {
+            uint32_t initExtension (uint32_t deviceInfoId,
+                                    uint32_t skyBoxModelInfoId,
+                                    uint32_t renderPassInfoId,
+                                    uint32_t skyBoxPipelineInfoId,
+                                    uint32_t pipelineInfoId,
+                                    uint32_t skyBoxSceneInfoId) {
 
                 auto deviceInfo      = getDeviceInfo   (deviceInfoId);
                 auto skyBoxModelInfo = getModelInfo    (skyBoxModelInfoId);
@@ -91,14 +92,10 @@ namespace SandBox {
                  * target enums. Also, the sky box texture image is not added to the global texture pool, hence will need
                  * to be deleted as part of the extension
                 */
-                auto texturePaths   = std::vector <const char*> {
-                    g_skyBoxTextureImagePool[POSITIVE_X],
-                    g_skyBoxTextureImagePool[NEGATIVE_X],
-                    g_skyBoxTextureImagePool[POSITIVE_Y],
-                    g_skyBoxTextureImagePool[NEGATIVE_Y],
-                    g_skyBoxTextureImagePool[POSITIVE_Z],
-                    g_skyBoxTextureImagePool[NEGATIVE_Z]
-                };
+                auto texturePaths = std::vector <const char*> {};
+                for (auto const& [target, path]: g_skyBoxTextureImagePool)
+                    texturePaths.push_back (path);
+
                 createTextureResources (deviceInfoId,
                                         m_skyBoxImageInfoId,
                                         6,
@@ -109,6 +106,43 @@ namespace SandBox {
                 LOG_INFO (m_ENSkyBoxLog) << "[OK] Texture resources "
                                          << "[" << m_skyBoxImageInfoId << "]"
                                          << std::endl;
+
+                /* Note that, the sky box model is imported without any textures (default diffuse texture is added to it
+                 * by default) and the model mgr is unaware of the texture resource created above. We will now add the
+                 * texture image info id to the model mgr, and update the texture id look up table
+                */
+                skyBoxModelInfo->id.diffuseTextureImageInfos.push_back (m_skyBoxImageInfoId);
+                for (auto const& infoId: skyBoxModelInfo->id.diffuseTextureImageInfos)
+                    updateTexIdLUT (skyBoxModelInfoId, 0, infoId, infoId);
+                /* |------------------------------------------------------------------------------------------------|
+                 * | CONFIG TEXTURE RESOURCES - ALIAS                                                               |
+                 * |------------------------------------------------------------------------------------------------|
+                */
+                /* Next, we will create separate texture resource for each image layer. Note that, these will also
+                 * reside in same image info id as the sky box image info id as aliases
+                */
+                auto skyBoxImageInfo  = getImageInfo (m_skyBoxImageInfoId, Core::TEXTURE_IMAGE);
+
+                for (auto const& [target, path]: g_skyBoxTextureImagePool) {
+                    auto texturePaths = std::vector <const char*> {
+                        path
+                    };
+                    uint32_t infoId   = getNextInfoIdFromBufferType (Core::STAGING_BUFFER);
+                    createTextureResources (deviceInfoId,
+                                            infoId,
+                                            1,
+                                            texturePaths,
+                                            0,
+                                            VK_IMAGE_VIEW_TYPE_2D,
+                                            false);
+                    LOG_INFO (m_ENSkyBoxLog) << "[OK] Texture resources "
+                                             << "[" << infoId << "]"
+                                             << std::endl;
+
+                    m_textureImagePool[path] = infoId;
+                    auto imageInfo           = getImageInfo (infoId, Core::TEXTURE_IMAGE);
+                    skyBoxImageInfo->resource.aliasImageViews.push_back (imageInfo->resource.imageView);
+                }
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG VERTEX BUFFERS                                                                          |
                  * |------------------------------------------------------------------------------------------------|
@@ -394,11 +428,11 @@ namespace SandBox {
                 for (uint32_t layerIdx = 0; layerIdx < 6; layerIdx++) {
                     uint32_t bufferInfoId = m_skyBoxImageInfoId + layerIdx;
 
-                    copyBufferToImage (bufferInfoId, m_skyBoxImageInfoId,
-                                       Core::STAGING_BUFFER, Core::TEXTURE_IMAGE,
-                                       0,
-                                       layerIdx,
-                                       transferOpsCommandBuffers[0]);
+                    copyBufferToImage     (bufferInfoId, m_skyBoxImageInfoId,
+                                           Core::STAGING_BUFFER, Core::TEXTURE_IMAGE,
+                                           0,
+                                           layerIdx,
+                                           transferOpsCommandBuffers[0]);
 
                     transitionImageLayout (m_skyBoxImageInfoId,
                                            Core::TEXTURE_IMAGE,
@@ -409,11 +443,27 @@ namespace SandBox {
                                            transferOpsCommandBuffers[0]);
                 }
 
+                for (auto const& [path, infoId]: m_textureImagePool) {
+                    copyBufferToImage     (infoId, infoId,
+                                           Core::STAGING_BUFFER, Core::TEXTURE_IMAGE,
+                                           0,
+                                           0,
+                                           transferOpsCommandBuffers[0]);
+
+                    transitionImageLayout (infoId,
+                                           Core::TEXTURE_IMAGE,
+                                           VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                                           VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+                                           0, 1,
+                                           0, 1,
+                                           transferOpsCommandBuffers[0]);
+                }
+
                 for (auto const& infoId: skyBoxModelInfo->id.vertexBufferInfos) {
-                    copyBufferToBuffer (infoId, infoId,
-                                        Core::STAGING_BUFFER, Core::VERTEX_BUFFER,
-                                        0, 0,
-                                        transferOpsCommandBuffers[0]);
+                    copyBufferToBuffer    (infoId, infoId,
+                                           Core::STAGING_BUFFER, Core::VERTEX_BUFFER,
+                                           0, 0,
+                                           transferOpsCommandBuffers[0]);
                 }
 
                 copyBufferToBuffer (skyBoxModelInfo->id.indexBufferInfo,
@@ -478,6 +528,13 @@ namespace SandBox {
                                              << std::endl;
                 }
 
+                for (auto const& [path, infoId]: m_textureImagePool) {
+                    VKBufferMgr::cleanUp (deviceInfoId, infoId, Core::STAGING_BUFFER);
+                    LOG_INFO (m_ENSkyBoxLog) << "[DELETE] Staging buffer "
+                                             << "[" << infoId << "]"
+                                             << std::endl;
+                }
+
                 for (uint32_t layerIdx = 0; layerIdx < 6; layerIdx++) {
                     uint32_t bufferInfoId = m_skyBoxImageInfoId + layerIdx;
 
@@ -501,6 +558,8 @@ namespace SandBox {
                 VKCmdBuffer::cleanUp (deviceInfoId, transferOpsCommandPool);
                 LOG_INFO (m_ENSkyBoxLog) << "[DELETE] Transfer ops command pool"
                                          << std::endl;
+
+                return m_skyBoxImageInfoId;
             }
 
             void drawExtension (uint32_t skyBoxModelInfoId,
@@ -565,6 +624,13 @@ namespace SandBox {
                  * | DESTROY TEXTURE RESOURCES - DIFFUSE TEXTURE                                                    |
                  * |------------------------------------------------------------------------------------------------|
                 */
+                for (auto const& [path, infoId]: m_textureImagePool) {
+                    VKImageMgr::cleanUp (deviceInfoId, infoId, Core::TEXTURE_IMAGE);
+                    LOG_INFO (m_ENSkyBoxLog) << "[DELETE] Texture resources "
+                                             << "[" << infoId << "]"
+                                             << std::endl;
+                }
+
                 VKImageMgr::cleanUp (deviceInfoId, m_skyBoxImageInfoId, Core::TEXTURE_IMAGE);
                 LOG_INFO (m_ENSkyBoxLog) << "[DELETE] Texture resources "
                                          << "[" << m_skyBoxImageInfoId << "]"

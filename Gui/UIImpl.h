@@ -62,7 +62,8 @@ namespace Gui {
                           const std::vector <uint32_t>& modelInfoIds,
                           uint32_t uiRenderPassInfoId,
                           const std::vector <uint32_t>& cameraInfoIds,
-                          uint32_t uiSceneInfoId) {
+                          uint32_t uiSceneInfoId,
+                          const std::unordered_map <uint32_t, std::vector <std::string>>& textureImagePool) {
 
                 auto deviceInfo       = getDeviceInfo     (deviceInfoId);
                 auto uiRenderPassInfo = getRenderPassInfo (uiRenderPassInfoId);
@@ -272,7 +273,8 @@ namespace Gui {
                                cameraInfoIds,
                                uiSceneInfoId,
                                m_frameDeltaPlotDataInfoId,
-                               m_fpsPlotDataInfoId);
+                               m_fpsPlotDataInfoId,
+                               textureImagePool);
             }
 
             void createUIFrame (float frameDelta) {

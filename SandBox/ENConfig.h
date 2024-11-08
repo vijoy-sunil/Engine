@@ -106,8 +106,9 @@ namespace SandBox {
      *                              |     NY    |
      *                              |           |
      *                              |-----------|
+     * Note that, we are not using unordered map since the order in which the path is laid out is important
     */
-    std::unordered_map <e_cubeMapTarget, const char*> g_skyBoxTextureImagePool     = {
+    std::map <e_cubeMapTarget, const char*> g_skyBoxTextureImagePool = {
         {POSITIVE_X,                "Asset/Texture/Environment/tex_2Kx2K_sky_box_px.png"},
         {NEGATIVE_X,                "Asset/Texture/Environment/tex_2Kx2K_sky_box_nx.png"},
         {POSITIVE_Y,                "Asset/Texture/Environment/tex_2Kx2K_sky_box_py.png"},

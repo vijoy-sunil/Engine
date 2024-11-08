@@ -51,13 +51,13 @@ namespace Core {
                                                       << "[" << newTexId << "]"
                                                       << std::endl;
                 }
-                else {
-                    const uint32_t numColumns = 4;
-                    uint32_t rowIdx = oldTexId / numColumns;
-                    uint32_t colIdx = oldTexId % numColumns;
-
-                    modelInfo->meta.instances[modelInstanceId].texIdLUT[rowIdx][colIdx] = newTexId;
-                }
+                /* Note that, we continue past the warning to update the look up table. This is because some texture
+                 * image info ids may not necessarily exist in the texture image pool, for example, alias resources
+                */
+                const uint32_t numColumns = 4;
+                uint32_t rowIdx           = oldTexId / numColumns;
+                uint32_t colIdx           = oldTexId % numColumns;
+                modelInfo->meta.instances[modelInstanceId].texIdLUT[rowIdx][colIdx] = newTexId;
             }
 
             uint32_t importInstanceData (uint32_t modelInfoId, const char* instanceDataPath) {

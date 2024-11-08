@@ -35,7 +35,7 @@ namespace Gui {
         struct TreeNode {
             /* Note that, node info ids for specific nodes are obtained from dump file
             */
-            const uint32_t worldCollection                           = 110;
+            const uint32_t worldCollection                           = 114;
             const uint32_t worldCollectionSample                     = 23;
         } treeNode;
 
@@ -77,9 +77,9 @@ namespace Gui {
             const float window                                       = 4.0f;
             const float frame                                        = 0.0f;
             const float child                                        = 0.0f;
-            const float popUp                                        = 4.0f;
+            const float popUp                                        = 0.0f;
             const float scrollBar                                    = 4.0f;
-            const float inputField                                   = 2.0f;
+            const float inputField                                   = 0.0f;
         } rounding;
 
         struct BorderSize {
@@ -93,7 +93,7 @@ namespace Gui {
             const float intend                                       = 12.0f;
             const ImVec2 item                                        = ImVec2 (0.0f, 4.0f);
             const ImVec2 itemInner                                   = ImVec2 (8.0f, 8.0f);
-            const ImVec2 list                                        = ImVec2 (0.0f, 4.0f);
+            const ImVec2 list                                        = ImVec2 (4.0f, 4.0f);
         } spacing;
 
         struct Size {
