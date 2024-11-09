@@ -33,7 +33,7 @@ layout (location = 0) out vec4 outColor;
  *
  * Note that, only the final binding in a descriptor set can have a variable size
 */
-layout (binding = 1) uniform sampler2D texSampler[];
+layout (set = 1, binding = 0) uniform sampler2D texSampler[];
 
 /* The main function is called for every fragment just like the vertex shader main function is called for every vertex
 */

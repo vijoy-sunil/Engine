@@ -267,23 +267,23 @@ namespace SandBox {
                                          VK_FALSE,
                                          VK_NULL_HANDLE, VK_NULL_HANDLE);
                 /* |------------------------------------------------------------------------------------------------|
-                 * | CONFIG DESCRIPTOR SET LAYOUT                                                                   |
+                 * | CONFIG DESCRIPTOR SET LAYOUT - COMMON                                                          |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                auto layoutBindings = std::vector {
+                auto commonLayoutBindings = std::vector {
                     getLayoutBinding (0,
                                       1,
                                       VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
                                       VK_SHADER_STAGE_FRAGMENT_BIT,
                                       VK_NULL_HANDLE)
                 };
-                auto bindingFlags   = std::vector <VkDescriptorBindingFlags> {
+                auto commonBindingFlags   = std::vector <VkDescriptorBindingFlags> {
                     0
                 };
                 createDescriptorSetLayout (deviceInfoId,
                                            skyBoxPipelineInfoId,
-                                           layoutBindings,
-                                           bindingFlags,
+                                           commonLayoutBindings,
+                                           commonBindingFlags,
                                            0);
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG PUSH CONSTANT RANGES                                                                    |
@@ -359,17 +359,18 @@ namespace SandBox {
                                          << "[" << skyBoxSceneInfoId << "]"
                                          << std::endl;
                 /* |------------------------------------------------------------------------------------------------|
-                 * | CONFIG DESCRIPTOR SETS                                                                         |
+                 * | CONFIG DESCRIPTOR SETS - COMMON                                                                |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                uint32_t descriptorSetLayoutId = 0;
+                uint32_t commonDescriptorSetLayoutIdx = 0;
                 createDescriptorSets (deviceInfoId,
                                       skyBoxPipelineInfoId,
                                       skyBoxSceneInfoId,
-                                      descriptorSetLayoutId,
-                                      1);
+                                      commonDescriptorSetLayoutIdx,
+                                      1,
+                                      Core::COMMON_SET);
                 /* |------------------------------------------------------------------------------------------------|
-                 * | CONFIG DESCRIPTOR SETS UPDATE                                                                  |
+                 * | CONFIG DESCRIPTOR SETS UPDATE - COMMON                                                         |
                  * |------------------------------------------------------------------------------------------------|
                 */
                 auto imageInfo            = getImageInfo (m_skyBoxImageInfoId, Core::TEXTURE_IMAGE);
@@ -380,7 +381,7 @@ namespace SandBox {
                 };
                 auto writeDescriptorSets  = std::vector {
                     getWriteImageDescriptorSetInfo  (VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-                                                     skyBoxSceneInfo->resource.descriptorSets[0],
+                                                     skyBoxSceneInfo->resource.commonDescriptorSet,
                                                      descriptorImageInfos,
                                                      0, 0, 1)
                 };
@@ -392,7 +393,7 @@ namespace SandBox {
                                          << " "
                                          << "[" << skyBoxPipelineInfoId << "]"
                                          << " "
-                                         << "[" << descriptorSetLayoutId << "]"
+                                         << "[" << commonDescriptorSetLayoutIdx << "]"
                                          << std::endl;
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG TRANSFER OPS - COMMAND POOL AND BUFFER                                                  |
@@ -602,7 +603,7 @@ namespace SandBox {
                                      sceneInfo->resource.commandBuffers[currentFrameInFlight]);
 
                 auto descriptorSetsToBind = std::vector {
-                    skyBoxSceneInfo->resource.descriptorSets[0]
+                    skyBoxSceneInfo->resource.commonDescriptorSet
                 };
                 auto dynamicOffsets       = std::vector <uint32_t> {
                 };

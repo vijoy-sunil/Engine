@@ -104,7 +104,7 @@ struct InstanceDataSSBO {
     mat4 texIdLUT;
 };
 
-layout (binding = 0) readonly buffer InstanceData {
+layout (set = 0, binding = 0) readonly buffer InstanceData {
     InstanceDataSSBO instances[];
 } instanceData;
 

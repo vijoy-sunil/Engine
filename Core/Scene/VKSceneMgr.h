@@ -28,7 +28,8 @@ namespace Core {
                 struct Resource {
                     VkSampler textureSampler;
                     VkDescriptorPool descriptorPool;
-                    std::vector <VkDescriptorSet> descriptorSets;
+                    std::vector <VkDescriptorSet> perFrameDescriptorSets;
+                    VkDescriptorSet commonDescriptorSet;
 
                     VkCommandPool commandPool;
                     std::vector <VkCommandBuffer> commandBuffers;
@@ -149,8 +150,8 @@ namespace Core {
                                                << "[" << val.id.renderDoneSemaphoreInfoBase << "]"
                                                << std::endl;
 
-                    LOG_INFO (m_VKSceneMgrLog) << "Descriptor sets count "
-                                               << "[" << val.resource.descriptorSets.size() << "]"
+                    LOG_INFO (m_VKSceneMgrLog) << "Per frame descriptor sets count "
+                                               << "[" << val.resource.perFrameDescriptorSets.size() << "]"
                                                << std::endl;
 
                     LOG_INFO (m_VKSceneMgrLog) << "Command buffers count "

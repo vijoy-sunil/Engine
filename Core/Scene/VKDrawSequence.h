@@ -261,7 +261,8 @@ namespace Core {
                                       sceneInfo->resource.commandBuffers[currentFrameInFlight]);
 
                 auto descriptorSetsToBind = std::vector {
-                    sceneInfo->resource.descriptorSets[currentFrameInFlight]
+                    sceneInfo->resource.perFrameDescriptorSets[currentFrameInFlight],   /* Set #0 */
+                    sceneInfo->resource.commonDescriptorSet                             /* Set #1 */
                 };
                 auto dynamicOffsets       = std::vector <uint32_t> {
                 };

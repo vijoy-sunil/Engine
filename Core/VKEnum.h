@@ -26,5 +26,10 @@ namespace Core {
         SEM_IMAGE_AVAILABLE = 3,
         SEM_RENDER_DONE     = 4
     } e_syncType;
+
+    typedef enum {
+        PER_FRAME_SET       = 0,
+        COMMON_SET          = 1
+    } e_descriptorSetType;
 }   // namespace Core
 #endif  // VK_ENUM_H

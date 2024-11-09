@@ -599,26 +599,14 @@ namespace Core {
                 };
                 createDynamicState (pipelineInfoId, dynamicStates);
                 /* |------------------------------------------------------------------------------------------------|
-                 * | CONFIG DESCRIPTOR SET LAYOUT                                                                   |
+                 * | CONFIG DESCRIPTOR SET LAYOUT - PER FRAME                                                       |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                auto layoutBindings = std::vector {
+                auto perFrameLayoutBindings = std::vector {
                     getLayoutBinding (0,
                                       1,
                                       VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
                                       VK_SHADER_STAGE_VERTEX_BIT,
-                                      VK_NULL_HANDLE),
-
-                    /* Another commonly used type of descriptor is the combined image sampler, which is a single
-                     * descriptor type associated with both a sampler and an image resource, combining both a sampler
-                     * and sampled image descriptor into a single descriptor. Note that, it is possible to use texture
-                     * sampling in the vertex shader, for example to dynamically deform a grid of vertices by a
-                     * heightmap
-                    */
-                    getLayoutBinding (1,
-                                      static_cast <uint32_t> (getTextureImagePool().size()),
-                                      VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-                                      VK_SHADER_STAGE_FRAGMENT_BIT,
                                       VK_NULL_HANDLE)
                 };
                 /* Info on some of the available binding flags
@@ -650,14 +638,38 @@ namespace Core {
                  * but only binds the first 32 slots in the array. This also relies on the the application knowing that
                  * it will not index into the unbound slots in the array
                 */
-                auto bindingFlags = std::vector <VkDescriptorBindingFlags> {
-                    g_pipelineSettings.descriptorSetLayout.bindingFlagsSSBO,
+                auto perFrameBindingFlags = std::vector <VkDescriptorBindingFlags> {
+                    g_pipelineSettings.descriptorSetLayout.bindingFlagsSSBO
+                };
+                createDescriptorSetLayout (deviceInfoId,
+                                           pipelineInfoId,
+                                           perFrameLayoutBindings,
+                                           perFrameBindingFlags,
+                                           g_pipelineSettings.descriptorSetLayout.layoutCreateFlags);
+                /* |------------------------------------------------------------------------------------------------|
+                 * | CONFIG DESCRIPTOR SET LAYOUT - COMMON                                                          |
+                 * |------------------------------------------------------------------------------------------------|
+                */
+                auto commonLayoutBindings = std::vector {
+                    /* Another commonly used type of descriptor is the combined image sampler, which is a single
+                     * descriptor type associated with both a sampler and an image resource, combining both a sampler
+                     * and sampled image descriptor into a single descriptor. Note that, it is possible to use texture
+                     * sampling in the vertex shader, for example to dynamically deform a grid of vertices by a
+                     * heightmap
+                    */
+                    getLayoutBinding (0,
+                                      static_cast <uint32_t> (getTextureImagePool().size()),
+                                      VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+                                      VK_SHADER_STAGE_FRAGMENT_BIT,
+                                      VK_NULL_HANDLE)
+                };
+                auto commonBindingFlags = std::vector <VkDescriptorBindingFlags> {
                     g_pipelineSettings.descriptorSetLayout.bindingFlagsCIS
                 };
                 createDescriptorSetLayout (deviceInfoId,
                                            pipelineInfoId,
-                                           layoutBindings,
-                                           bindingFlags,
+                                           commonLayoutBindings,
+                                           commonBindingFlags,
                                            g_pipelineSettings.descriptorSetLayout.layoutCreateFlags);
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG PUSH CONSTANT RANGES                                                                    |
@@ -721,31 +733,44 @@ namespace Core {
                  * |------------------------------------------------------------------------------------------------|
                 */
                 auto poolSizes = std::vector {
-                    getPoolSize (VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, g_coreSettings.maxFramesInFlight),
+                    getPoolSize (VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+                                 g_coreSettings.maxFramesInFlight),
 
-                    getPoolSize (VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, static_cast <uint32_t>
-                                (getTextureImagePool().size()) * g_coreSettings.maxFramesInFlight)
+                    getPoolSize (VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+                                 static_cast <uint32_t> (getTextureImagePool().size()))
                 };
                 createDescriptorPool (deviceInfoId,
                                       sceneInfoId,
                                       poolSizes,
-                                      g_coreSettings.maxFramesInFlight,
+                                      g_coreSettings.maxFramesInFlight + 1,
                                       g_descriptorSettings.poolCreateFlags);
                 LOG_INFO (m_VKInitSequenceLog) << "[OK] Descriptor pool "
                                                << "[" << sceneInfoId << "]"
                                                << std::endl;
                 /* |------------------------------------------------------------------------------------------------|
-                 * | CONFIG DESCRIPTOR SETS                                                                         |
+                 * | CONFIG DESCRIPTOR SETS - PER FRAME                                                             |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                uint32_t descriptorSetLayoutId = 0;
+                uint32_t perFrameDescriptorSetLayoutIdx = 0;
                 createDescriptorSets (deviceInfoId,
                                       pipelineInfoId,
                                       sceneInfoId,
-                                      descriptorSetLayoutId,
-                                      g_coreSettings.maxFramesInFlight);
+                                      perFrameDescriptorSetLayoutIdx,
+                                      g_coreSettings.maxFramesInFlight,
+                                      PER_FRAME_SET);
                 /* |------------------------------------------------------------------------------------------------|
-                 * | CONFIG DESCRIPTOR SETS UPDATE                                                                  |
+                 * | CONFIG DESCRIPTOR SETS - COMMON                                                                |
+                 * |------------------------------------------------------------------------------------------------|
+                */
+                uint32_t commonDescriptorSetLayoutIdx = 1;
+                createDescriptorSets (deviceInfoId,
+                                      pipelineInfoId,
+                                      sceneInfoId,
+                                      commonDescriptorSetLayoutIdx,
+                                      1,
+                                      COMMON_SET);
+                /* |------------------------------------------------------------------------------------------------|
+                 * | CONFIG DESCRIPTOR SETS UPDATE - PER FRAME                                                      |
                  * |------------------------------------------------------------------------------------------------|
                 */
                 for (uint32_t i = 0; i < g_coreSettings.maxFramesInFlight; i++) {
@@ -757,28 +782,14 @@ namespace Core {
                                                  sceneInfo->meta.totalInstancesCount * sizeof (InstanceDataSSBO))
                     };
 
-                    uint32_t textureCount = static_cast <uint32_t> (getTextureImagePool().size());
-                    std::vector <VkDescriptorImageInfo> descriptorImageInfos (textureCount);
-                    for (auto const& [path, infoId]: getTextureImagePool()) {
-                        auto imageInfo               = getImageInfo (infoId, TEXTURE_IMAGE);
-                        descriptorImageInfos[infoId] = getDescriptorImageInfo (sceneInfo->resource.textureSampler,
-                                                                               imageInfo->resource.imageView,
-                                                                               VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-                    }
-
                     /* The configuration of descriptors is updated using the vkUpdateDescriptorSets function, which takes
                      * an array of VkWriteDescriptorSet structs as parameter
                     */
                     auto writeDescriptorSets = std::vector {
                         getWriteBufferDescriptorSetInfo (VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-                                                         sceneInfo->resource.descriptorSets[i],
+                                                         sceneInfo->resource.perFrameDescriptorSets[i],
                                                          descriptorBufferInfos,
-                                                         0, 0, 1),
-
-                        getWriteImageDescriptorSetInfo  (VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-                                                         sceneInfo->resource.descriptorSets[i],
-                                                         descriptorImageInfos,
-                                                         1, 0, textureCount)
+                                                         0, 0, 1)
                     };
 
                     updateDescriptorSets (deviceInfoId, writeDescriptorSets);
@@ -788,7 +799,36 @@ namespace Core {
                                                << " "
                                                << "[" << pipelineInfoId << "]"
                                                << " "
-                                               << "[" << descriptorSetLayoutId << "]"
+                                               << "[" << perFrameDescriptorSetLayoutIdx << "]"
+                                               << std::endl;
+                /* |------------------------------------------------------------------------------------------------|
+                 * | CONFIG DESCRIPTOR SETS UPDATE - COMMON                                                         |
+                 * |------------------------------------------------------------------------------------------------|
+                */
+                uint32_t textureCount = static_cast <uint32_t> (getTextureImagePool().size());
+                std::vector <VkDescriptorImageInfo> descriptorImageInfos (textureCount);
+                for (auto const& [path, infoId]: getTextureImagePool()) {
+                    auto imageInfo               = getImageInfo (infoId, TEXTURE_IMAGE);
+                    descriptorImageInfos[infoId] = getDescriptorImageInfo (sceneInfo->resource.textureSampler,
+                                                                           imageInfo->resource.imageView,
+                                                                           VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+                }
+
+                auto writeDescriptorSets = std::vector {
+                    getWriteImageDescriptorSetInfo  (VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+                                                     sceneInfo->resource.commonDescriptorSet,
+                                                     descriptorImageInfos,
+                                                     0, 0, textureCount)
+                };
+
+                updateDescriptorSets (deviceInfoId, writeDescriptorSets);
+
+                LOG_INFO (m_VKInitSequenceLog) << "[OK] Descriptor sets "
+                                               << "[" << sceneInfoId << "]"
+                                               << " "
+                                               << "[" << pipelineInfoId << "]"
+                                               << " "
+                                               << "[" << commonDescriptorSetLayoutIdx << "]"
                                                << std::endl;
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG TRANSFER OPS - COMMAND POOL AND BUFFER                                                  |

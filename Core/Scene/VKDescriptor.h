@@ -107,20 +107,30 @@ namespace Core {
             void createDescriptorSets (uint32_t deviceInfoId,
                                        uint32_t pipelineInfoId,
                                        uint32_t sceneInfoId,
-                                       uint32_t descriptorSetLayoutId,
-                                       uint32_t descriptorSetCount) {
+                                       uint32_t descriptorSetLayoutIdx,
+                                       uint32_t descriptorSetCount,
+                                       e_descriptorSetType type) {
 
                 auto deviceInfo   = getDeviceInfo   (deviceInfoId);
                 auto pipelineInfo = getPipelineInfo (pipelineInfoId);
                 auto sceneInfo    = getSceneInfo    (sceneInfoId);
 
-                if (descriptorSetLayoutId >= pipelineInfo->resource.descriptorSetLayouts.size()) {
+                if (descriptorSetLayoutIdx >= pipelineInfo->resource.descriptorSetLayouts.size()) {
                     LOG_ERROR (m_VKDescriptorLog) << "Invalid descriptor set layout id "
-                                                  << "[" << descriptorSetLayoutId << "]"
+                                                  << "[" << descriptorSetLayoutIdx << "]"
                                                   << "->"
                                                   << "[" << pipelineInfo->resource.descriptorSetLayouts.size() << "]"
                                                   << std::endl;
                     throw std::runtime_error ("Invalid descriptor set layout id");
+                }
+
+                if (descriptorSetCount != 1 && type == COMMON_SET) {
+                    LOG_ERROR (m_VKDescriptorLog) << "Invalid descriptor set count "
+                                                  << "[" << descriptorSetCount << "]"
+                                                  << "->"
+                                                  << "[" << getDescriptorSetTypeString (type) << "]"
+                                                  << std::endl;
+                    throw std::runtime_error ("Invalid descriptor set count");
                 }
                 /* A descriptor set layout defines the structure of a descriptor set, a template of sorts. Think of a
                  * class or struct in C or C++, it says "I am made out of, 3 UBOs, a texture sampler, etc". It's analogous
@@ -139,7 +149,7 @@ namespace Core {
                  * Using the class/struct analogy, it's like going MyDesc DescInstance();
                 */
                 std::vector <VkDescriptorSetLayout> layouts (descriptorSetCount,
-                                                    pipelineInfo->resource.descriptorSetLayouts[descriptorSetLayoutId]);
+                                                    pipelineInfo->resource.descriptorSetLayouts[descriptorSetLayoutIdx]);
 
                 /* A descriptor set allocation is described with a VkDescriptorSetAllocateInfo struct. You need to
                  * specify the descriptor pool to allocate from, the number of descriptor sets to allocate, and the
@@ -162,13 +172,15 @@ namespace Core {
                                                   << " "
                                                   << "[" << pipelineInfoId << "]"
                                                   << " "
-                                                  << "[" << descriptorSetLayoutId << "]"
+                                                  << "[" << descriptorSetLayoutIdx << "]"
                                                   << " "
                                                   << "[" << string_VkResult (result) << "]"
                                                   << std::endl;
                     throw std::runtime_error ("Failed to allocate descriptor sets");
                 }
-                sceneInfo->resource.descriptorSets = descriptorSets;
+
+                if (type == PER_FRAME_SET)  sceneInfo->resource.perFrameDescriptorSets = descriptorSets;
+                if (type == COMMON_SET)     sceneInfo->resource.commonDescriptorSet    = descriptorSets[0];
             }
 
             /* Descriptors that refer to buffers, like a uniform buffer descriptor, are configured with a

@@ -59,5 +59,14 @@ namespace Core {
             default:                    return "Unhandled e_syncType";
         }
     }
+
+    const char* getDescriptorSetTypeString (e_descriptorSetType type) {
+        switch (type)
+        {
+            case PER_FRAME_SET:         return "PER_FRAME_SET";
+            case COMMON_SET:            return "COMMON_SET";
+            default:                    return "Unhandled e_descriptorSetType";
+        }
+    }
 }   // namespace Core
 #endif  // VK_LOG_HELPER_H

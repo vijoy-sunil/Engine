@@ -75,15 +75,15 @@ namespace SandBox {
                                                                fragmentShaderBinaryPath,
                                                                "main");
                 /* |------------------------------------------------------------------------------------------------|
-                 * | CONFIG DESCRIPTOR SET LAYOUT                                                                   |
+                 * | CONFIG DESCRIPTOR SET LAYOUT - COMMON                                                          |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                auto layoutBindings = std::vector <VkDescriptorSetLayoutBinding> {};
-                auto bindingFlags   = std::vector <VkDescriptorBindingFlags>     {};
+                auto commonLayoutBindings = std::vector <VkDescriptorSetLayoutBinding> {};
+                auto commonBindingFlags   = std::vector <VkDescriptorBindingFlags>     {};
                 createDescriptorSetLayout (deviceInfoId,
                                            gridPipelineInfoId,
-                                           layoutBindings,
-                                           bindingFlags,
+                                           commonLayoutBindings,
+                                           commonBindingFlags,
                                            0);
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG PUSH CONSTANT RANGES                                                                    |
