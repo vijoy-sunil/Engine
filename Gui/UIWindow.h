@@ -121,26 +121,20 @@ namespace Gui {
                             level2NodeInfoIds.clear();
                             for (auto const& texId: modelInfo->id.diffuseTextureImageInfos) {
                                 level2NodeInfoIds.push_back (currentNodeInfoId);
-                                /* Get texture id from look up table for every instance
+                                /* Get texture image info id from look up table for every instance and construct label
                                 */
-                                const uint32_t numColumns = 4;
-                                uint32_t rowIdx           = texId / numColumns;
-                                uint32_t colIdx           = texId % numColumns;
-                                /* Construct label
-                                */
-                                std::string label         = " Diffuse texture [" + std::to_string (static_cast <uint32_t>
-                                                            (modelInfo->meta.instances[i].texIdLUT[rowIdx][colIdx])) +
-                                                            "]";
+                                uint32_t newTexId     = decodeTexIdLUTPacket (infoId, i, texId);
+                                std::string label     = " Diffuse texture [" + std::to_string (newTexId) + "]";
                                 /* Since this is a leaf node, the child info id vector be empty
                                 */
-                                auto leafChildInfoIds     = std::vector <uint32_t> {};
+                                auto leafChildInfoIds = std::vector <uint32_t> {};
 
                                 readyNodeInfo (currentNodeInfoId,
                                                ICON_FA_FILE_IMAGE + label,
                                                MODEL_TEXTURE_NODE,
                                                UNDEFINED_ACTION,
                                                leafChildInfoIds,
-                                               texId,
+                                               newTexId,
                                                true,
                                                treeNodeFlags);
 
@@ -640,8 +634,8 @@ namespace Gui {
 
                         if (nodeInfo->meta.type == MODEL_TEXTURE_NODE) {
                             uint32_t infoId         = nodeInfo->meta.coreInfoId;
-                            /* Convert texture info id to label, and we use the label to find the offset to the labels
-                             * vector. This provides us a common index to access both the map and the vector
+                            /* Convert texture image info id to label, and we use the label to find the offset to the
+                             * labels vector. This provides us a common index to access both the map and the vector
                             */
                             std::string label       = "Info id [" + std::to_string (infoId) + "]";
                             selectedDiffuseLabelIdx = std::find (m_diffuseTextureImageInfoIdLabels.begin(),
@@ -677,10 +671,9 @@ namespace Gui {
                         /* Image details
                         */
                         auto imageInfo       = getImageInfo (iter->first, Core::TEXTURE_IMAGE);
-                        std::string dims     = std::to_string (imageInfo->meta.width)  +
-                                               " x " +
-                                               std::to_string (imageInfo->meta.height) +
-                                               "px";
+                        std::string dims     = std::to_string (imageInfo->meta.width)  + "px"
+                                               + " x " +
+                                               std::to_string (imageInfo->meta.height) + "px";
                         std::string fileName = iter->second.meta.fileNames[iter->second.meta.selectedLayerIdx];
 
                         ImGui::Text ("%s", dims.c_str());

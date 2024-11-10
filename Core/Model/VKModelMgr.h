@@ -362,10 +362,10 @@ namespace Core {
                                             attrib.normals[3 * index.normal_index + 2]
                                           };
                         /* We will handle missing texture faces (material_ids = -1) by adding +1 to all material_ids, this
-                         * will allow us to use the default texture whose texture id is 0. Note that, this local texture
-                         * id is an index into the current model's texture array embedded with in the model file. What
-                         * we need is a texture id that can be used to index into the global texture pool, so that the
-                         * shader can sample from the correct texture from the global pool of textures
+                         * will allow us to use the default texture whose image info id is 0. Note that, this local image
+                         * info id is an index into the current model's texture array embedded with in the model file.
+                         * What we need is a image info id that can be used to index into the global texture pool, so that
+                         * the shader can sample from the correct texture from the global pool of textures
                         */
                         uint32_t localTexId     = shape.mesh.material_ids[faceIndex] + 1;
                         std::string texturePath = modelInfo->path.diffuseTextureImages[localTexId];
@@ -408,6 +408,37 @@ namespace Core {
                 return m_textureImagePool;
             }
 
+            uint32_t decodeTexIdLUTPacket (uint32_t modelInfoId,
+                                           uint32_t modelInstanceId,
+                                           uint32_t oldTexId) {
+
+                auto modelInfo = getModelInfo (modelInfoId);
+
+                if (modelInstanceId >= modelInfo->meta.instancesCount) {
+                    LOG_ERROR (m_VKModelMgrLog) << "Invalid model instance id "
+                                                << "[" << modelInstanceId << "]"
+                                                << "->"
+                                                << "[" << modelInfo->meta.instancesCount << "]"
+                                                << std::endl;
+                    throw std::runtime_error ("Invalid model instance id");
+                }
+
+                if (oldTexId > UINT8_MAX) {
+                    LOG_ERROR (m_VKModelMgrLog) << "Failed to decode packet "
+                                                << "[" << oldTexId << "]"
+                                                << std::endl;
+                    throw std::runtime_error ("Failed to decode packet");
+                }
+
+                uint32_t readIdx   = oldTexId / 4;
+                uint32_t offsetIdx = oldTexId % 4;
+                uint32_t mask      = UINT8_MAX << offsetIdx * 8;
+                uint32_t packet    = modelInfo->meta.instances[modelInstanceId].texIdLUT[readIdx];
+                uint32_t newTexId  = (packet & mask) >> offsetIdx * 8;
+
+                return newTexId;
+            }
+
             ModelInfo* getModelInfo (uint32_t modelInfoId) {
                 if (m_modelInfoPool.find (modelInfoId) != m_modelInfoPool.end())
                     return &m_modelInfoPool[modelInfoId];
@@ -447,15 +478,32 @@ namespace Core {
                             rowIdx++;
                         }
 
-                        LOG_INFO (m_VKModelMgrLog) << "Texture id look up table"
+                        LOG_INFO (m_VKModelMgrLog) << "Texture image info id look up table"
                                                    << std::endl;
-                        rowIdx = 0;
-                        while (rowIdx < 4) {
-                            LOG_INFO (m_VKModelMgrLog) << "["
-                                                       << instance.texIdLUT[rowIdx][0] << " "
-                                                       << instance.texIdLUT[rowIdx][1] << " "
-                                                       << instance.texIdLUT[rowIdx][2] << " "
-                                                       << instance.texIdLUT[rowIdx][3]
+                        uint32_t colIdx = 0;
+                        rowIdx          = 0;
+                        while (rowIdx < 16) {
+                            LOG_INFO (m_VKModelMgrLog) << rowIdx << ": "
+                                                       << "["
+                                                       << decodeTexIdLUTPacket (key, modelInstanceId, colIdx++) << ", "
+                                                       << decodeTexIdLUTPacket (key, modelInstanceId, colIdx++) << ", "
+                                                       << decodeTexIdLUTPacket (key, modelInstanceId, colIdx++) << ", "
+                                                       << decodeTexIdLUTPacket (key, modelInstanceId, colIdx++)
+                                                       << " - "
+                                                       << decodeTexIdLUTPacket (key, modelInstanceId, colIdx++) << ", "
+                                                       << decodeTexIdLUTPacket (key, modelInstanceId, colIdx++) << ", "
+                                                       << decodeTexIdLUTPacket (key, modelInstanceId, colIdx++) << ", "
+                                                       << decodeTexIdLUTPacket (key, modelInstanceId, colIdx++)
+                                                       << " - "
+                                                       << decodeTexIdLUTPacket (key, modelInstanceId, colIdx++) << ", "
+                                                       << decodeTexIdLUTPacket (key, modelInstanceId, colIdx++) << ", "
+                                                       << decodeTexIdLUTPacket (key, modelInstanceId, colIdx++) << ", "
+                                                       << decodeTexIdLUTPacket (key, modelInstanceId, colIdx++)
+                                                       << " - "
+                                                       << decodeTexIdLUTPacket (key, modelInstanceId, colIdx++) << ", "
+                                                       << decodeTexIdLUTPacket (key, modelInstanceId, colIdx++) << ", "
+                                                       << decodeTexIdLUTPacket (key, modelInstanceId, colIdx++) << ", "
+                                                       << decodeTexIdLUTPacket (key, modelInstanceId, colIdx++)
                                                        << "]"
                                                        << std::endl;
                             rowIdx++;

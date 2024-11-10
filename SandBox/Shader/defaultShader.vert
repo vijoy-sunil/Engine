@@ -101,7 +101,7 @@ layout (location = 1) out uint fragTexId;
 */
 struct InstanceDataSSBO {
     mat4 modelMatrix;
-    mat4 texIdLUT;
+    uint texIdLUT[64];
 };
 
 layout (set = 0, binding = 0) readonly buffer InstanceData {
@@ -123,14 +123,19 @@ void main (void) {
      * coordinates may not be 1 after model transform calculations, which will result in a division when converted to
      * the final normalized device coordinates on the screen
     */
-    gl_Position  = sceneDataVert.projectionMatrix *
-                   sceneDataVert.viewMatrix       *
-                   instanceData.instances[gl_InstanceIndex].modelMatrix *
-                   vec4 (inPosition, 1.0);
+    gl_Position    = sceneDataVert.projectionMatrix *
+                     sceneDataVert.viewMatrix       *
+                     instanceData.instances[gl_InstanceIndex].modelMatrix *
+                     vec4 (inPosition, 1.0);
 
-    fragTexCoord = inTexCoord;
+    fragTexCoord   = inTexCoord;
+    /* Decode packet
+    */
+    uint readIdx   = inTexId / 4;
+    uint offsetIdx = inTexId % 4;
+    uint mask      = 255 << offsetIdx * 8;
+    uint packet    = instanceData.instances[gl_InstanceIndex].texIdLUT[readIdx];
+    uint newTexId  = (packet & mask) >> offsetIdx * 8;
 
-    uint rowIdx  = inTexId / 4;
-    uint colIdx  = inTexId % 4;
-    fragTexId    = uint (instanceData.instances[gl_InstanceIndex].texIdLUT[rowIdx][colIdx]);
+    fragTexId      = newTexId;
 }

@@ -156,7 +156,7 @@ namespace Core {
                 */
                 for (auto const& infoId: modelInfoIds) {
                     importOBJModel (infoId);
-                    /* Populate texture id look up table for all model instances
+                    /* Populate texture image info id look up table for all model instances
                     */
                     auto modelInfo = getModelInfo (infoId);
                     for (uint32_t i = 0; i < modelInfo->meta.instancesCount; i++) {

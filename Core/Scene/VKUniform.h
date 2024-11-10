@@ -101,7 +101,19 @@ namespace Core {
     */
     struct InstanceDataSSBO {
         glm::mat4 modelMatrix;
-        alignas (16) glm::mat4 texIdLUT;
+        /* The texture image info id look up table is an array of 32 bit unsigned integers as shown below. We can pack 4
+         * info ids into 32 bits (a packet) if we assume a maximum id value of UINT8_MAX
+         * |--------|--------|--------|--------|
+         * |   32b  |   32b  |   32b  |   32b  |.....
+         * |--------|--------|--------|--------|
+         *              |
+         *              |
+         *              v
+         *          |--------|--------|--------|--------|
+         *          |   8b   |   8b   |   8b   |   8b   |
+         *          |--------|--------|--------|--------|
+        */
+        uint32_t texIdLUT[64];
     };
 
     struct SceneDataVertPC {

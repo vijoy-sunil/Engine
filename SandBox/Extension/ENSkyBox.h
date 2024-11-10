@@ -109,7 +109,7 @@ namespace SandBox {
 
                 /* Note that, the sky box model is imported without any textures (default diffuse texture is added to it
                  * by default) and the model mgr is unaware of the texture resource created above. We will now add the
-                 * texture image info id to the model mgr, and update the texture id look up table
+                 * texture image info id to the model mgr, and update the texture image info id look up table
                 */
                 skyBoxModelInfo->id.diffuseTextureImageInfos.push_back (m_skyBoxImageInfoId);
                 for (auto const& infoId: skyBoxModelInfo->id.diffuseTextureImageInfos)

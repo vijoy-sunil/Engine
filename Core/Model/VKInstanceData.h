@@ -45,19 +45,33 @@ namespace Core {
                 }
 
                 if (!oldTexIdValid || !newTexIdValid) {
-                    LOG_WARNING (m_VKInstanceDataLog) << "Invalid texture id "
+                    LOG_WARNING (m_VKInstanceDataLog) << "Failed to find texture image info id "
                                                       << "[" << oldTexId << "]"
                                                       << " "
                                                       << "[" << newTexId << "]"
                                                       << std::endl;
                 }
                 /* Note that, we continue past the warning to update the look up table. This is because some texture
-                 * image info ids may not necessarily exist in the texture image pool, for example, alias resources
+                 * image info ids, for example, image info ids for alias resources, may not necessarily exist in the
+                 * texture image pool
                 */
-                const uint32_t numColumns = 4;
-                uint32_t rowIdx           = oldTexId / numColumns;
-                uint32_t colIdx           = oldTexId % numColumns;
-                modelInfo->meta.instances[modelInstanceId].texIdLUT[rowIdx][colIdx] = newTexId;
+                if (oldTexId > UINT8_MAX || newTexId > UINT8_MAX) {
+                    LOG_ERROR (m_VKInstanceDataLog) << "Failed to encode packet "
+                                                    << "[" << oldTexId << "]"
+                                                    << " "
+                                                    << "[" << newTexId << "]"
+                                                    << std::endl;
+                    throw std::runtime_error ("Failed to encode packet");
+                }
+                uint32_t writeIdx  = oldTexId / 4;
+                uint32_t offsetIdx = oldTexId % 4;
+                uint32_t mask      = UINT8_MAX << offsetIdx * 8;
+                uint32_t packet    = modelInfo->meta.instances[modelInstanceId].texIdLUT[writeIdx];
+
+                packet             = packet & ~mask;
+                packet             = packet | (newTexId << offsetIdx * 8);
+
+                modelInfo->meta.instances[modelInstanceId].texIdLUT[writeIdx] = packet;
             }
 
             uint32_t importInstanceData (uint32_t modelInfoId, const char* instanceDataPath) {
