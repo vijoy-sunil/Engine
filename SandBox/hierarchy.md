@@ -3,13 +3,15 @@
 
 ## Extension/
 <pre>
-    |<----------------------|{VKModelMgr}
+    |<----------------------|{VKInstanceData}
     |
     |<----------------------|{VKTextureImage}
     |
     |<----------------------|{VKVertexBuffer}
     |
     |<----------------------|{VKIndexBuffer}
+    |
+    |<----------------------|VKUniformBuffer
     |
     |<----------------------|{VKVertexInput}
     |

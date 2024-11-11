@@ -38,6 +38,7 @@ namespace Gui {
             std::unordered_map <uint32_t, UIImageInfo> m_uiImageInfoPool;
 
             std::vector <uint32_t>    m_rootNodeInfoIds;
+            std::vector <uint32_t>    m_lockedNodeInfoIds;
             std::vector <std::string> m_cameraTypeLabels;
             std::vector <std::string> m_diffuseTextureImageInfoIdLabels;
 
@@ -48,10 +49,15 @@ namespace Gui {
             const uint32_t m_instanceId = g_collectionSettings.instanceId++;
 
             bool isCameraPropertyWritable (void) {
+                auto nodeInfo   = getNodeInfo (m_selectedNodeInfoId);
                 auto cameraType = getCameraType();
-                /* Allow data write to camera properties when camera type is set to either drone lock or drone follow
+
+                /* Prevent data write to camera properties when
+                 * (1) Node is in 'locked' state, or
+                 * (2) Camera type is not set to either drone lock or drone follow
                 */
-                if (cameraType != SandBox::DRONE_LOCK  && cameraType != SandBox::DRONE_FOLLOW)
+                if (nodeInfo->state.locked ||
+                   (cameraType != SandBox::DRONE_LOCK  && cameraType != SandBox::DRONE_FOLLOW))
                     return false;
                 else
                     return true;
@@ -60,8 +66,10 @@ namespace Gui {
         public:
             UIWindow (void) {
 #if ENABLE_SAMPLE_MODELS_IMPORT
+                m_lockedNodeInfoIds        = g_defaultStateSettings.treeNode.lockedNodesSample;
                 m_selectedNodeInfoId       = g_defaultStateSettings.treeNode.worldCollectionSample;
 #else
+                m_lockedNodeInfoIds        = g_defaultStateSettings.treeNode.lockedNodes;
                 m_selectedNodeInfoId       = g_defaultStateSettings.treeNode.worldCollection;
 #endif  // ENABLE_SAMPLE_MODELS_IMPORT
                 m_selectedPropertyLabelIdx = g_defaultStateSettings.button.propertyEditor;
@@ -249,6 +257,14 @@ namespace Gui {
                 auto nodeInfo = getNodeInfo (m_selectedNodeInfoId);
                 if (nodeInfo->meta.parentInfoId != UINT32_MAX)
                     openRootToNode (nodeInfo->meta.parentInfoId);
+                /* |------------------------------------------------------------------------------------------------|
+                 * | READY LOCKED NODES                                                                             |
+                 * |------------------------------------------------------------------------------------------------|
+                */
+                for (auto const& infoId: m_lockedNodeInfoIds) {
+                    auto nodeInfo          = getNodeInfo (infoId);
+                    nodeInfo->state.locked = true;
+                }
                 /* |------------------------------------------------------------------------------------------------|
                  * | READY CAMERA TYPE LABELS                                                                       |
                  * |------------------------------------------------------------------------------------------------|
@@ -439,6 +455,9 @@ namespace Gui {
                                 rotateAxis               = modelInfo->meta.instanceDatas[modelInstanceId].rotateAxis;
                                 scale                    = modelInfo->meta.instanceDatas[modelInstanceId].scale;
                                 rotateAngleDeg           = modelInfo->meta.instanceDatas[modelInstanceId].rotateAngleDeg;
+
+                                if (nodeInfo->state.locked)
+                                    fieldDisable = true;
                             }
 
                             ImGui::Text              ("%s",            "Position");

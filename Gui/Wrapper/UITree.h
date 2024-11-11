@@ -24,9 +24,10 @@ namespace Gui {
                 } meta;
 
                 struct State {
-                    bool open;
+                    bool opened;
                     bool selected;
                     bool leaf;
+                    bool locked;
                 } state;
 
                 struct Parameters {
@@ -61,10 +62,10 @@ namespace Gui {
                 if (nodeInfo->state.selected)
                     ImGui::PushStyleColor (ImGuiCol_Text, g_styleSettings.color.textActive);
 
-                nodeInfo->state.open = ImGui::TreeNodeEx ((void*)(intptr_t) nodeInfoId,
-                                                          nodeInfo->params.treeNodeFlags,
-                                                          nodeInfo->meta.label.c_str(),
-                                                          nodeInfoId);
+                nodeInfo->state.opened = ImGui::TreeNodeEx ((void*)(intptr_t) nodeInfoId,
+                                                            nodeInfo->params.treeNodeFlags,
+                                                            nodeInfo->meta.label.c_str(),
+                                                            nodeInfoId);
                 if (nodeInfo->state.selected)
                     ImGui::PopStyleColor();
 
@@ -121,9 +122,10 @@ namespace Gui {
                 info.meta.parentInfoId     = UINT32_MAX;
                 info.meta.coreInfoId       = coreInfoId;
 
-                info.state.open            = false;
+                info.state.opened          = false;
                 info.state.selected        = false;
                 info.state.leaf            = leaf;
+                info.state.locked          = false;
 
                 info.params.treeNodeFlags  = treeNodeFlags;
                 m_nodeInfoPool[nodeInfoId] = info;
@@ -133,7 +135,7 @@ namespace Gui {
                 auto nodeInfo = getNodeInfo (nodeInfoId);
 
                 createNode (nodeInfoId, selectedNodeInfoId);
-                if (nodeInfo->state.open && !nodeInfo->state.leaf) {
+                if (nodeInfo->state.opened && !nodeInfo->state.leaf) {
                     for (auto const& infoId: nodeInfo->meta.childInfoIds)
                         createTree (infoId, selectedNodeInfoId);
 
@@ -205,8 +207,8 @@ namespace Gui {
                                            << "[" << val.meta.coreInfoId << "]"
                                            << std::endl;
 
-                    std::string boolString = val.state.open     == true ? "TRUE": "FALSE";
-                    LOG_INFO (m_UITreeLog) << "Open state "
+                    std::string boolString = val.state.opened   == true ? "TRUE": "FALSE";
+                    LOG_INFO (m_UITreeLog) << "Opened state "
                                            << "[" << boolString << "]"
                                            << std::endl;
 
@@ -217,6 +219,11 @@ namespace Gui {
 
                     boolString             = val.state.leaf     == true ? "TRUE": "FALSE";
                     LOG_INFO (m_UITreeLog) << "Leaf state "
+                                           << "[" << boolString << "]"
+                                           << std::endl;
+
+                    boolString             = val.state.locked   == true ? "TRUE": "FALSE";
+                    LOG_INFO (m_UITreeLog) << "Locked state "
                                            << "[" << boolString << "]"
                                            << std::endl;
 

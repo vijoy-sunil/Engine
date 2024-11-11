@@ -33,10 +33,19 @@ namespace Gui {
         } button;
 
         struct TreeNode {
-            /* Note that, node info ids for specific nodes are obtained from dump file
+            /* Node info ids for specific nodes are obtained from dump file. Note that, whenever a new node is added or
+             * removed, the below node info ids need to be changed as well
             */
-            const uint32_t worldCollection                           = 114;
-            const uint32_t worldCollectionSample                     = 23;
+            const uint32_t worldCollection                           = 114;     /* Camera info id 0 node    */
+            const uint32_t worldCollectionSample                     = 27;      /* Camera info id 0 node    */
+            /* Locked nodes are nodes with their properties locked. Note that there can be more than one locked nodes
+            */
+            const std::vector <uint32_t> lockedNodes                 = {
+                                                                        111     /* Sky box instance 0 node  */
+                                                                       };
+            const std::vector <uint32_t> lockedNodesSample           = {
+                                                                        24      /* Sky box instance 0 node  */
+                                                                       };
         } treeNode;
 
         struct OverlayLocation {

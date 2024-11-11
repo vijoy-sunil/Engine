@@ -7,7 +7,6 @@
 
 namespace SandBox {
     #define ENABLE_SAMPLE_MODELS_IMPORT                              (false)
-    #define ENABLE_MOTION_UPDATE_TEST                                (true)
 
     struct CollectionSettings {
         /* Collection instance id range assignments

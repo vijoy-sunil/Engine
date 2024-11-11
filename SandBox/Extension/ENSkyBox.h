@@ -5,6 +5,7 @@
 #include "../../Core/Image/VKTextureImage.h"
 #include "../../Core/Buffer/VKVertexBuffer.h"
 #include "../../Core/Buffer/VKIndexBuffer.h"
+#include "../../Core/Buffer/VKUniformBuffer.h"
 #include "../../Core/Pipeline/VKVertexInput.h"
 #include "../../Core/Pipeline/VKShaderStage.h"
 #include "../../Core/Pipeline/VKRasterization.h"
@@ -25,6 +26,7 @@ namespace SandBox {
                     protected virtual Core::VKTextureImage,
                     protected virtual Core::VKVertexBuffer,
                     protected virtual Core::VKIndexBuffer,
+                    protected Core::VKUniformBuffer,
                     protected virtual Core::VKVertexInput,
                     protected virtual Core::VKShaderStage,
                     protected virtual Core::VKRasterization,
@@ -121,8 +123,6 @@ namespace SandBox {
                 /* Next, we will create separate texture resource for each image layer. Note that, these will also
                  * reside in same image info id as the sky box image info id as aliases
                 */
-                auto skyBoxImageInfo  = getImageInfo (m_skyBoxImageInfoId, Core::TEXTURE_IMAGE);
-
                 for (auto const& [target, path]: g_skyBoxTextureImagePool) {
                     auto texturePaths = std::vector <const char*> {
                         path
@@ -140,6 +140,12 @@ namespace SandBox {
                                              << std::endl;
 
                     m_textureImagePool[path] = infoId;
+                    /* Note that, it is important to reacquire the pointer to sky box image info every loop, since
+                     * the pointer may become invalid after the image info vector grows in the image mgr. (The rate at
+                     * which the capacity of a vector grows is required by the standard to be exponential 1, 2, 4, 8 etc.
+                     * and every time a vector's capacity is grown the elements need to be copied)
+                    */
+                    auto skyBoxImageInfo     = getImageInfo (m_skyBoxImageInfoId, Core::TEXTURE_IMAGE);
                     auto imageInfo           = getImageInfo (infoId, Core::TEXTURE_IMAGE);
                     skyBoxImageInfo->resource.aliasImageViews.push_back (imageInfo->resource.imageView);
                 }
@@ -180,6 +186,20 @@ namespace SandBox {
                 LOG_INFO (m_ENSkyBoxLog) << "[OK] Index buffer "
                                          << "[" << indexBufferInfoId << "]"
                                          << std::endl;
+                /* |------------------------------------------------------------------------------------------------|
+                 * | CONFIG UNIFORM BUFFERS                                                                         |
+                 * |------------------------------------------------------------------------------------------------|
+                */
+                for (uint32_t i = 0; i < Core::g_coreSettings.maxFramesInFlight; i++) {
+                    uint32_t uniformBufferInfoId = skyBoxSceneInfo->id.uniformBufferInfoBase + i;
+                    createUniformBuffer (deviceInfoId,
+                                         uniformBufferInfoId,
+                                         skyBoxSceneInfo->meta.totalInstancesCount * sizeof (glm::mat4));
+
+                    LOG_INFO (m_ENSkyBoxLog) << "[OK] Uniform buffer "
+                                             << "[" << uniformBufferInfoId << "]"
+                                             << std::endl;
+                }
                 /* |------------------------------------------------------------------------------------------------|
                  * | READY PIPELINE INFO                                                                            |
                  * |------------------------------------------------------------------------------------------------|
@@ -267,6 +287,25 @@ namespace SandBox {
                                          VK_FALSE,
                                          VK_NULL_HANDLE, VK_NULL_HANDLE);
                 /* |------------------------------------------------------------------------------------------------|
+                 * | CONFIG DESCRIPTOR SET LAYOUT - PER FRAME                                                       |
+                 * |------------------------------------------------------------------------------------------------|
+                */
+                auto perFrameLayoutBindings = std::vector {
+                    getLayoutBinding (0,
+                                      1,
+                                      VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+                                      VK_SHADER_STAGE_VERTEX_BIT,
+                                      VK_NULL_HANDLE)
+                };
+                auto perFrameBindingFlags   = std::vector <VkDescriptorBindingFlags> {
+                   0
+                };
+                createDescriptorSetLayout (deviceInfoId,
+                                           skyBoxPipelineInfoId,
+                                           perFrameLayoutBindings,
+                                           perFrameBindingFlags,
+                                           0);
+                /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG DESCRIPTOR SET LAYOUT - COMMON                                                          |
                  * |------------------------------------------------------------------------------------------------|
                 */
@@ -348,27 +387,71 @@ namespace SandBox {
                  * |------------------------------------------------------------------------------------------------|
                 */
                 auto poolSizes = std::vector {
-                    getPoolSize (VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1)
+                    getPoolSize (VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+                                 Core::g_coreSettings.maxFramesInFlight),
+
+                    getPoolSize (VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+                                 1)
                 };
                 createDescriptorPool (deviceInfoId,
                                       skyBoxSceneInfoId,
                                       poolSizes,
-                                      1,
+                                      Core::g_coreSettings.maxFramesInFlight + 1,
                                       0);
                 LOG_INFO (m_ENSkyBoxLog) << "[OK] Descriptor pool "
                                          << "[" << skyBoxSceneInfoId << "]"
                                          << std::endl;
                 /* |------------------------------------------------------------------------------------------------|
+                 * | CONFIG DESCRIPTOR SETS - PER FRAME                                                             |
+                 * |------------------------------------------------------------------------------------------------|
+                */
+                uint32_t perFrameDescriptorSetLayoutIdx = 0;
+                createDescriptorSets (deviceInfoId,
+                                      skyBoxPipelineInfoId,
+                                      skyBoxSceneInfoId,
+                                      perFrameDescriptorSetLayoutIdx,
+                                      Core::g_coreSettings.maxFramesInFlight,
+                                      Core::PER_FRAME_SET);
+                /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG DESCRIPTOR SETS - COMMON                                                                |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                uint32_t commonDescriptorSetLayoutIdx = 0;
+                uint32_t commonDescriptorSetLayoutIdx = 1;
                 createDescriptorSets (deviceInfoId,
                                       skyBoxPipelineInfoId,
                                       skyBoxSceneInfoId,
                                       commonDescriptorSetLayoutIdx,
                                       1,
                                       Core::COMMON_SET);
+                /* |------------------------------------------------------------------------------------------------|
+                 * | CONFIG DESCRIPTOR SETS UPDATE - PER FRAME                                                      |
+                 * |------------------------------------------------------------------------------------------------|
+                */
+                for (uint32_t i = 0; i < Core::g_coreSettings.maxFramesInFlight; i++) {
+                    uint32_t uniformBufferInfoId = skyBoxSceneInfo->id.uniformBufferInfoBase + i;
+                    auto bufferInfo              = getBufferInfo (uniformBufferInfoId, Core::UNIFORM_BUFFER);
+                    auto descriptorBufferInfos   = std::vector {
+                        getDescriptorBufferInfo (bufferInfo->resource.buffer,
+                                                 0,
+                                                 skyBoxSceneInfo->meta.totalInstancesCount * sizeof (glm::mat4))
+                    };
+
+                    auto writeDescriptorSets = std::vector {
+                        getWriteBufferDescriptorSetInfo (VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+                                                         skyBoxSceneInfo->resource.perFrameDescriptorSets[i],
+                                                         descriptorBufferInfos,
+                                                         0, 0, 1)
+                    };
+
+                    updateDescriptorSets (deviceInfoId, writeDescriptorSets);
+                }
+                LOG_INFO (m_ENSkyBoxLog) << "[OK] Descriptor sets "
+                                         << "[" << skyBoxSceneInfoId << "]"
+                                         << " "
+                                         << "[" << skyBoxPipelineInfoId << "]"
+                                         << " "
+                                         << "[" << perFrameDescriptorSetLayoutIdx << "]"
+                                         << std::endl;
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG DESCRIPTOR SETS UPDATE - COMMON                                                         |
                  * |------------------------------------------------------------------------------------------------|
@@ -575,6 +658,10 @@ namespace SandBox {
                 auto skyBoxSceneInfo = getSceneInfo  (skyBoxSceneInfoId);
                 auto sceneInfo       = getSceneInfo  (sceneInfoId);
 
+                updateUniformBuffer (skyBoxSceneInfo->id.uniformBufferInfoBase + currentFrameInFlight,
+                                     skyBoxSceneInfo->meta.totalInstancesCount * sizeof (glm::mat4),
+                                     &skyBoxModelInfo->meta.instances[0].modelMatrix);
+
                 Core::SceneDataVertPC sceneDataVert;
                 sceneDataVert.viewMatrix       = cameraInfo->transform.viewMatrix;
                 sceneDataVert.projectionMatrix = cameraInfo->transform.projectionMatrix;
@@ -603,6 +690,7 @@ namespace SandBox {
                                      sceneInfo->resource.commandBuffers[currentFrameInFlight]);
 
                 auto descriptorSetsToBind = std::vector {
+                    skyBoxSceneInfo->resource.perFrameDescriptorSets[currentFrameInFlight],
                     skyBoxSceneInfo->resource.commonDescriptorSet
                 };
                 auto dynamicOffsets       = std::vector <uint32_t> {
@@ -622,7 +710,7 @@ namespace SandBox {
 
             void deleteExtension (uint32_t deviceInfoId) {
                 /* |------------------------------------------------------------------------------------------------|
-                 * | DESTROY TEXTURE RESOURCES - DIFFUSE TEXTURE                                                    |
+                 * | DESTROY TEXTURE RESOURCES - ALIAS                                                              |
                  * |------------------------------------------------------------------------------------------------|
                 */
                 for (auto const& [path, infoId]: m_textureImagePool) {
@@ -631,7 +719,10 @@ namespace SandBox {
                                              << "[" << infoId << "]"
                                              << std::endl;
                 }
-
+                /* |------------------------------------------------------------------------------------------------|
+                 * | DESTROY TEXTURE RESOURCES - DIFFUSE TEXTURE                                                    |
+                 * |------------------------------------------------------------------------------------------------|
+                */
                 VKImageMgr::cleanUp (deviceInfoId, m_skyBoxImageInfoId, Core::TEXTURE_IMAGE);
                 LOG_INFO (m_ENSkyBoxLog) << "[DELETE] Texture resources "
                                          << "[" << m_skyBoxImageInfoId << "]"

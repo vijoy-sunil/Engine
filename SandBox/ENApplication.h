@@ -124,7 +124,15 @@ namespace SandBox {
                                 0,                   /* In flight fence info id base           */
                                 0,                   /* Image available semaphore info id base */
                                 0);                  /* Render done semaphore info id base     */
-                readySceneInfo (m_skyBoxSceneInfoId, 1);
+                readySceneInfo (m_skyBoxSceneInfoId, 1,
+                                UINT32_MAX,
+                                UINT32_MAX,
+                                UINT32_MAX,
+                                0,
+                                UINT32_MAX,
+                                UINT32_MAX,
+                                UINT32_MAX,
+                                UINT32_MAX);
                 readySceneInfo (m_uiSceneInfoId,     0);
                 /* |------------------------------------------------------------------------------------------------|
                  * | RUN SEQUENCE - INIT                                                                            |
@@ -221,8 +229,9 @@ namespace SandBox {
             }
 
             void runScene (void) {
-                auto deviceInfo  = getDeviceInfo (m_deviceInfoId);
-                float frameDelta = 0.0f;
+                auto deviceInfo   = getDeviceInfo (m_deviceInfoId);
+                float elapsedTime = 0.0f;
+                float frameDelta  = 0.0f;
                 /* |------------------------------------------------------------------------------------------------|
                  * | EVENT LOOP                                                                                     |
                  * |------------------------------------------------------------------------------------------------|
@@ -243,22 +252,37 @@ namespace SandBox {
                  * | MOTION UPDATE                                                                                  |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                    auto startOfFrameTime = std::chrono::high_resolution_clock::now();
-                    handleKeyEvents   (startOfFrameTime);
+                    static auto startOfRenderTime = std::chrono::high_resolution_clock::now();
+                    auto startOfFrameTime         = std::chrono::high_resolution_clock::now();
+                    elapsedTime                   = std::chrono::duration <float, std::chrono::seconds::period>
+                                                    (startOfFrameTime - startOfRenderTime).count();
+
+                    handleKeyEvents (startOfFrameTime);
+
                     /* Update vehicle state before camera state so that the model matrix is ready to be used by camera
                      * vectors in the same frame
                     */
-#if ENABLE_MOTION_UPDATE_TEST
+                    {   /* [ X ] Vehicle base translation test */
 #if ENABLE_SAMPLE_MODELS_IMPORT
-                    auto modelInfo = getModelInfo (SAMPLE_1);
-                    modelInfo->meta.instanceDatas[0].position += glm::vec3 (0.0f, 0.0f, 0.01f);
-                    createModelMatrix (SAMPLE_1, 0);
+                        auto modelInfoId         = SAMPLE_1;
 #else
-                    auto modelInfo = getModelInfo (VEHICLE_BASE);
-                    modelInfo->meta.instanceDatas[0].position += glm::vec3 (0.0f, 0.0f, 0.01f);
-                    createModelMatrix (VEHICLE_BASE, 0);
+                        auto modelInfoId         = VEHICLE_BASE;
 #endif  // ENABLE_SAMPLE_MODELS_IMPORT
-#endif  // ENABLE_MOTION_UPDATE_TEST
+                        auto modelInfo           = getModelInfo (modelInfoId);
+                        uint32_t modelInstanceId = 0;
+                        auto& position           = modelInfo->meta.instanceDatas[modelInstanceId].position;
+
+                        position                += glm::vec3 (0.0f, 0.0f, 0.01f);
+                        createModelMatrix (modelInfoId, modelInstanceId);
+                    }
+                    {   /* Sky box rotation */
+                        auto modelInfo           = getModelInfo (SKY_BOX);
+                        uint32_t modelInstanceId = 0;
+                        auto& rotateAngleDeg     = modelInfo->meta.instanceDatas[modelInstanceId].rotateAngleDeg;
+
+                        rotateAngleDeg           = elapsedTime * 1.0f;
+                        createModelMatrix (SKY_BOX, modelInstanceId);
+                    }
 
 #if ENABLE_SAMPLE_MODELS_IMPORT
                     setCameraState (SAMPLE_1, 0);
