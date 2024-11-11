@@ -418,6 +418,10 @@ namespace Core {
                                                    << "[" << info.meta.layerCount << "]"
                                                    << std::endl;
 
+                        LOG_INFO (m_VKImageMgrLog) << "Alias image views count "
+                                                   << "[" << info.resource.aliasImageViews.size() << "]"
+                                                   << std::endl;
+
                         LOG_INFO (m_VKImageMgrLog) << "Initial layout "
                                                    << "[" << string_VkImageLayout (info.params.initialLayout) << "]"
                                                    << std::endl;
