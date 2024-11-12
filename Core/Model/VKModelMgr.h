@@ -362,10 +362,10 @@ namespace Core {
                                             attrib.normals[3 * index.normal_index + 2]
                                           };
                         /* We will handle missing texture faces (material_ids = -1) by adding +1 to all material_ids, this
-                         * will allow us to use the default texture whose image info id is 0. Note that, this local image
-                         * info id is an index into the current model's texture array embedded with in the model file.
-                         * What we need is a image info id that can be used to index into the global texture pool, so that
-                         * the shader can sample from the correct texture from the global pool of textures
+                         * will allow us to use the default texture whose image info id is 0. Note that, the local texture
+                         * id is an index into the current model's texture array embedded with in the model file. What we
+                         * need is a image info id that can be used to index into the global texture pool, so that the
+                         * shader can sample from the correct texture from the global pool of textures
                         */
                         uint32_t localTexId     = shape.mesh.material_ids[faceIndex] + 1;
                         std::string texturePath = modelInfo->path.diffuseTextureImages[localTexId];
