@@ -364,7 +364,7 @@ namespace Core {
                         /* We will handle missing texture faces (material_ids = -1) by adding +1 to all material_ids, this
                          * will allow us to use the default texture whose image info id is 0. Note that, the local texture
                          * id is an index into the current model's texture array embedded with in the model file. What we
-                         * need is a image info id that can be used to index into the global texture pool, so that the
+                         * need is an image info id that can be used to index into the global texture pool, so that the
                          * shader can sample from the correct texture from the global pool of textures
                         */
                         uint32_t localTexId     = shape.mesh.material_ids[faceIndex] + 1;
