@@ -65,7 +65,7 @@ namespace Core {
 
         protected:
             void readySceneInfo (uint32_t sceneInfoId,
-                                 uint32_t totatInstancesCount,
+                                 uint32_t totalInstancesCount,
                                  uint32_t swapChainImageInfoBase          = UINT32_MAX,
                                  uint32_t depthImageInfo                  = UINT32_MAX,
                                  uint32_t multiSampleImageInfo            = UINT32_MAX,
@@ -83,7 +83,7 @@ namespace Core {
                 }
 
                 SceneInfo info{};
-                info.meta.totalInstancesCount           = totatInstancesCount;
+                info.meta.totalInstancesCount           = totalInstancesCount;
                 info.id.swapChainImageInfoBase          = swapChainImageInfoBase;
                 info.id.depthImageInfo                  = depthImageInfo;
                 info.id.multiSampleImageInfo            = multiSampleImageInfo;
