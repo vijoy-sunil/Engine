@@ -100,7 +100,7 @@ namespace Core {
                     }
                 }
                 /* |------------------------------------------------------------------------------------------------|
-                 * | DESTROY DRAW OPS - COMMAND POOL                                                                |
+                 * | DESTROY COMMAND POOL                                                                           |
                  * |------------------------------------------------------------------------------------------------|
                 */
                 for (auto const& infoId: sceneInfoIds) {
@@ -108,7 +108,7 @@ namespace Core {
 
                     if (sceneInfo->resource.commandPool != VK_NULL_HANDLE) {
                         VKCmdBuffer::cleanUp (deviceInfoId, sceneInfo->resource.commandPool);
-                        LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Draw ops command pool "
+                        LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Command pool "
                                                          << "[" << infoId << "]"
                                                          << std::endl;
                     }
