@@ -8,7 +8,6 @@
 #include "../Core/Scene/VKSceneMgr.h"
 #include "Wrapper/UIPrimitive.h"
 #include "Wrapper/UITree.h"
-#include "Wrapper/UIOverlay.h"
 #include "Wrapper/UIPlot.h"
 #include "../SandBox/Controller/ENCamera.h"
 #include "../SandBox/ENLogHelper.h"
@@ -19,7 +18,6 @@ namespace Gui {
                     protected virtual Core::VKSceneMgr,
                     protected UIPrimitive,
                     protected UITree,
-                    protected UIOverlay,
                     protected UIPlot,
                     protected SandBox::ENCamera {
         private:
@@ -75,7 +73,6 @@ namespace Gui {
                 m_selectedPropertyLabelIdx = g_defaultStateSettings.button.propertyEditor;
 
                 m_UIWindowLog = LOG_INIT (m_instanceId, g_collectionSettings.logSaveDirPath);
-                LOG_ADD_CONFIG (m_instanceId, Log::ERROR, Log::TO_FILE_IMMEDIATE | Log::TO_CONSOLE);
             }
 
             ~UIWindow (void) {

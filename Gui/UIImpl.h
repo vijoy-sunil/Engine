@@ -7,10 +7,12 @@
 */
 #include <imgui_impl_glfw.h>
 #include "../Core/RenderPass/VKRenderPassMgr.h"
+#include "Wrapper/UIOverlay.h"
 #include "UIWindow.h"
 
 namespace Gui {
     class UIImpl: protected virtual Core::VKRenderPassMgr,
+                  protected UIOverlay,
                   protected UIWindow {
         private:
             bool m_showWorldCollectionWindow;
