@@ -193,7 +193,7 @@ namespace SandBox {
                     */
                     uint32_t uiTextureCount = 0;
                     for (auto const& [infoId, paths]: uiTextureImagePool)
-                            uiTextureCount += static_cast <uint32_t> (paths.size());
+                        uiTextureCount += static_cast <uint32_t> (paths.size());
 
                     ENUI::initExtension     (m_deviceInfoId,
                                              m_uiRenderPassInfoId,
