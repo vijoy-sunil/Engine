@@ -39,8 +39,8 @@ namespace SandBox {
                                 uint32_t sceneInfoId,
                                 uint32_t textureCount) {
 
-                auto deviceInfo  = getDeviceInfo (deviceInfoId);
-                auto sceneInfo   = getSceneInfo  (sceneInfoId);
+                auto deviceInfo = getDeviceInfo (deviceInfoId);
+                auto sceneInfo  = getSceneInfo  (sceneInfoId);
                 /* |------------------------------------------------------------------------------------------------|
                  * | READY RENDER PASS INFO                                                                         |
                  * |------------------------------------------------------------------------------------------------|
