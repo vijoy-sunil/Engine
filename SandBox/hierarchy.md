@@ -53,8 +53,6 @@
     |
     |<----------------------|{VKShaderStage}
     |
-    |<----------------------|{VKDescriptorSetLayout}
-    |
     |<----------------------|{VKPushConstantRange}
     |
     |<----------------------|{VKPipelineLayout}

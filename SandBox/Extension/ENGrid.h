@@ -3,7 +3,6 @@
 
 #include "../../Core/Pipeline/VKVertexInput.h"
 #include "../../Core/Pipeline/VKShaderStage.h"
-#include "../../Core/Pipeline/VKDescriptorSetLayout.h"
 #include "../../Core/Pipeline/VKPushConstantRange.h"
 #include "../../Core/Pipeline/VKPipelineLayout.h"
 #include "../../Core/Cmd/VKCmd.h"
@@ -15,7 +14,6 @@
 namespace SandBox {
     class ENGrid: protected virtual Core::VKVertexInput,
                   protected virtual Core::VKShaderStage,
-                  protected virtual Core::VKDescriptorSetLayout,
                   protected virtual Core::VKPushConstantRange,
                   protected virtual Core::VKPipelineLayout,
                   protected virtual Core::VKCmd,
@@ -74,17 +72,6 @@ namespace SandBox {
                                                                g_pipelineSettings.gridShaderStage.
                                                                fragmentShaderBinaryPath,
                                                                "main");
-                /* |------------------------------------------------------------------------------------------------|
-                 * | CONFIG DESCRIPTOR SET LAYOUT - COMMON                                                          |
-                 * |------------------------------------------------------------------------------------------------|
-                */
-                auto commonLayoutBindings = std::vector <VkDescriptorSetLayoutBinding> {};
-                auto commonBindingFlags   = std::vector <VkDescriptorBindingFlags>     {};
-                createDescriptorSetLayout (deviceInfoId,
-                                           gridPipelineInfoId,
-                                           commonLayoutBindings,
-                                           commonBindingFlags,
-                                           0);
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG PUSH CONSTANT RANGES                                                                    |
                  * |------------------------------------------------------------------------------------------------|
