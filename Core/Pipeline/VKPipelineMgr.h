@@ -117,6 +117,13 @@ namespace Core {
             }
 
             void derivePipelineInfo (uint32_t childPipelineInfoId, uint32_t pipelineInfoId) {
+                if (m_pipelineInfoPool.find (childPipelineInfoId) != m_pipelineInfoPool.end()) {
+                    LOG_ERROR (m_VKPipelineMgrLog) << "Pipeline info id already exists "
+                                                   << "[" << childPipelineInfoId << "]"
+                                                   << std::endl;
+                    throw std::runtime_error ("Pipeline info id already exists");
+                }
+
                 auto pipelineInfo = getPipelineInfo (pipelineInfoId);
                 PipelineInfo info{};
                 /* Note that, we wan't to be careful when shallow copying the struct members. Hence, why we are not
