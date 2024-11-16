@@ -63,7 +63,7 @@ VARIABLES
 -------------------------------------------------------------------------------------------------------------------------
 METHODS
 -------------------------------------------------------------------------------------------------------------------------
-[ - ] Common methods - create, get, is, ready, delete, dump, cleanUp, pick, update, import
+[ - ] Common methods - create, get, set, is, ready, delete, dump, cleanUp, pick, update, import, init, draw, delete
 [ - ] Return objects/literals methods start with get
 [ - ] Return boolean methods start with is
 [ - ] Return via parameter only if returning multiple variables
@@ -89,6 +89,15 @@ LOG
 [ - ] Dump ordering must match relative member orders
 [ - ] Turn off delete empty and go through all log outputs when you run
 -------------------------------------------------------------------------------------------------------------------------
+TEST
+-------------------------------------------------------------------------------------------------------------------------
+[ - ] Run with sample models
+[ - ] Resize primary window
+[ - ] Resize/close UI windows
+[ - ] Verify UI sync between collection and property editor {transform,
+                                                             camera type,
+                                                             texture}
+-------------------------------------------------------------------------------------------------------------------------
 MISC
 -------------------------------------------------------------------------------------------------------------------------
 [ - ] [a-z]<                                    search all “no space before <”
@@ -100,9 +109,10 @@ MISC
 [ - ] [a-z]\*                                   use of pointers
 [ - ] \) [a-z]                                  no use of C-style casting
 [ - ] \) &                                      no use of C-style casting
-[ - ] [0-9]\.[0-9]                              float values end with f
+[ - ] [0-9]\.[0-9], [0-9]\.[0-9][0-9]           float values end with f -- search + [space, comma, ], ), ;]
 [ - ] () {                                      void parameter
 [ - ] auto                                      use of auto for vectors, structs etc.
+[ - ] auto&                                     use of auto&
 [ - ] static                                    is it necessary?
 [ - ] const                                     is it necessary?
 [ - ] = get                                     use of auto
@@ -112,9 +122,10 @@ MISC
 [ - ] .size()                                   make sure it is casted from size_t to required types
 [ - ] c_str()                                   when passing it to const char* parameter
 [ - ] size_t                                    only used for size of an object and in fns that accept size_t
-[ - ] std::endl;                                in new line
+[ - ] std::endl                                 in new line
 [ - ] #endif  //                                all endifs should have comment
 [ - ] " [", "[ ", " [ ", " ]", "] ", " ] "      spacing around log brackets
 [ - ] }   // namespace <name>                   every file has to have one
 [ - ] [ X ]                                     to do list
+[ - ] bool is, bool m_is, bool& is, bool& m_is  bool variable naming check
 -------------------------------------------------------------------------------------------------------------------------
