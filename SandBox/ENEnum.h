@@ -3,20 +3,22 @@
 
 namespace SandBox {
     typedef enum {
-        SAMPLE_1                    = 0,
-        SAMPLE_2                    = 1,
-        SAMPLE_3                    = 2,
-        SAMPLE_4                    = 3,
-        T0_GENERIC_NOCAP            = 4,
-        T0_CURVE_R6_D90             = 5,
-        T0_CURVE_R6_D90_CAP         = 6,
-        T0_CURVE_R10_D45_Z          = 7,
-        T0_CURVE_R10_D45_Z_CAP      = 8,
-        T0_CURVE_R10_D45_Z_SMT      = 9,
-        T0_CURVE_R10_D90            = 10,
-        VEHICLE_BASE                = 11,
-        TYRE                        = 12,
-        SKY_BOX                     = 13
+        SAMPLE_CUBE                 = 0,
+        SAMPLE_CYLINDER             = 1,
+        SAMPLE_T_BEAM               = 2,
+        SAMPLE_SLOPE                = 3,
+        SAMPLE_BRIDGE               = 4,
+        SAMPLE_PLATFORM             = 5,
+        T0_GENERIC_NOCAP            = 6,
+        T0_CURVE_R6_D90             = 7,
+        T0_CURVE_R6_D90_CAP         = 8,
+        T0_CURVE_R10_D45_Z          = 9,
+        T0_CURVE_R10_D45_Z_CAP      = 10,
+        T0_CURVE_R10_D45_Z_SMT      = 11,
+        T0_CURVE_R10_D90            = 12,
+        VEHICLE_BASE                = 13,
+        TYRE                        = 14,
+        SKY_BOX                     = 15
     } e_modelType;
 
     typedef enum {

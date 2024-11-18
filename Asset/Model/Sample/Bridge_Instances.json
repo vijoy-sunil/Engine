@@ -1,0 +1,26 @@
+{
+    "instancesCount": 3,
+    "instances": [
+        {
+            "id":         0,
+            "position":   [13.0, -6.1, -13.0],
+            "rotateAxis": [ 1.0,  0.0,   0.0],
+            "scale":      [ 1.0,  1.0,   1.0],
+            "rotateAngleDeg": -90.0
+        },
+        {
+            "id":         1,
+            "position":   [-12.0, -0.1, 0.0],
+            "rotateAxis": [  1.0,  1.0, 0.0],
+            "scale":      [  1.0,  1.0, 1.0],
+            "rotateAngleDeg": 0.0
+        },
+        {
+            "id":         2,
+            "position":   [-12.0, -4.1, 0.0],
+            "rotateAxis": [  1.0,  1.0, 0.0],
+            "scale":      [  1.0,  1.0, 1.0],
+            "rotateAngleDeg": 0.0
+        }
+    ]
+}

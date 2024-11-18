@@ -7,10 +7,12 @@ namespace SandBox {
     const char* getModelTypeString (e_modelType type) {
         switch (type)
         {
-            case SAMPLE_1:                  return "SAMPLE_1";
-            case SAMPLE_2:                  return "SAMPLE_2";
-            case SAMPLE_3:                  return "SAMPLE_3";
-            case SAMPLE_4:                  return "SAMPLE_4";
+            case SAMPLE_CUBE:               return "SAMPLE_CUBE";
+            case SAMPLE_CYLINDER:           return "SAMPLE_CYLINDER";
+            case SAMPLE_T_BEAM:             return "SAMPLE_T_BEAM";
+            case SAMPLE_SLOPE:              return "SAMPLE_SLOPE";
+            case SAMPLE_BRIDGE:             return "SAMPLE_BRIDGE";
+            case SAMPLE_PLATFORM:           return "SAMPLE_PLATFORM";
             case T0_GENERIC_NOCAP:          return "T0_GENERIC_NOCAP";
             case T0_CURVE_R6_D90:           return "T0_CURVE_R6_D90";
             case T0_CURVE_R6_D90_CAP:       return "T0_CURVE_R6_D90_CAP";

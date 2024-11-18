@@ -6,7 +6,7 @@
 #include "ENEnum.h"
 
 namespace SandBox {
-    #define ENABLE_SAMPLE_MODELS_IMPORT                              (false)
+    #define ENABLE_SAMPLE_MODELS_IMPORT                              (true)
 
     struct CollectionSettings {
         /* Collection instance id range assignments
@@ -25,21 +25,29 @@ namespace SandBox {
     };
 
     std::unordered_map <e_modelType, ModelImportInfo> g_sampleModelImportInfoPool  = {
-        {SAMPLE_1,                  {"Asset/Model/Sample/Model_1.obj",
+        {SAMPLE_CUBE,               {"Asset/Model/Sample/Cube.obj",
                                      "Asset/Model/Sample/",
-                                     "Asset/Model/Sample/Model_1_Instances.json"}},
+                                     "Asset/Model/Sample/Cube_Instances.json"}},
 
-        {SAMPLE_2,                  {"Asset/Model/Sample/Model_2.obj",
+        {SAMPLE_CYLINDER,           {"Asset/Model/Sample/Cylinder.obj",
                                      "Asset/Model/Sample/",
-                                     "Asset/Model/Sample/Model_2_Instances.json"}},
+                                     "Asset/Model/Sample/Cylinder_Instances.json"}},
 
-        {SAMPLE_3,                  {"Asset/Model/Sample/Model_3.obj",
+        {SAMPLE_T_BEAM,             {"Asset/Model/Sample/T_Beam.obj",
                                      "Asset/Model/Sample/",
-                                     "Asset/Model/Sample/Model_3_Instances.json"}},
+                                     "Asset/Model/Sample/T_Beam_Instances.json"}},
 
-        {SAMPLE_4,                  {"Asset/Model/Sample/Model_4.obj",
+        {SAMPLE_SLOPE,              {"Asset/Model/Sample/Slope.obj",
                                      "Asset/Model/Sample/",
-                                     "Asset/Model/Sample/Model_4_Instances.json"}}
+                                     "Asset/Model/Sample/Slope_Instances.json"}},
+
+        {SAMPLE_BRIDGE,             {"Asset/Model/Sample/Bridge.obj",
+                                     "Asset/Model/Sample/",
+                                     "Asset/Model/Sample/Bridge_Instances.json"}},
+
+        {SAMPLE_PLATFORM,           {"Asset/Model/Sample/Platform.obj",
+                                     "Asset/Model/Sample/",
+                                     "Asset/Model/Sample/Platform_Instances.json"}}
     };
 
     std::unordered_map <e_modelType, ModelImportInfo> g_staticModelImportInfoPool  = {

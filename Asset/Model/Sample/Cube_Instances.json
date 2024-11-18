@@ -1,0 +1,61 @@
+{
+    "instancesCount": 8,
+    "instances": [
+        {
+            "id":         0,
+            "position":   [14.2, -0.1, 5.2],
+            "rotateAxis": [ 0.0,  1.0, 0.0],
+            "scale":      [ 1.0,  1.0, 1.0],
+            "rotateAngleDeg": 0.0
+        },
+        {
+            "id":         1,
+            "position":   [13.0, -0.1, 5.0],
+            "rotateAxis": [ 0.0,  1.0, 0.0],
+            "scale":      [ 1.0,  1.0, 1.0],
+            "rotateAngleDeg": 0.0
+        },
+        {
+            "id":         2,
+            "position":   [13.6, -1.1, 5.0],
+            "rotateAxis": [ 0.0,  1.0, 0.0],
+            "scale":      [ 1.0,  1.0, 1.0],
+            "rotateAngleDeg": -45.0
+        },
+        {
+            "id":         3,
+            "position":   [-9.0, -8.1, -4.0],
+            "rotateAxis": [ 0.0,  1.0,  0.0],
+            "scale":      [ 1.0,  1.0,  1.0],
+            "rotateAngleDeg": -15.0
+        },
+        {
+            "id":         4,
+            "position":   [-9.0, -9.1, -4.0],
+            "rotateAxis": [ 0.0,  1.0,  0.0],
+            "scale":      [ 1.0,  1.0,  1.0],
+            "rotateAngleDeg": 0.0
+        },
+        {
+            "id":         5,
+            "position":   [-11.5, -0.1, -11.0],
+            "rotateAxis": [  0.0,  1.0,   0.0],
+            "scale":      [  1.0,  1.0,   1.0],
+            "rotateAngleDeg": 0.0
+        },
+        {
+            "id":         6,
+            "position":   [-13.0, -0.1, -11.0],
+            "rotateAxis": [  0.0,  1.0,   0.0],
+            "scale":      [  1.0,  1.0,   1.0],
+            "rotateAngleDeg": 0.0
+        },
+        {
+            "id":         7,
+            "position":   [-13.0, -1.1, -10.8],
+            "rotateAxis": [  0.0,  1.0,   0.0],
+            "scale":      [  1.0,  1.0,   1.0],
+            "rotateAngleDeg": 0.0
+        }
+    ]
+}

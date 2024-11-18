@@ -264,12 +264,12 @@ namespace SandBox {
                     */
                     {   /* [ X ] Vehicle base translation test */
 #if ENABLE_SAMPLE_MODELS_IMPORT
-                        auto modelInfoId         = SAMPLE_1;
+                        auto modelInfoId         = SAMPLE_CYLINDER;
 #else
                         auto modelInfoId         = VEHICLE_BASE;
 #endif  // ENABLE_SAMPLE_MODELS_IMPORT
                         auto modelInfo           = getModelInfo (modelInfoId);
-                        uint32_t modelInstanceId = 0;
+                        uint32_t modelInstanceId = 3;
                         auto& position           = modelInfo->meta.instanceDatas[modelInstanceId].position;
 
                         position                += glm::vec3 (0.0f, 0.0f, 0.01f);
@@ -285,7 +285,7 @@ namespace SandBox {
                     }
 
 #if ENABLE_SAMPLE_MODELS_IMPORT
-                    setCameraState (SAMPLE_1, 0);
+                    setCameraState (SAMPLE_CYLINDER, 1);
 #else
                     setCameraState (VEHICLE_BASE, 0);
 #endif  // ENABLE_SAMPLE_MODELS_IMPORT
