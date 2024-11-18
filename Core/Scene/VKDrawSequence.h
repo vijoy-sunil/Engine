@@ -46,7 +46,7 @@ namespace Core {
                               uint32_t& swapChainImageId,
                               T1 primaryExtensions,
                               T2 secondaryExtensions,
-                              T3 tertiaryExtensions) {
+                              T3 resizeExtensions) {
 
                 auto deviceInfo    = getDeviceInfo (deviceInfoId);
                 auto modelInfoBase = getModelInfo  (modelInfoIds[0]);
@@ -113,10 +113,10 @@ namespace Core {
                                            renderPassInfoId,
                                            sceneInfoId);
                 /* |------------------------------------------------------------------------------------------------|
-                 * | CONFIG TERTIARY EXTENSIONS                                                                     |
+                 * | CONFIG RESIZE EXTENSIONS                                                                       |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                    tertiaryExtensions();
+                    resizeExtensions();
                     cameraInfo->meta.updateProjectionMatrix = true;
                     return;
                 }
@@ -430,10 +430,10 @@ namespace Core {
                                            renderPassInfoId,
                                            sceneInfoId);
                 /* |------------------------------------------------------------------------------------------------|
-                 * | CONFIG TERTIARY EXTENSIONS                                                                     |
+                 * | CONFIG RESIZE EXTENSIONS                                                                       |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                    tertiaryExtensions();
+                    resizeExtensions();
                     cameraInfo->meta.updateProjectionMatrix = true;
                 }
                 else if (result != VK_SUCCESS) {
