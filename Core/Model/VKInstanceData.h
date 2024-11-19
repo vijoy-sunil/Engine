@@ -74,12 +74,12 @@ namespace Core {
                 modelInfo->meta.instances[modelInstanceId].texIdLUT[writeIdx] = packet;
             }
 
-            uint32_t importInstanceData (uint32_t modelInfoId, const char* instanceDataPath) {
+            uint32_t importTransformData (uint32_t modelInfoId, const char* transformDataPath) {
                 auto modelInfo = getModelInfo (modelInfoId);
                 uint32_t instancesCount = 0;
                 /* Read and parse json file
                 */
-                std::ifstream fJson (instanceDataPath);
+                std::ifstream fJson (transformDataPath);
                 std::stringstream stream;
 
                 stream << fJson.rdbuf();
@@ -92,51 +92,53 @@ namespace Core {
                     json = nlohmann::json::parse (stream.str());
                 }
                 catch (nlohmann::json::parse_error& exception) {
-                    LOG_WARNING (m_VKInstanceDataLog) << "Failed to import instance data "
+                    LOG_WARNING (m_VKInstanceDataLog) << "Failed to import transform data "
                                                       << "[" << modelInfoId << "]"
                                                       << " "
-                                                      << "[" << instanceDataPath << "]"
+                                                      << "[" << transformDataPath << "]"
                                                       << std::endl;
-                    /* Set default instance data
+                    /* Set default transform data
                     */
                     instancesCount = 1;
-                    modelInfo->meta.instances.resize     (instancesCount);
-                    modelInfo->meta.instanceDatas.resize (instancesCount);
-                    modelInfo->meta.instancesCount      = instancesCount;
-                    uint32_t modelInstanceId            = 0;
+                    modelInfo->meta.instances.resize      (instancesCount);
+                    modelInfo->meta.transformDatas.resize (instancesCount);
+                    modelInfo->meta.instancesCount       = instancesCount;
+                    uint32_t modelInstanceId             = 0;
 
-                    modelInfo->meta.instanceDatas[modelInstanceId].position       = {0.0f, 0.0f, 0.0f};
-                    modelInfo->meta.instanceDatas[modelInstanceId].rotateAxis     = {0.0f, 1.0f, 0.0f};
-                    modelInfo->meta.instanceDatas[modelInstanceId].scale          = {1.0f, 1.0f, 1.0f};
-                    modelInfo->meta.instanceDatas[modelInstanceId].rotateAngleDeg = 0.0f;
+                    modelInfo->meta.transformDatas[modelInstanceId].position        = {0.0f, 0.0f, 0.0f};
+                    modelInfo->meta.transformDatas[modelInstanceId].rotateAxis      = {0.0f, 1.0f, 0.0f};
+                    modelInfo->meta.transformDatas[modelInstanceId].scale           = {1.0f, 1.0f, 1.0f};
+                    modelInfo->meta.transformDatas[modelInstanceId].rotateAngleDeg  = 0.0f;
+                    modelInfo->meta.transformDatas[modelInstanceId].scaleMultiplier = 1.0f;
                     createModelMatrix (modelInfoId, modelInstanceId);
                 }
 
                 if (instancesCount == 0) {
                     instancesCount  = json["instancesCount"];
-                    modelInfo->meta.instances.resize     (instancesCount);
-                    modelInfo->meta.instanceDatas.resize (instancesCount);
-                    modelInfo->meta.instancesCount      = instancesCount;
+                    modelInfo->meta.instances.resize      (instancesCount);
+                    modelInfo->meta.transformDatas.resize (instancesCount);
+                    modelInfo->meta.instancesCount       = instancesCount;
 
                     for (auto const& instance: json["instances"]) {
                         uint32_t modelInstanceId = instance["id"];
 
-                        modelInfo->meta.instanceDatas[modelInstanceId].position       = {
+                        modelInfo->meta.transformDatas[modelInstanceId].position   = {
                             instance["position"][0],
                             instance["position"][1],
                             instance["position"][2]
                         };
-                        modelInfo->meta.instanceDatas[modelInstanceId].rotateAxis     = {
+                        modelInfo->meta.transformDatas[modelInstanceId].rotateAxis = {
                             instance["rotateAxis"][0],
                             instance["rotateAxis"][1],
                             instance["rotateAxis"][2]
                         };
-                        modelInfo->meta.instanceDatas[modelInstanceId].scale          = {
+                        modelInfo->meta.transformDatas[modelInstanceId].scale      = {
                             instance["scale"][0],
                             instance["scale"][1],
                             instance["scale"][2]
                         };
-                        modelInfo->meta.instanceDatas[modelInstanceId].rotateAngleDeg = instance["rotateAngleDeg"];
+                        modelInfo->meta.transformDatas[modelInstanceId].rotateAngleDeg  = instance["rotateAngleDeg"];
+                        modelInfo->meta.transformDatas[modelInstanceId].scaleMultiplier = 1.0f;
                         createModelMatrix (modelInfoId, modelInstanceId);
                     }
                 }

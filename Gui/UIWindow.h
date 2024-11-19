@@ -61,6 +61,19 @@ namespace Gui {
                     return true;
             }
 
+            /* Note that, member function operators cannot have more than one argument (the first argument is implicitly
+             * this ptr while the second is the one you supply), unless it is a friend function
+            */
+            friend bool operator == (const glm::vec3& vecA, const glm::vec3& vecB) {
+                /* Since vectors consist of floating point values, we want to do an epsilon comparison so they are equal
+                 * if all members are 'nearly' equal
+                */
+                const double epsilon = 0.0001;
+                return fabs (vecA.x - vecB.x) < epsilon &&
+                       fabs (vecA.y - vecB.y) < epsilon &&
+                       fabs (vecA.z - vecB.z) < epsilon;
+            }
+
         public:
             UIWindow (void) {
 #if ENABLE_SAMPLE_MODELS_IMPORT
@@ -448,10 +461,10 @@ namespace Gui {
                                 auto parentNodeInfo      = getNodeInfo  (nodeInfo->meta.parentInfoId);
                                 auto modelInfo           = getModelInfo (parentNodeInfo->meta.coreInfoId);
                                 uint32_t modelInstanceId = nodeInfo->meta.coreInfoId;
-                                position                 = modelInfo->meta.instanceDatas[modelInstanceId].position;
-                                rotateAxis               = modelInfo->meta.instanceDatas[modelInstanceId].rotateAxis;
-                                scale                    = modelInfo->meta.instanceDatas[modelInstanceId].scale;
-                                rotateAngleDeg           = modelInfo->meta.instanceDatas[modelInstanceId].rotateAngleDeg;
+                                position                 = modelInfo->meta.transformDatas[modelInstanceId].position;
+                                rotateAxis               = modelInfo->meta.transformDatas[modelInstanceId].rotateAxis;
+                                scale                    = modelInfo->meta.transformDatas[modelInstanceId].scale;
+                                rotateAngleDeg           = modelInfo->meta.transformDatas[modelInstanceId].rotateAngleDeg;
 
                                 if (nodeInfo->state.locked)
                                     fieldDisable = true;
@@ -502,10 +515,10 @@ namespace Gui {
                                     auto modelInfo           = getModelInfo (parentNodeInfo->meta.coreInfoId);
                                     uint32_t modelInstanceId = nodeInfo->meta.coreInfoId;
 
-                                    modelInfo->meta.instanceDatas[modelInstanceId].position       = position;
-                                    modelInfo->meta.instanceDatas[modelInstanceId].rotateAxis     = rotateAxis;
-                                    modelInfo->meta.instanceDatas[modelInstanceId].scale          = scale;
-                                    modelInfo->meta.instanceDatas[modelInstanceId].rotateAngleDeg = rotateAngleDeg;
+                                    modelInfo->meta.transformDatas[modelInstanceId].position       = position;
+                                    modelInfo->meta.transformDatas[modelInstanceId].rotateAxis     = rotateAxis;
+                                    modelInfo->meta.transformDatas[modelInstanceId].scale          = scale;
+                                    modelInfo->meta.transformDatas[modelInstanceId].rotateAngleDeg = rotateAngleDeg;
                                     createModelMatrix (parentNodeInfo->meta.coreInfoId, modelInstanceId);
                                 }
                             }
@@ -589,6 +602,7 @@ namespace Gui {
                         float nearPlane                     = 0.0f;
                         float farPlane                      = 0.0f;
                         uint32_t selectedCameraTypeLabelIdx = static_cast <uint32_t> (getCameraType());
+                        bool hideRender                     = false;
                         bool fieldDisable                   = false;
                         bool writePending                   = false;
 
@@ -638,7 +652,47 @@ namespace Gui {
                             }
                         }
 
-                        createCheckBoxButton ("##overlay", "Metrics", "##postLabel", false, showMetricsOverlay);
+                        /* Note that, in order to reuse the same field disable boolean for model instance node, we need
+                         * to make sure to reset it in the else block
+                        */
+                        if (nodeInfo->meta.type != MODEL_INSTANCE_NODE)
+                            fieldDisable             = true;
+                        else {
+                            auto parentNodeInfo      = getNodeInfo  (nodeInfo->meta.parentInfoId);
+                            auto modelInfo           = getModelInfo (parentNodeInfo->meta.coreInfoId);
+                            uint32_t modelInstanceId = nodeInfo->meta.coreInfoId;
+
+                            if (modelInfo->meta.transformDatas[modelInstanceId].scaleMultiplier == 0.0f)
+                                hideRender           = true;
+                            else
+                                hideRender           = false;
+                            fieldDisable             = false;
+                        }
+
+                        createCheckBoxButton ("##hideRender",
+                                              "Hide render",
+                                              "##postLabelHideRender",
+                                              fieldDisable,
+                                              hideRender);
+                        {   /* Data write */
+                            if (!fieldDisable) {
+                                auto parentNodeInfo      = getNodeInfo  (nodeInfo->meta.parentInfoId);
+                                auto modelInfo           = getModelInfo (parentNodeInfo->meta.coreInfoId);
+                                uint32_t modelInstanceId = nodeInfo->meta.coreInfoId;
+
+                                if (hideRender)
+                                    modelInfo->meta.transformDatas[modelInstanceId].scaleMultiplier = 0.0f;
+                                else
+                                    modelInfo->meta.transformDatas[modelInstanceId].scaleMultiplier = 1.0f;
+                                createModelMatrix (parentNodeInfo->meta.coreInfoId, modelInstanceId);
+                            }
+                        }
+
+                        createCheckBoxButton ("##metrics",
+                                              "Metrics",
+                                              "##postLabelMetrics",
+                                              false,
+                                              showMetricsOverlay);
                     }
                 /* |------------------------------------------------------------------------------------------------|
                  * | RIGHT PANEL - TEXTURE                                                                          |

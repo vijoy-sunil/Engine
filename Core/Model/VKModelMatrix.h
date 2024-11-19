@@ -54,14 +54,15 @@ namespace Core {
                 /* Cumulating transformations, note that we perform scaling FIRST, and THEN the rotation, and THEN the
                  * translation. This is how matrix multiplication works
                 */
-                glm::vec3 position    = modelInfo->meta.instanceDatas[modelInstanceId].position;
-                glm::vec3 rotateAxis  = modelInfo->meta.instanceDatas[modelInstanceId].rotateAxis;
-                glm::vec3 scale       = modelInfo->meta.instanceDatas[modelInstanceId].scale;
-                float rotateAngleDeg  = modelInfo->meta.instanceDatas[modelInstanceId].rotateAngleDeg;
+                glm::vec3 position    = modelInfo->meta.transformDatas[modelInstanceId].position;
+                glm::vec3 rotateAxis  = modelInfo->meta.transformDatas[modelInstanceId].rotateAxis;
+                glm::vec3 scale       = modelInfo->meta.transformDatas[modelInstanceId].scale;
+                float rotateAngleDeg  = modelInfo->meta.transformDatas[modelInstanceId].rotateAngleDeg;
+                float scaleMultiplier = modelInfo->meta.transformDatas[modelInstanceId].scaleMultiplier;
 
                 glm::mat4 modelMatrix = glm::translate (glm::mat4 (1.0f), position) *
                                         glm::rotate    (glm::mat4 (1.0f), glm::radians (rotateAngleDeg), rotateAxis) *
-                                        glm::scale     (glm::mat4 (1.0f), scale);
+                                        glm::scale     (glm::mat4 (1.0f), scale * scaleMultiplier);
 
                 modelInfo->meta.instances[modelInstanceId].modelMatrix = modelMatrix;
             }

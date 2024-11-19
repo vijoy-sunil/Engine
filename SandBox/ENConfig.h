@@ -21,7 +21,7 @@ namespace SandBox {
     struct ModelImportInfo {
         const char* modelPath;
         const char* mtlFileDirPath;
-        const char* instanceDataPath;
+        const char* transformDataPath;
     };
 
     std::unordered_map <e_modelType, ModelImportInfo> g_sampleModelImportInfoPool  = {

@@ -74,7 +74,7 @@ namespace SandBox {
                                     info.modelPath,
                                     info.mtlFileDirPath);
 
-                    totalInstancesCount += importInstanceData (infoId, info.instanceDataPath);
+                    totalInstancesCount += importTransformData (infoId, info.transformDataPath);
                     m_modelInfoIds.push_back (infoId);
                 }
 #else
@@ -83,7 +83,7 @@ namespace SandBox {
                                     info.modelPath,
                                     info.mtlFileDirPath);
 
-                    totalInstancesCount += importInstanceData (infoId, info.instanceDataPath);
+                    totalInstancesCount += importTransformData (infoId, info.transformDataPath);
                     m_modelInfoIds.push_back (infoId);
                 }
 
@@ -92,16 +92,16 @@ namespace SandBox {
                                     info.modelPath,
                                     info.mtlFileDirPath);
 
-                    totalInstancesCount += importInstanceData (infoId, info.instanceDataPath);
+                    totalInstancesCount += importTransformData (infoId, info.transformDataPath);
                     m_modelInfoIds.push_back (infoId);
                 }
 #endif  // ENABLE_SAMPLE_MODELS_IMPORT
 
-                readyModelInfo     (SKY_BOX,
-                                    g_skyBoxModelImportInfoPool[SKY_BOX].modelPath,
-                                    g_skyBoxModelImportInfoPool[SKY_BOX].mtlFileDirPath);
-                importInstanceData (SKY_BOX,
-                                    g_skyBoxModelImportInfoPool[SKY_BOX].instanceDataPath);
+                readyModelInfo      (SKY_BOX,
+                                     g_skyBoxModelImportInfoPool[SKY_BOX].modelPath,
+                                     g_skyBoxModelImportInfoPool[SKY_BOX].mtlFileDirPath);
+                importTransformData (SKY_BOX,
+                                     g_skyBoxModelImportInfoPool[SKY_BOX].transformDataPath);
                 /* |------------------------------------------------------------------------------------------------|
                  * | READY CAMERA INFO                                                                              |
                  * |------------------------------------------------------------------------------------------------|
@@ -270,7 +270,7 @@ namespace SandBox {
 #endif  // ENABLE_SAMPLE_MODELS_IMPORT
                         auto modelInfo           = getModelInfo (modelInfoId);
                         uint32_t modelInstanceId = 3;
-                        auto& position           = modelInfo->meta.instanceDatas[modelInstanceId].position;
+                        auto& position           = modelInfo->meta.transformDatas[modelInstanceId].position;
 
                         position                += glm::vec3 (0.0f, 0.0f, 0.01f);
                         createModelMatrix (modelInfoId, modelInstanceId);
@@ -278,7 +278,7 @@ namespace SandBox {
                     {   /* Sky box rotation */
                         auto modelInfo           = getModelInfo (SKY_BOX);
                         uint32_t modelInstanceId = 0;
-                        auto& rotateAngleDeg     = modelInfo->meta.instanceDatas[modelInstanceId].rotateAngleDeg;
+                        auto& rotateAngleDeg     = modelInfo->meta.transformDatas[modelInstanceId].rotateAngleDeg;
 
                         rotateAngleDeg           = elapsedTime * 1.0f;
                         createModelMatrix (SKY_BOX, modelInstanceId);
