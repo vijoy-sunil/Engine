@@ -647,8 +647,7 @@ namespace SandBox {
                                      dynamicOffsets,
                                      sceneInfo->resource.commandBuffers[currentFrameInFlight]);
 
-                drawIndexed         (skyBoxModelInfo->meta.indicesCount,
-                                     skyBoxModelInfo->meta.instancesCount,
+                drawIndexed         (skyBoxModelInfoId,
                                      0, 0, 0,
                                      sceneInfo->resource.commandBuffers[currentFrameInFlight]);
             }

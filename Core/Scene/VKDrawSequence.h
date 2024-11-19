@@ -2,7 +2,6 @@
 #define VK_DRAW_SEQUENCE_H
 
 #include "../Device/VKWindow.h"
-#include "../Model/VKModelMgr.h"
 #include "../Buffer/VKStorageBuffer.h"
 #include "../Cmd/VKCmd.h"
 #include "VKCameraMgr.h"
@@ -10,7 +9,6 @@
 
 namespace Core {
     class VKDrawSequence: protected virtual VKWindow,
-                          protected virtual VKModelMgr,
                           protected virtual VKStorageBuffer,
                           protected virtual VKCmd,
                           protected virtual VKCameraMgr,
@@ -289,8 +287,7 @@ namespace Core {
                 for (auto const& infoId: modelInfoIds) {
                     auto modelInfo = getModelInfo (infoId);
 
-                    drawIndexed (modelInfo->meta.indicesCount,
-                                 modelInfo->meta.instancesCount,
+                    drawIndexed (infoId,
                                  firstIndex, vertexOffset, firstInstance,
                                  sceneInfo->resource.commandBuffers[currentFrameInFlight]);
 

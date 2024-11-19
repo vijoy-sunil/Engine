@@ -1,6 +1,7 @@
 #ifndef VK_CMD_H
 #define VK_CMD_H
 
+#include "../Model/VKModelMgr.h"
 #include "../Image/VKImageMgr.h"
 #include "../Buffer/VKBufferMgr.h"
 #include "../Pipeline/VKPipelineMgr.h"
@@ -8,7 +9,8 @@
 #include "../Scene/VKSyncObject.h"
 
 namespace Core {
-    class VKCmd: protected virtual VKImageMgr,
+    class VKCmd: protected virtual VKModelMgr,
+                 protected virtual VKImageMgr,
                  protected virtual VKBufferMgr,
                  protected virtual VKPipelineMgr,
                  protected virtual VKCmdBuffer,
@@ -587,22 +589,22 @@ namespace Core {
                            firstInstance);
             }
 
-            void drawIndexed (uint32_t indicesCount,
-                              uint32_t instanceCount,
+            void drawIndexed (uint32_t modelInfoId,
                               uint32_t firstIndex,
                               int32_t vertexOffset,
                               uint32_t firstInstance,
                               VkCommandBuffer commandBuffer) {
 
-                /* InstanceCount: Used for instanced rendering, use 1 if you're not doing that
+                auto modelInfo = getModelInfo (modelInfoId);
+                /* instanceCount: Used for instanced rendering, use 1 if you're not doing that
                  * firstIndex:    Specifies an offset into the index buffer, using a value of 1 would cause the graphics
                  *                card to start reading at the second index
                  * vertexOffset:  Specifies the value added to the vertex index before indexing into the vertex buffer
                  * firstInstance: Used as an offset for instanced rendering, defines the lowest value of gl_InstanceIndex
                 */
                 vkCmdDrawIndexed (commandBuffer,
-                                  indicesCount,
-                                  instanceCount,
+                                  modelInfo->meta.indicesCount,
+                                  modelInfo->meta.instancesCount,
                                   firstIndex,
                                   vertexOffset,
                                   firstInstance);
