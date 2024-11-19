@@ -4,11 +4,15 @@
 #include "../Image/VKImageMgr.h"
 #include "../Buffer/VKBufferMgr.h"
 #include "../Pipeline/VKPipelineMgr.h"
+#include "VKCmdBuffer.h"
+#include "../Scene/VKSyncObject.h"
 
 namespace Core {
     class VKCmd: protected virtual VKImageMgr,
                  protected virtual VKBufferMgr,
-                 protected virtual VKPipelineMgr {
+                 protected virtual VKPipelineMgr,
+                 protected virtual VKCmdBuffer,
+                 protected virtual VKSyncObject {
         private:
             Log::Record* m_VKCmdLog;
             const uint32_t m_instanceId = g_collectionSettings.instanceId++;
@@ -16,6 +20,7 @@ namespace Core {
         public:
             VKCmd (void) {
                 m_VKCmdLog = LOG_INIT (m_instanceId, g_collectionSettings.logSaveDirPath);
+                LOG_ADD_CONFIG (m_instanceId, Log::INFO,  Log::TO_FILE_IMMEDIATE);
                 LOG_ADD_CONFIG (m_instanceId, Log::ERROR, Log::TO_FILE_IMMEDIATE | Log::TO_CONSOLE);
             }
 
@@ -601,6 +606,94 @@ namespace Core {
                                   firstIndex,
                                   vertexOffset,
                                   firstInstance);
+            }
+
+            template <typename T>
+            void oneTimeOpsQueueSubmit (uint32_t deviceInfoId,
+                                        uint32_t fenceInfoId,
+                                        VkQueue queue,
+                                        VkCommandBuffer commandBuffer,
+                                        T commands) {
+
+                auto deviceInfo = getDeviceInfo (deviceInfoId);
+                /* |------------------------------------------------------------------------------------------------|
+                 * | CONFIG ONE TIME OPS - FENCE                                                                    |
+                 * |------------------------------------------------------------------------------------------------|
+                */
+                createFence (deviceInfoId, fenceInfoId, FEN_ONE_TIME_OPS, 0);
+                LOG_INFO (m_VKCmdLog) << "[OK] One time ops fence "
+                                      << "[" << fenceInfoId << "]"
+                                      << std::endl;
+                /* |------------------------------------------------------------------------------------------------|
+                 * | CONFIG ONE TIME OPS - RECORD AND SUBMIT                                                        |
+                 * |------------------------------------------------------------------------------------------------|
+                */
+                /* We're only going to use the command buffer once and wait (vkQueueWaitIdle/vkWaitForFences) until the
+                 * operations have finished executing. It's good practice to tell the driver about our intent using
+                 * VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT
+                */
+                beginRecording (commandBuffer,
+                                VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
+                                VK_NULL_HANDLE);
+                commands();
+                endRecording   (commandBuffer);
+
+                VkSubmitInfo submitInfo{};
+                submitInfo.sType              = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+                submitInfo.commandBufferCount = 1;
+                submitInfo.pCommandBuffers    = &commandBuffer;
+
+                auto fenceInfo                = getFenceInfo  (fenceInfoId, FEN_ONE_TIME_OPS);
+                VkResult result               = vkQueueSubmit (queue,
+                                                               1,
+                                                               &submitInfo,
+                                                               fenceInfo->resource.fence);
+
+                if (result != VK_SUCCESS) {
+                    LOG_ERROR (m_VKCmdLog) << "Failed to submit one time ops command buffer "
+                                           << "[" << deviceInfoId << "]"
+                                           << " "
+                                           << "[" << string_VkResult (result) << "]"
+                                           << std::endl;
+                    throw std::runtime_error ("Failed to submit one time ops command buffer");
+                }
+                /* |------------------------------------------------------------------------------------------------|
+                 * | CONFIG ONE TIME OPS - WAIT                                                                     |
+                 * |------------------------------------------------------------------------------------------------|
+                */
+                /* Wait for fence
+                 * Unlike the draw commands, there are no events we need to wait on. We just want to execute the
+                 * operations on the buffer immediately. There are two possible ways to wait on these to complete
+                 *
+                 * (1) We could use a fence and wait with vkWaitForFences, or
+                 * (2) Simply wait for the queue to become idle via vkQueueWaitIdle
+                 *
+                 * A fence would allow you to schedule multiple operations simultaneously and wait for all of them
+                 * complete, instead of executing one at a time. That may give the driver more opportunities to optimize
+                */
+                LOG_INFO (m_VKCmdLog) << "[WAITING] One time ops fence "
+                                      << "[" << fenceInfoId << "]"
+                                      << std::endl;
+                vkWaitForFences (deviceInfo->resource.logDevice,
+                                 1,
+                                 &fenceInfo->resource.fence,
+                                 VK_TRUE,
+                                 UINT64_MAX);
+
+                vkResetFences   (deviceInfo->resource.logDevice,
+                                 1,
+                                 &fenceInfo->resource.fence);
+                LOG_INFO (m_VKCmdLog) << "[OK] One time ops fence reset "
+                                      << "[" << fenceInfoId << "]"
+                                      << std::endl;
+                /* |------------------------------------------------------------------------------------------------|
+                 * | DESTROY ONE TIME OPS - FENCE                                                                   |
+                 * |------------------------------------------------------------------------------------------------|
+                */
+                cleanUpFence (deviceInfoId, fenceInfoId, FEN_ONE_TIME_OPS);
+                LOG_INFO (m_VKCmdLog) << "[DELETE] One time ops fence "
+                                      << "[" << fenceInfoId << "]"
+                                      << std::endl;
             }
     };
 }   // namespace Core

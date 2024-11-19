@@ -4,20 +4,16 @@
 #include "../Device/VKWindow.h"
 #include "../Model/VKModelMgr.h"
 #include "../Buffer/VKStorageBuffer.h"
-#include "../Cmd/VKCmdBuffer.h"
 #include "../Cmd/VKCmd.h"
 #include "VKCameraMgr.h"
-#include "VKSyncObject.h"
 #include "VKResizing.h"
 
 namespace Core {
     class VKDrawSequence: protected virtual VKWindow,
                           protected virtual VKModelMgr,
                           protected virtual VKStorageBuffer,
-                          protected virtual VKCmdBuffer,
                           protected virtual VKCmd,
                           protected virtual VKCameraMgr,
-                          protected virtual VKSyncObject,
                           protected VKResizing {
         private:
             Log::Record* m_VKDrawSequenceLog;

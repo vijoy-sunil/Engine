@@ -28,11 +28,9 @@
 #include "../Pipeline/VKDescriptorSetLayout.h"
 #include "../Pipeline/VKPushConstantRange.h"
 #include "../Pipeline/VKPipelineLayout.h"
-#include "../Cmd/VKCmdBuffer.h"
 #include "../Cmd/VKCmd.h"
 #include "VKTextureSampler.h"
 #include "VKDescriptor.h"
-#include "VKSyncObject.h"
 
 namespace Core {
     class VKInitSequence: protected virtual VKWindow,
@@ -62,11 +60,9 @@ namespace Core {
                           protected virtual VKDescriptorSetLayout,
                           protected virtual VKPushConstantRange,
                           protected virtual VKPipelineLayout,
-                          protected virtual VKCmdBuffer,
                           protected virtual VKCmd,
                           protected virtual VKTextureSampler,
-                          protected virtual VKDescriptor,
-                          protected virtual VKSyncObject {
+                          protected virtual VKDescriptor {
         private:
             Log::Record* m_VKInitSequenceLog;
             const uint32_t m_instanceId = g_collectionSettings.instanceId++;
@@ -834,9 +830,8 @@ namespace Core {
                  * | CONFIG TRANSFER OPS - COMMAND POOL AND BUFFER                                                  |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                /* Note that the command buffers that we will be submitting to the transfer queue will be short lived, so
-                 * we will choose the VK_COMMAND_POOL_CREATE_TRANSIENT_BIT flag. And, this buffer copy command requires a
-                 * queue family that supports transfer operations, which is indicated using VK_QUEUE_TRANSFER_BIT
+                /* Note that the command buffer that we will be submitting for one time operations will be short lived,
+                 * so we will choose the VK_COMMAND_POOL_CREATE_TRANSIENT_BIT flag
                 */
                 auto transferOpsCommandPool = getCommandPool (deviceInfoId,
                                                               VK_COMMAND_POOL_CREATE_TRANSIENT_BIT,
@@ -845,102 +840,46 @@ namespace Core {
                                                << "[" << deviceInfoId << "]"
                                                << std::endl;
                 /* Note that we are only requesting one command buffer from the pool, since it is recommended to combine
-                 * all the transfer operations in a single command buffer and execute them asynchronously for higher
+                 * all the one time operations in a single command buffer and execute them asynchronously for higher
                  * throughput
                 */
                 auto transferOpsCommandBuffers = std::vector {
                     getCommandBuffers (deviceInfoId, transferOpsCommandPool, 1, VK_COMMAND_BUFFER_LEVEL_PRIMARY)
                 };
                 /* |------------------------------------------------------------------------------------------------|
-                 * | CONFIG TRANSFER OPS - FENCE                                                                    |
+                 * | CONFIG TRANSFER OPS - SUBMIT & EXECUTE                                                         |
                  * |------------------------------------------------------------------------------------------------|
                 */
                 uint32_t transferOpsFenceInfoId = 0;
-                createFence (deviceInfoId, transferOpsFenceInfoId, FEN_TRANSFER_DONE, 0);
-                LOG_INFO (m_VKInitSequenceLog) << "[OK] Transfer ops fence "
-                                               << "[" << transferOpsFenceInfoId << "]"
-                                               << std::endl;
-                /* |------------------------------------------------------------------------------------------------|
-                 * | CONFIG TRANSFER OPS - RECORD AND SUBMIT                                                        |
-                 * |------------------------------------------------------------------------------------------------|
-                */
-                /* We're only going to use the command buffer once and wait (vkQueueWaitIdle/vkWaitForFences) until the
-                 * copy operation has finished executing. It's good practice to tell the driver about our intent using
-                 * VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT
-                */
-                beginRecording (transferOpsCommandBuffers[0],
-                                VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
-                                VK_NULL_HANDLE);
-
-                for (auto const& [path, infoId]: getTextureImagePool()) {
-                    copyBufferToImage (infoId, infoId,
-                                       STAGING_BUFFER, TEXTURE_IMAGE,
-                                       0,
-                                       0,
-                                       transferOpsCommandBuffers[0]);
+                oneTimeOpsQueueSubmit (deviceInfoId,
+                                       transferOpsFenceInfoId,
+                                       deviceInfo->resource.transferQueue,
+                                       transferOpsCommandBuffers[0],
+                [&](void) {
+                {   /* Copy pixel data to texture image */
+                    for (auto const& [path, infoId]: getTextureImagePool()) {
+                        copyBufferToImage  (infoId, infoId,
+                                            STAGING_BUFFER, TEXTURE_IMAGE,
+                                            0,
+                                            0,
+                                            transferOpsCommandBuffers[0]);
+                    }
                 }
+                {   /* Copy vertex and index buffers */
+                    for (auto const& infoId: modelInfoBase->id.vertexBufferInfos) {
+                        copyBufferToBuffer (infoId, infoId,
+                                            STAGING_BUFFER, VERTEX_BUFFER,
+                                            0, 0,
+                                            transferOpsCommandBuffers[0]);
+                    }
 
-                for (auto const& infoId: modelInfoBase->id.vertexBufferInfos) {
-                    copyBufferToBuffer (infoId, infoId,
-                                        STAGING_BUFFER, VERTEX_BUFFER,
-                                        0, 0,
-                                        transferOpsCommandBuffers[0]);
+                    copyBufferToBuffer     (modelInfoBase->id.indexBufferInfo,
+                                            modelInfoBase->id.indexBufferInfo,
+                                            STAGING_BUFFER, INDEX_BUFFER,
+                                            0, 0,
+                                            transferOpsCommandBuffers[0]);
                 }
-
-                copyBufferToBuffer (modelInfoBase->id.indexBufferInfo,
-                                    modelInfoBase->id.indexBufferInfo,
-                                    STAGING_BUFFER, INDEX_BUFFER,
-                                    0, 0,
-                                    transferOpsCommandBuffers[0]);
-
-                endRecording (transferOpsCommandBuffers[0]);
-
-                VkSubmitInfo transferOpsSubmitInfo{};
-                transferOpsSubmitInfo.sType              = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-                transferOpsSubmitInfo.commandBufferCount = static_cast <uint32_t> (transferOpsCommandBuffers.size());
-                transferOpsSubmitInfo.pCommandBuffers    = transferOpsCommandBuffers.data();
-                VkResult result = vkQueueSubmit (deviceInfo->resource.transferQueue,
-                                                 1,
-                                                 &transferOpsSubmitInfo,
-                                                 getFenceInfo (transferOpsFenceInfoId, FEN_TRANSFER_DONE)->resource.fence);
-
-                if (result != VK_SUCCESS) {
-                    LOG_ERROR (m_VKInitSequenceLog) << "Failed to submit transfer ops command buffer "
-                                                    << "[" << deviceInfoId << "]"
-                                                    << " "
-                                                    << "[" << string_VkResult (result) << "]"
-                                                    << std::endl;
-                    throw std::runtime_error ("Failed to submit transfer ops command buffer");
-                }
-                /* |------------------------------------------------------------------------------------------------|
-                 * | CONFIG TRANSFER OPS - WAIT                                                                     |
-                 * |------------------------------------------------------------------------------------------------|
-                */
-                /* Wait for fence
-                 * Unlike the draw commands, there are no events we need to wait on. We just want to execute the transfer
-                 * on the buffers immediately. There are again two possible ways to wait on this transfer to complete
-                 *
-                 * (1) We could use a fence and wait with vkWaitForFences, or
-                 * (2) Simply wait for the transfer queue to become idle via vkQueueWaitIdle (getTransferQueue());
-                 *
-                 * A fence would allow you to schedule multiple transfers simultaneously and wait for all of them
-                 * complete, instead of executing one at a time. That may give the driver more opportunities to optimize
-                */
-                LOG_INFO (m_VKInitSequenceLog) << "[WAITING] Transfer ops fence "
-                                               << "[" << transferOpsFenceInfoId << "]"
-                                               << std::endl;
-                vkWaitForFences (deviceInfo->resource.logDevice,
-                                 1,
-                                 &getFenceInfo (transferOpsFenceInfoId, FEN_TRANSFER_DONE)->resource.fence,
-                                 VK_TRUE,
-                                 UINT64_MAX);
-
-                vkResetFences   (deviceInfo->resource.logDevice,
-                                 1,
-                                 &getFenceInfo (transferOpsFenceInfoId, FEN_TRANSFER_DONE)->resource.fence);
-                LOG_INFO (m_VKInitSequenceLog) << "[OK] Transfer ops fence reset "
-                                               << "[" << transferOpsFenceInfoId << "]"
-                                               << std::endl;
+                });
                 /* |------------------------------------------------------------------------------------------------|
                  * | DESTROY STAGING BUFFERS                                                                        |
                  * |------------------------------------------------------------------------------------------------|
@@ -964,14 +903,6 @@ namespace Core {
                                                    << std::endl;
                 }
                 /* |------------------------------------------------------------------------------------------------|
-                 * | DESTROY TRANSFER OPS - FENCE                                                                   |
-                 * |------------------------------------------------------------------------------------------------|
-                */
-                cleanUpFence (deviceInfoId, transferOpsFenceInfoId, FEN_TRANSFER_DONE);
-                LOG_INFO (m_VKInitSequenceLog) << "[DELETE] Transfer ops fence "
-                                               << "[" << transferOpsFenceInfoId << "]"
-                                               << std::endl;
-                /* |------------------------------------------------------------------------------------------------|
                  * | DESTROY TRANSFER OPS - COMMAND POOL                                                            |
                  * |------------------------------------------------------------------------------------------------|
                 */
@@ -993,72 +924,20 @@ namespace Core {
                     getCommandBuffers (deviceInfoId, blitOpsCommandPool, 1, VK_COMMAND_BUFFER_LEVEL_PRIMARY)
                 };
                 /* |------------------------------------------------------------------------------------------------|
-                 * | CONFIG BLIT OPS - FENCE                                                                        |
+                 * | CONFIG BLIT OPS - SUBMIT & EXECUTE                                                             |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                uint32_t blitOpsFenceInfoId = 0;
-                createFence (deviceInfoId, blitOpsFenceInfoId, FEN_BLIT_DONE, 0);
-                LOG_INFO (m_VKInitSequenceLog) << "[OK] Blit ops fence "
-                                               << "[" << blitOpsFenceInfoId << "]"
-                                               << std::endl;
-                /* |------------------------------------------------------------------------------------------------|
-                 * | CONFIG BLIT OPS - RECORD AND SUBMIT                                                            |
-                 * |------------------------------------------------------------------------------------------------|
-                */
-                beginRecording (blitOpsCommandBuffers[0],
-                                VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
-                                VK_NULL_HANDLE);
-
-                for (auto const& [path, infoId]: getTextureImagePool()) {
-                    blitImageToMipMaps (infoId, TEXTURE_IMAGE, 0, blitOpsCommandBuffers[0]);
+                uint32_t blitOpsFenceInfoId = 1;
+                oneTimeOpsQueueSubmit (deviceInfoId,
+                                       blitOpsFenceInfoId,
+                                       deviceInfo->resource.graphicsQueue,
+                                       blitOpsCommandBuffers[0],
+                [&](void) {
+                {   /* Generate mip maps */
+                    for (auto const& [path, infoId]: getTextureImagePool())
+                        blitImageToMipMaps (infoId, TEXTURE_IMAGE, 0, blitOpsCommandBuffers[0]);
                 }
-
-                endRecording (blitOpsCommandBuffers[0]);
-
-                VkSubmitInfo blitOpsSubmitInfo{};
-                blitOpsSubmitInfo.sType              = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-                blitOpsSubmitInfo.commandBufferCount = static_cast <uint32_t> (blitOpsCommandBuffers.size());
-                blitOpsSubmitInfo.pCommandBuffers    = blitOpsCommandBuffers.data();
-                result = vkQueueSubmit (deviceInfo->resource.graphicsQueue,
-                                        1,
-                                        &blitOpsSubmitInfo,
-                                        getFenceInfo (blitOpsFenceInfoId, FEN_BLIT_DONE)->resource.fence);
-
-                if (result != VK_SUCCESS) {
-                    LOG_ERROR (m_VKInitSequenceLog) << "Failed to submit blit ops command buffer "
-                                                    << "[" << deviceInfoId << "]"
-                                                    << " "
-                                                    << "[" << string_VkResult (result) << "]"
-                                                    << std::endl;
-                    throw std::runtime_error ("Failed to submit blit ops command buffer");
-                }
-                /* |------------------------------------------------------------------------------------------------|
-                 * | CONFIG BLIT OPS - WAIT                                                                         |
-                 * |------------------------------------------------------------------------------------------------|
-                */
-                LOG_INFO (m_VKInitSequenceLog) << "[WAITING] Blit ops fence "
-                                               << "[" << blitOpsFenceInfoId << "]"
-                                               << std::endl;
-                vkWaitForFences (deviceInfo->resource.logDevice,
-                                 1,
-                                 &getFenceInfo (blitOpsFenceInfoId, FEN_BLIT_DONE)->resource.fence,
-                                 VK_TRUE,
-                                 UINT64_MAX);
-
-                vkResetFences   (deviceInfo->resource.logDevice,
-                                 1,
-                                 &getFenceInfo (blitOpsFenceInfoId, FEN_BLIT_DONE)->resource.fence);
-                LOG_INFO (m_VKInitSequenceLog) << "[OK] Blit ops fence reset "
-                                               << "[" << blitOpsFenceInfoId << "]"
-                                               << std::endl;
-                /* |------------------------------------------------------------------------------------------------|
-                 * | DESTROY BLIT OPS - FENCE                                                                       |
-                 * |------------------------------------------------------------------------------------------------|
-                */
-                cleanUpFence (deviceInfoId, blitOpsFenceInfoId, FEN_BLIT_DONE);
-                LOG_INFO (m_VKInitSequenceLog) << "[DELETE] Blit ops fence "
-                                               << "[" << blitOpsFenceInfoId << "]"
-                                               << std::endl;
+                });
                 /* |------------------------------------------------------------------------------------------------|
                  * | DESTROY BLIT OPS - COMMAND POOL                                                                |
                  * |------------------------------------------------------------------------------------------------|

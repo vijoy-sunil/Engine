@@ -51,8 +51,7 @@ namespace Core {
     const char* getSyncTypeString (e_syncType type) {
         switch (type)
         {
-            case FEN_TRANSFER_DONE:     return "FEN_TRANSFER_DONE";
-            case FEN_BLIT_DONE:         return "FEN_BLIT_DONE";
+            case FEN_ONE_TIME_OPS:      return "FEN_ONE_TIME_OPS";
             case FEN_IN_FLIGHT:         return "FEN_IN_FLIGHT";
             case SEM_IMAGE_AVAILABLE:   return "SEM_IMAGE_AVAILABLE";
             case SEM_RENDER_DONE:       return "SEM_RENDER_DONE";

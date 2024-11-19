@@ -20,11 +20,10 @@ namespace Core {
     } e_bufferType;
 
     typedef enum {
-        FEN_TRANSFER_DONE   = 0,
-        FEN_BLIT_DONE       = 1,
-        FEN_IN_FLIGHT       = 2,
-        SEM_IMAGE_AVAILABLE = 3,
-        SEM_RENDER_DONE     = 4
+        FEN_ONE_TIME_OPS    = 0,
+        FEN_IN_FLIGHT       = 1,
+        SEM_IMAGE_AVAILABLE = 2,
+        SEM_RENDER_DONE     = 3
     } e_syncType;
 
     typedef enum {

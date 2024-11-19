@@ -13,12 +13,10 @@
 #include "../../Core/Pipeline/VKDescriptorSetLayout.h"
 #include "../../Core/Pipeline/VKPushConstantRange.h"
 #include "../../Core/Pipeline/VKPipelineLayout.h"
-#include "../../Core/Cmd/VKCmdBuffer.h"
 #include "../../Core/Cmd/VKCmd.h"
 #include "../../Core/Scene/VKCameraMgr.h"
 #include "../../Core/Scene/VKTextureSampler.h"
 #include "../../Core/Scene/VKDescriptor.h"
-#include "../../Core/Scene/VKSyncObject.h"
 #include "../ENConfig.h"
 
 namespace SandBox {
@@ -34,12 +32,10 @@ namespace SandBox {
                     protected virtual Core::VKDescriptorSetLayout,
                     protected virtual Core::VKPushConstantRange,
                     protected virtual Core::VKPipelineLayout,
-                    protected virtual Core::VKCmdBuffer,
                     protected virtual Core::VKCmd,
                     protected virtual Core::VKCameraMgr,
                     protected virtual Core::VKTextureSampler,
-                    protected virtual Core::VKDescriptor,
-                    protected virtual Core::VKSyncObject {
+                    protected virtual Core::VKDescriptor {
         private:
             uint32_t m_skyBoxImageInfoId;
             std::unordered_map <std::string, uint32_t> m_textureImagePool;
@@ -493,109 +489,66 @@ namespace SandBox {
                     getCommandBuffers (deviceInfoId, transferOpsCommandPool, 1, VK_COMMAND_BUFFER_LEVEL_PRIMARY)
                 };
                 /* |------------------------------------------------------------------------------------------------|
-                 * | CONFIG TRANSFER OPS - FENCE                                                                    |
+                 * | CONFIG TRANSFER OPS - SUBMIT & EXECUTE                                                         |
                  * |------------------------------------------------------------------------------------------------|
                 */
                 uint32_t transferOpsFenceInfoId = 0;
-                createFence (deviceInfoId, transferOpsFenceInfoId, Core::FEN_TRANSFER_DONE, 0);
-                LOG_INFO (m_ENSkyBoxLog) << "[OK] Transfer ops fence "
-                                         << "[" << transferOpsFenceInfoId << "]"
-                                         << std::endl;
-                /* |------------------------------------------------------------------------------------------------|
-                 * | CONFIG TRANSFER OPS - RECORD AND SUBMIT                                                        |
-                 * |------------------------------------------------------------------------------------------------|
-                */
-                beginRecording (transferOpsCommandBuffers[0],
-                                VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
-                                VK_NULL_HANDLE);
+                oneTimeOpsQueueSubmit (deviceInfoId,
+                                       transferOpsFenceInfoId,
+                                       deviceInfo->resource.transferQueue,
+                                       transferOpsCommandBuffers[0],
+                [&](void) {
+                {   /* Copy pixel data to texture image */
+                    for (uint32_t layerIdx = 0; layerIdx < 6; layerIdx++) {
+                        uint32_t bufferInfoId = m_skyBoxImageInfoId + layerIdx;
 
-                for (uint32_t layerIdx = 0; layerIdx < 6; layerIdx++) {
-                    uint32_t bufferInfoId = m_skyBoxImageInfoId + layerIdx;
+                        copyBufferToImage     (bufferInfoId, m_skyBoxImageInfoId,
+                                               Core::STAGING_BUFFER, Core::TEXTURE_IMAGE,
+                                               0,
+                                               layerIdx,
+                                               transferOpsCommandBuffers[0]);
 
-                    copyBufferToImage     (bufferInfoId, m_skyBoxImageInfoId,
-                                           Core::STAGING_BUFFER, Core::TEXTURE_IMAGE,
-                                           0,
-                                           layerIdx,
-                                           transferOpsCommandBuffers[0]);
-
-                    transitionImageLayout (m_skyBoxImageInfoId,
-                                           Core::TEXTURE_IMAGE,
-                                           VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-                                           VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-                                           0, 1,
-                                           layerIdx, 1,
-                                           transferOpsCommandBuffers[0]);
+                        transitionImageLayout (m_skyBoxImageInfoId,
+                                               Core::TEXTURE_IMAGE,
+                                               VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                                               VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+                                               0, 1,
+                                               layerIdx, 1,
+                                               transferOpsCommandBuffers[0]);
+                    }
                 }
+                {   /* Copy pixel data to texture image - alias */
+                    for (auto const& [path, infoId]: m_textureImagePool) {
+                        copyBufferToImage     (infoId, infoId,
+                                               Core::STAGING_BUFFER, Core::TEXTURE_IMAGE,
+                                               0,
+                                               0,
+                                               transferOpsCommandBuffers[0]);
 
-                for (auto const& [path, infoId]: m_textureImagePool) {
-                    copyBufferToImage     (infoId, infoId,
-                                           Core::STAGING_BUFFER, Core::TEXTURE_IMAGE,
-                                           0,
-                                           0,
-                                           transferOpsCommandBuffers[0]);
-
-                    transitionImageLayout (infoId,
-                                           Core::TEXTURE_IMAGE,
-                                           VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-                                           VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-                                           0, 1,
-                                           0, 1,
-                                           transferOpsCommandBuffers[0]);
+                        transitionImageLayout (infoId,
+                                               Core::TEXTURE_IMAGE,
+                                               VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                                               VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+                                               0, 1,
+                                               0, 1,
+                                               transferOpsCommandBuffers[0]);
+                    }
                 }
+                {   /* Copy vertex and index buffers */
+                    for (auto const& infoId: skyBoxModelInfo->id.vertexBufferInfos) {
+                        copyBufferToBuffer    (infoId, infoId,
+                                               Core::STAGING_BUFFER, Core::VERTEX_BUFFER,
+                                               0, 0,
+                                               transferOpsCommandBuffers[0]);
+                    }
 
-                for (auto const& infoId: skyBoxModelInfo->id.vertexBufferInfos) {
-                    copyBufferToBuffer    (infoId, infoId,
-                                           Core::STAGING_BUFFER, Core::VERTEX_BUFFER,
-                                           0, 0,
-                                           transferOpsCommandBuffers[0]);
+                    copyBufferToBuffer        (skyBoxModelInfo->id.indexBufferInfo,
+                                               skyBoxModelInfo->id.indexBufferInfo,
+                                               Core::STAGING_BUFFER, Core::INDEX_BUFFER,
+                                               0, 0,
+                                               transferOpsCommandBuffers[0]);
                 }
-
-                copyBufferToBuffer (skyBoxModelInfo->id.indexBufferInfo,
-                                    skyBoxModelInfo->id.indexBufferInfo,
-                                    Core::STAGING_BUFFER, Core::INDEX_BUFFER,
-                                    0, 0,
-                                    transferOpsCommandBuffers[0]);
-
-                endRecording (transferOpsCommandBuffers[0]);
-
-                VkSubmitInfo transferOpsSubmitInfo{};
-                transferOpsSubmitInfo.sType              = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-                transferOpsSubmitInfo.commandBufferCount = static_cast <uint32_t> (transferOpsCommandBuffers.size());
-                transferOpsSubmitInfo.pCommandBuffers    = transferOpsCommandBuffers.data();
-
-                auto fenceInfo  = getFenceInfo  (transferOpsFenceInfoId, Core::FEN_TRANSFER_DONE);
-                VkResult result = vkQueueSubmit (deviceInfo->resource.transferQueue,
-                                                 1,
-                                                 &transferOpsSubmitInfo,
-                                                 fenceInfo->resource.fence);
-
-                if (result != VK_SUCCESS) {
-                    LOG_ERROR (m_ENSkyBoxLog) << "Failed to submit transfer ops command buffer "
-                                              << "[" << deviceInfoId << "]"
-                                              << " "
-                                              << "[" << string_VkResult (result) << "]"
-                                              << std::endl;
-                    throw std::runtime_error ("Failed to submit transfer ops command buffer");
-                }
-                /* |------------------------------------------------------------------------------------------------|
-                 * | CONFIG TRANSFER OPS - WAIT                                                                     |
-                 * |------------------------------------------------------------------------------------------------|
-                */
-                LOG_INFO (m_ENSkyBoxLog) << "[WAITING] Transfer ops fence "
-                                         << "[" << transferOpsFenceInfoId << "]"
-                                         << std::endl;
-                vkWaitForFences (deviceInfo->resource.logDevice,
-                                 1,
-                                 &fenceInfo->resource.fence,
-                                 VK_TRUE,
-                                 UINT64_MAX);
-
-                vkResetFences   (deviceInfo->resource.logDevice,
-                                 1,
-                                 &fenceInfo->resource.fence);
-                LOG_INFO (m_ENSkyBoxLog) << "[OK] Transfer ops fence reset "
-                                         << "[" << transferOpsFenceInfoId << "]"
-                                         << std::endl;
+                });
                 /* |------------------------------------------------------------------------------------------------|
                  * | DESTROY STAGING BUFFERS                                                                        |
                  * |------------------------------------------------------------------------------------------------|
@@ -627,14 +580,6 @@ namespace SandBox {
                                              << "[" << bufferInfoId << "]"
                                              << std::endl;
                 }
-                /* |------------------------------------------------------------------------------------------------|
-                 * | DESTROY TRANSFER OPS - FENCE                                                                   |
-                 * |------------------------------------------------------------------------------------------------|
-                */
-                cleanUpFence (deviceInfoId, transferOpsFenceInfoId, Core::FEN_TRANSFER_DONE);
-                LOG_INFO (m_ENSkyBoxLog) << "[DELETE] Transfer ops fence "
-                                         << "[" << transferOpsFenceInfoId << "]"
-                                         << std::endl;
                 /* |------------------------------------------------------------------------------------------------|
                  * | DESTROY TRANSFER OPS - COMMAND POOL                                                            |
                  * |------------------------------------------------------------------------------------------------|
