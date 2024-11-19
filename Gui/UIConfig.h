@@ -37,14 +37,14 @@ namespace Gui {
              * removed, the below node info ids need to be changed as well
             */
             const uint32_t worldCollection                           = 114;     /* Camera info id 0 node    */
-            const uint32_t worldCollectionSample                     = 27;      /* Camera info id 0 node    */
+            const uint32_t worldCollectionSample                     = 95;      /* Camera info id 0 node    */
             /* Locked nodes are nodes with their properties locked. Note that there can be more than one locked nodes
             */
             const std::vector <uint32_t> lockedNodes                 = {
                                                                         111     /* Sky box instance 0 node  */
                                                                        };
             const std::vector <uint32_t> lockedNodesSample           = {
-                                                                        24      /* Sky box instance 0 node  */
+                                                                        92      /* Sky box instance 0 node  */
                                                                        };
         } treeNode;
 
