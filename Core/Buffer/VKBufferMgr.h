@@ -205,8 +205,7 @@ namespace Core {
             uint32_t getNextInfoIdFromBufferType (e_bufferType type) {
                 uint32_t nextInfoId = 0;
                 if (m_bufferInfoPool.find (type) != m_bufferInfoPool.end()) {
-                    auto& infos = m_bufferInfoPool[type];
-                    for (auto const& info: infos) {
+                    for (auto const& info: m_bufferInfoPool[type]) {
                         if (info.meta.id >= nextInfoId) nextInfoId = info.meta.id + 1;
                     }
                 }
@@ -215,8 +214,7 @@ namespace Core {
 
             BufferInfo* getBufferInfo (uint32_t bufferInfoId, e_bufferType type) {
                 if (m_bufferInfoPool.find (type) != m_bufferInfoPool.end()) {
-                    auto& infos = m_bufferInfoPool[type];
-                    for (auto& info: infos) {
+                    for (auto& info: m_bufferInfoPool[type]) {
                         if (info.meta.id == bufferInfoId) return &info;
                     }
                 }

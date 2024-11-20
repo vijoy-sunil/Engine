@@ -367,8 +367,7 @@ namespace Core {
             uint32_t getNextInfoIdFromImageType (e_imageType type) {
                 uint32_t nextInfoId = 0;
                 if (m_imageInfoPool.find (type) != m_imageInfoPool.end()) {
-                    auto& infos = m_imageInfoPool[type];
-                    for (auto const& info: infos) {
+                    for (auto const& info: m_imageInfoPool[type]) {
                         if (info.meta.id >= nextInfoId) nextInfoId = info.meta.id + 1;
                     }
                 }
@@ -377,8 +376,7 @@ namespace Core {
 
             ImageInfo* getImageInfo (uint32_t imageInfoId, e_imageType type) {
                 if (m_imageInfoPool.find (type) != m_imageInfoPool.end()) {
-                    auto& infos = m_imageInfoPool[type];
-                    for (auto& info: infos) {
+                    for (auto& info: m_imageInfoPool[type]) {
                         if (info.meta.id == imageInfoId) return &info;
                     }
                 }

@@ -200,8 +200,7 @@ namespace Core {
 
             FenceInfo* getFenceInfo (uint32_t fenceInfoId, e_syncType type) {
                 if (m_fenceInfoPool.find (type) != m_fenceInfoPool.end()) {
-                    auto& infos = m_fenceInfoPool[type];
-                    for (auto& info: infos) {
+                    for (auto& info: m_fenceInfoPool[type]) {
                         if (info.meta.id == fenceInfoId) return &info;
                     }
                 }
@@ -216,8 +215,7 @@ namespace Core {
 
             SemaphoreInfo* getSemaphoreInfo (uint32_t semaphoreInfoId, e_syncType type) {
                 if (m_semaphoreInfoPool.find (type) != m_semaphoreInfoPool.end()) {
-                    auto& infos = m_semaphoreInfoPool[type];
-                    for (auto& info: infos) {
+                    for (auto& info: m_semaphoreInfoPool[type]) {
                         if (info.meta.id == semaphoreInfoId) return &info;
                     }
                 }
