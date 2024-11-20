@@ -265,11 +265,12 @@ namespace SandBox {
                     {   /* [ X ] Vehicle base translation test */
 #if ENABLE_SAMPLE_MODELS_IMPORT
                         auto modelInfoId         = SAMPLE_CYLINDER;
+                        uint32_t modelInstanceId = 3;
 #else
                         auto modelInfoId         = VEHICLE_BASE;
+                        uint32_t modelInstanceId = 0;
 #endif  // ENABLE_SAMPLE_MODELS_IMPORT
                         auto modelInfo           = getModelInfo (modelInfoId);
-                        uint32_t modelInstanceId = 3;
                         auto& position           = modelInfo->meta.transformDatas[modelInstanceId].position;
 
                         position                += glm::vec3 (0.0f, 0.0f, 0.01f);
