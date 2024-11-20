@@ -38,7 +38,7 @@ namespace SandBox {
                     protected virtual Core::VKDescriptor {
         private:
             uint32_t m_skyBoxImageInfoId;
-            std::unordered_map <std::string, uint32_t> m_textureImagePool;
+            std::vector <uint32_t> m_aliasImageInfoIds;
 
             Log::Record* m_ENSkyBoxLog;
             const uint32_t m_instanceId = g_collectionSettings.instanceId++;
@@ -135,7 +135,7 @@ namespace SandBox {
                                              << "[" << infoId << "]"
                                              << std::endl;
 
-                    m_textureImagePool[path] = infoId;
+                    m_aliasImageInfoIds.push_back (infoId);
                     /* Note that, it is important to reacquire the pointer to sky box image info every loop, since
                      * the pointer may become invalid after the image info vector grows in the image mgr. (The rate at
                      * which the capacity of a vector grows is required by the standard to be exponential 1, 2, 4, 8 etc.
@@ -518,7 +518,7 @@ namespace SandBox {
                     }
                 }
                 {   /* Copy pixel data to texture image - alias */
-                    for (auto const& [path, infoId]: m_textureImagePool) {
+                    for (auto const& infoId: m_aliasImageInfoIds) {
                         copyBufferToImage     (infoId, infoId,
                                                Core::STAGING_BUFFER, Core::TEXTURE_IMAGE,
                                                0,
@@ -565,7 +565,7 @@ namespace SandBox {
                                              << std::endl;
                 }
 
-                for (auto const& [path, infoId]: m_textureImagePool) {
+                for (auto const& infoId: m_aliasImageInfoIds) {
                     VKBufferMgr::cleanUp (deviceInfoId, infoId, Core::STAGING_BUFFER);
                     LOG_INFO (m_ENSkyBoxLog) << "[DELETE] Staging buffer "
                                              << "[" << infoId << "]"
@@ -657,7 +657,7 @@ namespace SandBox {
                  * | DESTROY TEXTURE RESOURCES - ALIAS                                                              |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                for (auto const& [path, infoId]: m_textureImagePool) {
+                for (auto const& infoId: m_aliasImageInfoIds) {
                     VKImageMgr::cleanUp (deviceInfoId, infoId, Core::TEXTURE_IMAGE);
                     LOG_INFO (m_ENSkyBoxLog) << "[DELETE] Texture resources "
                                              << "[" << infoId << "]"
