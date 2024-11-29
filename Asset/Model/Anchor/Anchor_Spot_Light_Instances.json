@@ -1,0 +1,41 @@
+{
+    "instancesCount": 6,
+    "instances": [
+        {
+            "id":             0,
+            "position":       [ 12.0, -16.0, -12.0],
+            "scale":          [  2.0,   2.0,   2.0],
+            "rotateAngleDeg": [-90.0,   0.0,   0.0]
+        },
+        {
+            "id":             1,
+            "position":       [ 12.0, -6.0, 0.0],
+            "scale":          [  2.0,  2.0, 2.0],
+            "rotateAngleDeg": [-90.0,  0.0, 0.0]
+        },
+        {
+            "id":             2,
+            "position":       [ 12.0, -6.0, 12.0],
+            "scale":          [  2.0,  2.0,  2.0],
+            "rotateAngleDeg": [-90.0,  0.0,  0.0]
+        },
+        {
+            "id":             3,
+            "position":       [-12.0, -6.0, 12.0],
+            "scale":          [  2.0,  2.0,  2.0],
+            "rotateAngleDeg": [-90.0,  0.0,  0.0]
+        },
+        {
+            "id":             4,
+            "position":       [-12.0, -16.0, 0.0],
+            "scale":          [  2.0,   2.0, 2.0],
+            "rotateAngleDeg": [-90.0,   0.0, 0.0]
+        },
+        {
+            "id":             5,
+            "position":       [-12.0, -16.0, -12.0],
+            "scale":          [  2.0,   2.0,   2.0],
+            "rotateAngleDeg": [-90.0,   0.0,   0.0]
+        }
+    ]
+}

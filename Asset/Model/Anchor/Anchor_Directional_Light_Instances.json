@@ -1,0 +1,11 @@
+{
+    "instancesCount": 1,
+    "instances": [
+        {
+            "id":             0,
+            "position":       [   0.0, -24.0, 24.0],
+            "scale":          [   2.0,   2.0,  2.0],
+            "rotateAngleDeg": [-135.0,   0.0,  0.0]
+        }
+    ]
+}
