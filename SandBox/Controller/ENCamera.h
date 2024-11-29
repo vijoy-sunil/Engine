@@ -422,14 +422,16 @@ namespace SandBox {
                 /* Instead of using the pre computed model matrix, we will recreate it using a unit scale vector to
                  * make the transformation of camera vectors independent of the model scale
                 */
-                glm::vec3 position    = modelInfo->meta.transformDatas[modelInstanceId].position;
-                glm::vec3 rotateAxis  = modelInfo->meta.transformDatas[modelInstanceId].rotateAxis;
-                glm::vec3 scale       = glm::vec3 (1.0f);
-                float rotateAngleDeg  = modelInfo->meta.transformDatas[modelInstanceId].rotateAngleDeg;
+                glm::vec3 position       = modelInfo->meta.transformDatas[modelInstanceId].position;
+                glm::vec3 rotateAngleDeg = modelInfo->meta.transformDatas[modelInstanceId].rotateAngleDeg;
 
-                glm::mat4 modelMatrix = glm::translate (glm::mat4 (1.0f), position) *
-                                        glm::rotate    (glm::mat4 (1.0f), glm::radians (rotateAngleDeg), rotateAxis) *
-                                        glm::scale     (glm::mat4 (1.0f), scale);
+                glm::mat4 modelMatrix    = glm::translate (glm::mat4 (1.0f), position)    *
+                                           glm::rotate    (glm::mat4 (1.0f), glm::radians (rotateAngleDeg.z),
+                                                           glm::vec3 (0.0f,  0.0f, 1.0f)) *     /* Roll  */
+                                           glm::rotate    (glm::mat4 (1.0f), glm::radians (rotateAngleDeg.y),
+                                                           glm::vec3 (0.0f, -1.0f, 0.0f)) *     /* Yaw   */
+                                           glm::rotate    (glm::mat4 (1.0f), glm::radians (rotateAngleDeg.x),
+                                                           glm::vec3 (1.0f,  0.0f, 0.0f));      /* Pitch */
                 /* Why do we need to remove the model transformation that was done to the camera vectors before using
                  * them in drone follow mode? The reason is, when we switch to drone follow mode, we use the camera
                  * vectors from the previous mode, which have already been multiplied by the model matrix. But, what

@@ -51,17 +51,21 @@ namespace Core {
                  * If w == 0, then the vector (x,y,z,0) is a direction
                 */
 
+                glm::vec3 position       = modelInfo->meta.transformDatas[modelInstanceId].position;;
+                glm::vec3 scale          = modelInfo->meta.transformDatas[modelInstanceId].scale;
+                glm::vec3 rotateAngleDeg = modelInfo->meta.transformDatas[modelInstanceId].rotateAngleDeg;
+                float scaleMultiplier    = modelInfo->meta.transformDatas[modelInstanceId].scaleMultiplier;
+
                 /* Cumulating transformations, note that we perform scaling FIRST, and THEN the rotation, and THEN the
                  * translation. This is how matrix multiplication works
                 */
-                glm::vec3 position    = modelInfo->meta.transformDatas[modelInstanceId].position;
-                glm::vec3 rotateAxis  = modelInfo->meta.transformDatas[modelInstanceId].rotateAxis;
-                glm::vec3 scale       = modelInfo->meta.transformDatas[modelInstanceId].scale;
-                float rotateAngleDeg  = modelInfo->meta.transformDatas[modelInstanceId].rotateAngleDeg;
-                float scaleMultiplier = modelInfo->meta.transformDatas[modelInstanceId].scaleMultiplier;
-
-                glm::mat4 modelMatrix = glm::translate (glm::mat4 (1.0f), position) *
-                                        glm::rotate    (glm::mat4 (1.0f), glm::radians (rotateAngleDeg), rotateAxis) *
+                glm::mat4 modelMatrix = glm::translate (glm::mat4 (1.0f), position)    *
+                                        glm::rotate    (glm::mat4 (1.0f), glm::radians (rotateAngleDeg.z),
+                                                        glm::vec3 (0.0f,  0.0f, 1.0f)) *    /* Roll  */
+                                        glm::rotate    (glm::mat4 (1.0f), glm::radians (rotateAngleDeg.y),
+                                                        glm::vec3 (0.0f, -1.0f, 0.0f)) *    /* Yaw   */
+                                        glm::rotate    (glm::mat4 (1.0f), glm::radians (rotateAngleDeg.x),
+                                                        glm::vec3 (1.0f,  0.0f, 0.0f)) *    /* Pitch */
                                         glm::scale     (glm::mat4 (1.0f), scale * scaleMultiplier);
 
                 modelInfo->meta.instances[modelInstanceId].modelMatrix = modelMatrix;

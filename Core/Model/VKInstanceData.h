@@ -37,24 +37,6 @@ namespace Core {
                     throw std::runtime_error ("Invalid model instance id");
                 }
 
-                bool oldTexIdValid = false;
-                bool newTexIdValid = false;
-                for (auto const& [path, infoId]: getTextureImagePool()) {
-                    if (infoId == oldTexId) oldTexIdValid = true;
-                    if (infoId == newTexId) newTexIdValid = true;
-                }
-
-                if (!oldTexIdValid || !newTexIdValid) {
-                    LOG_WARNING (m_VKInstanceDataLog) << "Failed to find texture image info id "
-                                                      << "[" << oldTexId << "]"
-                                                      << " "
-                                                      << "[" << newTexId << "]"
-                                                      << std::endl;
-                }
-                /* Note that, we continue past the warning to update the look up table. This is because some texture
-                 * image info ids, for example, image info ids for alias resources, may not necessarily exist in the
-                 * texture image pool
-                */
                 if (oldTexId > UINT8_MAX || newTexId > UINT8_MAX) {
                     LOG_ERROR (m_VKInstanceDataLog) << "Failed to encode packet "
                                                     << "[" << oldTexId << "]"
@@ -106,9 +88,8 @@ namespace Core {
                     uint32_t modelInstanceId             = 0;
 
                     modelInfo->meta.transformDatas[modelInstanceId].position        = {0.0f, 0.0f, 0.0f};
-                    modelInfo->meta.transformDatas[modelInstanceId].rotateAxis      = {0.0f, 1.0f, 0.0f};
                     modelInfo->meta.transformDatas[modelInstanceId].scale           = {1.0f, 1.0f, 1.0f};
-                    modelInfo->meta.transformDatas[modelInstanceId].rotateAngleDeg  = 0.0f;
+                    modelInfo->meta.transformDatas[modelInstanceId].rotateAngleDeg  = {0.0f, 0.0f, 0.0f};
                     modelInfo->meta.transformDatas[modelInstanceId].scaleMultiplier = 1.0f;
                     createModelMatrix (modelInfoId, modelInstanceId);
                 }
@@ -122,22 +103,21 @@ namespace Core {
                     for (auto const& instance: json["instances"]) {
                         uint32_t modelInstanceId = instance["id"];
 
-                        modelInfo->meta.transformDatas[modelInstanceId].position   = {
+                        modelInfo->meta.transformDatas[modelInstanceId].position        = {
                             instance["position"][0],
                             instance["position"][1],
                             instance["position"][2]
                         };
-                        modelInfo->meta.transformDatas[modelInstanceId].rotateAxis = {
-                            instance["rotateAxis"][0],
-                            instance["rotateAxis"][1],
-                            instance["rotateAxis"][2]
-                        };
-                        modelInfo->meta.transformDatas[modelInstanceId].scale      = {
+                        modelInfo->meta.transformDatas[modelInstanceId].scale           = {
                             instance["scale"][0],
                             instance["scale"][1],
                             instance["scale"][2]
                         };
-                        modelInfo->meta.transformDatas[modelInstanceId].rotateAngleDeg  = instance["rotateAngleDeg"];
+                        modelInfo->meta.transformDatas[modelInstanceId].rotateAngleDeg  = {
+                            instance["rotateAngleDeg"][0],
+                            instance["rotateAngleDeg"][1],
+                            instance["rotateAngleDeg"][2]
+                        };
                         modelInfo->meta.transformDatas[modelInstanceId].scaleMultiplier = 1.0f;
                         createModelMatrix (modelInfoId, modelInstanceId);
                     }

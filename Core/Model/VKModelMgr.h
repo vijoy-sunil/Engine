@@ -12,9 +12,8 @@ namespace Core {
         private:
             struct TransformData {
                 glm::vec3 position;
-                glm::vec3 rotateAxis;
                 glm::vec3 scale;
-                float rotateAngleDeg;
+                glm::vec3 rotateAngleDeg;
                 /* Scale multiplier makes it easier to clear and restore the scale vector for each instance. This can
                  * be helpful when you want to hide/show a model instance by clearing/restoring the scale vector
                 */
@@ -513,37 +512,33 @@ namespace Core {
                             rowIdx++;
                         }
 
-                        LOG_INFO (m_VKModelMgrLog) << "Position"
-                                                   << std::endl;
-                        LOG_INFO (m_VKModelMgrLog) << "[" << val.meta.transformDatas[modelInstanceId].position.x << ", "
-                                                          << val.meta.transformDatas[modelInstanceId].position.y << ", "
-                                                          << val.meta.transformDatas[modelInstanceId].position.z
+                        LOG_INFO (m_VKModelMgrLog) << "Position "
+                                                   << "["
+                                                   << val.meta.transformDatas[modelInstanceId].position.x << ", "
+                                                   << val.meta.transformDatas[modelInstanceId].position.y << ", "
+                                                   << val.meta.transformDatas[modelInstanceId].position.z
                                                    << "]"
                                                    << std::endl;
 
-                        LOG_INFO (m_VKModelMgrLog) << "Rotate axis"
-                                                   << std::endl;
-                        LOG_INFO (m_VKModelMgrLog) << "[" << val.meta.transformDatas[modelInstanceId].rotateAxis.x << ", "
-                                                          << val.meta.transformDatas[modelInstanceId].rotateAxis.y << ", "
-                                                          << val.meta.transformDatas[modelInstanceId].rotateAxis.z
-                                                   << "]"
-                                                   << std::endl;
-
-                        LOG_INFO (m_VKModelMgrLog) << "Scale"
-                                                   << std::endl;
-                        LOG_INFO (m_VKModelMgrLog) << "[" << val.meta.transformDatas[modelInstanceId].scale.x << ", "
-                                                          << val.meta.transformDatas[modelInstanceId].scale.y << ", "
-                                                          << val.meta.transformDatas[modelInstanceId].scale.z
+                        LOG_INFO (m_VKModelMgrLog) << "Scale "
+                                                   << "["
+                                                   << val.meta.transformDatas[modelInstanceId].scale.x << ", "
+                                                   << val.meta.transformDatas[modelInstanceId].scale.y << ", "
+                                                   << val.meta.transformDatas[modelInstanceId].scale.z
                                                    << "]"
                                                    << std::endl;
 
                         LOG_INFO (m_VKModelMgrLog) << "Rotate angle deg "
-                                                   << "[" << val.meta.transformDatas[modelInstanceId].rotateAngleDeg
+                                                   << "["
+                                                   << val.meta.transformDatas[modelInstanceId].rotateAngleDeg.x << ", "
+                                                   << val.meta.transformDatas[modelInstanceId].rotateAngleDeg.y << ", "
+                                                   << val.meta.transformDatas[modelInstanceId].rotateAngleDeg.z
                                                    << "]"
                                                    << std::endl;
 
                         LOG_INFO (m_VKModelMgrLog) << "Scale multiplier "
-                                                   << "[" << val.meta.transformDatas[modelInstanceId].scaleMultiplier
+                                                   << "[" 
+                                                   << val.meta.transformDatas[modelInstanceId].scaleMultiplier
                                                    << "]"
                                                    << std::endl;
                         modelInstanceId++;
