@@ -3,7 +3,7 @@
 
 #include <imgui_impl_vulkan.h>
 #include <IconFontCppHeaders/IconsFontAwesome6.h>
-#include "../Core/Model/VKModelMatrix.h"
+#include "../Core/Model/VKInstanceData.h"
 #include "../Core/Image/VKImageMgr.h"
 #include "../Core/Scene/VKSceneMgr.h"
 #include "Wrapper/UIPrimitive.h"
@@ -13,7 +13,11 @@
 #include "../SandBox/ENLogHelper.h"
 
 namespace Gui {
-    class UIWindow: protected virtual Core::VKModelMatrix,
+    inline e_nodeType operator | (e_nodeType typeA, e_nodeType typeB) {
+        return static_cast <e_nodeType> (static_cast <int> (typeA) | static_cast <int> (typeB));
+    }
+
+    class UIWindow: protected virtual Core::VKInstanceData,
                     protected virtual Core::VKImageMgr,
                     protected virtual Core::VKSceneMgr,
                     protected UIPrimitive,
@@ -35,16 +39,54 @@ namespace Gui {
             };
             std::unordered_map <uint32_t, UIImageInfo> m_uiImageInfoPool;
 
-            std::vector <uint32_t>    m_rootNodeInfoIds;
-            std::vector <uint32_t>    m_lockedNodeInfoIds;
+            struct UILightAnchorInfo {
+                struct Meta {
+                    uint32_t anchorInstanceId;
+                    std::string label;
+                } meta;
+            };
+            std::unordered_map <SandBox::e_anchorType, std::vector <UILightAnchorInfo>> m_uiLightAnchorInfoPool;
+
+            std::vector <uint32_t> m_rootNodeInfoIds;
+            std::vector <uint32_t> m_lockedNodeInfoIds;
+
             std::vector <std::string> m_cameraTypeLabels;
             std::vector <std::string> m_diffuseTextureImageInfoIdLabels;
+            std::vector <std::string> m_directionalLightInfoIdLabels;
+            std::vector <std::string> m_pointLightInfoIdLabels;
+            std::vector <std::string> m_spotLightInfoIdLabels;
 
             uint32_t m_selectedNodeInfoId;
             uint32_t m_selectedPropertyLabelIdx;
 
             Log::Record* m_UIWindowLog;
             const uint32_t m_instanceId = g_collectionSettings.instanceId++;
+
+            void readyTreeLevel (uint32_t& currentNodeInfoId,
+                                 std::vector <uint32_t>& currentLevelNodeInfoIds,
+                                 const std::string& label,
+                                 e_nodeType type,
+                                 const std::vector <uint32_t>& childNodeInfoIds,
+                                 uint32_t coreInfoId,
+                                 ImGuiTreeNodeFlags treeNodeFlags) {
+
+                currentLevelNodeInfoIds.push_back (currentNodeInfoId);
+                readyNodeInfo   (currentNodeInfoId,
+                                 label,
+                                 type,
+                                 childNodeInfoIds,
+                                 coreInfoId,
+                                 childNodeInfoIds.empty(),
+                                 treeNodeFlags);
+
+                /* Update parent node info id for all children
+                 */
+                for (auto const& infoId: childNodeInfoIds) {
+                    auto nodeInfo               = getNodeInfo (infoId);
+                    nodeInfo->meta.parentInfoId = currentNodeInfoId;
+                }
+                currentNodeInfoId++;
+            }
 
             bool isCameraPropertyWritable (void) {
                 auto nodeInfo   = getNodeInfo (m_selectedNodeInfoId);
@@ -61,17 +103,26 @@ namespace Gui {
                     return true;
             }
 
-            /* Note that, member function operators cannot have more than one argument (the first argument is implicitly
-             * this ptr while the second is the one you supply), unless it is a friend function
-            */
-            friend bool operator == (const glm::vec3& vecA, const glm::vec3& vecB) {
-                /* Since vectors consist of floating point values, we want to do an epsilon comparison so they are equal
-                 * if all members are 'nearly' equal
-                */
-                const double epsilon = 0.0001;
-                return fabs (vecA.x - vecB.x) < epsilon &&
-                       fabs (vecA.y - vecB.y) < epsilon &&
-                       fabs (vecA.z - vecB.z) < epsilon;
+            ImVec4 getAnchorColor (uint32_t anchorInfoId, uint32_t anchorInstanceId) {
+                ImVec4 color;
+                color.x = static_cast <float> (decodeTexIdLUTPacket (anchorInfoId, anchorInstanceId, 0))  / UINT8_MAX;
+                color.y = static_cast <float> (decodeTexIdLUTPacket (anchorInfoId, anchorInstanceId, 4))  / UINT8_MAX;
+                color.z = static_cast <float> (decodeTexIdLUTPacket (anchorInfoId, anchorInstanceId, 8))  / UINT8_MAX;
+                color.w = static_cast <float> (decodeTexIdLUTPacket (anchorInfoId, anchorInstanceId, 12)) / UINT8_MAX;
+
+                return color;
+            }
+
+            void setAnchorColor (uint32_t anchorInfoId, uint32_t anchorInstanceId, ImVec4 color) {
+                color.x *= UINT8_MAX;
+                color.y *= UINT8_MAX;
+                color.z *= UINT8_MAX;
+                color.w *= UINT8_MAX;
+
+                updateTexIdLUT (anchorInfoId, anchorInstanceId, 0,  color.x);
+                updateTexIdLUT (anchorInfoId, anchorInstanceId, 4,  color.y);
+                updateTexIdLUT (anchorInfoId, anchorInstanceId, 8,  color.z);
+                updateTexIdLUT (anchorInfoId, anchorInstanceId, 12, color.w);
             }
 
         public:
@@ -94,7 +145,8 @@ namespace Gui {
 
         protected:
             void readyUIWindow (const std::vector <uint32_t>& modelInfoIds,
-                                const std::vector <uint32_t>& cameraInfoIds,
+                                uint32_t cameraAnchorInfoId,
+                                const std::vector <uint32_t>& lightAnchorInfoIds,
                                 uint32_t uiSceneInfoId,
                                 uint32_t frameDeltaPlotDataInfoId,
                                 uint32_t fpsPlotDataInfoId,
@@ -129,7 +181,6 @@ namespace Gui {
                     std::vector <uint32_t> level1NodeInfoIds;
                     std::vector <uint32_t> level2NodeInfoIds;
 
-                    level0NodeInfoIds.clear();
                     for (auto const& infoId: modelInfoIds) {
                         auto modelInfo = getModelInfo (infoId);
 
@@ -138,82 +189,50 @@ namespace Gui {
 
                             level2NodeInfoIds.clear();
                             for (auto const& texId: modelInfo->id.diffuseTextureImageInfos) {
-                                level2NodeInfoIds.push_back (currentNodeInfoId);
+
                                 /* Get texture image info id from look up table for every instance and construct label
                                 */
                                 uint32_t newTexId     = decodeTexIdLUTPacket (infoId, i, texId);
                                 std::string label     = " Diffuse texture [" + std::to_string (newTexId) + "]";
-                                /* Since this is a leaf node, the child info id vector be empty
-                                */
                                 auto leafChildInfoIds = std::vector <uint32_t> {};
 
-                                readyNodeInfo (currentNodeInfoId,
-                                               ICON_FA_FILE_IMAGE + label,
-                                               MODEL_TEXTURE_NODE,
-                                               UNDEFINED_ACTION,
-                                               leafChildInfoIds,
-                                               newTexId,
-                                               true,
-                                               treeNodeFlags);
-
-                                currentNodeInfoId++;
+                                readyTreeLevel (currentNodeInfoId,
+                                                level2NodeInfoIds,
+                                                ICON_FA_FILE_IMAGE + label,
+                                                MODEL_NODE | TEXTURE_NODE,
+                                                leafChildInfoIds,
+                                                newTexId,
+                                                treeNodeFlags);
                             }
 
-                            level1NodeInfoIds.push_back (currentNodeInfoId);
                             std::string label = " Instance [" + std::to_string (i) + "]";
-                            readyNodeInfo (currentNodeInfoId,
-                                           ICON_FA_DATABASE + label,
-                                           MODEL_INSTANCE_NODE,
-                                           UNDEFINED_ACTION,
-                                           level2NodeInfoIds,
-                                           static_cast <uint32_t> (i),
-                                           false,
-                                           treeNodeFlags);
-                            /* Update parent node info id for all children
-                            */
-                            for (auto const& infoId: level2NodeInfoIds) {
-                                auto nodeInfo               = getNodeInfo (infoId);
-                                nodeInfo->meta.parentInfoId = currentNodeInfoId;
-                            }
-                            currentNodeInfoId++;
+                            readyTreeLevel     (currentNodeInfoId,
+                                                level1NodeInfoIds,
+                                                ICON_FA_DATABASE + label,
+                                                MODEL_NODE | INSTANCE_NODE,
+                                                level2NodeInfoIds,
+                                                static_cast <uint32_t> (i),
+                                                treeNodeFlags);
                         }
 
-                        level0NodeInfoIds.push_back (currentNodeInfoId);
                         auto label = SandBox::getModelTypeString (static_cast <SandBox::e_modelType> (infoId));
-                        readyNodeInfo (currentNodeInfoId,
-                                       label,
-                                       MODEL_TYPE_NODE,
-                                       UNDEFINED_ACTION,
-                                       level1NodeInfoIds,
-                                       infoId,
-                                       false,
-                                       treeNodeFlags);
-
-                        for (auto const& infoId: level1NodeInfoIds) {
-                            auto nodeInfo               = getNodeInfo (infoId);
-                            nodeInfo->meta.parentInfoId = currentNodeInfoId;
-                        }
-                        currentNodeInfoId++;
+                        readyTreeLevel         (currentNodeInfoId,
+                                                level0NodeInfoIds,
+                                                label,
+                                                MODEL_NODE | TYPE_NODE,
+                                                level1NodeInfoIds,
+                                                infoId,
+                                                treeNodeFlags);
                     }
 
-                    /* Save root node id
-                    */
-                    m_rootNodeInfoIds.push_back (currentNodeInfoId);
                     std::string label = " Model";
-                    readyNodeInfo (currentNodeInfoId,
-                                   ICON_FA_CUBE + label,
-                                   MODEL_ROOT_NODE,
-                                   UNDEFINED_ACTION,
-                                   level0NodeInfoIds,
-                                   UINT32_MAX,
-                                   false,
-                                   treeNodeFlags);
-
-                    for (auto const& infoId: level0NodeInfoIds) {
-                        auto nodeInfo               = getNodeInfo (infoId);
-                        nodeInfo->meta.parentInfoId = currentNodeInfoId;
-                    }
-                    currentNodeInfoId++;
+                    readyTreeLevel             (currentNodeInfoId,
+                                                m_rootNodeInfoIds,
+                                                ICON_FA_CUBE + label,
+                                                MODEL_NODE | ROOT_NODE,
+                                                level0NodeInfoIds,
+                                                UINT32_MAX,
+                                                treeNodeFlags);
                 }
                 /* |------------------------------------------------------------------------------------------------|
                  * | READY TREE NODES - CAMERA                                                                      |
@@ -221,42 +240,92 @@ namespace Gui {
                 */
                 {
                     std::vector <uint32_t> level0NodeInfoIds;
+                    std::vector <uint32_t> level1NodeInfoIds;
 
-                    level0NodeInfoIds.clear();
-                    for (auto const& infoId: cameraInfoIds) {
+                    {   /* Note that, there is only one camera anchor (unlike light anchors), and its instances will
+                         * represent all the available cameras
+                        */
+                        auto anchorInfo = getModelInfo (cameraAnchorInfoId);
+                        for (size_t i = 0; i < anchorInfo->meta.instances.size(); i++) {
 
-                        level0NodeInfoIds.push_back (currentNodeInfoId);
-                        std::string label     = " Info id [" + std::to_string (infoId) + "]";
-                        auto leafChildInfoIds = std::vector <uint32_t> {};
-                        readyNodeInfo (currentNodeInfoId,
-                                       ICON_FA_FILE + label,
-                                       CAMERA_INFO_ID_NODE,
-                                       UNDEFINED_ACTION,
-                                       leafChildInfoIds,
-                                       infoId,
-                                       true,
-                                       treeNodeFlags);
-                        currentNodeInfoId++;
+                            std::string label     = " Instance ["      + std::to_string (i) + "]" +
+                                                    ":" + "Info id ["  + std::to_string (i) + "]";
+                            auto leafChildInfoIds = std::vector <uint32_t> {};
+
+                            readyTreeLevel (currentNodeInfoId,
+                                            level1NodeInfoIds,
+                                            ICON_FA_ANCHOR + label,
+                                            ANCHOR_NODE | INSTANCE_NODE | CAMERA_NODE | INFO_ID_NODE,
+                                            leafChildInfoIds,
+                                            static_cast <uint32_t> (i),
+                                            treeNodeFlags);
+                        }
+
+                        auto label = SandBox::getAnchorTypeString (static_cast <SandBox::e_anchorType>
+                                     (cameraAnchorInfoId));
+                        readyTreeLevel     (currentNodeInfoId,
+                                            level0NodeInfoIds,
+                                            label,
+                                            ANCHOR_NODE | TYPE_NODE | CAMERA_NODE,
+                                            level1NodeInfoIds,
+                                            cameraAnchorInfoId,
+                                            treeNodeFlags);
                     }
 
-                    /* Save root node id
-                    */
-                    m_rootNodeInfoIds.push_back (currentNodeInfoId);
                     std::string label = " Camera";
-                    readyNodeInfo (currentNodeInfoId,
-                                   ICON_FA_CAMERA + label,
-                                   CAMERA_ROOT_NODE,
-                                   UNDEFINED_ACTION,
-                                   level0NodeInfoIds,
-                                   UINT32_MAX,
-                                   false,
-                                   treeNodeFlags);
+                    readyTreeLevel         (currentNodeInfoId,
+                                            m_rootNodeInfoIds,
+                                            ICON_FA_CAMERA + label,
+                                            CAMERA_NODE | ROOT_NODE,
+                                            level0NodeInfoIds,
+                                            UINT32_MAX,
+                                            treeNodeFlags);
+                }
+                /* |------------------------------------------------------------------------------------------------|
+                 * | READY TREE NODES - LIGHT                                                                       |
+                 * |------------------------------------------------------------------------------------------------|
+                */
+                {
+                    std::vector <uint32_t> level0NodeInfoIds;
+                    std::vector <uint32_t> level1NodeInfoIds;
 
-                    for (auto const& infoId: level0NodeInfoIds) {
-                        auto nodeInfo               = getNodeInfo (infoId);
-                        nodeInfo->meta.parentInfoId = currentNodeInfoId;
+                    for (auto const& infoId: lightAnchorInfoIds) {
+                        auto anchorInfo = getModelInfo (infoId);
+
+                        level1NodeInfoIds.clear();
+                        for (size_t i = 0; i < anchorInfo->meta.instances.size(); i++) {
+
+                            std::string label     = " Instance ["      + std::to_string (i) + "]" +
+                                                    ":" + "Info id ["  + std::to_string (i) + "]";
+                            auto leafChildInfoIds = std::vector <uint32_t> {};
+
+                            readyTreeLevel (currentNodeInfoId,
+                                            level1NodeInfoIds,
+                                            ICON_FA_ANCHOR + label,
+                                            ANCHOR_NODE | INSTANCE_NODE | LIGHT_NODE | INFO_ID_NODE,
+                                            leafChildInfoIds,
+                                            static_cast <uint32_t> (i),
+                                            treeNodeFlags);
+                        }
+
+                        auto label = SandBox::getAnchorTypeString (static_cast <SandBox::e_anchorType> (infoId));
+                        readyTreeLevel     (currentNodeInfoId,
+                                            level0NodeInfoIds,
+                                            label,
+                                            ANCHOR_NODE | TYPE_NODE | LIGHT_NODE,
+                                            level1NodeInfoIds,
+                                            infoId,
+                                            treeNodeFlags);
                     }
-                    currentNodeInfoId++;
+
+                    std::string label = " Light";
+                    readyTreeLevel         (currentNodeInfoId,
+                                            m_rootNodeInfoIds,
+                                            ICON_FA_SUN + label,
+                                            LIGHT_NODE | ROOT_NODE,
+                                            level0NodeInfoIds,
+                                            UINT32_MAX,
+                                            treeNodeFlags);
                 }
                 /* |------------------------------------------------------------------------------------------------|
                  * | READY SELECTED NODE                                                                            |
@@ -317,6 +386,25 @@ namespace Gui {
                 */
                 for (auto const& [key, val]: m_uiImageInfoPool)
                     m_diffuseTextureImageInfoIdLabels.push_back (val.meta.label);
+                /* |------------------------------------------------------------------------------------------------|
+                 * | READY UI LIGHT ANCHOR INFO POOL                                                                |
+                 * |------------------------------------------------------------------------------------------------|
+                */
+                for (auto const& infoId: lightAnchorInfoIds) {
+                    auto anchorInfo = getModelInfo (infoId);
+
+                    for (uint32_t i = 0; i < anchorInfo->meta.instancesCount; i++) {
+                        std::string label = "Info id [" + std::to_string (i) + "]";
+                        m_uiLightAnchorInfoPool[static_cast <SandBox::e_anchorType> (infoId)].push_back ({{i, label}});
+                    }
+                }
+
+                for (auto const& info: m_uiLightAnchorInfoPool[SandBox::ANCHOR_DIRECTIONAL_LIGHT])
+                    m_directionalLightInfoIdLabels.push_back (info.meta.label);
+                for (auto const& info: m_uiLightAnchorInfoPool[SandBox::ANCHOR_POINT_LIGHT])
+                    m_pointLightInfoIdLabels.push_back       (info.meta.label);
+                for (auto const& info: m_uiLightAnchorInfoPool[SandBox::ANCHOR_SPOT_LIGHT])
+                    m_spotLightInfoIdLabels.push_back        (info.meta.label);
                 /* |------------------------------------------------------------------------------------------------|
                  * | READY PLOT DATA INFO                                                                           |
                  * |------------------------------------------------------------------------------------------------|
@@ -400,7 +488,7 @@ namespace Gui {
                                        ImGuiWindowFlags_NoBackground)) {
 
                     auto icons = std::vector <const char*> {
-                        ICON_FA_ANCHOR,         /* Transform    */
+                        ICON_FA_SCISSORS,       /* Transform    */
                         ICON_FA_EYE,            /* View         */
                         ICON_FA_PALETTE,        /* Texture      */
                         ICON_FA_LIGHTBULB,      /* Light        */
@@ -446,65 +534,61 @@ namespace Gui {
                 */
                     if (m_selectedPropertyLabelIdx == TRANSFORM) {
 
-                        if (nodeInfo->meta.type <= MODEL_TEXTURE_NODE) {
+                        if ((nodeInfo->meta.type & MODEL_NODE) ||
+                            (nodeInfo->meta.type & LIGHT_NODE)) {
 
                             glm::vec3 position           = {0.0f, 0.0f, 0.0f};
-                            glm::vec3 rotateAxis         = {0.0f, 0.0f, 0.0f};
                             glm::vec3 scale              = {0.0f, 0.0f, 0.0f};
-                            float rotateAngleDeg         = 0.0f;
+                            glm::vec3 rotateAngleDeg     = {0.0f, 0.0f, 0.0f};
                             bool fieldDisable            = false;
                             bool writePending            = false;
 
-                            if (nodeInfo->meta.type != MODEL_INSTANCE_NODE)
-                                fieldDisable             = true;
-                            else {
+                            if (nodeInfo->meta.type & INSTANCE_NODE) {
                                 auto parentNodeInfo      = getNodeInfo  (nodeInfo->meta.parentInfoId);
                                 auto modelInfo           = getModelInfo (parentNodeInfo->meta.coreInfoId);
                                 uint32_t modelInstanceId = nodeInfo->meta.coreInfoId;
                                 position                 = modelInfo->meta.transformDatas[modelInstanceId].position;
-                                rotateAxis               = modelInfo->meta.transformDatas[modelInstanceId].rotateAxis;
                                 scale                    = modelInfo->meta.transformDatas[modelInstanceId].scale;
                                 rotateAngleDeg           = modelInfo->meta.transformDatas[modelInstanceId].rotateAngleDeg;
 
                                 if (nodeInfo->state.locked)
-                                    fieldDisable = true;
+                                    fieldDisable         = true;
                             }
+                            else
+                                fieldDisable             = true;
 
-                            ImGui::Text              ("%s",            "Position");
-                            if (createFloatTextField ("##positionX",   "X",     "m",        g_styleSettings.precision,
+                            ImGui::Text              ("%s",             "Position");
+                            if (createFloatTextField ("##positionX",    "X",    "m",        g_styleSettings.precision,
                                                       fieldDisable,
-                                                      g_styleSettings.size.inputFieldSmall, position.x)     ||
-                                createFloatTextField ("##positionY",   "Y",     "m",        g_styleSettings.precision,
+                                                      g_styleSettings.size.inputFieldSmall, position.x)         ||
+                                createFloatTextField ("##positionY",    "Y",    "m",        g_styleSettings.precision,
                                                       fieldDisable,
-                                                      g_styleSettings.size.inputFieldSmall, position.y)     ||
-                                createFloatTextField ("##positionZ",   "Z",     "m",        g_styleSettings.precision,
+                                                      g_styleSettings.size.inputFieldSmall, position.y)         ||
+                                createFloatTextField ("##positionZ",    "Z",    "m",        g_styleSettings.precision,
                                                       fieldDisable,
                                                       g_styleSettings.size.inputFieldSmall, position.z))
                                 writePending = true;
 
-                            ImGui::Text              ("%s",            "Rotate axis");
-                            if (createFloatTextField ("##rotateAxisX", "X",     "u",        g_styleSettings.precision,
+                            ImGui::Text              ("%s",             "Rotate angle");
+                            if (createFloatTextField ("##rotateAngleX", "X",    "deg",      g_styleSettings.precision,
                                                       fieldDisable,
-                                                      g_styleSettings.size.inputFieldSmall, rotateAxis.x)   ||
-                                createFloatTextField ("##rotateAxisY", "Y",     "u",        g_styleSettings.precision,
+                                                      g_styleSettings.size.inputFieldSmall, rotateAngleDeg.x)   ||
+                                createFloatTextField ("##rotateAngleY", "Y",    "deg",      g_styleSettings.precision,
                                                       fieldDisable,
-                                                      g_styleSettings.size.inputFieldSmall, rotateAxis.y)   ||
-                                createFloatTextField ("##rotateAxisZ", "Z",     "u",        g_styleSettings.precision,
+                                                      g_styleSettings.size.inputFieldSmall, rotateAngleDeg.y)   ||
+                                createFloatTextField ("##rotateAngleZ", "Z",    "deg",      g_styleSettings.precision,
                                                       fieldDisable,
-                                                      g_styleSettings.size.inputFieldSmall, rotateAxis.z)   ||
-                                createFloatTextField ("##rotateAngle", "Angle", "deg",      g_styleSettings.precision,
-                                                      fieldDisable,
-                                                      g_styleSettings.size.inputFieldSmall, rotateAngleDeg))
+                                                      g_styleSettings.size.inputFieldSmall, rotateAngleDeg.z))
                                 writePending = true;
 
-                            ImGui::Text              ("%s",            "Scale");
-                            if (createFloatTextField ("##scaleX",      "X",     "u",        g_styleSettings.precision,
+                            ImGui::Text              ("%s",             "Scale");
+                            if (createFloatTextField ("##scaleX",       "X",    "u",        g_styleSettings.precision,
                                                       fieldDisable,
-                                                      g_styleSettings.size.inputFieldSmall, scale.x)        ||
-                                createFloatTextField ("##scaleY",      "Y",     "u",        g_styleSettings.precision,
+                                                      g_styleSettings.size.inputFieldSmall, scale.x)            ||
+                                createFloatTextField ("##scaleY",       "Y",    "u",        g_styleSettings.precision,
                                                       fieldDisable,
-                                                      g_styleSettings.size.inputFieldSmall, scale.y)        ||
-                                createFloatTextField ("##scaleZ",      "Z",     "u",        g_styleSettings.precision,
+                                                      g_styleSettings.size.inputFieldSmall, scale.y)            ||
+                                createFloatTextField ("##scaleZ",       "Z",    "u",        g_styleSettings.precision,
                                                       fieldDisable,
                                                       g_styleSettings.size.inputFieldSmall, scale.z))
                                 writePending = true;
@@ -516,7 +600,6 @@ namespace Gui {
                                     uint32_t modelInstanceId = nodeInfo->meta.coreInfoId;
 
                                     modelInfo->meta.transformDatas[modelInstanceId].position       = position;
-                                    modelInfo->meta.transformDatas[modelInstanceId].rotateAxis     = rotateAxis;
                                     modelInfo->meta.transformDatas[modelInstanceId].scale          = scale;
                                     modelInfo->meta.transformDatas[modelInstanceId].rotateAngleDeg = rotateAngleDeg;
                                     createModelMatrix (parentNodeInfo->meta.coreInfoId, modelInstanceId);
@@ -524,25 +607,25 @@ namespace Gui {
                             }
                         }
 
-                        else if (nodeInfo->meta.type <= CAMERA_INFO_ID_NODE) {
+                        else if (nodeInfo->meta.type & CAMERA_NODE) {
 
-                            glm::vec3 position  = {0.0f, 0.0f, 0.0f};
-                            glm::vec3 direction = {0.0f, 0.0f, 0.0f};
-                            glm::vec3 upVector  = {0.0f, 0.0f, 0.0f};
-                            bool fieldDisable   = false;
-                            bool writePending   = false;
+                            glm::vec3 position   = {0.0f, 0.0f, 0.0f};
+                            glm::vec3 direction  = {0.0f, 0.0f, 0.0f};
+                            glm::vec3 upVector   = {0.0f, 0.0f, 0.0f};
+                            bool fieldDisable    = false;
+                            bool writePending    = false;
 
-                            if (nodeInfo->meta.type != CAMERA_INFO_ID_NODE)
-                                fieldDisable    = true;
-                            else {
-                                auto cameraInfo = getCameraInfo (nodeInfo->meta.coreInfoId);
-                                position        = cameraInfo->meta.position;
-                                direction       = cameraInfo->meta.direction;
-                                upVector        = cameraInfo->meta.upVector;
+                            if (nodeInfo->meta.type & INSTANCE_NODE) {
+                                auto cameraInfo  = getCameraInfo (nodeInfo->meta.coreInfoId);
+                                position         = cameraInfo->meta.position;
+                                direction        = cameraInfo->meta.direction;
+                                upVector         = cameraInfo->meta.upVector;
 
                                 if (!isCameraPropertyWritable())
                                     fieldDisable = true;
                             }
+                            else
+                                fieldDisable     = true;
 
                             ImGui::Text              ("%s",           "Position");
                             if (createFloatTextField ("##positionX",  "X", "m",             g_styleSettings.precision,
@@ -606,22 +689,24 @@ namespace Gui {
                         bool fieldDisable                   = false;
                         bool writePending                   = false;
 
-                        if (nodeInfo->meta.type != CAMERA_INFO_ID_NODE)
-                            fieldDisable    = true;
-                        else {
-                            auto cameraInfo = getCameraInfo (nodeInfo->meta.coreInfoId);
-                            fovDeg          = cameraInfo->meta.fovDeg;
-                            nearPlane       = cameraInfo->meta.nearPlane;
-                            farPlane        = cameraInfo->meta.farPlane;
+                        if ((nodeInfo->meta.type & CAMERA_NODE) &&
+                            (nodeInfo->meta.type & INSTANCE_NODE)) {
+
+                            auto cameraInfo  = getCameraInfo (nodeInfo->meta.coreInfoId);
+                            fovDeg           = cameraInfo->meta.fovDeg;
+                            nearPlane        = cameraInfo->meta.nearPlane;
+                            farPlane         = cameraInfo->meta.farPlane;
 
                             if (!isCameraPropertyWritable())
                                 fieldDisable = true;
                         }
+                        else
+                            fieldDisable     = true;
                         /* To prevent showing post label, prefix it with '##'
                         */
                         createCombo          ("##cameraType",
                                               "Camera type",
-                                              "##postLabel",
+                                              "##postLabelCameraType",
                                               m_cameraTypeLabels,
                                               false,
                                               g_styleSettings.size.inputFieldLarge,
@@ -652,12 +737,7 @@ namespace Gui {
                             }
                         }
 
-                        /* Note that, in order to reuse the same field disable boolean for model instance node, we need
-                         * to make sure to reset it in the else block
-                        */
-                        if (nodeInfo->meta.type != MODEL_INSTANCE_NODE)
-                            fieldDisable             = true;
-                        else {
+                        if (nodeInfo->meta.type & INSTANCE_NODE) {
                             auto parentNodeInfo      = getNodeInfo  (nodeInfo->meta.parentInfoId);
                             auto modelInfo           = getModelInfo (parentNodeInfo->meta.coreInfoId);
                             uint32_t modelInstanceId = nodeInfo->meta.coreInfoId;
@@ -668,9 +748,12 @@ namespace Gui {
                                 hideRender           = false;
                             fieldDisable             = false;
                         }
+                        else
+                            fieldDisable             = true;
 
+                        const char* preLabel = (nodeInfo->meta.type & ANCHOR_NODE) ? "Hide anchor": "Hide model";
                         createCheckBoxButton ("##hideRender",
-                                              "Hide render",
+                                              preLabel,
                                               "##postLabelHideRender",
                                               fieldDisable,
                                               hideRender);
@@ -702,7 +785,9 @@ namespace Gui {
                         static uint32_t selectedDiffuseLabelIdx = 0;
                         bool fieldDisable                       = false;
 
-                        if (nodeInfo->meta.type == MODEL_TEXTURE_NODE) {
+                        if (nodeInfo->meta.type & MODEL_NODE &&
+                            nodeInfo->meta.type & TEXTURE_NODE) {
+
                             uint32_t infoId         = nodeInfo->meta.coreInfoId;
                             /* Convert texture image info id to label, and we use the label to find the offset to the
                              * labels vector. This provides us a common index to access both the map and the vector
@@ -754,8 +839,139 @@ namespace Gui {
                  * |------------------------------------------------------------------------------------------------|
                 */
                     else if (m_selectedPropertyLabelIdx == LIGHT) {
-                        /* [ X ] Pending implementation */
-                        createCheckBoxButton ("##shadow", "Shadow", "##postLabel", true, showShadow);
+                        static ImVec4 ambientColor                  = {0.0f, 0.0f, 0.0f, 1.0f};
+
+                        static uint32_t selectedDirectionalLabelIdx = 0;
+                        static uint32_t selectedPointLabelIdx       = 0;
+                        static uint32_t selectedSpotLabelIdx        = 0;
+
+                        bool fieldDisableDirectional                = false;
+                        bool fieldDisablePoint                      = false;
+                        bool fieldDisableSpot                       = false;
+
+                        if (nodeInfo->meta.type & LIGHT_NODE &&
+                            nodeInfo->meta.type & INSTANCE_NODE) {
+
+                            auto parentNodeInfo = getNodeInfo (nodeInfo->meta.parentInfoId);
+                            auto anchorType     = static_cast <SandBox::e_anchorType> (parentNodeInfo->meta.coreInfoId);
+
+                            if (anchorType == SandBox::ANCHOR_DIRECTIONAL_LIGHT) {
+
+                                uint32_t infoId             = nodeInfo->meta.coreInfoId;
+                                std::string label           = "Info id [" + std::to_string (infoId) + "]";
+                                selectedDirectionalLabelIdx = std::find (m_directionalLightInfoIdLabels.begin(),
+                                                                         m_directionalLightInfoIdLabels.end(), label) -
+                                                                         m_directionalLightInfoIdLabels.begin();
+                                fieldDisableDirectional     = true;
+                            }
+
+                            else if (anchorType == SandBox::ANCHOR_POINT_LIGHT)  {
+
+                                uint32_t infoId             = nodeInfo->meta.coreInfoId;
+                                std::string label           = "Info id [" + std::to_string (infoId) + "]";
+                                selectedPointLabelIdx       = std::find (m_pointLightInfoIdLabels.begin(),
+                                                                         m_pointLightInfoIdLabels.end(), label) -
+                                                                         m_pointLightInfoIdLabels.begin();
+                                fieldDisablePoint           = true;
+                            }
+
+                            else if (anchorType == SandBox::ANCHOR_SPOT_LIGHT)   {
+
+                                uint32_t infoId             = nodeInfo->meta.coreInfoId;
+                                std::string label           = "Info id [" + std::to_string (infoId) + "]";
+                                selectedSpotLabelIdx        = std::find (m_spotLightInfoIdLabels.begin(),
+                                                                         m_spotLightInfoIdLabels.end(), label) -
+                                                                         m_spotLightInfoIdLabels.begin();
+                                fieldDisableSpot            = true;
+                            }
+                        }
+
+                        createColorButton ("##ambient",
+                                           "Ambient",
+                                           false,
+                                           g_styleSettings.size.inputFieldLarge,
+                                           ambientColor);
+
+                        if (!m_directionalLightInfoIdLabels.empty()) {
+                            createCombo           ("##directional",
+                                                   "Directional",
+                                                   "##postLabelDirectional",
+                                                   m_directionalLightInfoIdLabels,
+                                                   fieldDisableDirectional,
+                                                   g_styleSettings.size.inputFieldLarge,
+                                                   selectedDirectionalLabelIdx);
+                            {   /* Data read/write */
+                                auto anchorType           = SandBox::ANCHOR_DIRECTIONAL_LIGHT;
+                                auto infos                = m_uiLightAnchorInfoPool[anchorType];
+                                auto iter                 = std::next (infos.begin(), selectedDirectionalLabelIdx);
+                                uint32_t anchorInstanceId = iter->meta.anchorInstanceId;
+                                ImVec4 directionalColor   = getAnchorColor (anchorType, anchorInstanceId);
+
+                                createColorButton ("##directional",
+                                                   "Color",
+                                                   false,
+                                                   g_styleSettings.size.inputFieldLarge,
+                                                   directionalColor);
+
+                                setAnchorColor    (anchorType, anchorInstanceId, directionalColor);
+                            }
+                        }
+
+                        if (!m_pointLightInfoIdLabels.empty()) {
+                            createCombo           ("##point",
+                                                   "Point",
+                                                   "##postLabelPoint",
+                                                   m_pointLightInfoIdLabels,
+                                                   fieldDisablePoint,
+                                                   g_styleSettings.size.inputFieldLarge,
+                                                   selectedPointLabelIdx);
+                            {   /* Data read/write */
+                                auto anchorType           = SandBox::ANCHOR_POINT_LIGHT;
+                                auto infos                = m_uiLightAnchorInfoPool[anchorType];
+                                auto iter                 = std::next (infos.begin(), selectedPointLabelIdx);
+                                uint32_t anchorInstanceId = iter->meta.anchorInstanceId;
+                                ImVec4 pointColor         = getAnchorColor (anchorType, anchorInstanceId);
+
+                                createColorButton ("##point",
+                                                   "Color",
+                                                   false,
+                                                   g_styleSettings.size.inputFieldLarge,
+                                                   pointColor);
+
+                                setAnchorColor    (anchorType, anchorInstanceId, pointColor);
+                            }
+                        }
+
+                        if (!m_spotLightInfoIdLabels.empty()) {
+                            createCombo           ("##spot",
+                                                   "Spot",
+                                                   "##postLabelSpot",
+                                                   m_spotLightInfoIdLabels,
+                                                   fieldDisableSpot,
+                                                   g_styleSettings.size.inputFieldLarge,
+                                                   selectedSpotLabelIdx);
+                            {   /* Data read/write */
+                                auto anchorType           = SandBox::ANCHOR_SPOT_LIGHT;
+                                auto infos                = m_uiLightAnchorInfoPool[anchorType];
+                                auto iter                 = std::next (infos.begin(), selectedSpotLabelIdx);
+                                uint32_t anchorInstanceId = iter->meta.anchorInstanceId;
+                                ImVec4 spotColor          = getAnchorColor (anchorType, anchorInstanceId);
+
+                                createColorButton ("##spot",
+                                                   "Color",
+                                                   false,
+                                                   g_styleSettings.size.inputFieldLarge,
+                                                   spotColor);
+
+                                setAnchorColor    (anchorType, anchorInstanceId, spotColor);
+                            }
+                        }
+
+                        createCheckBoxButton ("##shadow",
+                                              "Shadow",
+                                              "##postLabelShadow",
+                                              true,
+                                              showShadow);
                     }
                 /* |------------------------------------------------------------------------------------------------|
                  * | RIGHT PANEL - PHYSICS                                                                          |
@@ -763,7 +979,11 @@ namespace Gui {
                 */
                     else if (m_selectedPropertyLabelIdx == PHYSICS) {
                         /* [ X ] Pending implementation */
-                        createCheckBoxButton ("##boundingBox", "Bounding box", "##postLabel", true, showBoundingBox);
+                        createCheckBoxButton ("##boundingBox",
+                                              "Bounding box",
+                                              "##postLabelBoundingBox",
+                                              true,
+                                              showBoundingBox);
                     }
                 /* |------------------------------------------------------------------------------------------------|
                  * | RIGHT PANEL - DEBUG                                                                            |

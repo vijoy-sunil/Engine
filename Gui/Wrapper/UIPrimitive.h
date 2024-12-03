@@ -22,6 +22,32 @@ namespace Gui {
             }
 
         protected:
+            void createColorButton (const char* stringId,
+                                    const char* label,
+                                    bool buttonDisable,
+                                    float buttonWidth,
+                                    ImVec4& color) {
+
+                auto colorEditFlags = ImGuiColorEditFlags_NoBorder      |
+                                      ImGuiColorEditFlags_NoTooltip     |
+                                      ImGuiColorEditFlags_AlphaBar      |
+                                      ImGuiColorEditFlags_AlphaPreview  |
+                                      ImGuiColorEditFlags_NoSidePreview;
+
+                ImGui::Text             ("%s", label);
+                ImGui::SameLine         (g_styleSettings.alignment.inputField);
+
+                ImGui::BeginDisabled    (buttonDisable);
+                if (ImGui::ColorButton  (stringId, color, colorEditFlags, ImVec2 (buttonWidth, 0.0f))) {
+                    ImGui::OpenPopup    (stringId);
+                }
+                if (ImGui::BeginPopup   (stringId)) {
+                    ImGui::ColorPicker4 (stringId, (float*) &color, colorEditFlags);
+                    ImGui::EndPopup();
+                }
+                ImGui::EndDisabled();
+            }
+
             void createCheckBoxButton (const char* stringId,
                                        const char* preLabel,
                                        const char* postLabel,

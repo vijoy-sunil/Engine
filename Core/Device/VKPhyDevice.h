@@ -79,10 +79,15 @@ namespace Core {
                 descriptorIndexingFeatures.pNext = VK_NULL_HANDLE;
                 getPhyDeviceFeatures2 (phyDevice, VK_NULL_HANDLE, &descriptorIndexingFeatures);
 
-                return queueFamilyIndicesComplete &&
-                       extensionsSupported &&
-                       swapChainAdequate   &&
+                return queueFamilyIndicesComplete          &&
+                       extensionsSupported                 &&
+                       swapChainAdequate                   &&
                        supportedFeatures.samplerAnisotropy &&
+                       supportedFeatures.sampleRateShading &&
+                       /* This specifies whether point and wireframe fill modes are supported. If this feature is not
+                        * enabled, the VK_POLYGON_MODE_POINT and VK_POLYGON_MODE_LINE enum values must not be used
+                       */
+                       supportedFeatures.fillModeNonSolid  &&
                        /* This indicates whether the implementation supports the SPIR-V run time descriptor array
                         * capability. If this feature is not enabled, descriptors must not be declared in runtime arrays
                        */

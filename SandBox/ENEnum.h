@@ -22,6 +22,13 @@ namespace SandBox {
     } e_modelType;
 
     typedef enum {
+        ANCHOR_CAMERA               = 16,
+        ANCHOR_DIRECTIONAL_LIGHT    = 17,
+        ANCHOR_POINT_LIGHT          = 18,
+        ANCHOR_SPOT_LIGHT           = 19
+    } e_anchorType;
+
+    typedef enum {
         POSITIVE_X                  = 0,
         NEGATIVE_X                  = 1,
         POSITIVE_Y                  = 2,

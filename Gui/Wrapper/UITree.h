@@ -97,7 +97,6 @@ namespace Gui {
             void readyNodeInfo (uint32_t nodeInfoId,
                                 std::string label,
                                 e_nodeType type,
-                                e_nodeActionType action,
                                 const std::vector <uint32_t>& childInfoIds,
                                 uint32_t coreInfoId,
                                 bool leaf,
@@ -116,7 +115,7 @@ namespace Gui {
                 NodeInfo info{};
                 info.meta.label            = label;
                 info.meta.type             = type;
-                info.meta.action           = action;
+                info.meta.action           = UNDEFINED_ACTION;
 
                 info.meta.childInfoIds     = childInfoIds;
                 info.meta.parentInfoId     = UINT32_MAX;
@@ -185,9 +184,18 @@ namespace Gui {
                                            << "[" << val.meta.label << "]"
                                            << std::endl;
 
-                    LOG_INFO (m_UITreeLog) << "Type "
-                                           << "[" << getNodeTypeString (val.meta.type) << "]"
+                    LOG_INFO (m_UITreeLog) << "Type"
                                            << std::endl;
+                    uint32_t typeMask = 1 << 31;
+                    while (typeMask) {
+                        if (typeMask & val.meta.type) {
+                            LOG_INFO (m_UITreeLog) << "["
+                                                   << getNodeTypeString (static_cast <e_nodeType> (typeMask))
+                                                   << "]"
+                                                   << std::endl;
+                        }
+                        typeMask = typeMask >> 1;
+                    }
 
                     LOG_INFO (m_UITreeLog) << "Action "
                                            << "[" << getNodeActionTypeString (val.meta.action) << "]"

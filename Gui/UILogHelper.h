@@ -7,12 +7,15 @@ namespace Gui {
     const char* getNodeTypeString (e_nodeType type) {
         switch (type)
         {
-            case MODEL_ROOT_NODE:       return "MODEL_ROOT_NODE";
-            case MODEL_TYPE_NODE:       return "MODEL_TYPE_NODE";
-            case MODEL_INSTANCE_NODE:   return "MODEL_INSTANCE_NODE";
-            case MODEL_TEXTURE_NODE:    return "MODEL_TEXTURE_NODE";
-            case CAMERA_ROOT_NODE:      return "CAMERA_ROOT_NODE";
-            case CAMERA_INFO_ID_NODE:   return "CAMERA_INFO_ID_NODE";
+            case MODEL_NODE:            return "MODEL_NODE";
+            case ANCHOR_NODE:           return "ANCHOR_NODE";
+            case CAMERA_NODE:           return "CAMERA_NODE";
+            case LIGHT_NODE:            return "LIGHT_NODE";
+            case ROOT_NODE:             return "ROOT_NODE";
+            case TYPE_NODE:             return "TYPE_NODE";
+            case INSTANCE_NODE:         return "INSTANCE_NODE";
+            case TEXTURE_NODE:          return "TEXTURE_NODE";
+            case INFO_ID_NODE:          return "INFO_ID_NODE";
             default:                    return "Unhandled e_nodeType";
         }
     }

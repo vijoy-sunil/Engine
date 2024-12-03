@@ -5,6 +5,7 @@
 #include "../Core/Scene/VKDrawSequence.h"
 #include "../Core/Scene/VKDeleteSequence.h"
 #include "Extension/ENSkyBox.h"
+#include "Extension/ENAnchor.h"
 #include "Extension/ENGrid.h"
 #include "Extension/ENUI.h"
 #include "Controller/ENGeneric.h"
@@ -14,22 +15,34 @@ namespace SandBox {
                          protected Core::VKDrawSequence,
                          protected Core::VKDeleteSequence,
                          protected ENSkyBox,
+                         protected ENAnchor,
                          protected ENGrid,
                          protected ENUI,
                          protected ENGeneric {
         private:
             uint32_t m_deviceInfoId;
+
             std::vector <uint32_t> m_modelInfoIds;
-            uint32_t m_renderPassInfoId;
-            uint32_t m_pipelineInfoId;
-            uint32_t m_cameraInfoId;
-            uint32_t m_sceneInfoId;
-            /* Secondary ids
+            /* Anchors are a subclass of models in the sense that they reside in the model mgr. They are used to visualize
+             * model-less instances such as lights and cameras by copying their properties like pose, color, etc. Note
+             * that, the info ids for the aforementioned model-less instances will be same as their corresponding anchor
+             * instance ids, which also makes it easier to replace an anchor with a model down the road
             */
+            std::vector <uint32_t> m_anchorInfoIds;
+
+            uint32_t m_renderPassInfoId;
             uint32_t m_uiRenderPassInfoId;
+
+            uint32_t m_pipelineInfoId;
             uint32_t m_skyBoxPipelineInfoId;
+            uint32_t m_anchorPipelineInfoId;
             uint32_t m_gridPipelineInfoId;
+
+            uint32_t m_activeCameraInfoId;
+
+            uint32_t m_sceneInfoId;
             uint32_t m_skyBoxSceneInfoId;
+            uint32_t m_anchorSceneInfoId;
             uint32_t m_uiSceneInfoId;
             /* To use the right objects (command buffers, sync objects etc.) every frame, keep track of the current
              * frame in flight
@@ -40,16 +53,23 @@ namespace SandBox {
         public:
             ENApplication (void) {
                 m_deviceInfoId         = 0;
-                m_renderPassInfoId     = 0;
-                m_pipelineInfoId       = 0;
-                m_cameraInfoId         = 0;
-                m_sceneInfoId          = 0;
 
+                m_renderPassInfoId     = 0;
                 m_uiRenderPassInfoId   = 1;
+
+                m_pipelineInfoId       = 0;
                 m_skyBoxPipelineInfoId = 1;
-                m_gridPipelineInfoId   = 2;
+                m_anchorPipelineInfoId = 2;
+                m_gridPipelineInfoId   = 3;
+                /* Note that, the default active camera info id will be set to the first camera anchor instance id, which
+                 * will be instance id #0
+                */
+                m_activeCameraInfoId   = 0;
+
+                m_sceneInfoId          = 0;
                 m_skyBoxSceneInfoId    = 1;
-                m_uiSceneInfoId        = 2;
+                m_anchorSceneInfoId    = 2;
+                m_uiSceneInfoId        = 3;
 
                 m_currentFrameInFlight = 0;
             }
@@ -102,15 +122,37 @@ namespace SandBox {
                                      g_skyBoxModelImportInfoPool[SKY_BOX].mtlFileDirPath);
                 importTransformData (SKY_BOX,
                                      g_skyBoxModelImportInfoPool[SKY_BOX].transformDataPath);
+
+                uint32_t anchorTotalInstanceCount = 0;
+                readyModelInfo      (ANCHOR_CAMERA,
+                                     g_cameraAnchorImportInfoPool[ANCHOR_CAMERA].modelPath,
+                                     g_cameraAnchorImportInfoPool[ANCHOR_CAMERA].mtlFileDirPath);
+                importTransformData (ANCHOR_CAMERA,
+                                     g_cameraAnchorImportInfoPool[ANCHOR_CAMERA].transformDataPath);
+
+                anchorTotalInstanceCount++;
+                m_anchorInfoIds.push_back (ANCHOR_CAMERA);
+
+                for (auto const& [infoId, info]: g_lightAnchorImportInfoPool) {
+                    readyModelInfo  (infoId,
+                                     info.modelPath,
+                                     info.mtlFileDirPath);
+
+                    anchorTotalInstanceCount += importTransformData (infoId, info.transformDataPath);
+                    m_anchorInfoIds.push_back (infoId);
+                }
                 /* |------------------------------------------------------------------------------------------------|
                  * | READY CAMERA INFO                                                                              |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                readyCameraInfo (m_cameraInfoId);
-                auto cameraInfo            = getCameraInfo (m_cameraInfoId);
-                cameraInfo->meta.upVector  = g_cameraSettings.upVector;
-                cameraInfo->meta.nearPlane = g_cameraSettings.nearPlane;
-                cameraInfo->meta.farPlane  = g_cameraSettings.farPlane;
+                auto anchorInfo = getModelInfo (ANCHOR_CAMERA);
+                for (uint32_t i = 0; i < anchorInfo->meta.instancesCount; i++) {
+                    readyCameraInfo (i);
+                    auto cameraInfo            = getCameraInfo (i);
+                    cameraInfo->meta.upVector  = g_cameraSettings.upVector;
+                    cameraInfo->meta.nearPlane = g_cameraSettings.nearPlane;
+                    cameraInfo->meta.farPlane  = g_cameraSettings.farPlane;
+                }
                 /* |------------------------------------------------------------------------------------------------|
                  * | READY SCENE INFO                                                                               |
                  * |------------------------------------------------------------------------------------------------|
@@ -128,8 +170,17 @@ namespace SandBox {
                                 UINT32_MAX,
                                 UINT32_MAX,
                                 UINT32_MAX,
-                                0,
+                                0,                   /* Uniform buffer info id base            */
                                 UINT32_MAX,
+                                UINT32_MAX,
+                                UINT32_MAX,
+                                UINT32_MAX);
+                readySceneInfo (m_anchorSceneInfoId, anchorTotalInstanceCount,
+                                UINT32_MAX,
+                                UINT32_MAX,
+                                UINT32_MAX,
+                                UINT32_MAX,
+                                2,                   /* Storage buffer info id base            */
                                 UINT32_MAX,
                                 UINT32_MAX,
                                 UINT32_MAX);
@@ -166,6 +217,16 @@ namespace SandBox {
                                                                           m_skyBoxPipelineInfoId,
                                                                           m_pipelineInfoId,
                                                                           m_skyBoxSceneInfoId);
+                /* |------------------------------------------------------------------------------------------------|
+                 * | EXTENSION INIT - ANCHOR                                                                        |
+                 * |------------------------------------------------------------------------------------------------|
+                */
+                    ENAnchor::initExtension (m_deviceInfoId,
+                                             m_anchorInfoIds,
+                                             m_renderPassInfoId,
+                                             m_anchorPipelineInfoId,
+                                             m_pipelineInfoId,
+                                             m_anchorSceneInfoId);
                 /* |------------------------------------------------------------------------------------------------|
                  * | EXTENSION INIT - GRID                                                                          |
                  * |------------------------------------------------------------------------------------------------|
@@ -209,15 +270,19 @@ namespace SandBox {
                         SKY_BOX
                     );
 
-                    auto cameraInfoIds = std::vector <uint32_t> {
-                        m_cameraInfoId
+                    auto lightAnchorInfoIds = std::vector <uint32_t> {
+                        ANCHOR_DIRECTIONAL_LIGHT,
+                        ANCHOR_POINT_LIGHT,
+                        ANCHOR_SPOT_LIGHT
                     };
-                    readyUI                 (m_deviceInfoId,
-                                             modelInfoIds,
-                                             m_uiRenderPassInfoId,
-                                             cameraInfoIds,
-                                             m_uiSceneInfoId,
-                                             uiTextureImagePool);
+
+                    readyUI (m_deviceInfoId,
+                             modelInfoIds,
+                             ANCHOR_CAMERA,
+                             lightAnchorInfoIds,
+                             m_uiRenderPassInfoId,
+                             m_uiSceneInfoId,
+                             uiTextureImagePool);
                 }
                 });
                 /* |------------------------------------------------------------------------------------------------|
@@ -225,7 +290,7 @@ namespace SandBox {
                  * |------------------------------------------------------------------------------------------------|
                 */
                 readyGenericController (m_deviceInfoId);
-                readyCameraController  (m_deviceInfoId, m_cameraInfoId, SPOILER);
+                readyCameraController  (m_deviceInfoId, m_activeCameraInfoId, SPOILER);
             }
 
             void runScene (void) {
@@ -264,24 +329,39 @@ namespace SandBox {
                     */
                     {   /* [ X ] Vehicle base translation test */
 #if ENABLE_SAMPLE_MODELS_IMPORT
-                        auto modelInfoId         = SAMPLE_CYLINDER;
-                        uint32_t modelInstanceId = 3;
+                        auto modelInfoId          = SAMPLE_CYLINDER;
+                        uint32_t modelInstanceId  = 3;
 #else
-                        auto modelInfoId         = VEHICLE_BASE;
-                        uint32_t modelInstanceId = 0;
+                        auto modelInfoId          = VEHICLE_BASE;
+                        uint32_t modelInstanceId  = 0;
 #endif  // ENABLE_SAMPLE_MODELS_IMPORT
-                        auto modelInfo           = getModelInfo (modelInfoId);
-                        auto& position           = modelInfo->meta.transformDatas[modelInstanceId].position;
+                        auto modelInfo            = getModelInfo (modelInfoId);
+                        auto& position            = modelInfo->meta.transformDatas[modelInstanceId].position;
 
-                        position                += glm::vec3 (0.0f, 0.0f, 0.01f);
+                        position                 += glm::vec3 (0.0f, 0.0f, 0.01f);
                         createModelMatrix (modelInfoId, modelInstanceId);
                     }
-                    {   /* Sky box rotation */
-                        auto modelInfo           = getModelInfo (SKY_BOX);
-                        uint32_t modelInstanceId = 0;
-                        auto& rotateAngleDeg     = modelInfo->meta.transformDatas[modelInstanceId].rotateAngleDeg;
+                    {   /* Active camera anchor */
+                        auto anchorInfo           = getModelInfo (ANCHOR_CAMERA);
+                        uint32_t anchorInstanceId = m_activeCameraInfoId;
+                        auto& position            = anchorInfo->meta.transformDatas[anchorInstanceId].position;
+                        auto& rotateAngleDeg      = anchorInfo->meta.transformDatas[anchorInstanceId].rotateAngleDeg;
 
-                        rotateAngleDeg           = elapsedTime * 1.0f;
+                        auto cameraInfo           = getCameraInfo  (anchorInstanceId);
+                        glm::vec3 direction       = glm::normalize (cameraInfo->meta.direction);
+                        float yawDeg              = -glm::degrees  (atan2 (direction.x, direction.z));
+                        float pitchDeg            = -glm::degrees  (asin  (direction.y));
+
+                        position                  = cameraInfo->meta.position;
+                        rotateAngleDeg            = glm::vec3 (pitchDeg, yawDeg, 0.0f);
+                        createModelMatrix (ANCHOR_CAMERA, anchorInstanceId);
+                    }
+                    {   /* Sky box rotation */
+                        auto modelInfo            = getModelInfo (SKY_BOX);
+                        uint32_t modelInstanceId  = 0;
+                        auto& rotateAngleDeg      = modelInfo->meta.transformDatas[modelInstanceId].rotateAngleDeg;
+
+                        rotateAngleDeg            = glm::vec3 (0.0f, elapsedTime * 1.0f, 0.0f);
                         createModelMatrix (SKY_BOX, modelInstanceId);
                     }
 
@@ -298,7 +378,7 @@ namespace SandBox {
                                                      m_modelInfoIds,
                                                      m_renderPassInfoId,
                                                      m_pipelineInfoId,
-                                                     m_cameraInfoId,
+                                                     m_activeCameraInfoId,
                                                      m_sceneInfoId,
                                                      m_currentFrameInFlight,
                                                      m_swapChainImageId,
@@ -310,8 +390,18 @@ namespace SandBox {
                 */
                         ENSkyBox::drawExtension     (SKY_BOX,
                                                      m_skyBoxPipelineInfoId,
-                                                     m_cameraInfoId,
+                                                     m_activeCameraInfoId,
                                                      m_skyBoxSceneInfoId,
+                                                     m_sceneInfoId,
+                                                     m_currentFrameInFlight);
+                /* |------------------------------------------------------------------------------------------------|
+                 * | EXTENSION DRAW - ANCHOR                                                                        |
+                 * |------------------------------------------------------------------------------------------------|
+                */
+                        ENAnchor::drawExtension     (m_anchorInfoIds,
+                                                     m_anchorPipelineInfoId,
+                                                     m_activeCameraInfoId,
+                                                     m_anchorSceneInfoId,
                                                      m_sceneInfoId,
                                                      m_currentFrameInFlight);
                 /* |------------------------------------------------------------------------------------------------|
@@ -319,7 +409,7 @@ namespace SandBox {
                  * |------------------------------------------------------------------------------------------------|
                 */
                         ENGrid::drawExtension       (m_gridPipelineInfoId,
-                                                     m_cameraInfoId,
+                                                     m_activeCameraInfoId,
                                                      m_sceneInfoId,
                                                      m_currentFrameInFlight);
                     }},
@@ -365,9 +455,10 @@ namespace SandBox {
                  * |------------------------------------------------------------------------------------------------|
                 */
                 auto modelInfoIds      = m_modelInfoIds;
-                modelInfoIds.push_back (
-                    SKY_BOX
-                );
+                modelInfoIds.push_back     (SKY_BOX);
+                for (auto const& infoId: m_anchorInfoIds)
+                    modelInfoIds.push_back (infoId);
+
                 auto renderPassInfoIds = std::vector <uint32_t> {
                     m_renderPassInfoId,
                     m_uiRenderPassInfoId
@@ -375,18 +466,20 @@ namespace SandBox {
                 auto pipelineInfoIds   = std::vector <uint32_t> {
                     m_pipelineInfoId,
                     m_skyBoxPipelineInfoId,
+                    m_anchorPipelineInfoId,
                     m_gridPipelineInfoId
                 };
                 auto sceneInfoIds      = std::vector <uint32_t> {
                     m_sceneInfoId,
                     m_skyBoxSceneInfoId,
+                    m_anchorSceneInfoId,
                     m_uiSceneInfoId
                 };
                 VKDeleteSequence::runSequence   (m_deviceInfoId,
                                                  modelInfoIds,
                                                  renderPassInfoIds,
                                                  pipelineInfoIds,
-                                                 m_cameraInfoId,
+                                                 m_activeCameraInfoId,
                                                  sceneInfoIds,
                 [&](void) {
                 {

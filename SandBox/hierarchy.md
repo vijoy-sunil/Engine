@@ -45,6 +45,39 @@
     |ENSkyBox
 
 
+    |<----------------------|{VKInstanceData}
+    |
+    |<----------------------|{VKVertexBuffer}
+    |
+    |<----------------------|{VKIndexBuffer}
+    |
+    |<----------------------|{VKStorageBuffer}
+    |
+    |<----------------------|{VKVertexInput}
+    |
+    |<----------------------|{VKShaderStage}
+    |
+    |<----------------------|{VKRasterization}
+    |
+    |<----------------------|{VKDescriptorSetLayout}
+    |
+    |<----------------------|{VKPushConstantRange}
+    |
+    |<----------------------|{VKPipelineLayout}
+    |
+    |<----------------------|{VKCmd}
+    |
+    |<----------------------|{VKCameraMgr}
+    |
+    |<----------------------|{VKDescriptor}
+    |
+    |<......................|ENConfig
+    |
+    |
+    |(protected)
+    |ENAnchor
+
+
     |<----------------------|{VKVertexInput}
     |
     |<----------------------|{VKShaderStage}
@@ -134,6 +167,8 @@
     |<----------------------|VKDeleteSequence
     |
     |<----------------------|ENSkyBox
+    |
+    |<----------------------|ENAnchor
     |
     |<----------------------|ENGrid
     |

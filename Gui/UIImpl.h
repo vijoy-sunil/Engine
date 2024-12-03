@@ -62,8 +62,9 @@ namespace Gui {
         protected:
             void readyUI (uint32_t deviceInfoId,
                           const std::vector <uint32_t>& modelInfoIds,
+                          uint32_t cameraAnchorInfoId,
+                          const std::vector <uint32_t>& lightAnchorInfoIds,
                           uint32_t uiRenderPassInfoId,
-                          const std::vector <uint32_t>& cameraInfoIds,
                           uint32_t uiSceneInfoId,
                           const std::unordered_map <uint32_t, std::vector <std::string>>& textureImagePool) {
 
@@ -272,7 +273,8 @@ namespace Gui {
                  * |------------------------------------------------------------------------------------------------|
                 */
                 readyUIWindow (modelInfoIds,
-                               cameraInfoIds,
+                               cameraAnchorInfoId,
+                               lightAnchorInfoIds,
                                uiSceneInfoId,
                                m_frameDeltaPlotDataInfoId,
                                m_fpsPlotDataInfoId,

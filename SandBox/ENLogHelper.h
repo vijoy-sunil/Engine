@@ -27,6 +27,17 @@ namespace SandBox {
         }
     }
 
+    const char* getAnchorTypeString (e_anchorType type) {
+        switch (type)
+        {
+            case ANCHOR_CAMERA:             return "ANCHOR_CAMERA";
+            case ANCHOR_DIRECTIONAL_LIGHT:  return "ANCHOR_DIRECTIONAL_LIGHT";
+            case ANCHOR_POINT_LIGHT:        return "ANCHOR_POINT_LIGHT";
+            case ANCHOR_SPOT_LIGHT:         return "ANCHOR_SPOT_LIGHT";
+            default:                        return "Unhandled e_anchorType";
+        }
+    }
+
     const char* getCameraTypeString (e_cameraType type) {
         switch (type)
         {

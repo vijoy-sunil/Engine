@@ -24,7 +24,7 @@ namespace SandBox {
         const char* transformDataPath;
     };
 
-    std::unordered_map <e_modelType, ModelImportInfo> g_sampleModelImportInfoPool  = {
+    std::unordered_map <e_modelType, ModelImportInfo> g_sampleModelImportInfoPool = {
         {SAMPLE_CUBE,               {"Asset/Model/Sample/Cube.obj",
                                      "Asset/Model/Sample/",
                                      "Asset/Model/Sample/Cube_Instances.json"}},
@@ -50,7 +50,7 @@ namespace SandBox {
                                      "Asset/Model/Sample/Platform_Instances.json"}}
     };
 
-    std::unordered_map <e_modelType, ModelImportInfo> g_staticModelImportInfoPool  = {
+    std::unordered_map <e_modelType, ModelImportInfo> g_staticModelImportInfoPool = {
         {T0_GENERIC_NOCAP,          {"Asset/Model/Track/T0_Generic_NoCap.obj",
                                      "Asset/Model/Track/",
                                      "Asset/Model/Track/T0_Generic_NoCap_Instances.json"}},
@@ -90,10 +90,30 @@ namespace SandBox {
                                      "Asset/Model/Vehicle/Tyre_Instances.json"}}
     };
 
-    std::unordered_map <e_modelType, ModelImportInfo> g_skyBoxModelImportInfoPool  = {
+    std::unordered_map <e_modelType, ModelImportInfo> g_skyBoxModelImportInfoPool = {
         {SKY_BOX,                   {"Asset/Model/Environment/Sky_Box.obj",
                                      "Asset/Model/Environment/",
                                      "Asset/Model/Environment/Sky_Box_Instances.json"}}
+    };
+
+    std::unordered_map <e_anchorType, ModelImportInfo> g_cameraAnchorImportInfoPool = {
+        {ANCHOR_CAMERA,             {"Asset/Model/Anchor/Anchor_Camera.obj",
+                                     "Asset/Model/Anchor/",
+                                     "Asset/Model/Anchor/Anchor_Camera_Instances.json"}}
+    };
+
+    std::unordered_map <e_anchorType, ModelImportInfo> g_lightAnchorImportInfoPool = {
+        {ANCHOR_DIRECTIONAL_LIGHT,  {"Asset/Model/Anchor/Anchor_Directional_Light.obj",
+                                     "Asset/Model/Anchor/",
+                                     "Asset/Model/Anchor/Anchor_Directional_Light_Instances.json"}},
+
+        {ANCHOR_POINT_LIGHT,        {"Asset/Model/Anchor/Anchor_Point_Light.obj",
+                                     "Asset/Model/Anchor/",
+                                     "Asset/Model/Anchor/Anchor_Point_Light_Instances.json"}},
+
+        {ANCHOR_SPOT_LIGHT,         {"Asset/Model/Anchor/Anchor_Spot_Light.obj",
+                                     "Asset/Model/Anchor/",
+                                     "Asset/Model/Anchor/Anchor_Spot_Light_Instances.json"}}
     };
 
     /* A sky box is a "large" cube that encompasses the entire scene and contains 6 images of a surrounding environment,
@@ -129,6 +149,11 @@ namespace SandBox {
             const char* vertexShaderBinaryPath                       = "Build/Bin/skyBoxShaderVert.spv";
             const char* fragmentShaderBinaryPath                     = "Build/Bin/skyBoxShaderFrag.spv";
         } skyBoxShaderStage;
+
+        struct AnchorShaderStage {
+            const char* vertexShaderBinaryPath                       = "Build/Bin/anchorShaderVert.spv";
+            const char* fragmentShaderBinaryPath                     = "Build/Bin/anchorShaderFrag.spv";
+        } anchorShaderStage;
 
         struct GridShaderStage {
             const char* vertexShaderBinaryPath                       = "Build/Bin/gridShaderVert.spv";

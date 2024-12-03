@@ -3,12 +3,15 @@
 
 namespace Gui {
     typedef enum {
-        MODEL_ROOT_NODE     = 0,
-        MODEL_TYPE_NODE     = 1,
-        MODEL_INSTANCE_NODE = 2,
-        MODEL_TEXTURE_NODE  = 3,
-        CAMERA_ROOT_NODE    = 4,
-        CAMERA_INFO_ID_NODE = 5
+        MODEL_NODE          = 1,
+        ANCHOR_NODE         = 2,
+        CAMERA_NODE         = 4,
+        LIGHT_NODE          = 8,
+        ROOT_NODE           = 16,
+        TYPE_NODE           = 32,
+        INSTANCE_NODE       = 64,
+        TEXTURE_NODE        = 128,
+        INFO_ID_NODE        = 256
     } e_nodeType;
 
     typedef enum {

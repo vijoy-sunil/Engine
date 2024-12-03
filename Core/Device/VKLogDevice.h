@@ -116,12 +116,14 @@ namespace Core {
                 /* Enable only the following device features
                  * (1) samplerAnisotropy
                  * (2) sampleRateShading
+                 * (3) fillModeNonSolid
                  *
                  * Note that, even though it is very unlikely that a modern graphics card will not support it, we still
                  * check if it is available when picking the physical device
                 */
                 requiredFeatures.samplerAnisotropy = VK_TRUE;
                 requiredFeatures.sampleRateShading = VK_TRUE;
+                requiredFeatures.fillModeNonSolid  = VK_TRUE;
 
                 VkPhysicalDeviceDescriptorIndexingFeatures descriptorIndexingFeatures{};
                 descriptorIndexingFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES;
