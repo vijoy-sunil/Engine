@@ -3,9 +3,9 @@
     "instances": [
         {
             "id":             0,
-            "position":       [   0.0, -24.0, 24.0],
-            "scale":          [   2.0,   2.0,  2.0],
-            "rotateAngleDeg": [-135.0,   0.0,  0.0]
+            "position":       [  0.0, -24.0, 24.0],
+            "scale":          [  2.0,   2.0,  2.0],
+            "rotateAngleDeg": [-45.0, 180.0,  0.0]
         }
     ]
 }
