@@ -184,9 +184,9 @@ namespace SandBox {
             }
 
             /* Note that, the direction update binding returns immediately if the camera type is not in drone fly
-             * mode. This is to lock camera movement unless you are in drone fly mode. However, the cursor position
+             * type. This is to lock camera movement unless you are in drone fly type. However, the cursor position
              * callback is still triggered even though the binding function returns immediately. To prevent this, we
-             * will clear the cursor position callback whenever we switch out of drone fly mode
+             * will clear the cursor position callback whenever we switch out of drone fly type
             */
             void setDirection (double xPosIn, double yPosIn) {
                 if (getCameraType() != DRONE_FLY)
@@ -278,15 +278,11 @@ namespace SandBox {
             }
 
         protected:
-            void readyCameraController (uint32_t deviceInfoId,
-                                        uint32_t cameraInfoId,
-                                        e_cameraType type) {
-
+            void readyCameraController (uint32_t deviceInfoId) {
                 m_deviceInfoId = deviceInfoId;
-                m_cameraInfoId = cameraInfoId;
+                m_previousType = UNDEFINED;
                 m_currentType  = UNDEFINED;
 
-                setCameraType (type);
                 /* Note that, we are attempting to pass non-static class methods, which require an object instance to call
                  * them on, hence we use a lambda expression as shown below
                 */
@@ -353,11 +349,18 @@ namespace SandBox {
                 return m_currentType;
             }
 
+            void setCameraActive (uint32_t cameraInfoId, e_cameraType type) {
+                m_cameraInfoId = cameraInfoId;
+                m_currentType  = UNDEFINED;
+
+                setCameraType (type);
+            }
+
             void setCameraType (e_cameraType type) {
                 m_previousType = m_currentType;
                 m_currentType  = type;
-                /* Note that, we can only switch to drone follow if we are in either of the drone modes. Drone follow
-                 * mode would not make sense otherwise. We need to revert previous and current camera type before
+                /* Note that, we can only switch to drone follow if we are in either of the drone types. Drone follow
+                 * type would not make sense otherwise. We need to revert previous and current camera type before
                  * returning
                 */
                 if ((m_previousType != DRONE_LOCK && m_previousType != DRONE_FLY) &&
@@ -367,7 +370,7 @@ namespace SandBox {
                     m_previousType  = UNDEFINED;
                     return;
                 }
-                /* Note that, when we switch to drone follow mode we need to remove the model transformation done to the
+                /* Note that, when we switch to drone follow type we need to remove the model transformation done to the
                  * camera vectors before using them. The boolean ensures that the removal/inverse operation is only done
                  * once after the switch happens
                 */
@@ -388,7 +391,7 @@ namespace SandBox {
 
                     m_firstCursorEvent = true;
                 }
-                /* Delete mouse event callbacks if the camera is not in drone fly mode
+                /* Delete mouse event callbacks if the camera is not in drone fly type
                 */
                 if (m_previousType == DRONE_FLY && m_currentType != DRONE_FLY) {
                     auto deviceInfo = getDeviceInfo (m_deviceInfoId);
@@ -402,7 +405,7 @@ namespace SandBox {
                 }
             }
 
-            void setCameraState (uint32_t modelInfoId, uint32_t modelInstanceId) {
+            void setCameraFocus (uint32_t modelInfoId, uint32_t modelInstanceId) {
                 if (getCameraType() == DRONE_LOCK || getCameraType() == DRONE_FLY)
                     return;
 
@@ -433,36 +436,36 @@ namespace SandBox {
                                            glm::rotate    (glm::mat4 (1.0f), glm::radians (rotateAngleDeg.x),
                                                            glm::vec3 (1.0f,  0.0f, 0.0f));      /* Pitch */
                 /* Why do we need to remove the model transformation that was done to the camera vectors before using
-                 * them in drone follow mode? The reason is, when we switch to drone follow mode, we use the camera
-                 * vectors from the previous mode, which have already been multiplied by the model matrix. But, what
+                 * them in drone follow type? The reason is, when we switch to drone follow type, we use the camera
+                 * vectors from the previous type, which have already been multiplied by the model matrix. But, what
                  * we need is camera vectors that assumes the model is at the origin (just like the vectors stored in
                  * the camera info pool). Once we have obtained them, we can then easily apply the model transformation
                  * to it so that it follows the target
                  *
-                 * Note that, the boolean is unset when we switch to drone follow mode, and, when we write new data to
+                 * Note that, the boolean is unset when we switch to drone follow type, and, when we write new data to
                  * camera vectors via ui
                 */
                 if (currentType == DRONE_FOLLOW && !isModelTransformRemoved()) {
-                    glm::mat4 inverseModelMatrix                 = glm::inverse (modelMatrix);
-                    g_cameraStateInfoPool[currentType].position  = glm::vec3    (inverseModelMatrix *
-                                                                   glm::vec4    (cameraInfo->meta.position, 1.0f));
+                    glm::mat4 inverseModelMatrix                = glm::inverse (modelMatrix);
+                    g_cameraTypeInfoPool[currentType].position  = glm::vec3    (inverseModelMatrix *
+                                                                  glm::vec4    (cameraInfo->meta.position, 1.0f));
 
-                    g_cameraStateInfoPool[currentType].direction = glm::vec3    (inverseModelMatrix *
-                                                                   glm::vec4    (cameraInfo->meta.direction +
-                                                                                 cameraInfo->meta.position, 1.0f));
+                    g_cameraTypeInfoPool[currentType].direction = glm::vec3    (inverseModelMatrix *
+                                                                  glm::vec4    (cameraInfo->meta.direction +
+                                                                                cameraInfo->meta.position, 1.0f));
 
-                    g_cameraStateInfoPool[currentType].fovDeg    = cameraInfo->meta.fovDeg;
+                    g_cameraTypeInfoPool[currentType].fovDeg    = cameraInfo->meta.fovDeg;
                     setModelTransformRemoved (true);
                 }
 
                 cameraInfo->meta.position  = glm::vec3 (modelMatrix *
-                                             glm::vec4 (g_cameraStateInfoPool[currentType].position,  1.0f));
+                                             glm::vec4 (g_cameraTypeInfoPool[currentType].position,  1.0f));
 
                 cameraInfo->meta.direction = glm::vec3 (modelMatrix *
-                                             glm::vec4 (g_cameraStateInfoPool[currentType].direction, 1.0f)) -
+                                             glm::vec4 (g_cameraTypeInfoPool[currentType].direction, 1.0f)) -
                                              cameraInfo->meta.position;
 
-                cameraInfo->meta.fovDeg    = g_cameraStateInfoPool[currentType].fovDeg;
+                cameraInfo->meta.fovDeg    = g_cameraTypeInfoPool[currentType].fovDeg;
 
                 cameraInfo->meta.updateViewMatrix       = true;
                 cameraInfo->meta.updateProjectionMatrix = true;

@@ -173,13 +173,13 @@ namespace SandBox {
         const glm::vec3 upVector                                     = {0.0f, -1.0f,  0.0f};
     } g_cameraSettings;
 
-    struct CameraStateInfo {
+    struct CameraTypeInfo {
         glm::vec3 position;
         glm::vec3 direction;
         float fovDeg;
     };
 
-    std::unordered_map <e_cameraType, CameraStateInfo> g_cameraStateInfoPool = {
+    std::unordered_map <e_cameraType, CameraTypeInfo> g_cameraTypeInfoPool = {
         /* Camera position with respect to vehicle base
          *
          *      Z                   |===============|   Front       : {0.0, 0.0, 0.9}

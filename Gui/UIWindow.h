@@ -25,6 +25,13 @@ namespace Gui {
                     protected UIPlot,
                     protected SandBox::ENCamera {
         private:
+            struct UIBridgeInfo {
+                struct CameraFocus {
+                    uint32_t modelInfoId;
+                    uint32_t modelInstanceId;
+                } cameraFocus;
+            } m_uiBridgeInfo;
+
             struct UIImageInfo {
                 struct Meta {
                     uint32_t selectedLayerIdx;
@@ -39,13 +46,13 @@ namespace Gui {
             };
             std::unordered_map <uint32_t, UIImageInfo> m_uiImageInfoPool;
 
-            struct UILightAnchorInfo {
+            struct UILightInfo {
                 struct Meta {
                     uint32_t anchorInstanceId;
                     std::string label;
                 } meta;
             };
-            std::unordered_map <SandBox::e_anchorType, std::vector <UILightAnchorInfo>> m_uiLightAnchorInfoPool;
+            std::unordered_map <SandBox::e_anchorType, std::vector <UILightInfo>> m_uiLightInfoPool;
 
             std::vector <uint32_t> m_rootNodeInfoIds;
             std::vector <uint32_t> m_lockedNodeInfoIds;
@@ -387,7 +394,7 @@ namespace Gui {
                 for (auto const& [key, val]: m_uiImageInfoPool)
                     m_diffuseTextureImageInfoIdLabels.push_back (val.meta.label);
                 /* |------------------------------------------------------------------------------------------------|
-                 * | READY UI LIGHT ANCHOR INFO POOL                                                                |
+                 * | READY UI LIGHT INFO POOL                                                                       |
                  * |------------------------------------------------------------------------------------------------|
                 */
                 for (auto const& infoId: lightAnchorInfoIds) {
@@ -395,15 +402,15 @@ namespace Gui {
 
                     for (uint32_t i = 0; i < anchorInfo->meta.instancesCount; i++) {
                         std::string label = "Info id [" + std::to_string (i) + "]";
-                        m_uiLightAnchorInfoPool[static_cast <SandBox::e_anchorType> (infoId)].push_back ({{i, label}});
+                        m_uiLightInfoPool[static_cast <SandBox::e_anchorType> (infoId)].push_back ({{i, label}});
                     }
                 }
 
-                for (auto const& info: m_uiLightAnchorInfoPool[SandBox::ANCHOR_DIRECTIONAL_LIGHT])
+                for (auto const& info: m_uiLightInfoPool[SandBox::ANCHOR_DIRECTIONAL_LIGHT])
                     m_directionalLightInfoIdLabels.push_back (info.meta.label);
-                for (auto const& info: m_uiLightAnchorInfoPool[SandBox::ANCHOR_POINT_LIGHT])
+                for (auto const& info: m_uiLightInfoPool[SandBox::ANCHOR_POINT_LIGHT])
                     m_pointLightInfoIdLabels.push_back       (info.meta.label);
-                for (auto const& info: m_uiLightAnchorInfoPool[SandBox::ANCHOR_SPOT_LIGHT])
+                for (auto const& info: m_uiLightInfoPool[SandBox::ANCHOR_SPOT_LIGHT])
                     m_spotLightInfoIdLabels.push_back        (info.meta.label);
                 /* |------------------------------------------------------------------------------------------------|
                  * | READY PLOT DATA INFO                                                                           |
@@ -529,7 +536,7 @@ namespace Gui {
                                        ImGuiChildFlags_AlwaysUseWindowPadding,
                                        0)) {
                 /* |------------------------------------------------------------------------------------------------|
-                 * | RIGHT PANEL - TRANSFORM                                                                        |
+                 * | RIGHT PANEL - TRANSFORM/MODEL/LIGHT                                                            |
                  * |------------------------------------------------------------------------------------------------|
                 */
                     if (m_selectedPropertyLabelIdx == TRANSFORM) {
@@ -606,7 +613,10 @@ namespace Gui {
                                 }
                             }
                         }
-
+                /* |------------------------------------------------------------------------------------------------|
+                 * | RIGHT PANEL - TRANSFORM/CAMERA                                                                 |
+                 * |------------------------------------------------------------------------------------------------|
+                */
                         else if (nodeInfo->meta.type & CAMERA_NODE) {
 
                             glm::vec3 position   = {0.0f, 0.0f, 0.0f};
@@ -685,6 +695,7 @@ namespace Gui {
                         float nearPlane                     = 0.0f;
                         float farPlane                      = 0.0f;
                         uint32_t selectedCameraTypeLabelIdx = static_cast <uint32_t> (getCameraType());
+                        bool setFocus                       = false;
                         bool hideRender                     = false;
                         bool fieldDisable                   = false;
                         bool writePending                   = false;
@@ -736,7 +747,49 @@ namespace Gui {
                                 setModelTransformRemoved (false);
                             }
                         }
+                /* |------------------------------------------------------------------------------------------------|
+                 * | RIGHT PANEL - VIEW/SET FOCUS                                                                   |
+                 * |------------------------------------------------------------------------------------------------|
+                */
+                        /* Note that, we want to prevent the camera from setting focus on itself, hence why the 'if'
+                         * condition
+                        */
+                        if (!(nodeInfo->meta.type & CAMERA_NODE) &&
+                             (nodeInfo->meta.type & INSTANCE_NODE)) {
 
+                            auto parentNodeInfo      = getNodeInfo  (nodeInfo->meta.parentInfoId);
+                            uint32_t modelInfoId     = parentNodeInfo->meta.coreInfoId;
+                            uint32_t modelInstanceId = nodeInfo->meta.coreInfoId;
+
+                            if ((m_uiBridgeInfo.cameraFocus.modelInfoId     == modelInfoId) &&
+                                (m_uiBridgeInfo.cameraFocus.modelInstanceId == modelInstanceId))
+                                setFocus             = true;
+                            fieldDisable             = false;
+                        }
+                        else
+                            fieldDisable             = true;
+
+                        createCheckBoxButton ("##setFocus",
+                                              "Set focus",
+                                              "##postLabelSetFocus",
+                                              fieldDisable,
+                                              setFocus);
+                        {   /* Data write */
+                            if (!fieldDisable) {
+                                auto parentNodeInfo      = getNodeInfo  (nodeInfo->meta.parentInfoId);
+                                uint32_t modelInfoId     = parentNodeInfo->meta.coreInfoId;
+                                uint32_t modelInstanceId = nodeInfo->meta.coreInfoId;
+
+                                if (setFocus) {
+                                    m_uiBridgeInfo.cameraFocus.modelInfoId     = modelInfoId;
+                                    m_uiBridgeInfo.cameraFocus.modelInstanceId = modelInstanceId;
+                                }
+                            }
+                        }
+                /* |------------------------------------------------------------------------------------------------|
+                 * | RIGHT PANEL - VIEW/HIDE MODEL/ANCHOR                                                           |
+                 * |------------------------------------------------------------------------------------------------|
+                */
                         if (nodeInfo->meta.type & INSTANCE_NODE) {
                             auto parentNodeInfo      = getNodeInfo  (nodeInfo->meta.parentInfoId);
                             auto modelInfo           = getModelInfo (parentNodeInfo->meta.coreInfoId);
@@ -891,7 +944,10 @@ namespace Gui {
                                            false,
                                            g_styleSettings.size.inputFieldLarge,
                                            ambientColor);
-
+                /* |------------------------------------------------------------------------------------------------|
+                 * | RIGHT PANEL - LIGHT/DIRECTIONAL                                                                |
+                 * |------------------------------------------------------------------------------------------------|
+                */
                         if (!m_directionalLightInfoIdLabels.empty()) {
                             createCombo           ("##directional",
                                                    "Directional",
@@ -902,7 +958,7 @@ namespace Gui {
                                                    selectedDirectionalLabelIdx);
                             {   /* Data read/write */
                                 auto anchorType           = SandBox::ANCHOR_DIRECTIONAL_LIGHT;
-                                auto infos                = m_uiLightAnchorInfoPool[anchorType];
+                                auto infos                = m_uiLightInfoPool[anchorType];
                                 auto iter                 = std::next (infos.begin(), selectedDirectionalLabelIdx);
                                 uint32_t anchorInstanceId = iter->meta.anchorInstanceId;
                                 ImVec4 directionalColor   = getAnchorColor (anchorType, anchorInstanceId);
@@ -916,7 +972,10 @@ namespace Gui {
                                 setAnchorColor    (anchorType, anchorInstanceId, directionalColor);
                             }
                         }
-
+                /* |------------------------------------------------------------------------------------------------|
+                 * | RIGHT PANEL - LIGHT/POINT                                                                      |
+                 * |------------------------------------------------------------------------------------------------|
+                */
                         if (!m_pointLightInfoIdLabels.empty()) {
                             createCombo           ("##point",
                                                    "Point",
@@ -927,7 +986,7 @@ namespace Gui {
                                                    selectedPointLabelIdx);
                             {   /* Data read/write */
                                 auto anchorType           = SandBox::ANCHOR_POINT_LIGHT;
-                                auto infos                = m_uiLightAnchorInfoPool[anchorType];
+                                auto infos                = m_uiLightInfoPool[anchorType];
                                 auto iter                 = std::next (infos.begin(), selectedPointLabelIdx);
                                 uint32_t anchorInstanceId = iter->meta.anchorInstanceId;
                                 ImVec4 pointColor         = getAnchorColor (anchorType, anchorInstanceId);
@@ -941,7 +1000,10 @@ namespace Gui {
                                 setAnchorColor    (anchorType, anchorInstanceId, pointColor);
                             }
                         }
-
+                /* |------------------------------------------------------------------------------------------------|
+                 * | RIGHT PANEL - LIGHT/SPOT                                                                       |
+                 * |------------------------------------------------------------------------------------------------|
+                */
                         if (!m_spotLightInfoIdLabels.empty()) {
                             createCombo           ("##spot",
                                                    "Spot",
@@ -952,7 +1014,7 @@ namespace Gui {
                                                    selectedSpotLabelIdx);
                             {   /* Data read/write */
                                 auto anchorType           = SandBox::ANCHOR_SPOT_LIGHT;
-                                auto infos                = m_uiLightAnchorInfoPool[anchorType];
+                                auto infos                = m_uiLightInfoPool[anchorType];
                                 auto iter                 = std::next (infos.begin(), selectedSpotLabelIdx);
                                 uint32_t anchorInstanceId = iter->meta.anchorInstanceId;
                                 ImVec4 spotColor          = getAnchorColor (anchorType, anchorInstanceId);
@@ -1000,6 +1062,10 @@ namespace Gui {
                  * |------------------------------------------------------------------------------------------------|
                 */
                 ImGui::End();
+            }
+
+            UIBridgeInfo* getUIBridgeInfo (void) {
+                return &m_uiBridgeInfo;
             }
 
             void cleanUp (const std::vector <uint32_t>& plotDataInfoIds) {

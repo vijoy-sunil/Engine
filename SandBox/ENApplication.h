@@ -38,6 +38,7 @@ namespace SandBox {
             uint32_t m_anchorPipelineInfoId;
             uint32_t m_gridPipelineInfoId;
 
+            std::vector <uint32_t> m_cameraInfoIds;
             uint32_t m_activeCameraInfoId;
 
             uint32_t m_sceneInfoId;
@@ -152,6 +153,8 @@ namespace SandBox {
                     cameraInfo->meta.upVector  = g_cameraSettings.upVector;
                     cameraInfo->meta.nearPlane = g_cameraSettings.nearPlane;
                     cameraInfo->meta.farPlane  = g_cameraSettings.farPlane;
+
+                    m_cameraInfoIds.push_back (i);
                 }
                 /* |------------------------------------------------------------------------------------------------|
                  * | READY SCENE INFO                                                                               |
@@ -265,7 +268,7 @@ namespace SandBox {
                  * | READY UI                                                                                       |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                    auto modelInfoIds  = m_modelInfoIds;
+                    auto modelInfoIds = m_modelInfoIds;
                     modelInfoIds.push_back (
                         SKY_BOX
                     );
@@ -275,6 +278,17 @@ namespace SandBox {
                         ANCHOR_POINT_LIGHT,
                         ANCHOR_SPOT_LIGHT
                     };
+
+                    /* Save camera focus model and model instance ids
+                    */
+                    auto uiBridgeInfo = getUIBridgeInfo();
+#if ENABLE_SAMPLE_MODELS_IMPORT
+                    uiBridgeInfo->cameraFocus.modelInfoId     = SAMPLE_CYLINDER;
+                    uiBridgeInfo->cameraFocus.modelInstanceId = 1;
+#else
+                    uiBridgeInfo->cameraFocus.modelInfoId     = VEHICLE_BASE;
+                    uiBridgeInfo->cameraFocus.modelInstanceId = 0;
+#endif  // ENABLE_SAMPLE_MODELS_IMPORT
 
                     readyUI (m_deviceInfoId,
                              modelInfoIds,
@@ -290,7 +304,12 @@ namespace SandBox {
                  * |------------------------------------------------------------------------------------------------|
                 */
                 readyGenericController (m_deviceInfoId);
-                readyCameraController  (m_deviceInfoId, m_activeCameraInfoId, SPOILER);
+                readyCameraController  (m_deviceInfoId);
+                /* Note that, it is important to set a camera instance active and an intital camera type to avoid using
+                 * an undefined camera type. (It is possible to switch out of this undefined state by switching to a
+                 * valid non-drone camera type)
+                */
+                setCameraActive        (m_activeCameraInfoId, SPOILER);
             }
 
             void runScene (void) {
@@ -313,20 +332,17 @@ namespace SandBox {
                      * glfwWaitEvents() is a better choice
                     */
                     glfwPollEvents();
-                /* |------------------------------------------------------------------------------------------------|
-                 * | MOTION UPDATE                                                                                  |
-                 * |------------------------------------------------------------------------------------------------|
-                */
+
                     static auto startOfRenderTime = std::chrono::high_resolution_clock::now();
                     auto startOfFrameTime         = std::chrono::high_resolution_clock::now();
                     elapsedTime                   = std::chrono::duration <float, std::chrono::seconds::period>
                                                     (startOfFrameTime - startOfRenderTime).count();
 
                     handleKeyEvents (startOfFrameTime);
-
-                    /* Update vehicle state before camera state so that the model matrix is ready to be used by camera
-                     * vectors in the same frame
-                    */
+                /* |------------------------------------------------------------------------------------------------|
+                 * | MOTION UPDATE - CONTINUOUS                                                                     |
+                 * |------------------------------------------------------------------------------------------------|
+                */
                     {   /* [ X ] Vehicle base translation test */
 #if ENABLE_SAMPLE_MODELS_IMPORT
                         auto modelInfoId          = SAMPLE_CYLINDER;
@@ -340,6 +356,19 @@ namespace SandBox {
 
                         position                 += glm::vec3 (0.0f, 0.0f, 0.01f);
                         createModelMatrix (modelInfoId, modelInstanceId);
+                    }
+                    {   /* Sky box rotation */
+                        auto modelInfo            = getModelInfo (SKY_BOX);
+                        uint32_t modelInstanceId  = 0;
+                        auto& rotateAngleDeg      = modelInfo->meta.transformDatas[modelInstanceId].rotateAngleDeg;
+
+                        rotateAngleDeg            = glm::vec3 (0.0f, elapsedTime * 1.0f, 0.0f);
+                        createModelMatrix (SKY_BOX, modelInstanceId);
+                    }
+                    {   /* Camera focus */
+                        auto uiBridgeInfo         = getUIBridgeInfo();
+                        setCameraFocus (uiBridgeInfo->cameraFocus.modelInfoId,
+                                        uiBridgeInfo->cameraFocus.modelInstanceId);
                     }
                     {   /* Active camera anchor */
                         auto anchorInfo           = getModelInfo (ANCHOR_CAMERA);
@@ -356,20 +385,6 @@ namespace SandBox {
                         rotateAngleDeg            = glm::vec3 (pitchDeg, yawDeg, 0.0f);
                         createModelMatrix (ANCHOR_CAMERA, anchorInstanceId);
                     }
-                    {   /* Sky box rotation */
-                        auto modelInfo            = getModelInfo (SKY_BOX);
-                        uint32_t modelInstanceId  = 0;
-                        auto& rotateAngleDeg      = modelInfo->meta.transformDatas[modelInstanceId].rotateAngleDeg;
-
-                        rotateAngleDeg            = glm::vec3 (0.0f, elapsedTime * 1.0f, 0.0f);
-                        createModelMatrix (SKY_BOX, modelInstanceId);
-                    }
-
-#if ENABLE_SAMPLE_MODELS_IMPORT
-                    setCameraState (SAMPLE_CYLINDER, 1);
-#else
-                    setCameraState (VEHICLE_BASE, 0);
-#endif  // ENABLE_SAMPLE_MODELS_IMPORT
                 /* |------------------------------------------------------------------------------------------------|
                  * | RUN SEQUENCE - DRAW                                                                            |
                  * |------------------------------------------------------------------------------------------------|
@@ -479,7 +494,7 @@ namespace SandBox {
                                                  modelInfoIds,
                                                  renderPassInfoIds,
                                                  pipelineInfoIds,
-                                                 m_activeCameraInfoId,
+                                                 m_cameraInfoIds,
                                                  sceneInfoIds,
                 [&](void) {
                 {
