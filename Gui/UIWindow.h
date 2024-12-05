@@ -741,26 +741,22 @@ namespace Gui {
                                               g_styleSettings.size.inputFieldLarge,
                                               selectedCameraInfoIdLabelIdx))
                         {   /* Data write */
-                            auto anchorInfo           = getModelInfo (m_cameraAnchorInfoId);
-                            uint32_t anchorInstanceId = selectedCameraInfoIdLabelIdx;
-                            auto position             = anchorInfo->meta.transformDatas[anchorInstanceId].position;
-                            auto rotateAngleDeg       = anchorInfo->meta.transformDatas[anchorInstanceId].rotateAngleDeg;
-
-                            auto cameraInfo           = getCameraInfo (anchorInstanceId);
-                            auto& direction           = cameraInfo->meta.direction;
+                            auto anchorInfo            = getModelInfo (m_cameraAnchorInfoId);
+                            uint32_t anchorInstanceId  = selectedCameraInfoIdLabelIdx;
+                            auto position              = anchorInfo->meta.transformDatas[anchorInstanceId].position;
+                            auto rotateAngleDeg        = anchorInfo->meta.transformDatas[anchorInstanceId].rotateAngleDeg;
                             /* Match the selected camera's pose with the anchor instance's pose. Note that, usually when
                              * switching to the drone camera types, we use the previous type's values for fov, etc. as
                              * the initial values. However, since we are setting the initial camera type to drone lock,
                              * we will need to manually set them as shown below
                             */
-                            cameraInfo->meta.position = position;
-                            cameraInfo->meta.fovDeg   = 80.0f;
+                            auto cameraInfo            = getCameraInfo (anchorInstanceId);
+                            cameraInfo->meta.position  = position;
 
-                            float yawDeg              = -rotateAngleDeg.y;
-                            float pitchDeg            = -rotateAngleDeg.x;
-                            direction.x               = sin (glm::radians (yawDeg)) * cos (glm::radians (pitchDeg));
-                            direction.y               = sin (glm::radians (pitchDeg));
-                            direction.z               = cos (glm::radians (yawDeg)) * cos (glm::radians (pitchDeg));
+                            float yawDeg               = -rotateAngleDeg.y;
+                            float pitchDeg             = -rotateAngleDeg.x;
+                            cameraInfo->meta.direction = getDirectionVector (yawDeg, pitchDeg);
+                            cameraInfo->meta.fovDeg    = 80.0f;
                             /* Note that, upon chainging the active camera, we are setting the camera type to drone lock
                              * type which inherently doesn't set the boolean to update the camera matrices. Hence, why
                              * we need to explicitly set them

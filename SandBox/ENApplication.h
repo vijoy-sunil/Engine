@@ -379,8 +379,8 @@ namespace SandBox {
 
                         auto cameraInfo           = getCameraInfo  (anchorInstanceId);
                         glm::vec3 direction       = glm::normalize (cameraInfo->meta.direction);
-                        float yawDeg              = -glm::degrees  (atan2 (direction.x, direction.z));
-                        float pitchDeg            = -glm::degrees  (asin  (direction.y));
+                        float yawDeg              = -getYawDeg     (direction);
+                        float pitchDeg            = -getPitchDeg   (direction);
 
                         position                  = cameraInfo->meta.position;
                         rotateAngleDeg            = glm::vec3 (pitchDeg, yawDeg, 0.0f);

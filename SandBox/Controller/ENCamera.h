@@ -1,14 +1,14 @@
 #ifndef EN_CAMERA_H
 #define EN_CAMERA_H
 
-#include "../../Core/Model/VKModelMgr.h"
+#include "../../Core/Model/VKModelMatrix.h"
 #include "../../Core/Scene/VKCameraMgr.h"
 #include "../../Gui/UIInput.h"
 #include "../../Gui/UIUtil.h"
 #include "../ENConfig.h"
 
 namespace SandBox {
-    class ENCamera: protected virtual Core::VKModelMgr,
+    class ENCamera: protected virtual Core::VKModelMatrix,
                     protected virtual Core::VKCameraMgr,
                     protected virtual Gui::UIInput,
                     protected virtual Gui::UIUtil {
@@ -29,17 +29,6 @@ namespace SandBox {
 
             Log::Record* m_ENCameraLog;
             const uint32_t m_instanceId = g_collectionSettings.instanceId++;
-
-            float getYawDeg (glm::vec3 direction) {
-                return glm::degrees (atan2 (direction.x, direction.z));
-            }
-
-            float getPitchDeg (glm::vec3 direction) {
-                /* Note that, asin() function takes input in the range of [-1.0, 1.0], so we need to normalize the
-                 * input vector before calling this function
-                */
-                return glm::degrees (asin (direction.y));
-            }
 
             void switchToSpoiler (float deltaTime) {
                 if (isKeyBoardCapturedByUI())
@@ -237,11 +226,7 @@ namespace SandBox {
 
                 /* Finally, calculate the actual direction vector
                 */
-                direction.x = sin (glm::radians (m_yawDeg)) * cos (glm::radians (m_pitchDeg));
-                direction.y = sin (glm::radians (m_pitchDeg));
-                direction.z = cos (glm::radians (m_yawDeg)) * cos (glm::radians (m_pitchDeg));
-
-                cameraInfo->meta.direction        = direction;
+                cameraInfo->meta.direction        = getDirectionVector (m_yawDeg, m_pitchDeg);
                 cameraInfo->meta.updateViewMatrix = true;
             }
 
@@ -345,6 +330,26 @@ namespace SandBox {
                 m_modelTransformRemoved = val;
             }
 
+            float getYawDeg (glm::vec3 direction) {
+                return glm::degrees (atan2 (direction.x, direction.z));
+            }
+
+            float getPitchDeg (glm::vec3 direction) {
+                /* Note that, asin() function takes input in the range of [-1.0, 1.0], so we need to normalize the
+                 * input vector before calling this function
+                */
+                return glm::degrees (asin (direction.y));
+            }
+
+            glm::vec3 getDirectionVector (float yawDeg, float pitchDeg) {
+                glm::vec3 direction;
+                direction.x = sin (glm::radians (yawDeg)) * cos (glm::radians (pitchDeg));
+                direction.y = sin (glm::radians (pitchDeg));
+                direction.z = cos (glm::radians (yawDeg)) * cos (glm::radians (pitchDeg));
+
+                return direction;
+            }
+
             e_cameraType getCameraType (void) {
                 return m_currentType;
             }
@@ -428,13 +433,8 @@ namespace SandBox {
                 glm::vec3 position       = modelInfo->meta.transformDatas[modelInstanceId].position;
                 glm::vec3 rotateAngleDeg = modelInfo->meta.transformDatas[modelInstanceId].rotateAngleDeg;
 
-                glm::mat4 modelMatrix    = glm::translate (glm::mat4 (1.0f), position)    *
-                                           glm::rotate    (glm::mat4 (1.0f), glm::radians (rotateAngleDeg.z),
-                                                           glm::vec3 (0.0f,  0.0f, 1.0f)) *     /* Roll  */
-                                           glm::rotate    (glm::mat4 (1.0f), glm::radians (rotateAngleDeg.y),
-                                                           glm::vec3 (0.0f, -1.0f, 0.0f)) *     /* Yaw   */
-                                           glm::rotate    (glm::mat4 (1.0f), glm::radians (rotateAngleDeg.x),
-                                                           glm::vec3 (1.0f,  0.0f, 0.0f));      /* Pitch */
+                glm::mat4 modelMatrix    = glm::translate    (glm::mat4 (1.0f), position) *
+                                           getRotationMatrix (rotateAngleDeg);
                 /* Why do we need to remove the model transformation that was done to the camera vectors before using
                  * them in drone follow type? The reason is, when we switch to drone follow type, we use the camera
                  * vectors from the previous type, which have already been multiplied by the model matrix. But, what
