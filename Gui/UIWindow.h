@@ -30,6 +30,8 @@ namespace Gui {
                     uint32_t modelInfoId;
                     uint32_t modelInstanceId;
                 } cameraFocus;
+
+                uint32_t activeCameraInfoId;
             } m_uiBridgeInfo;
 
             struct UIImageInfo {
@@ -57,12 +59,14 @@ namespace Gui {
             std::vector <uint32_t> m_rootNodeInfoIds;
             std::vector <uint32_t> m_lockedNodeInfoIds;
 
-            std::vector <std::string> m_cameraTypeLabels;
             std::vector <std::string> m_diffuseTextureImageInfoIdLabels;
             std::vector <std::string> m_directionalLightInfoIdLabels;
             std::vector <std::string> m_pointLightInfoIdLabels;
             std::vector <std::string> m_spotLightInfoIdLabels;
+            std::vector <std::string> m_cameraInfoIdLabels;
+            std::vector <std::string> m_cameraTypeLabels;
 
+            uint32_t m_cameraAnchorInfoId;
             uint32_t m_selectedNodeInfoId;
             uint32_t m_selectedPropertyLabelIdx;
 
@@ -352,13 +356,6 @@ namespace Gui {
                     nodeInfo->state.locked = true;
                 }
                 /* |------------------------------------------------------------------------------------------------|
-                 * | READY CAMERA TYPE LABELS                                                                       |
-                 * |------------------------------------------------------------------------------------------------|
-                */
-                uint32_t cameraTypeCount = 10;
-                for (uint32_t i = 0; i < cameraTypeCount; i++)
-                    m_cameraTypeLabels.push_back (getCameraTypeString (static_cast <SandBox::e_cameraType> (i)));
-                /* |------------------------------------------------------------------------------------------------|
                  * | READY UI IMAGE INFO POOL                                                                       |
                  * |------------------------------------------------------------------------------------------------|
                 */
@@ -412,6 +409,26 @@ namespace Gui {
                     m_pointLightInfoIdLabels.push_back       (info.meta.label);
                 for (auto const& info: m_uiLightInfoPool[SandBox::ANCHOR_SPOT_LIGHT])
                     m_spotLightInfoIdLabels.push_back        (info.meta.label);
+                /* |------------------------------------------------------------------------------------------------|
+                 * | READY CAMERA INFO ID LABELS                                                                    |
+                 * |------------------------------------------------------------------------------------------------|
+                */
+                auto anchorInfo = getModelInfo (cameraAnchorInfoId);
+                for (uint32_t i = 0; i < anchorInfo->meta.instancesCount; i++) {
+                    std::string label = "Info id [" + std::to_string (i) + "]";
+                    m_cameraInfoIdLabels.push_back (label);
+                }
+                /* Note that, we need to save the camera anchor info id in order to enable changing the active camera
+                 * irrespective of the node selected
+                */
+                m_cameraAnchorInfoId = cameraAnchorInfoId;
+                /* |------------------------------------------------------------------------------------------------|
+                 * | READY CAMERA TYPE LABELS                                                                       |
+                 * |------------------------------------------------------------------------------------------------|
+                */
+                uint32_t cameraTypeCount = 10;
+                for (uint32_t i = 0; i < cameraTypeCount; i++)
+                    m_cameraTypeLabels.push_back (getCameraTypeString (static_cast <SandBox::e_cameraType> (i)));
                 /* |------------------------------------------------------------------------------------------------|
                  * | READY PLOT DATA INFO                                                                           |
                  * |------------------------------------------------------------------------------------------------|
@@ -691,14 +708,15 @@ namespace Gui {
                 */
                     else if (m_selectedPropertyLabelIdx == VIEW) {
 
-                        float fovDeg                        = 0.0f;
-                        float nearPlane                     = 0.0f;
-                        float farPlane                      = 0.0f;
-                        uint32_t selectedCameraTypeLabelIdx = static_cast <uint32_t> (getCameraType());
-                        bool setFocus                       = false;
-                        bool hideRender                     = false;
-                        bool fieldDisable                   = false;
-                        bool writePending                   = false;
+                        uint32_t selectedCameraInfoIdLabelIdx = m_uiBridgeInfo.activeCameraInfoId;
+                        uint32_t selectedCameraTypeLabelIdx   = static_cast <uint32_t> (getCameraType());
+                        float fovDeg                          = 0.0f;
+                        float nearPlane                       = 0.0f;
+                        float farPlane                        = 0.0f;
+                        bool setFocus                         = false;
+                        bool hideRender                       = false;
+                        bool fieldDisable                     = false;
+                        bool writePending                     = false;
 
                         if ((nodeInfo->meta.type & CAMERA_NODE) &&
                             (nodeInfo->meta.type & INSTANCE_NODE)) {
@@ -715,13 +733,53 @@ namespace Gui {
                             fieldDisable     = true;
                         /* To prevent showing post label, prefix it with '##'
                         */
-                        createCombo          ("##cameraType",
+                        if (createCombo      ("##cameraActive",
+                                              "Camera active",
+                                              "##postLabelCameraActive",
+                                              m_cameraInfoIdLabels,
+                                              false,
+                                              g_styleSettings.size.inputFieldLarge,
+                                              selectedCameraInfoIdLabelIdx))
+                        {   /* Data write */
+                            auto anchorInfo           = getModelInfo (m_cameraAnchorInfoId);
+                            uint32_t anchorInstanceId = selectedCameraInfoIdLabelIdx;
+                            auto position             = anchorInfo->meta.transformDatas[anchorInstanceId].position;
+                            auto rotateAngleDeg       = anchorInfo->meta.transformDatas[anchorInstanceId].rotateAngleDeg;
+
+                            auto cameraInfo           = getCameraInfo (anchorInstanceId);
+                            auto& direction           = cameraInfo->meta.direction;
+                            /* Match the selected camera's pose with the anchor instance's pose. Note that, usually when
+                             * switching to the drone camera types, we use the previous type's values for fov, etc. as
+                             * the initial values. However, since we are setting the initial camera type to drone lock,
+                             * we will need to manually set them as shown below
+                            */
+                            cameraInfo->meta.position = position;
+                            cameraInfo->meta.fovDeg   = 80.0f;
+
+                            float yawDeg              = -rotateAngleDeg.y;
+                            float pitchDeg            = -rotateAngleDeg.x;
+                            direction.x               = sin (glm::radians (yawDeg)) * cos (glm::radians (pitchDeg));
+                            direction.y               = sin (glm::radians (pitchDeg));
+                            direction.z               = cos (glm::radians (yawDeg)) * cos (glm::radians (pitchDeg));
+                            /* Note that, upon chainging the active camera, we are setting the camera type to drone lock
+                             * type which inherently doesn't set the boolean to update the camera matrices. Hence, why
+                             * we need to explicitly set them
+                            */
+                            cameraInfo->meta.updateViewMatrix       = true;
+                            cameraInfo->meta.updateProjectionMatrix = true;
+                            /* Update active camera info id
+                            */
+                            m_uiBridgeInfo.activeCameraInfoId       = anchorInstanceId;
+                            setCameraActive (anchorInstanceId, SandBox::DRONE_LOCK);
+                        }
+
+                        if (createCombo      ("##cameraType",
                                               "Camera type",
                                               "##postLabelCameraType",
                                               m_cameraTypeLabels,
                                               false,
                                               g_styleSettings.size.inputFieldLarge,
-                                              selectedCameraTypeLabelIdx);
+                                              selectedCameraTypeLabelIdx))
                         {   /* Data write */
                             setCameraType    (static_cast <SandBox::e_cameraType> (selectedCameraTypeLabelIdx));
                         }

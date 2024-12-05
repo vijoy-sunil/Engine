@@ -49,7 +49,7 @@ namespace Core {
                               const std::vector <uint32_t>& modelInfoIds,
                               const std::vector <uint32_t>& renderPassInfoIds,
                               const std::vector <uint32_t>& pipelineInfoIds,
-                              uint32_t cameraInfoId,
+                              const std::vector <uint32_t>& cameraInfoIds,
                               const std::vector <uint32_t>& sceneInfoIds,
                               T extensions) {
 
@@ -359,10 +359,12 @@ namespace Core {
                  * | DESTROY CAMERA INFO                                                                            |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                VKCameraMgr::cleanUp (cameraInfoId);
-                LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Camera info "
-                                                 << "[" << cameraInfoId << "]"
-                                                 << std::endl;
+                for (auto const& infoId: cameraInfoIds) {
+                    VKCameraMgr::cleanUp (infoId);
+                    LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Camera info "
+                                                     << "[" << infoId << "]"
+                                                     << std::endl;
+                }
                 /* |------------------------------------------------------------------------------------------------|
                  * | DESTROY MODEL INFO                                                                             |
                  * |------------------------------------------------------------------------------------------------|

@@ -279,8 +279,6 @@ namespace SandBox {
                         ANCHOR_SPOT_LIGHT
                     };
 
-                    /* Save camera focus model and model instance ids
-                    */
                     auto uiBridgeInfo = getUIBridgeInfo();
 #if ENABLE_SAMPLE_MODELS_IMPORT
                     uiBridgeInfo->cameraFocus.modelInfoId     = SAMPLE_CYLINDER;
@@ -289,6 +287,7 @@ namespace SandBox {
                     uiBridgeInfo->cameraFocus.modelInfoId     = VEHICLE_BASE;
                     uiBridgeInfo->cameraFocus.modelInstanceId = 0;
 #endif  // ENABLE_SAMPLE_MODELS_IMPORT
+                    uiBridgeInfo->activeCameraInfoId          = m_activeCameraInfoId;
 
                     readyUI (m_deviceInfoId,
                              modelInfoIds,
@@ -339,10 +338,8 @@ namespace SandBox {
                                                     (startOfFrameTime - startOfRenderTime).count();
 
                     handleKeyEvents (startOfFrameTime);
-                /* |------------------------------------------------------------------------------------------------|
-                 * | MOTION UPDATE - CONTINUOUS                                                                     |
-                 * |------------------------------------------------------------------------------------------------|
-                */
+                    /* Note that, the ordering of some/all of the code blocks below are important!
+                    */
                     {   /* [ X ] Vehicle base translation test */
 #if ENABLE_SAMPLE_MODELS_IMPORT
                         auto modelInfoId          = SAMPLE_CYLINDER;
@@ -364,6 +361,10 @@ namespace SandBox {
 
                         rotateAngleDeg            = glm::vec3 (0.0f, elapsedTime * 1.0f, 0.0f);
                         createModelMatrix (SKY_BOX, modelInstanceId);
+                    }
+                    {   /* Update active camera */
+                        auto uiBridgeInfo         = getUIBridgeInfo();
+                        m_activeCameraInfoId      = uiBridgeInfo->activeCameraInfoId;
                     }
                     {   /* Camera focus */
                         auto uiBridgeInfo         = getUIBridgeInfo();

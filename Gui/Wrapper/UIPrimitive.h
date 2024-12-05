@@ -89,7 +89,7 @@ namespace Gui {
                 return enterPressed;
             }
 
-            void createCombo (const char* stringId,
+            bool createCombo (const char* stringId,
                               const char* preLabel,
                               const char* postLabel,
                               const std::vector <std::string>& labels,
@@ -97,6 +97,7 @@ namespace Gui {
                               float fieldWidth,
                               uint32_t& selectedLabelIdx) {
 
+                bool selectionUpdated = false;
                 ImGui::PushID         (stringId);
                 ImGui::Text           ("%s", preLabel);
                 ImGui::PopID();
@@ -110,8 +111,14 @@ namespace Gui {
                     for (size_t i = 0; i < labels.size(); i++) {
                         bool selected = (selectedLabelIdx == i);
 
-                        if (ImGui::Selectable (labels[i].c_str(), selected))
-                            selectedLabelIdx = static_cast <uint32_t> (i);
+                        if (ImGui::Selectable (labels[i].c_str(), selected)) {
+                            /* Set boolean only if new selection is different from the previous one
+                            */
+                            if (selectedLabelIdx != i) {
+                                selectionUpdated = true;
+                                selectedLabelIdx = static_cast <uint32_t> (i);
+                            }
+                        }
                         /* Set the initial focus when opening the combo
                         */
                         if (selected)
@@ -122,6 +129,7 @@ namespace Gui {
                 ImGui::PopStyleVar();
                 ImGui::PopItemWidth();
                 ImGui::EndDisabled();
+                return selectionUpdated;
             }
 
             void createImagePreview (VkDescriptorSet imageDescriptorSet,
