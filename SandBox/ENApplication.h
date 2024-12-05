@@ -199,17 +199,6 @@ namespace SandBox {
                                              m_sceneInfoId,
                 [&](void) {
                 {
-#if ENABLE_SAMPLE_MODELS_IMPORT
-#else
-                    /* Update instance textures, this is required when you need instances to have different textures
-                     * applied to them compared to the parent instance (model instance id = 0). Note that, the texture
-                     * ids to be updated must exist in the global texture pool
-                    */
-                    for (auto const& modelInstanceId: {1, 2, 3})
-                        updateTexIdLUT (T0_GENERIC_NOCAP, modelInstanceId, 5, 4);
-#endif  // ENABLE_SAMPLE_MODELS_IMPORT
-                }
-                {
                 /* |------------------------------------------------------------------------------------------------|
                  * | EXTENSION INIT - SKY BOX                                                                       |
                  * |------------------------------------------------------------------------------------------------|
@@ -296,6 +285,24 @@ namespace SandBox {
                              m_uiRenderPassInfoId,
                              m_uiSceneInfoId,
                              uiTextureImagePool);
+                }
+                {
+#if ENABLE_SAMPLE_MODELS_IMPORT
+#else
+                    /* Update instance textures, this is required when you need instances to have different textures
+                     * applied to them compared to the parent instance (model instance id = 0). Note that, the texture
+                     * ids to be updated must exist in the global texture pool
+                    */
+                    for (auto const& modelInstanceId: {1, 2, 3})
+                        updateTexIdLUT (T0_GENERIC_NOCAP, modelInstanceId, 5, 4);
+#endif  // ENABLE_SAMPLE_MODELS_IMPORT
+
+                    for (auto const& anchorInstanceId: m_cameraInfoIds) {
+                        updateTexIdLUT (ANCHOR_CAMERA, anchorInstanceId, 0,  0);
+                        updateTexIdLUT (ANCHOR_CAMERA, anchorInstanceId, 4,  255);
+                        updateTexIdLUT (ANCHOR_CAMERA, anchorInstanceId, 8,  0);
+                        updateTexIdLUT (ANCHOR_CAMERA, anchorInstanceId, 12, 255);
+                    }
                 }
                 });
                 /* |------------------------------------------------------------------------------------------------|
