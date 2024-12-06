@@ -117,23 +117,31 @@ namespace SandBox {
                     m_modelInfoIds.push_back (infoId);
                 }
 #endif  // ENABLE_SAMPLE_MODELS_IMPORT
-
+                /* |------------------------------------------------------------------------------------------------|
+                 * | READY MODEL INFO - SKY BOX                                                                     |
+                 * |------------------------------------------------------------------------------------------------|
+                */
+                auto modelImportInfo = g_skyBoxModelImportInfoPool[SKY_BOX];
                 readyModelInfo      (SKY_BOX,
-                                     g_skyBoxModelImportInfoPool[SKY_BOX].modelPath,
-                                     g_skyBoxModelImportInfoPool[SKY_BOX].mtlFileDirPath);
-                importTransformData (SKY_BOX,
-                                     g_skyBoxModelImportInfoPool[SKY_BOX].transformDataPath);
-
+                                     modelImportInfo.modelPath,
+                                     modelImportInfo.mtlFileDirPath);
+                importTransformData (SKY_BOX, modelImportInfo.transformDataPath);
+                /* |------------------------------------------------------------------------------------------------|
+                 * | READY ANCHOR INFO - CAMERA                                                                     |
+                 * |------------------------------------------------------------------------------------------------|
+                */
                 uint32_t anchorTotalInstanceCount = 0;
+                auto anchorImportInfo             = g_cameraAnchorImportInfoPool[ANCHOR_CAMERA];
                 readyModelInfo      (ANCHOR_CAMERA,
-                                     g_cameraAnchorImportInfoPool[ANCHOR_CAMERA].modelPath,
-                                     g_cameraAnchorImportInfoPool[ANCHOR_CAMERA].mtlFileDirPath);
-                importTransformData (ANCHOR_CAMERA,
-                                     g_cameraAnchorImportInfoPool[ANCHOR_CAMERA].transformDataPath);
+                                     anchorImportInfo.modelPath,
+                                     anchorImportInfo.mtlFileDirPath);
 
-                anchorTotalInstanceCount++;
+                anchorTotalInstanceCount += importTransformData (ANCHOR_CAMERA, anchorImportInfo.transformDataPath);
                 m_anchorInfoIds.push_back (ANCHOR_CAMERA);
-
+                /* |------------------------------------------------------------------------------------------------|
+                 * | READY ANCHOR INFO - LIGHT                                                                      |
+                 * |------------------------------------------------------------------------------------------------|
+                */
                 for (auto const& [infoId, info]: g_lightAnchorImportInfoPool) {
                     readyModelInfo  (infoId,
                                      info.modelPath,
