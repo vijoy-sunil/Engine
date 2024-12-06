@@ -553,7 +553,7 @@ namespace Gui {
                                        ImGuiChildFlags_AlwaysUseWindowPadding,
                                        0)) {
                 /* |------------------------------------------------------------------------------------------------|
-                 * | RIGHT PANEL - TRANSFORM/MODEL/LIGHT                                                            |
+                 * | RIGHT PANEL - TRANSFORM MODEL/LIGHT                                                            |
                  * |------------------------------------------------------------------------------------------------|
                 */
                     if (m_selectedPropertyLabelIdx == TRANSFORM) {
@@ -631,7 +631,7 @@ namespace Gui {
                             }
                         }
                 /* |------------------------------------------------------------------------------------------------|
-                 * | RIGHT PANEL - TRANSFORM/CAMERA                                                                 |
+                 * | RIGHT PANEL - TRANSFORM CAMERA                                                                 |
                  * |------------------------------------------------------------------------------------------------|
                 */
                         else if (nodeInfo->meta.type & CAMERA_NODE) {
@@ -802,7 +802,7 @@ namespace Gui {
                             }
                         }
                 /* |------------------------------------------------------------------------------------------------|
-                 * | RIGHT PANEL - VIEW/SET FOCUS                                                                   |
+                 * | RIGHT PANEL - VIEW > SET FOCUS                                                                 |
                  * |------------------------------------------------------------------------------------------------|
                 */
                         /* Note that, we want to prevent the camera from setting focus on itself, hence why the 'if'
@@ -841,7 +841,7 @@ namespace Gui {
                             }
                         }
                 /* |------------------------------------------------------------------------------------------------|
-                 * | RIGHT PANEL - VIEW/HIDE MODEL/ANCHOR                                                           |
+                 * | RIGHT PANEL - VIEW > HIDE MODEL/HIDE ANCHOR                                                    |
                  * |------------------------------------------------------------------------------------------------|
                 */
                         if (nodeInfo->meta.type & INSTANCE_NODE) {
@@ -999,7 +999,7 @@ namespace Gui {
                                            g_styleSettings.size.inputFieldLarge,
                                            ambientColor);
                 /* |------------------------------------------------------------------------------------------------|
-                 * | RIGHT PANEL - LIGHT/DIRECTIONAL                                                                |
+                 * | RIGHT PANEL - DIRECTIONAL LIGHT                                                                |
                  * |------------------------------------------------------------------------------------------------|
                 */
                         if (!m_directionalLightInfoIdLabels.empty()) {
@@ -1027,7 +1027,7 @@ namespace Gui {
                             }
                         }
                 /* |------------------------------------------------------------------------------------------------|
-                 * | RIGHT PANEL - LIGHT/POINT                                                                      |
+                 * | RIGHT PANEL - POINT LIGHT                                                                      |
                  * |------------------------------------------------------------------------------------------------|
                 */
                         if (!m_pointLightInfoIdLabels.empty()) {
@@ -1055,7 +1055,7 @@ namespace Gui {
                             }
                         }
                 /* |------------------------------------------------------------------------------------------------|
-                 * | RIGHT PANEL - LIGHT/SPOT                                                                       |
+                 * | RIGHT PANEL - SPOT LIGHT                                                                       |
                  * |------------------------------------------------------------------------------------------------|
                 */
                         if (!m_spotLightInfoIdLabels.empty()) {
