@@ -60,7 +60,7 @@ namespace SandBox {
                  * | IMPORT MODEL                                                                                   |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                /* Note that, we are not populating/updating the the texture image info id look up table since we
+                /* Note that, we are not populating/updating the texture image info id look up table since we
                  * won't be needing any textures for anchors and its instances. Instead, we will use the table to store
                  * the color for the anchor. Although it may seem inefficient to use just 4 bytes (R, G, B, A) in
                  * the table, it is easier to populate the combined instances vector in the draw sequence

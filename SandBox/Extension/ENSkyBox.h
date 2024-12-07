@@ -46,8 +46,7 @@ namespace SandBox {
         public:
             ENSkyBox (void) {
                 m_ENSkyBoxLog = LOG_INIT (m_instanceId, g_collectionSettings.logSaveDirPath);
-                LOG_ADD_CONFIG (m_instanceId, Log::INFO,  Log::TO_FILE_IMMEDIATE);
-                LOG_ADD_CONFIG (m_instanceId, Log::ERROR, Log::TO_FILE_IMMEDIATE | Log::TO_CONSOLE);
+                LOG_ADD_CONFIG (m_instanceId, Log::INFO, Log::TO_FILE_IMMEDIATE);
             }
 
             ~ENSkyBox (void) {

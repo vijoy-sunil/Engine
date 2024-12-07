@@ -130,13 +130,13 @@ namespace SandBox {
                  * | READY ANCHOR INFO - CAMERA                                                                     |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                uint32_t anchorTotalInstanceCount = 0;
-                auto anchorImportInfo             = g_cameraAnchorImportInfoPool[ANCHOR_CAMERA];
+                uint32_t anchorTotalInstancesCount = 0;
+                auto anchorImportInfo              = g_cameraAnchorImportInfoPool[ANCHOR_CAMERA];
                 readyModelInfo      (ANCHOR_CAMERA,
                                      anchorImportInfo.modelPath,
                                      anchorImportInfo.mtlFileDirPath);
 
-                anchorTotalInstanceCount += importTransformData (ANCHOR_CAMERA, anchorImportInfo.transformDataPath);
+                anchorTotalInstancesCount += importTransformData (ANCHOR_CAMERA, anchorImportInfo.transformDataPath);
                 m_anchorInfoIds.push_back (ANCHOR_CAMERA);
                 /* |------------------------------------------------------------------------------------------------|
                  * | READY ANCHOR INFO - LIGHT                                                                      |
@@ -147,7 +147,7 @@ namespace SandBox {
                                      info.modelPath,
                                      info.mtlFileDirPath);
 
-                    anchorTotalInstanceCount += importTransformData (infoId, info.transformDataPath);
+                    anchorTotalInstancesCount += importTransformData (infoId, info.transformDataPath);
                     m_anchorInfoIds.push_back (infoId);
                 }
                 /* |------------------------------------------------------------------------------------------------|
@@ -186,7 +186,7 @@ namespace SandBox {
                                 UINT32_MAX,
                                 UINT32_MAX,
                                 UINT32_MAX);
-                readySceneInfo (m_anchorSceneInfoId, anchorTotalInstanceCount,
+                readySceneInfo (m_anchorSceneInfoId, anchorTotalInstancesCount,
                                 UINT32_MAX,
                                 UINT32_MAX,
                                 UINT32_MAX,

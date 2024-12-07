@@ -70,8 +70,7 @@ namespace Core {
         public:
             VKInitSequence (void) {
                 m_VKInitSequenceLog = LOG_INIT (m_instanceId, g_collectionSettings.logSaveDirPath);
-                LOG_ADD_CONFIG (m_instanceId, Log::INFO,  Log::TO_FILE_IMMEDIATE);
-                LOG_ADD_CONFIG (m_instanceId, Log::ERROR, Log::TO_FILE_IMMEDIATE | Log::TO_CONSOLE);
+                LOG_ADD_CONFIG (m_instanceId, Log::INFO, Log::TO_FILE_IMMEDIATE);
             }
 
             ~VKInitSequence (void) {

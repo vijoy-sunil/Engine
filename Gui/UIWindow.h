@@ -582,37 +582,37 @@ namespace Gui {
                                 fieldDisable             = true;
 
                             ImGui::Text              ("%s",             "Position");
-                            if (createFloatTextField ("##positionX",    "X",    "m",        g_styleSettings.precision,
+                            if (createFloatTextField ("##positionX",    "X", "m",           g_styleSettings.precision,
                                                       fieldDisable,
                                                       g_styleSettings.size.inputFieldSmall, position.x)         ||
-                                createFloatTextField ("##positionY",    "Y",    "m",        g_styleSettings.precision,
+                                createFloatTextField ("##positionY",    "Y", "m",           g_styleSettings.precision,
                                                       fieldDisable,
                                                       g_styleSettings.size.inputFieldSmall, position.y)         ||
-                                createFloatTextField ("##positionZ",    "Z",    "m",        g_styleSettings.precision,
+                                createFloatTextField ("##positionZ",    "Z", "m",           g_styleSettings.precision,
                                                       fieldDisable,
                                                       g_styleSettings.size.inputFieldSmall, position.z))
                                 writePending = true;
 
                             ImGui::Text              ("%s",             "Rotate angle");
-                            if (createFloatTextField ("##rotateAngleX", "X",    "deg",      g_styleSettings.precision,
+                            if (createFloatTextField ("##rotateAngleX", "X", "deg",         g_styleSettings.precision,
                                                       fieldDisable,
                                                       g_styleSettings.size.inputFieldSmall, rotateAngleDeg.x)   ||
-                                createFloatTextField ("##rotateAngleY", "Y",    "deg",      g_styleSettings.precision,
+                                createFloatTextField ("##rotateAngleY", "Y", "deg",         g_styleSettings.precision,
                                                       fieldDisable,
                                                       g_styleSettings.size.inputFieldSmall, rotateAngleDeg.y)   ||
-                                createFloatTextField ("##rotateAngleZ", "Z",    "deg",      g_styleSettings.precision,
+                                createFloatTextField ("##rotateAngleZ", "Z", "deg",         g_styleSettings.precision,
                                                       fieldDisable,
                                                       g_styleSettings.size.inputFieldSmall, rotateAngleDeg.z))
                                 writePending = true;
 
                             ImGui::Text              ("%s",             "Scale");
-                            if (createFloatTextField ("##scaleX",       "X",    "u",        g_styleSettings.precision,
+                            if (createFloatTextField ("##scaleX",       "X", "u",           g_styleSettings.precision,
                                                       fieldDisable,
                                                       g_styleSettings.size.inputFieldSmall, scale.x)            ||
-                                createFloatTextField ("##scaleY",       "Y",    "u",        g_styleSettings.precision,
+                                createFloatTextField ("##scaleY",       "Y", "u",           g_styleSettings.precision,
                                                       fieldDisable,
                                                       g_styleSettings.size.inputFieldSmall, scale.y)            ||
-                                createFloatTextField ("##scaleZ",       "Z",    "u",        g_styleSettings.precision,
+                                createFloatTextField ("##scaleZ",       "Z", "u",           g_styleSettings.precision,
                                                       fieldDisable,
                                                       g_styleSettings.size.inputFieldSmall, scale.z))
                                 writePending = true;
@@ -892,8 +892,8 @@ namespace Gui {
                         static uint32_t selectedDiffuseLabelIdx = 0;
                         bool fieldDisable                       = false;
 
-                        if (nodeInfo->meta.type & MODEL_NODE &&
-                            nodeInfo->meta.type & TEXTURE_NODE) {
+                        if ((nodeInfo->meta.type & MODEL_NODE) &&
+                            (nodeInfo->meta.type & TEXTURE_NODE)) {
 
                             uint32_t infoId         = nodeInfo->meta.coreInfoId;
                             /* Convert texture image info id to label, and we use the label to find the offset to the
@@ -956,8 +956,8 @@ namespace Gui {
                         bool fieldDisablePoint                      = false;
                         bool fieldDisableSpot                       = false;
 
-                        if (nodeInfo->meta.type & LIGHT_NODE &&
-                            nodeInfo->meta.type & INSTANCE_NODE) {
+                        if ((nodeInfo->meta.type & LIGHT_NODE) &&
+                            (nodeInfo->meta.type & INSTANCE_NODE)) {
 
                             auto parentNodeInfo = getNodeInfo (nodeInfo->meta.parentInfoId);
                             auto anchorType     = static_cast <SandBox::e_anchorType> (parentNodeInfo->meta.coreInfoId);
