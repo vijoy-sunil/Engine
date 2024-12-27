@@ -24,8 +24,7 @@ namespace Core {
     }
 
     const char* getImageTypeString (e_imageType type) {
-        switch (type)
-        {
+        switch (type) {
             case VOID_IMAGE:            return "VOID_IMAGE";
             case SWAP_CHAIN_IMAGE:      return "SWAP_CHAIN_IMAGE";
             case TEXTURE_IMAGE:         return "TEXTURE_IMAGE";
@@ -35,9 +34,17 @@ namespace Core {
         }
     }
 
+    const char* getTextureTypeString (e_textureType type) {
+        switch (type) {
+            case DIFFUSE_TEXTURE:       return "DIFFUSE_TEXTURE";
+            case SPECULAR_TEXTURE:      return "SPECULAR_TEXTURE";
+            case EMISSION_TEXTURE:      return "EMISSION_TEXTURE";
+            default:                    return "Unhandled e_textureType";
+        }
+    }
+
     const char* getBufferTypeString (e_bufferType type) {
-        switch (type)
-        {
+        switch (type) {
             case VOID_BUFFER:           return "VOID_BUFFER";
             case STAGING_BUFFER:        return "STAGING_BUFFER";
             case VERTEX_BUFFER:         return "VERTEX_BUFFER";
@@ -49,8 +56,7 @@ namespace Core {
     }
 
     const char* getSyncTypeString (e_syncType type) {
-        switch (type)
-        {
+        switch (type) {
             case FEN_ONE_TIME_OPS:      return "FEN_ONE_TIME_OPS";
             case FEN_IN_FLIGHT:         return "FEN_IN_FLIGHT";
             case SEM_IMAGE_AVAILABLE:   return "SEM_IMAGE_AVAILABLE";
@@ -60,11 +66,19 @@ namespace Core {
     }
 
     const char* getDescriptorSetTypeString (e_descriptorSetType type) {
-        switch (type)
-        {
+        switch (type) {
             case PER_FRAME_SET:         return "PER_FRAME_SET";
             case COMMON_SET:            return "COMMON_SET";
             default:                    return "Unhandled e_descriptorSetType";
+        }
+    }
+
+    const char* getLightTypeString (e_lightType type) {
+        switch (type) {
+            case DIRECTIONAL_LIGHT:     return "DIRECTIONAL";
+            case POINT_LIGHT:           return "POINT";
+            case SPOT_LIGHT:            return "SPOT";
+            default:                    return "Unhandled e_lightType";
         }
     }
 }   // namespace Core

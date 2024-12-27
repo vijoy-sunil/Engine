@@ -11,6 +11,12 @@ namespace Core {
     } e_imageType;
 
     typedef enum {
+        DIFFUSE_TEXTURE     = 0,
+        SPECULAR_TEXTURE    = 1,
+        EMISSION_TEXTURE    = 2
+    } e_textureType;
+
+    typedef enum {
         VOID_BUFFER         = 0,
         STAGING_BUFFER      = 1,
         VERTEX_BUFFER       = 2,
@@ -30,5 +36,11 @@ namespace Core {
         PER_FRAME_SET       = 0,
         COMMON_SET          = 1
     } e_descriptorSetType;
+
+    typedef enum {
+        DIRECTIONAL_LIGHT   = 0,
+        POINT_LIGHT         = 1,
+        SPOT_LIGHT          = 2
+    } e_lightType;
 }   // namespace Core
 #endif  // VK_ENUM_H

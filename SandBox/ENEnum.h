@@ -3,30 +3,23 @@
 
 namespace SandBox {
     typedef enum {
-        SAMPLE_CUBE                 = 0,
-        SAMPLE_CYLINDER             = 1,
-        SAMPLE_T_BEAM               = 2,
-        SAMPLE_SLOPE                = 3,
-        SAMPLE_BRIDGE               = 4,
-        SAMPLE_PLATFORM             = 5,
-        T0_GENERIC_NOCAP            = 6,
-        T0_CURVE_R6_D90             = 7,
-        T0_CURVE_R6_D90_CAP         = 8,
-        T0_CURVE_R10_D45_Z          = 9,
-        T0_CURVE_R10_D45_Z_CAP      = 10,
-        T0_CURVE_R10_D45_Z_SMT      = 11,
-        T0_CURVE_R10_D90            = 12,
-        VEHICLE_BASE                = 13,
-        TYRE                        = 14,
-        SKY_BOX                     = 15
-    } e_modelType;
+        ANCHOR_CAMERA               = 3,
+        /* Note that light anchor enums must match light type enums
+        */
+        ANCHOR_DIRECTIONAL_LIGHT    = 0,
+        ANCHOR_POINT_LIGHT          = 1,
+        ANCHOR_SPOT_LIGHT           = 2,
+    } e_anchorType;
 
     typedef enum {
-        ANCHOR_CAMERA               = 16,
-        ANCHOR_DIRECTIONAL_LIGHT    = 17,
-        ANCHOR_POINT_LIGHT          = 18,
-        ANCHOR_SPOT_LIGHT           = 19
-    } e_anchorType;
+        CUBE                        = 4,
+        CYLINDER                    = 5,
+        T_BEAM                      = 6,
+        SLOPE                       = 7,
+        BRIDGE                      = 8,
+        PLATFORM                    = 9,
+        SKY_BOX                     = 10
+    } e_modelType;
 
     typedef enum {
         POSITIVE_X                  = 0,
