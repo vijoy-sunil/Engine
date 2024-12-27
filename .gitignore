@@ -2,6 +2,7 @@
 .vscode
 Asset/Model/*.blend
 Asset/Model/*.blend1
+Asset/Texture/*.xcf
 Dependency/IconFontCppHeaders/
 Dependency/imgui/
 Dependency/implot/

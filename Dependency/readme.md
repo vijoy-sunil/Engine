@@ -1,9 +1,9 @@
 # Dependency repos
 
-## Icon fonts
+## Fonts
 > https://github.com/juliettef/IconFontCppHeaders.git
 
-## Dear imgui
+## Imgui
 > https://github.com/ocornut/imgui.git
 
 ## Implot

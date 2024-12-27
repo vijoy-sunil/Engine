@@ -1,7 +1,11 @@
 # |-------------------------------------------------------------------------|
+# |	Environment variables													|
+# |-------------------------------------------------------------------------|
+# 'VULKAN_SDK'
+# 'MVK_CONFIG_USE_METAL_ARGUMENT_BUFFERS'
+# |-------------------------------------------------------------------------|
 # |	Directories																|
 # |-------------------------------------------------------------------------|
-# 'VULKAN_SDK' is setup in .zshrc
 GLM_DIR				:= /opt/homebrew/Cellar/glm/1.0.1
 GLFW_DIR			:= /opt/homebrew/Cellar/glfw/3.4
 DEPENDENCY_DIR		:= ./Dependency
@@ -99,7 +103,7 @@ $(APP_TARGET): $(OBJS)
 # |-------------------------------------------------------------------------|
 # | Targets																	|
 # |-------------------------------------------------------------------------|
-.PHONY: all directories shaders app clean run
+.PHONY: all directories shaders app clean_logs clean run
 
 all: directories shaders app
 
@@ -114,6 +118,12 @@ directories:
 shaders: $(VERT_SHADER_TARGET) $(FRAG_SHADER_TARGET)
 
 app: $(APP_TARGET)
+
+clean_logs:
+	@$(RM) $(LOG_DIR)/Core/*
+	@$(RM) $(LOG_DIR)/Gui/*
+	@$(RM) $(LOG_DIR)/SandBox/*
+	@echo "[OK] clean logs"
 
 clean:
 	@$(RMDIR) $(BUILD_DIR)/*
