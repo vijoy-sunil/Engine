@@ -1,0 +1,12 @@
+# Blender 4.3.0 MTL File: 'Sketchbook.blend'
+# www.blender.org
+
+newmtl Material_Multi_Grid
+Ns 640.000000
+Ka 1.000000 1.000000 1.000000
+Ni 1.500000
+d 1.000000
+illum 2
+map_Kd /Users/vijoys/Downloads/Projects/Engine/Asset/Texture/Track/tex_2Kx2K_grid.png
+map_Ks /Users/vijoys/Downloads/Projects/Engine/Asset/Texture/tex_16x16_specular_empty.png
+map_Ke /Users/vijoys/Downloads/Projects/Engine/Asset/Texture/tex_16x16_emission_empty.png
