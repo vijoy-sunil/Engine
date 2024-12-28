@@ -8,11 +8,13 @@
 #include <imgui_impl_glfw.h>
 #include "../Core/RenderPass/VKRenderPassMgr.h"
 #include "Wrapper/UIOverlay.h"
+#include "Wrapper/UIPlot.h"
 #include "UIWindow.h"
 
 namespace Gui {
     class UIImpl: protected virtual Core::VKRenderPassMgr,
                   protected UIOverlay,
+                  protected UIPlot,
                   protected UIWindow {
         private:
             bool m_showWorldCollectionWindow;
@@ -63,10 +65,11 @@ namespace Gui {
             void readyUI (uint32_t deviceInfoId,
                           const std::vector <uint32_t>& modelInfoIds,
                           uint32_t cameraAnchorInfoId,
-                          const std::vector <uint32_t>& lightAnchorInfoIds,
                           uint32_t uiRenderPassInfoId,
                           uint32_t uiSceneInfoId,
-                          const std::unordered_map <uint32_t, std::vector <std::string>>& textureImagePool) {
+                          const std::vector <uint32_t>& lightInfoIds,
+                          const std::unordered_map <Core::e_textureType, 
+                                std::unordered_map <uint32_t, std::vector <std::string>>>& textureImagePools) {
 
                 auto deviceInfo       = getDeviceInfo     (deviceInfoId);
                 auto uiRenderPassInfo = getRenderPassInfo (uiRenderPassInfoId);
@@ -106,6 +109,7 @@ namespace Gui {
                 style.WindowPadding                              = g_styleSettings.padding.window;
                 style.FramePadding                               = g_styleSettings.padding.frame;
                 style.CellPadding                                = g_styleSettings.padding.cell;
+                style.SeparatorTextPadding                       = g_styleSettings.padding.separatorText;
                 /* Rounding
                 */
                 style.WindowRounding                             = g_styleSettings.rounding.window;
@@ -119,6 +123,7 @@ namespace Gui {
                 style.FrameBorderSize                            = g_styleSettings.borderSize.frame;
                 style.ChildBorderSize                            = g_styleSettings.borderSize.child;
                 style.PopupBorderSize                            = g_styleSettings.borderSize.popUp;
+                style.SeparatorTextBorderSize                    = g_styleSettings.borderSize.separatorText;
                 /* Spacing
                 */
                 style.IndentSpacing                              = g_styleSettings.spacing.intend;
@@ -131,6 +136,7 @@ namespace Gui {
                 */
                 style.WindowTitleAlign                           = g_styleSettings.alignment.windowTitle;
                 style.ButtonTextAlign                            = g_styleSettings.alignment.buttonText;
+                style.SeparatorTextAlign                         = g_styleSettings.alignment.separatorText;
                 /* Color
                 */
                 style.Colors[ImGuiCol_WindowBg]                  = g_styleSettings.color.windowBackground;
@@ -274,11 +280,44 @@ namespace Gui {
                 */
                 readyUIWindow (modelInfoIds,
                                cameraAnchorInfoId,
-                               lightAnchorInfoIds,
                                uiSceneInfoId,
-                               m_frameDeltaPlotDataInfoId,
-                               m_fpsPlotDataInfoId,
-                               textureImagePool);
+                               lightInfoIds,
+                               textureImagePools);
+                /* |------------------------------------------------------------------------------------------------|
+                 * | READY PLOT DATA INFO                                                                           |
+                 * |------------------------------------------------------------------------------------------------|
+                */
+                ImPlot::CreateContext();
+                ImPlot::GetStyle().PlotPadding = g_plotSettings.padding;
+                /* Note that, x axis limits are ignored if we are plotting againt time variable, which means the x axis
+                 * limits will based on elapsed time and history
+                */
+                readyPlotDataInfo (m_frameDeltaPlotDataInfoId,
+                                   "Frame delta",
+                                   g_plotSettings.history,
+                                   0.0f, 0.0f,
+                                   0.0f, 0.05f,
+                                   true,
+                                   g_plotSettings.bufferCapacity,
+                                   ImPlotFlags_CanvasOnly,
+                                   ImPlotAxisFlags_NoDecorations,
+                                   ImPlotLineFlags_Shaded);
+
+                readyPlotDataInfo (m_fpsPlotDataInfoId,
+                                   "FPS",
+                                   g_plotSettings.history,
+                                   0.0f, 0.0f,
+                                   0.0f, 240.0f,
+                                   true,
+                                   g_plotSettings.bufferCapacity,
+                                   ImPlotFlags_CanvasOnly,
+                                   ImPlotAxisFlags_NoDecorations,
+                                   ImPlotLineFlags_Shaded);
+                /* |------------------------------------------------------------------------------------------------|
+                 * | DUMP METHODS                                                                                   |
+                 * |------------------------------------------------------------------------------------------------|
+                */
+                dumpPlotDataInfoPool();
             }
 
             void createUIFrame (float frameDelta) {
@@ -344,13 +383,16 @@ namespace Gui {
 
             void cleanUp (uint32_t deviceInfoId) {
                 UIInput::cleanUp (deviceInfoId);
-
+                
                 auto plotDataInfoIds = std::vector <uint32_t> {
                     m_frameDeltaPlotDataInfoId,
                     m_fpsPlotDataInfoId
                 };
-                UIWindow::cleanUp (plotDataInfoIds);
+                for (auto const& infoId: plotDataInfoIds)
+                    UIPlot::cleanUp (infoId);
+                ImPlot::DestroyContext();
 
+                UIWindow::cleanUp();
                 ImGui_ImplVulkan_Shutdown();
                 ImGui_ImplGlfw_Shutdown();
                 ImGui::DestroyContext();

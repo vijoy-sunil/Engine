@@ -31,6 +31,7 @@
 #include "../Cmd/VKCmd.h"
 #include "VKTextureSampler.h"
 #include "VKDescriptor.h"
+#include "VKLightMgr.h"
 
 namespace Core {
     class VKInitSequence: protected virtual VKWindow,
@@ -62,7 +63,8 @@ namespace Core {
                           protected virtual VKPipelineLayout,
                           protected virtual VKCmd,
                           protected virtual VKTextureSampler,
-                          protected virtual VKDescriptor {
+                          protected virtual VKDescriptor,
+                          protected virtual VKLightMgr {
         private:
             Log::Record* m_VKInitSequenceLog;
             const uint32_t m_instanceId = g_collectionSettings.instanceId++;
@@ -84,6 +86,7 @@ namespace Core {
                               uint32_t renderPassInfoId,
                               uint32_t pipelineInfoId,
                               uint32_t sceneInfoId,
+                              const std::vector <uint32_t>& lightInfoIds,
                               T extensions) {
 
                 auto deviceInfo    = getDeviceInfo (deviceInfoId);
@@ -151,12 +154,13 @@ namespace Core {
                 */
                 for (auto const& infoId: modelInfoIds) {
                     importOBJModel (infoId);
-                    /* Populate texture image info id look up table for all model instances
+                    /* Populate texture image info id look up tables for all model instances
                     */
                     auto modelInfo = getModelInfo (infoId);
                     for (uint32_t i = 0; i < modelInfo->meta.instancesCount; i++) {
-                        for (auto const& texId: modelInfo->id.diffuseTextureImageInfos)
-                            updateTexIdLUT (infoId, i, texId, texId);
+                        for (auto const& [type, texIds]: modelInfo->id.textureImageInfos)
+                            for (auto const& texId: texIds)
+                                updateTexIdLUT (infoId, i, type, texId, texId);
                     }
                     LOG_INFO (m_VKInitSequenceLog) << "[OK] Import model "
                                                    << "[" << infoId << "]"
@@ -173,13 +177,49 @@ namespace Core {
                                                << "[" << deviceInfoId << "]"
                                                << std::endl;
                 /* |------------------------------------------------------------------------------------------------|
-                 * | CONFIG TEXTURE RESOURCES - DIFFUSE TEXTURE                                                     |
+                 * | CONFIG TEXTURE RESOURCES - DIFFUSE                                                             |
                  * |------------------------------------------------------------------------------------------------|
                 */
                 /* Create texture resources from the texture image pool, this is to ensure that duplicate texture images
                  * across models are not loaded again
                 */
-                for (auto const& [path, infoId]: getTextureImagePool()) {
+                for (auto const& [path, infoId]: getTextureImagePool (DIFFUSE_TEXTURE)) {
+                    auto texturePaths = std::vector <const char*> {
+                        path.c_str()
+                    };
+                    createTextureResources (deviceInfoId,
+                                            infoId,
+                                            1,
+                                            texturePaths,
+                                            0,
+                                            VK_IMAGE_VIEW_TYPE_2D);
+                    LOG_INFO (m_VKInitSequenceLog) << "[OK] Texture resources "
+                                                   << "[" << infoId << "]"
+                                                   << std::endl;
+                }
+                /* |------------------------------------------------------------------------------------------------|
+                 * | CONFIG TEXTURE RESOURCES - SPECULAR                                                            |
+                 * |------------------------------------------------------------------------------------------------|
+                */
+                for (auto const& [path, infoId]: getTextureImagePool (SPECULAR_TEXTURE)) {
+                    auto texturePaths = std::vector <const char*> {
+                        path.c_str()
+                    };
+                    createTextureResources (deviceInfoId,
+                                            infoId,
+                                            1,
+                                            texturePaths,
+                                            0,
+                                            VK_IMAGE_VIEW_TYPE_2D);
+                    LOG_INFO (m_VKInitSequenceLog) << "[OK] Texture resources "
+                                                   << "[" << infoId << "]"
+                                                   << std::endl;
+                }
+                /* |------------------------------------------------------------------------------------------------|
+                 * | CONFIG TEXTURE RESOURCES - EMISSION                                                            |
+                 * |------------------------------------------------------------------------------------------------|
+                */
+                for (auto const& [path, infoId]: getTextureImagePool (EMISSION_TEXTURE)) {
                     auto texturePaths = std::vector <const char*> {
                         path.c_str()
                     };
@@ -269,28 +309,52 @@ namespace Core {
                                                << "[" << indexBufferInfoId << "]"
                                                << std::endl;
                 /* |------------------------------------------------------------------------------------------------|
-                 * | CONFIG STORAGE BUFFERS                                                                         |
+                 * | CONFIG STORAGE BUFFERS - MODEL                                                                 |
                  * |------------------------------------------------------------------------------------------------|
                 */
                 /* Uniform buffers are great for small, read only data. But what if you want data you don’t know the
-                 * size of in the shader? Or data that can be writeable. You use storage buffers for that. Storage
+                 * size of in the shader? Or data that can be writable. You use storage buffers for that. Storage
                  * buffers are usually slightly slower than uniform buffers, but they can be much, much bigger. With
                  * storage buffers, you can have an unsized array in a shader with whatever data you want. A common use
                  * for them is to store the transformation data of all the models in the scene. Shader storage buffers
                  * are created in the same way as uniform buffers. They also work in mostly the same way, they just have
-                 * different properties like increased maximum size, and being writeable in shaders
+                 * different properties like increased maximum size, and being writable in shaders
                 */
-
+                size_t modelTotalInstancesCount = 0;
+                for (auto const& infoId: modelInfoIds) {
+                    auto modelInfo              = getModelInfo (infoId);
+                    modelTotalInstancesCount   += modelInfo->meta.instancesCount;
+                }
                 /* We should have multiple buffers, because multiple frames may be in flight at the same time and we
                  * don't want to update the buffer in preparation of the next frame while a previous one is still reading
                  * from it. Thus, we need to have as many buffers as we have frames in flight, and write to a buffer that
                  * is not currently being read by the GPU
                 */
                 for (uint32_t i = 0; i < g_coreSettings.maxFramesInFlight; i++) {
-                    uint32_t storageBufferInfoId = sceneInfo->id.storageBufferInfoBase + i;
+                    uint32_t storageBufferInfoId = sceneInfo->id.modelStorageBufferInfoBase + i;
                     createStorageBuffer (deviceInfoId,
                                          storageBufferInfoId,
-                                         sceneInfo->meta.totalInstancesCount * sizeof (InstanceDataSSBO));
+                                         modelTotalInstancesCount * sizeof (ModelInstanceDataSSBO));
+
+                    LOG_INFO (m_VKInitSequenceLog) << "[OK] Storage buffer "
+                                                   << "[" << storageBufferInfoId << "]"
+                                                   << std::endl;
+                }
+                /* |------------------------------------------------------------------------------------------------|
+                 * | CONFIG STORAGE BUFFERS - LIGHT                                                                 |
+                 * |------------------------------------------------------------------------------------------------|
+                */
+                size_t lightTotalInstancesCount = 0;
+                for (auto const& infoId: lightInfoIds) {
+                    auto lightInfo              = getLightInfo (infoId);
+                    lightTotalInstancesCount   += lightInfo->meta.instancesCount;
+                }
+
+                for (uint32_t i = 0; i < g_coreSettings.maxFramesInFlight; i++) {
+                    uint32_t storageBufferInfoId = sceneInfo->id.lightStorageBufferInfoBase + i;
+                    createStorageBuffer (deviceInfoId,
+                                         storageBufferInfoId,
+                                         lightTotalInstancesCount * sizeof (LightInstanceDataSSBO));
 
                     LOG_INFO (m_VKInitSequenceLog) << "[OK] Storage buffer "
                                                    << "[" << storageBufferInfoId << "]"
@@ -491,19 +555,31 @@ namespace Core {
                 auto attributeDescriptions = std::vector {
                     getAttributeDescription (0,
                                              0,
-                                             offsetof (Vertex, pos),
+                                             offsetof (Vertex, meta.position),
                                              VK_FORMAT_R32G32B32_SFLOAT),
                     getAttributeDescription (0,
                                              1,
-                                             offsetof (Vertex, texCoord),
+                                             offsetof (Vertex, meta.texCoord),
                                              VK_FORMAT_R32G32_SFLOAT),
                     getAttributeDescription (0,
                                              2,
-                                             offsetof (Vertex, normal),
+                                             offsetof (Vertex, meta.normal),
                                              VK_FORMAT_R32G32B32_SFLOAT),
                     getAttributeDescription (0,
                                              3,
-                                             offsetof (Vertex, texId),
+                                             offsetof (Vertex, material.diffuseTexId),
+                                             VK_FORMAT_R32_UINT),
+                    getAttributeDescription (0,
+                                             4,
+                                             offsetof (Vertex, material.specularTexId),
+                                             VK_FORMAT_R32_UINT),
+                    getAttributeDescription (0,
+                                             5,
+                                             offsetof (Vertex, material.emissionTexId),
+                                             VK_FORMAT_R32_UINT),
+                    getAttributeDescription (0,
+                                             6,
+                                             offsetof (Vertex, material.shininess),
                                              VK_FORMAT_R32_UINT)
                 };
                 createVertexInputState (pipelineInfoId, bindingDescriptions, attributeDescriptions);
@@ -602,38 +678,16 @@ namespace Core {
                                       1,
                                       VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
                                       VK_SHADER_STAGE_VERTEX_BIT,
+                                      VK_NULL_HANDLE),
+
+                    getLayoutBinding (1,
+                                      1,
+                                      VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+                                      VK_SHADER_STAGE_FRAGMENT_BIT,
                                       VK_NULL_HANDLE)
                 };
-                /* Info on some of the available binding flags
-                 * (1) VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT
-                 * This flag indicates that if descriptors in this binding are updated between when the descriptor set is
-                 * bound in a command buffer and when that command buffer is submitted to a queue, then the submission
-                 * will use the most recently set descriptors for this binding and the updates do not invalidate the
-                 * command buffer
-                 *
-                 * After enabling the desired feature support for updating after bind, an application needs to setup the
-                 * following in order to use a descriptor that can update after bind
-                 * (a) The VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT_EXT flag for any
-                 * VkDescriptorSetLayout the descriptor is from
-                 * (b) The VK_DESCRIPTOR_POOL_CREATE_UPDATE_AFTER_BIND_BIT_EXT flag for any VkDescriptorPool the
-                 * descriptor is allocated from
-                 * (c) The VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT_EXT for each binding in the VkDescriptorSetLayout
-                 * that the descriptor will use
-                 *
-                 * More info:
-                 * https://docs.vulkan.org/guide/latest/extensions/VK_EXT_descriptor_indexing.html#:~:text=The%20key%20
-                 * word%20here%20is,dynamic%20uniform%20indexing%20in%20GLSL
-                 *
-                 * (2) VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT
-                 * With the partially bound feature an application developer isn’t required to update all the descriptors
-                 * at time of use. An example would be if an application’s GLSL has
-                 *
-                 * layout (set = 0, binding = 0) uniform sampler2D textureSampler[64];
-                 *
-                 * but only binds the first 32 slots in the array. This also relies on the the application knowing that
-                 * it will not index into the unbound slots in the array
-                */
                 auto perFrameBindingFlags = std::vector <VkDescriptorBindingFlags> {
+                    g_pipelineSettings.descriptorSetLayout.bindingFlagsSSBO,
                     g_pipelineSettings.descriptorSetLayout.bindingFlagsSSBO
                 };
                 createDescriptorSetLayout (deviceInfoId,
@@ -653,7 +707,9 @@ namespace Core {
                      * heightmap
                     */
                     getLayoutBinding (0,
-                                      static_cast <uint32_t> (getTextureImagePool().size()),
+                                      static_cast <uint32_t> (getTextureImagePool (DIFFUSE_TEXTURE). size() +
+                                                              getTextureImagePool (SPECULAR_TEXTURE).size() +
+                                                              getTextureImagePool (EMISSION_TEXTURE).size()),
                                       VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
                                       VK_SHADER_STAGE_FRAGMENT_BIT,
                                       VK_NULL_HANDLE)
@@ -674,6 +730,11 @@ namespace Core {
                                          VK_SHADER_STAGE_VERTEX_BIT,
                                          0,
                                          sizeof (SceneDataVertPC));
+
+                createPushConstantRange (pipelineInfoId,
+                                         VK_SHADER_STAGE_FRAGMENT_BIT,
+                                         sizeof (SceneDataVertPC),
+                                         sizeof (SceneDataFragPC));
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG PIPELINE LAYOUT                                                                         |
                  * |------------------------------------------------------------------------------------------------|
@@ -729,10 +790,12 @@ namespace Core {
                 */
                 auto poolSizes = std::vector {
                     getPoolSize (VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-                                 g_coreSettings.maxFramesInFlight),
+                                 g_coreSettings.maxFramesInFlight * 2),
 
                     getPoolSize (VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-                                 static_cast <uint32_t> (getTextureImagePool().size()))
+                                 static_cast <uint32_t> (getTextureImagePool (DIFFUSE_TEXTURE). size() +
+                                                         getTextureImagePool (SPECULAR_TEXTURE).size() +
+                                                         getTextureImagePool (EMISSION_TEXTURE).size()))
                 };
                 createDescriptorPool (deviceInfoId,
                                       sceneInfoId,
@@ -765,16 +828,16 @@ namespace Core {
                                       1,
                                       COMMON_SET);
                 /* |------------------------------------------------------------------------------------------------|
-                 * | CONFIG DESCRIPTOR SETS UPDATE - PER FRAME                                                      |
+                 * | CONFIG DESCRIPTOR SETS UPDATE - PER FRAME > MODEL                                              |
                  * |------------------------------------------------------------------------------------------------|
                 */
                 for (uint32_t i = 0; i < g_coreSettings.maxFramesInFlight; i++) {
-                    uint32_t storageBufferInfoId = sceneInfo->id.storageBufferInfoBase + i;
+                    uint32_t storageBufferInfoId = sceneInfo->id.modelStorageBufferInfoBase + i;
                     auto bufferInfo              = getBufferInfo (storageBufferInfoId, STORAGE_BUFFER);
                     auto descriptorBufferInfos   = std::vector {
                         getDescriptorBufferInfo (bufferInfo->resource.buffer,
                                                  0,
-                                                 sceneInfo->meta.totalInstancesCount * sizeof (InstanceDataSSBO))
+                                                 modelTotalInstancesCount * sizeof (ModelInstanceDataSSBO))
                     };
 
                     /* The configuration of descriptors is updated using the vkUpdateDescriptorSets function, which takes
@@ -785,6 +848,28 @@ namespace Core {
                                                          sceneInfo->resource.perFrameDescriptorSets[i],
                                                          descriptorBufferInfos,
                                                          0, 0, 1)
+                    };
+
+                    updateDescriptorSets (deviceInfoId, writeDescriptorSets);
+                }
+                /* |------------------------------------------------------------------------------------------------|
+                 * | CONFIG DESCRIPTOR SETS UPDATE - PER FRAME > LIGHT                                              |
+                 * |------------------------------------------------------------------------------------------------|
+                */
+                for (uint32_t i = 0; i < g_coreSettings.maxFramesInFlight; i++) {
+                    uint32_t storageBufferInfoId  = sceneInfo->id.lightStorageBufferInfoBase + i;
+                    auto bufferInfo               = getBufferInfo (storageBufferInfoId, STORAGE_BUFFER);
+                    auto descriptorBufferInfos    = std::vector {
+                        getDescriptorBufferInfo (bufferInfo->resource.buffer,
+                                                 0,
+                                                 lightTotalInstancesCount * sizeof (LightInstanceDataSSBO))
+                    };
+
+                    auto writeDescriptorSets = std::vector {
+                        getWriteBufferDescriptorSetInfo (VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+                                                         sceneInfo->resource.perFrameDescriptorSets[i],
+                                                         descriptorBufferInfos,
+                                                         1, 0, 1)
                     };
 
                     updateDescriptorSets (deviceInfoId, writeDescriptorSets);
@@ -800,10 +885,27 @@ namespace Core {
                  * | CONFIG DESCRIPTOR SETS UPDATE - COMMON                                                         |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                uint32_t textureCount = static_cast <uint32_t> (getTextureImagePool().size());
+                uint32_t textureCount = static_cast <uint32_t> (getTextureImagePool (DIFFUSE_TEXTURE). size() +
+                                                                getTextureImagePool (SPECULAR_TEXTURE).size() +
+                                                                getTextureImagePool (EMISSION_TEXTURE).size());
+
                 std::vector <VkDescriptorImageInfo> descriptorImageInfos (textureCount);
-                for (auto const& [path, infoId]: getTextureImagePool()) {
-                    auto imageInfo               = getImageInfo (infoId, TEXTURE_IMAGE);
+                for (auto const& [path, infoId]: getTextureImagePool (DIFFUSE_TEXTURE)) {
+                    auto imageInfo               = getImageInfo           (infoId, TEXTURE_IMAGE);
+                    descriptorImageInfos[infoId] = getDescriptorImageInfo (sceneInfo->resource.textureSampler,
+                                                                           imageInfo->resource.imageView,
+                                                                           VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+                }
+
+                for (auto const& [path, infoId]: getTextureImagePool (SPECULAR_TEXTURE)) {
+                    auto imageInfo               = getImageInfo           (infoId, TEXTURE_IMAGE);
+                    descriptorImageInfos[infoId] = getDescriptorImageInfo (sceneInfo->resource.textureSampler,
+                                                                           imageInfo->resource.imageView,
+                                                                           VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+                }
+
+                for (auto const& [path, infoId]: getTextureImagePool (EMISSION_TEXTURE)) {
+                    auto imageInfo               = getImageInfo           (infoId, TEXTURE_IMAGE);
                     descriptorImageInfos[infoId] = getDescriptorImageInfo (sceneInfo->resource.textureSampler,
                                                                            imageInfo->resource.imageView,
                                                                            VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
@@ -856,7 +958,23 @@ namespace Core {
                                        transferOpsCommandBuffers[0],
                 [&](void) {
                 {   /* Copy pixel data to texture image */
-                    for (auto const& [path, infoId]: getTextureImagePool()) {
+                    for (auto const& [path, infoId]: getTextureImagePool (DIFFUSE_TEXTURE)) {
+                        copyBufferToImage  (infoId, infoId,
+                                            STAGING_BUFFER, TEXTURE_IMAGE,
+                                            0,
+                                            0,
+                                            transferOpsCommandBuffers[0]);
+                    }
+
+                    for (auto const& [path, infoId]: getTextureImagePool (SPECULAR_TEXTURE)) {
+                        copyBufferToImage  (infoId, infoId,
+                                            STAGING_BUFFER, TEXTURE_IMAGE,
+                                            0,
+                                            0,
+                                            transferOpsCommandBuffers[0]);
+                    }
+
+                    for (auto const& [path, infoId]: getTextureImagePool (EMISSION_TEXTURE)) {
                         copyBufferToImage  (infoId, infoId,
                                             STAGING_BUFFER, TEXTURE_IMAGE,
                                             0,
@@ -895,7 +1013,21 @@ namespace Core {
                                                    << std::endl;
                 }
 
-                for (auto const& [path, infoId]: getTextureImagePool()) {
+                for (auto const& [path, infoId]: getTextureImagePool (DIFFUSE_TEXTURE)) {
+                    VKBufferMgr::cleanUp (deviceInfoId, infoId, STAGING_BUFFER);
+                    LOG_INFO (m_VKInitSequenceLog) << "[DELETE] Staging buffer "
+                                                   << "[" << infoId << "]"
+                                                   << std::endl;
+                }
+
+                for (auto const& [path, infoId]: getTextureImagePool (SPECULAR_TEXTURE)) {
+                    VKBufferMgr::cleanUp (deviceInfoId, infoId, STAGING_BUFFER);
+                    LOG_INFO (m_VKInitSequenceLog) << "[DELETE] Staging buffer "
+                                                   << "[" << infoId << "]"
+                                                   << std::endl;
+                }
+
+                for (auto const& [path, infoId]: getTextureImagePool (EMISSION_TEXTURE)) {
                     VKBufferMgr::cleanUp (deviceInfoId, infoId, STAGING_BUFFER);
                     LOG_INFO (m_VKInitSequenceLog) << "[DELETE] Staging buffer "
                                                    << "[" << infoId << "]"
@@ -933,7 +1065,13 @@ namespace Core {
                                        blitOpsCommandBuffers[0],
                 [&](void) {
                 {   /* Generate mip maps */
-                    for (auto const& [path, infoId]: getTextureImagePool())
+                    for (auto const& [path, infoId]: getTextureImagePool (DIFFUSE_TEXTURE))
+                        blitImageToMipMaps (infoId, TEXTURE_IMAGE, 0, blitOpsCommandBuffers[0]);
+
+                    for (auto const& [path, infoId]: getTextureImagePool (SPECULAR_TEXTURE))
+                        blitImageToMipMaps (infoId, TEXTURE_IMAGE, 0, blitOpsCommandBuffers[0]);
+
+                    for (auto const& [path, infoId]: getTextureImagePool (EMISSION_TEXTURE))
                         blitImageToMipMaps (infoId, TEXTURE_IMAGE, 0, blitOpsCommandBuffers[0]);
                 }
                 });
@@ -1004,6 +1142,74 @@ namespace Core {
                                                    << std::endl;
                 }
                 /* |------------------------------------------------------------------------------------------------|
+                 * | CONFIG LIGHTS                                                                                  |
+                 * |------------------------------------------------------------------------------------------------|
+                */
+                for (auto const& infoId: lightInfoIds) {
+                    auto lightInfo = getLightInfo (infoId);
+                    auto type      = static_cast <e_lightType> (infoId);
+
+                    switch (type) {
+                        case DIRECTIONAL_LIGHT:
+                            sceneInfo->meta.directionalLightsCount = lightInfo->meta.instancesCount;
+
+                            for (uint32_t i = 0; i < lightInfo->meta.instancesCount; i++) {
+                                lightInfo->meta.instances[i].ambient   = {0.05f, 0.05f, 0.05f, 1.00f};
+                                lightInfo->meta.instances[i].diffuse   = {0.40f, 0.40f, 0.40f, 1.00f};
+                                lightInfo->meta.instances[i].specular  = {0.50f, 0.50f, 0.50f, 1.00f};
+                                /* Note that, we do not set attenuation parameters for directional light
+                                */
+                                lightInfo->meta.instances[i].constant  = 1.0f;
+                                lightInfo->meta.instances[i].linear    = 0.0f;
+                                lightInfo->meta.instances[i].quadratic = 0.0f;
+
+                                setLightRadiusDeg (lightInfoIds[0], i, 0.0f, 0.0f);
+                            }
+                            break;
+
+                        case POINT_LIGHT:
+                            sceneInfo->meta.pointLightsCount = lightInfo->meta.instancesCount;
+
+                            for (uint32_t i = 0; i < lightInfo->meta.instancesCount; i++) {
+                                lightInfo->meta.instances[i].ambient   = {0.05f, 0.05f, 0.05f, 1.00f};
+                                lightInfo->meta.instances[i].diffuse   = {0.80f, 0.80f, 0.80f, 1.00f};
+                                lightInfo->meta.instances[i].specular  = {1.00f, 1.00f, 1.00f, 1.00f};
+                                /* Note that, setting the right values for the attenuation parameters depend on many
+                                 * factors: the environment, the distance you want a light to cover, the type of light
+                                 * etc. In most cases, it simply is a question of experience and a moderate amount of
+                                 * tweaking
+                                 *
+                                 * https://wiki.ogre3d.org/tiki-index.php?page=-Point+Light+Attenuation shows some of
+                                 * the values these terms could take to simulate a realistic (sort of) light source that
+                                 * covers a specific radius (distance). The first column specifies the distance a light
+                                 * will cover with the given terms. These values are good starting points for most lights
+                                */
+                                lightInfo->meta.instances[i].constant  = 1.0f;
+                                lightInfo->meta.instances[i].linear    = 0.045f;
+                                lightInfo->meta.instances[i].quadratic = 0.0075f;
+
+                                setLightRadiusDeg (lightInfoIds[1], i, 0.0f, 0.0f);
+                        }
+                        break;
+
+                        case SPOT_LIGHT:
+                            sceneInfo->meta.spotLightsCount = lightInfo->meta.instancesCount;
+
+                            for (uint32_t i = 0; i < lightInfo->meta.instancesCount; i++) {
+                                lightInfo->meta.instances[i].ambient   = {0.0f, 0.0f, 0.0f, 1.0f};
+                                lightInfo->meta.instances[i].diffuse   = {1.0f, 1.0f, 1.0f, 1.0f};
+                                lightInfo->meta.instances[i].specular  = {1.0f, 1.0f, 1.0f, 1.0f};
+
+                                lightInfo->meta.instances[i].constant  = 1.0f;
+                                lightInfo->meta.instances[i].linear    = 0.045f;
+                                lightInfo->meta.instances[i].quadratic = 0.0075f;
+
+                                setLightRadiusDeg (lightInfoIds[2], i, 12.0f, 24.0f);
+                            }
+                            break;
+                    }
+                }
+                /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG EXTENSIONS                                                                              |
                  * |------------------------------------------------------------------------------------------------|
                 */
@@ -1021,6 +1227,7 @@ namespace Core {
                 dumpFenceInfoPool();
                 dumpSemaphoreInfoPool();
                 dumpSceneInfoPool();
+                dumpLightInfoPool();
             }
     };
 }   // namespace Core

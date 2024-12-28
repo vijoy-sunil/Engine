@@ -22,6 +22,38 @@ namespace Gui {
             }
 
         protected:
+            void createSeparatorText (const char* label) {
+                ImGui::PushStyleVar  (ImGuiStyleVar_ItemSpacing, g_styleSettings.spacing.separatorText);
+                ImGui::SeparatorText (label);
+                ImGui::PopStyleVar();
+            }
+
+            void createMultiCirclesShape (uint32_t segmentsCount,
+                                          float postPadding,
+                                          float shapeDisable,
+                                          const std::vector <float>& radii,
+                                          std::vector <ImVec4>& colors) {
+
+                ImDrawList* draw_list = ImGui::GetWindowDrawList();
+                ImVec2 savedPos       = ImGui::GetCursorScreenPos();
+                /* Set cursor x position to the middle of the available content space. We will then offset from this
+                 * position using the radius of the circle to get the center. Note that, we are using the first value
+                 * in the radii vector since it is the largest radius
+                */
+                ImGui::SetCursorPosX ((ImGui::GetContentRegionAvail().x - (radii[0] * 2.0f)) * 0.5f);
+
+                ImVec2 currentPos     = ImGui::GetCursorScreenPos();
+                ImVec2 center         = {currentPos.x + radii[0], currentPos.y + radii[0]};
+                /* Since we cannot disable a shape, we will adjust its alpha to match a disabled field
+                */
+                for (auto& color: colors)
+                    color.w           = shapeDisable == true ? g_styleSettings.alpha.disabled: color.w;
+
+                for (size_t i = 0; i < radii.size(); i++)
+                    draw_list->AddCircleFilled (center, radii[i], ImColor (colors[i]), segmentsCount);
+                ImGui::SetCursorScreenPos      ({savedPos.x, savedPos.y + (radii[0] * 2.0f) + postPadding});
+            }
+
             void createColorButton (const char* stringId,
                                     const char* label,
                                     bool buttonDisable,

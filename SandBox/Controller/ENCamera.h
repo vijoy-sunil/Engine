@@ -354,6 +354,53 @@ namespace SandBox {
                 return m_currentType;
             }
 
+            /* Summary of writable camera types and available switching between active cameras, types and focuses
+             * |----------------|----------------|----------------|----------------|
+             * | TYPE           | WRITE          | ACTIVE         | FOCUS          |
+             * |----------------|----------------|----------------|----------------|
+             * | SPOILER        |       X        |       O        |       O        |
+             * |----------------|----------------|----------------|----------------|
+             * | LEFT_PROFILE   |       X        |       O        |       O        |
+             * |----------------|----------------|----------------|----------------|
+             * | REVERSE        |       X        |       O        |       O        |
+             * |----------------|----------------|----------------|----------------|
+             * | RIGHT_PROFILE  |       X        |       O        |       O        |
+             * |----------------|----------------|----------------|----------------|
+             * | REAR_AXLE      |       X        |       O        |       O        |
+             * |----------------|----------------|----------------|----------------|
+             * | TOP_DOWN       |       X        |       O        |       O        |
+             * |----------------|----------------|----------------|----------------|
+             * | FRONT_AXLE     |       X        |       O        |       O        |
+             * |----------------|----------------|----------------|----------------|
+             * | DRONE_LOCK (1) |       O        |       O        |       O        |
+             * |----------------|----------------|----------------|----------------|
+             * | DRONE_FOLLOW   |       O        |       O        |       X        |
+             * |----------------|----------------|----------------|----------------|
+             * | DRONE_FLY  (2) |       O        |       X        |       X        |
+             * |----------------|----------------|----------------|----------------|
+             *
+             * (1) When switching active camera, the type is automatically set to drone lock
+             * (2) Not writable via ui
+            */
+
+            bool isCameraPropertyWritable (void) {
+                if ((getCameraType() != SandBox::DRONE_LOCK) &&  (getCameraType() != SandBox::DRONE_FOLLOW))
+                    return false;
+                else
+                    return true;
+            }
+
+            bool isCameraFocusWritable (void) {
+                /* Prevent changing camera focus when camera type is drone follow. If we change focus in drone follow 
+                 * type, we won't be able to remove model transform from the camera vectors since we would have already 
+                 * lost track of the previous model that was focussed
+                */
+                if (getCameraType() == SandBox::DRONE_FOLLOW)
+                    return false;
+                else
+                    return true;
+            }
+
             void setCameraActive (uint32_t cameraInfoId, e_cameraType type) {
                 m_cameraInfoId = cameraInfoId;
                 m_currentType  = UNDEFINED;

@@ -6,7 +6,7 @@
 #include "ENEnum.h"
 
 namespace SandBox {
-    #define ENABLE_SAMPLE_MODELS_IMPORT                              (true)
+    #define SELECT_TRACK_ID                                          (0)
 
     struct CollectionSettings {
         /* Collection instance id range assignments
@@ -24,85 +24,16 @@ namespace SandBox {
         const char* transformDataPath;
     };
 
-    std::unordered_map <e_modelType, ModelImportInfo> g_sampleModelImportInfoPool = {
-        {SAMPLE_CUBE,               {"Asset/Model/Sample/Cube.obj",
-                                     "Asset/Model/Sample/",
-                                     "Asset/Model/Sample/Cube_Instances.json"}},
-
-        {SAMPLE_CYLINDER,           {"Asset/Model/Sample/Cylinder.obj",
-                                     "Asset/Model/Sample/",
-                                     "Asset/Model/Sample/Cylinder_Instances.json"}},
-
-        {SAMPLE_T_BEAM,             {"Asset/Model/Sample/T_Beam.obj",
-                                     "Asset/Model/Sample/",
-                                     "Asset/Model/Sample/T_Beam_Instances.json"}},
-
-        {SAMPLE_SLOPE,              {"Asset/Model/Sample/Slope.obj",
-                                     "Asset/Model/Sample/",
-                                     "Asset/Model/Sample/Slope_Instances.json"}},
-
-        {SAMPLE_BRIDGE,             {"Asset/Model/Sample/Bridge.obj",
-                                     "Asset/Model/Sample/",
-                                     "Asset/Model/Sample/Bridge_Instances.json"}},
-
-        {SAMPLE_PLATFORM,           {"Asset/Model/Sample/Platform.obj",
-                                     "Asset/Model/Sample/",
-                                     "Asset/Model/Sample/Platform_Instances.json"}}
-    };
-
-    std::unordered_map <e_modelType, ModelImportInfo> g_staticModelImportInfoPool = {
-        {T0_GENERIC_NOCAP,          {"Asset/Model/Track/T0_Generic_NoCap.obj",
-                                     "Asset/Model/Track/",
-                                     "Asset/Model/Track/T0_Generic_NoCap_Instances.json"}},
-
-        {T0_CURVE_R6_D90,           {"Asset/Model/Track/T0_Curve_R6_D90.obj",
-                                     "Asset/Model/Track/",
-                                     "Asset/Model/Track/T0_Curve_R6_D90_Instances.json"}},
-
-        {T0_CURVE_R6_D90_CAP,       {"Asset/Model/Track/T0_Curve_R6_D90_Cap.obj",
-                                     "Asset/Model/Track/",
-                                     "Asset/Model/Track/T0_Curve_R6_D90_Cap_Instances.json"}},
-
-        {T0_CURVE_R10_D45_Z,        {"Asset/Model/Track/T0_Curve_R10_D45_Z.obj",
-                                     "Asset/Model/Track/",
-                                     "Asset/Model/Track/T0_Curve_R10_D45_Z_Instances.json"}},
-
-        {T0_CURVE_R10_D45_Z_CAP,    {"Asset/Model/Track/T0_Curve_R10_D45_Z_Cap.obj",
-                                     "Asset/Model/Track/",
-                                     "Asset/Model/Track/T0_Curve_R10_D45_Z_Cap_Instances.json"}},
-
-        {T0_CURVE_R10_D45_Z_SMT,    {"Asset/Model/Track/T0_Curve_R10_D45_Z_SMT.obj",
-                                     "Asset/Model/Track/",
-                                     "Asset/Model/Track/T0_Curve_R10_D45_Z_SMT_Instances.json"}},
-
-        {T0_CURVE_R10_D90,          {"Asset/Model/Track/T0_Curve_R10_D90.obj",
-                                     "Asset/Model/Track/",
-                                     "Asset/Model/Track/T0_Curve_R10_D90_Instances.json"}}
-    };
-
-    std::unordered_map <e_modelType, ModelImportInfo> g_dynamicModelImportInfoPool = {
-        {VEHICLE_BASE,              {"Asset/Model/Vehicle/Vehicle_Base.obj",
-                                     "Asset/Model/Vehicle/",
-                                     "Asset/Model/Vehicle/Vehicle_Base_Instances.json"}},
-
-        {TYRE,                      {"Asset/Model/Vehicle/Tyre.obj",
-                                     "Asset/Model/Vehicle/",
-                                     "Asset/Model/Vehicle/Tyre_Instances.json"}}
-    };
-
-    std::unordered_map <e_modelType, ModelImportInfo> g_skyBoxModelImportInfoPool = {
-        {SKY_BOX,                   {"Asset/Model/Environment/Sky_Box.obj",
-                                     "Asset/Model/Environment/",
-                                     "Asset/Model/Environment/Sky_Box_Instances.json"}}
-    };
-
     std::unordered_map <e_anchorType, ModelImportInfo> g_cameraAnchorImportInfoPool = {
         {ANCHOR_CAMERA,             {"Asset/Model/Anchor/Anchor_Camera.obj",
                                      "Asset/Model/Anchor/",
                                      "Asset/Model/Anchor/Anchor_Camera_Instances.json"}}
     };
 
-    std::unordered_map <e_anchorType, ModelImportInfo> g_lightAnchorImportInfoPool = {
+    /* Note that, we are not using unordered map since the order in which the anchors (and thus the lights) are laid
+     * is important. This is because the instance datas of all the lights are expected to be in a specific order
+    */
+    std::map <e_anchorType, ModelImportInfo> g_lightAnchorImportInfoPool = {
         {ANCHOR_DIRECTIONAL_LIGHT,  {"Asset/Model/Anchor/Anchor_Directional_Light.obj",
                                      "Asset/Model/Anchor/",
                                      "Asset/Model/Anchor/Anchor_Directional_Light_Instances.json"}},
@@ -114,6 +45,40 @@ namespace SandBox {
         {ANCHOR_SPOT_LIGHT,         {"Asset/Model/Anchor/Anchor_Spot_Light.obj",
                                      "Asset/Model/Anchor/",
                                      "Asset/Model/Anchor/Anchor_Spot_Light_Instances.json"}}
+    };
+
+    std::unordered_map <e_modelType, ModelImportInfo> g_trackModelImportInfoPool = {
+#if SELECT_TRACK_ID == 0
+        {CUBE,                      {"Asset/Model/Track/0/Cube.obj",
+                                     "Asset/Model/Track/0/",
+                                     "Asset/Model/Track/0/Cube_Instances.json"}},
+
+        {CYLINDER,                  {"Asset/Model/Track/0/Cylinder.obj",
+                                     "Asset/Model/Track/0/",
+                                     "Asset/Model/Track/0/Cylinder_Instances.json"}},
+
+        {T_BEAM,                    {"Asset/Model/Track/0/T_Beam.obj",
+                                     "Asset/Model/Track/0/",
+                                     "Asset/Model/Track/0/T_Beam_Instances.json"}},
+
+        {SLOPE,                     {"Asset/Model/Track/0/Slope.obj",
+                                     "Asset/Model/Track/0/",
+                                     "Asset/Model/Track/0/Slope_Instances.json"}},
+
+        {BRIDGE,                    {"Asset/Model/Track/0/Bridge.obj",
+                                     "Asset/Model/Track/0/",
+                                     "Asset/Model/Track/0/Bridge_Instances.json"}},
+
+        {PLATFORM,                  {"Asset/Model/Track/0/Platform.obj",
+                                     "Asset/Model/Track/0/",
+                                     "Asset/Model/Track/0/Platform_Instances.json"}}
+#endif  // SELECT_TRACK_ID
+    };
+
+    std::unordered_map <e_modelType, ModelImportInfo> g_skyBoxModelImportInfoPool = {
+        {SKY_BOX,                   {"Asset/Model/SkyBox/Sky_Box.obj",
+                                     "Asset/Model/SkyBox/",
+                                     "Asset/Model/SkyBox/Sky_Box_Instances.json"}}
     };
 
     /* A sky box is a "large" cube that encompasses the entire scene and contains 6 images of a surrounding environment,
@@ -136,12 +101,22 @@ namespace SandBox {
      * Note that, we are not using unordered map since the order in which the path is laid out is important
     */
     std::map <e_cubeMapTarget, const char*> g_skyBoxTextureImagePool = {
-        {POSITIVE_X,                "Asset/Texture/Environment/tex_2Kx2K_sky_box_px.png"},
-        {NEGATIVE_X,                "Asset/Texture/Environment/tex_2Kx2K_sky_box_nx.png"},
-        {POSITIVE_Y,                "Asset/Texture/Environment/tex_2Kx2K_sky_box_py.png"},
-        {NEGATIVE_Y,                "Asset/Texture/Environment/tex_2Kx2K_sky_box_ny.png"},
-        {POSITIVE_Z,                "Asset/Texture/Environment/tex_2Kx2K_sky_box_pz.png"},
-        {NEGATIVE_Z,                "Asset/Texture/Environment/tex_2Kx2K_sky_box_nz.png"}
+        {POSITIVE_X,                "Asset/Texture/SkyBox/Evening/tex_2Kx2K_sky_box_px.png"},
+        {NEGATIVE_X,                "Asset/Texture/SkyBox/Evening/tex_2Kx2K_sky_box_nx.png"},
+        {POSITIVE_Y,                "Asset/Texture/SkyBox/Evening/tex_2Kx2K_sky_box_py.png"},
+        {NEGATIVE_Y,                "Asset/Texture/SkyBox/Evening/tex_2Kx2K_sky_box_ny.png"},
+        {POSITIVE_Z,                "Asset/Texture/SkyBox/Evening/tex_2Kx2K_sky_box_pz.png"},
+        {NEGATIVE_Z,                "Asset/Texture/SkyBox/Evening/tex_2Kx2K_sky_box_nz.png"}
+    };
+
+    std::unordered_map <std::string, uint32_t> g_shininessImportPool = {
+        {"/Users/vijoys/Downloads/Projects/Engine/Asset/Texture/Track/tex_2Kx2K_grid.png",          256},
+        {"/Users/vijoys/Downloads/Projects/Engine/Asset/Texture/Track/tex_512x512_arrow.png",       64},
+        {"/Users/vijoys/Downloads/Projects/Engine/Asset/Texture/Track/tex_512x512_border.png",      48},
+        {"/Users/vijoys/Downloads/Projects/Engine/Asset/Texture/Track/tex_512x512_circle.png",      64},
+        {"/Users/vijoys/Downloads/Projects/Engine/Asset/Texture/Track/tex_512x512_cross.png",       64},
+        {"/Users/vijoys/Downloads/Projects/Engine/Asset/Texture/Track/tex_512x512_strips.png",      64},
+        {"/Users/vijoys/Downloads/Projects/Engine/Asset/Texture/Track/tex_512x512_text.png",        48},
     };
 
     struct PipelineSettings {
@@ -162,15 +137,15 @@ namespace SandBox {
     } g_pipelineSettings;
 
     struct CameraSettings {
-        const float movementSpeed                                    = 0.6f;
-        const float sensitivity                                      = 0.1f;
+        const float movementSpeed                                    =  0.60f;
+        const float sensitivity                                      =  0.08f;
         const float minPitchDeg                                      = -89.0f;
-        const float maxPitchDeg                                      = 89.0f;
-        const float minFovDeg                                        = 1.0f;
+        const float maxPitchDeg                                      =  89.0f;
+        const float minFovDeg                                        =   1.0f;
         const float maxFovDeg                                        = 110.0f;
-        const float nearPlane                                        = 0.01f;
+        const float nearPlane                                        =  0.01f;
         const float farPlane                                         = 100.0f;
-        const glm::vec3 upVector                                     = {0.0f, -1.0f,  0.0f};
+        const glm::vec3 upVector                                     = {0.0f, -1.0f, 0.0f};
     } g_cameraSettings;
 
     struct CameraTypeInfo {
@@ -180,7 +155,7 @@ namespace SandBox {
     };
 
     std::unordered_map <e_cameraType, CameraTypeInfo> g_cameraTypeInfoPool = {
-        /* Camera position with respect to vehicle base
+        /* Camera position with respect to vehicle chassis
          *
          *      Z                   |===============|   Front       : {0.0, 0.0, 0.9}
          *      |                   |               |

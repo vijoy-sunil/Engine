@@ -16,10 +16,10 @@ layout (push_constant) uniform SceneDataVertPC {
 
 /* Use the scale variable to set the distance between the grid lines
 */
-const float scale           = 1.0;
-const float highlightMargin = 1.0;
-const float nearPlane       = 0.01;
-const float farPlane        = 100.0;
+const float SCALE            = 1.0;
+const float HIGHLIGHT_MARGIN = 1.0;
+const float NEAR_PLANE       = 0.01;
+const float FAR_PLANE        = 100.0;
 
 /* To draw lines instead of just a uniform color, compute the 3D position on the actual xz plane using the near point and
  * far point calculated earlier and use that position to determine if the point is actually on a line or on the void of
@@ -39,11 +39,11 @@ vec4 grid (vec3 fragPosition, float scale, bool drawAxis) {
     /* Axis highlight for X and Z axes
     */
     if (drawAxis) {
-        if (fragPosition.z > -highlightMargin * minimumZ &&
-            fragPosition.z <  highlightMargin * minimumZ)       color.x = 1.0;
+        if (fragPosition.z > -HIGHLIGHT_MARGIN * minimumZ &&
+            fragPosition.z <  HIGHLIGHT_MARGIN * minimumZ)       color.x = 1.0;
 
-        if (fragPosition.x > -highlightMargin * minimumX &&
-            fragPosition.x <  highlightMargin * minimumX)       color.z = 1.0;
+        if (fragPosition.x > -HIGHLIGHT_MARGIN * minimumX &&
+            fragPosition.x <  HIGHLIGHT_MARGIN * minimumX)       color.z = 1.0;
     }
     return color;
 }
@@ -70,11 +70,11 @@ float computeLinearDepth (vec3 fragPosition) {
     float clipSpaceDepth   = (clipSpacePosition.z/clipSpacePosition.w) * 2.0 - 1.0;
     /* Linear depth between near plane and far plane values
     */
-    float linearDepth      = (2.0 * farPlane * nearPlane)/
-                             (farPlane + nearPlane - clipSpaceDepth * (farPlane - nearPlane));
+    float linearDepth      = (2.0 * FAR_PLANE * NEAR_PLANE)/
+                             (FAR_PLANE + NEAR_PLANE - clipSpaceDepth * (FAR_PLANE - NEAR_PLANE));
     /* Normalize result
     */
-    return linearDepth/farPlane;
+    return linearDepth/FAR_PLANE;
 }
 
 void main (void) {
@@ -97,7 +97,7 @@ void main (void) {
     float linearDepth = computeLinearDepth (fragPosition);
     float fading      = max (0, (0.5 - linearDepth));
 
-    outColor          = (grid (fragPosition, scale, true)  +
-                         grid (fragPosition, scale, true)) * float (t > 0);
+    outColor          = (grid (fragPosition, SCALE, true)  +
+                         grid (fragPosition, SCALE, true)) * float (t > 0);
     outColor.a       *= fading;
 }

@@ -105,7 +105,7 @@ namespace Gui {
                     throw std::runtime_error ("Plot data info id already exists");
                 }
 
-                PlotDataInfo info{};
+                PlotDataInfo info;
                 info.meta.label           = label;
                 info.meta.insertIdx       = 0;
 

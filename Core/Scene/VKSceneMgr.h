@@ -11,7 +11,9 @@ namespace Core {
         private:
             struct SceneInfo {
                 struct Meta {
-                    uint32_t totalInstancesCount;
+                    uint32_t directionalLightsCount;
+                    uint32_t pointLightsCount;
+                    uint32_t spotLightsCount;
                 } meta;
 
                 struct Id {
@@ -19,7 +21,8 @@ namespace Core {
                     uint32_t depthImageInfo;
                     uint32_t multiSampleImageInfo;
                     uint32_t uniformBufferInfoBase;
-                    uint32_t storageBufferInfoBase;
+                    uint32_t modelStorageBufferInfoBase;
+                    uint32_t lightStorageBufferInfoBase;
                     uint32_t inFlightFenceInfoBase;
                     uint32_t imageAvailableSemaphoreInfoBase;
                     uint32_t renderDoneSemaphoreInfoBase;
@@ -65,12 +68,12 @@ namespace Core {
 
         protected:
             void readySceneInfo (uint32_t sceneInfoId,
-                                 uint32_t totalInstancesCount,
                                  uint32_t swapChainImageInfoBase          = UINT32_MAX,
                                  uint32_t depthImageInfo                  = UINT32_MAX,
                                  uint32_t multiSampleImageInfo            = UINT32_MAX,
                                  uint32_t uniformBufferInfoBase           = UINT32_MAX,
-                                 uint32_t storageBufferInfoBase           = UINT32_MAX,
+                                 uint32_t modelStorageBufferInfoBase      = UINT32_MAX,
+                                 uint32_t lightStorageBufferInfoBase      = UINT32_MAX,
                                  uint32_t inFlightFenceInfoBase           = UINT32_MAX,
                                  uint32_t imageAvailableSemaphoreInfoBase = UINT32_MAX,
                                  uint32_t renderDoneSemaphoreInfoBase     = UINT32_MAX) {
@@ -83,12 +86,12 @@ namespace Core {
                 }
 
                 SceneInfo info{};
-                info.meta.totalInstancesCount           = totalInstancesCount;
                 info.id.swapChainImageInfoBase          = swapChainImageInfoBase;
                 info.id.depthImageInfo                  = depthImageInfo;
                 info.id.multiSampleImageInfo            = multiSampleImageInfo;
                 info.id.uniformBufferInfoBase           = uniformBufferInfoBase;
-                info.id.storageBufferInfoBase           = storageBufferInfoBase;
+                info.id.modelStorageBufferInfoBase      = modelStorageBufferInfoBase;
+                info.id.lightStorageBufferInfoBase      = lightStorageBufferInfoBase;
                 info.id.inFlightFenceInfoBase           = inFlightFenceInfoBase;
                 info.id.imageAvailableSemaphoreInfoBase = imageAvailableSemaphoreInfoBase;
                 info.id.renderDoneSemaphoreInfoBase     = renderDoneSemaphoreInfoBase;
@@ -114,8 +117,16 @@ namespace Core {
                                                << "[" << key << "]"
                                                << std::endl;
 
-                    LOG_INFO (m_VKSceneMgrLog) << "Total instances count "
-                                               << "[" << val.meta.totalInstancesCount << "]"
+                    LOG_INFO (m_VKSceneMgrLog) << "Directional lights count "
+                                               << "[" << val.meta.directionalLightsCount << "]"
+                                               << std::endl;
+
+                    LOG_INFO (m_VKSceneMgrLog) << "Point lights count "
+                                               << "[" << val.meta.pointLightsCount << "]"
+                                               << std::endl;
+
+                    LOG_INFO (m_VKSceneMgrLog) << "Spot lights count "
+                                               << "[" << val.meta.spotLightsCount << "]"
                                                << std::endl;
 
                     LOG_INFO (m_VKSceneMgrLog) << "Swap chain image info id base "
@@ -134,8 +145,12 @@ namespace Core {
                                                << "[" << val.id.uniformBufferInfoBase << "]"
                                                << std::endl;
 
-                    LOG_INFO (m_VKSceneMgrLog) << "Storage buffer info id base "
-                                               << "[" << val.id.storageBufferInfoBase << "]"
+                    LOG_INFO (m_VKSceneMgrLog) << "Model storage buffer info id base "
+                                               << "[" << val.id.modelStorageBufferInfoBase << "]"
+                                               << std::endl;
+
+                    LOG_INFO (m_VKSceneMgrLog) << "Light storage buffer info id base "
+                                               << "[" << val.id.lightStorageBufferInfoBase << "]"
                                                << std::endl;
 
                     LOG_INFO (m_VKSceneMgrLog) << "In flight fence info id base "

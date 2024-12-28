@@ -66,6 +66,15 @@ namespace Core {
                     uint32_t maxStorageBufferRange;
                     uint32_t maxPushConstantsSize;
                     uint32_t maxMemoryAllocationCount;
+                    /* This is the maximum number of samplers that can be accessible to a single shader stage in a 
+                     * pipeline layout. Only descriptors in descriptor set layouts created without the 
+                     * VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT bit set count against this limit
+                    */
+                    uint32_t maxPerStageDescriptorSamplers;
+                    /* This is similar to maxPerStageDescriptorSamplers but counts descriptors from descriptor sets 
+                     * created with or without the VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT bit set
+                    */
+                    uint32_t maxPerStageDescriptorUpdateAfterBindSamplers;
                     /* maxAnisotropy is the anisotropy value clamp used by the sampler, it limits the amount of texel
                      * samples that can be used to calculate the final color
                     */
@@ -212,6 +221,14 @@ namespace Core {
 
                     LOG_INFO (m_VKDeviceMgrLog) << "Max memory allocation count "
                                                 << "[" << val.params.maxMemoryAllocationCount << "]"
+                                                << std::endl;
+
+                    LOG_INFO (m_VKDeviceMgrLog) << "Max per stage descriptor samplers "
+                                                << "[" << val.params.maxPerStageDescriptorSamplers << "]"
+                                                << std::endl;
+
+                    LOG_INFO (m_VKDeviceMgrLog) << "Max per stage descriptor update after bind samplers "
+                                                << "[" << val.params.maxPerStageDescriptorUpdateAfterBindSamplers << "]"
                                                 << std::endl;
 
                     LOG_INFO (m_VKDeviceMgrLog) << "Max sampler anisotropy "

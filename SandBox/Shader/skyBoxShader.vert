@@ -3,9 +3,9 @@
 layout (location = 0) in  vec3 inPosition;
 layout (location = 0) out vec3 fragTexCoord;
 
-layout (set = 0, binding = 0) uniform InstanceData {
+layout (set = 0, binding = 0) uniform ModelInstanceData {
     mat4 modelMatrix;
-} instanceData;
+} modelInstanceData;
 
 layout (push_constant) uniform SceneDataVertPC {
     mat4 viewMatrix;
@@ -27,7 +27,7 @@ void main (void) {
     mat4 viewMatrix  = mat4 (mat3 (sceneDataVert.viewMatrix));
     vec4 position    = sceneDataVert.projectionMatrix *
                        viewMatrix                     *
-                       instanceData.modelMatrix       *
+                       modelInstanceData.modelMatrix  *
                        vec4 (inPosition, 1.0);
     /* Set the z component of the position vector equal to its w component which will result in a z component (depth)
      * that is always equal to 1.0

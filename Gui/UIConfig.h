@@ -32,22 +32,6 @@ namespace Gui {
             const e_propertyType propertyEditor                      = VIEW;
         } button;
 
-        struct TreeNode {
-            /* Node info ids for specific nodes are obtained from dump file. Note that, whenever a new node is added or
-             * removed, the below node info ids need to be changed as well
-            */
-            const uint32_t worldCollection                           = 114;     /* Camera info id 0 node    */
-            const uint32_t worldCollectionSample                     = 95;      /* Camera info id 0 node    */
-            /* Locked nodes are nodes with their properties locked. Note that there can be more than one locked nodes
-            */
-            const std::vector <uint32_t> lockedNodes                 = {
-                                                                        111     /* Sky box instance 0 node  */
-                                                                       };
-            const std::vector <uint32_t> lockedNodesSample           = {
-                                                                        92      /* Sky box instance 0 node  */
-                                                                       };
-        } treeNode;
-
         struct OverlayLocation {
             const e_overlayLocation metrics                          = BOTTOM_LEFT;
         } overlayLocation;
@@ -55,7 +39,7 @@ namespace Gui {
 
     struct StyleSettings {
         const char* iniSaveFilePath                                  = "Gui/imgui.ini";
-        const char* precision                                        = "%0.2f";
+        const char* precision                                        = "%0.3f";
         const float hoverDelay                                       = 0.2f;
 
         struct Font {
@@ -80,6 +64,7 @@ namespace Gui {
             const ImVec2 child                                       = ImVec2 (4.0f, 4.0f);
             const ImVec2 cell                                        = ImVec2 (4.0f, 4.0f);
             const ImVec2 overlay                                     = ImVec2 (4.0f, 4.0f);
+            const ImVec2 separatorText                               = ImVec2 (0.0f, 4.0f);
         } padding;
 
         struct Rounding {
@@ -96,6 +81,7 @@ namespace Gui {
             const float frame                                        = 0.0f;
             const float child                                        = 0.0f;
             const float popUp                                        = 0.0f;
+            const float separatorText                                = 1.0f;
         } borderSize;
 
         struct Spacing {
@@ -103,6 +89,7 @@ namespace Gui {
             const ImVec2 item                                        = ImVec2 (0.0f, 4.0f);
             const ImVec2 itemInner                                   = ImVec2 (8.0f, 8.0f);
             const ImVec2 list                                        = ImVec2 (4.0f, 4.0f);
+            const ImVec2 separatorText                               = ImVec2 (8.0f, 4.0f);
         } spacing;
 
         struct Size {
@@ -117,6 +104,7 @@ namespace Gui {
             const float inputField                                   = 120.0f;
             const ImVec2 windowTitle                                 = ImVec2 (0.5f, 0.5f);
             const ImVec2 buttonText                                  = ImVec2 (0.5f, 0.5f);
+            const ImVec2 separatorText                               = ImVec2 (0.0f, 0.5f);
         } alignment;
 
         struct Color {

@@ -80,13 +80,6 @@ namespace Core {
      * These gotchas are a good reason to always be explicit about alignment. That way you won't be caught offguard by
      * the strange symptoms of alignment error
      *
-     * When declaring UBOs/SSBOs, pretend that all 3-element vector types don't exist. This includes column-major
-     * matrices with 3 rows or row-major matrices with 3 columns. Pretend that the only types are scalars, 2, and 4
-     * element vectors (and matrices)
-     *
-     * Reference: https://stackoverflow.com/questions/38172696/should-i-ever-use-a-vec3-inside-of-a-uniform-buffer-or-
-     * shader-storage-buffer-o
-     *
      * Layout standards std140 vs std430
      * std430 - the default for push constants
      * std140 - the default for uniform buffers
@@ -99,9 +92,10 @@ namespace Core {
      * For example, a mat3 may be padded internally to take 12 floats of space arranged as
      * [x0, y0, z0, pad][x1, y1, z1, pad][x2, y2, z2, pad]
     */
-    struct InstanceDataSSBO {
+    struct ModelInstanceDataSSBO {
         glm::mat4 modelMatrix;
-        /* The texture image info id look up table is an array of 32 bit unsigned integers as shown below. We can pack 4
+        glm::mat4 normalMatrix;
+        /* A texture image info id look up table is an array of 32 bit unsigned integers as shown below. We can pack 4
          * info ids into 32 bits (a packet) if we assume a maximum id value of UINT8_MAX
          * |--------|--------|--------|--------|
          * |   32b  |   32b  |   32b  |   32b  |.....
@@ -113,12 +107,40 @@ namespace Core {
          *          |   8b   |   8b   |   8b   |   8b   |
          *          |--------|--------|--------|--------|
         */
-        uint32_t texIdLUT[64];
+        uint32_t diffuseTexIdLUT [64];
+        uint32_t specularTexIdLUT[64];
+        uint32_t emissionTexIdLUT[64];
     };
 
     struct SceneDataVertPC {
         glm::mat4 viewMatrix;
-        alignas (16) glm::mat4 projectionMatrix;
+        glm::mat4 projectionMatrix;
+    };
+
+    struct SceneDataFragPC {
+        glm::vec3 viewPosition;
+        uint32_t directionalLightsCount;
+        uint32_t pointLightsCount;
+        uint32_t spotLightsCount;
+    };
+
+    struct LightInstanceDataSSBO {
+        alignas (16) glm::vec3 position;
+        alignas (16) glm::vec3 direction;
+        /* A light source has a different intensity for its ambient, diffuse and specular components. The ambient light
+         * is usually set to a low intensity because we don't want the ambient color to be too dominant. The diffuse
+         * component of a light source is usually set to the exact color we would like a light to have; often a bright
+         * white color. The specular component is usually kept at 1.0 shining at full intensity
+        */
+        alignas (16) glm::vec4 ambient;
+        glm::vec4 diffuse;
+        glm::vec4 specular;
+
+        float constant;
+        float linear;
+        float quadratic;
+        float innerRadiusCosine;
+        float outerRadiusCosine;
     };
 }   // namespace Core
 #endif  // VK_UNIFORM_H

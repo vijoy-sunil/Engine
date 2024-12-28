@@ -131,8 +131,10 @@ namespace Core {
                 /* Enable only the following descriptor indexing features, note that we have queried for their support
                  * already while selecting the phy device
                  * (1) runtimeDescriptorArray
+                 * (2) descriptorBindingSampledImageUpdateAfterBind
                 */
-                descriptorIndexingFeatures.runtimeDescriptorArray = VK_TRUE;
+                descriptorIndexingFeatures.runtimeDescriptorArray                       = VK_TRUE;
+                descriptorIndexingFeatures.descriptorBindingSampledImageUpdateAfterBind = VK_TRUE;
 
                 auto requiredFeatures2 = getPhyDeviceFeatures2 (deviceInfo->resource.phyDevice,
                                                                 &requiredFeatures,

@@ -24,6 +24,7 @@ namespace Core {
         protected:
             void updateTexIdLUT (uint32_t modelInfoId,
                                  uint32_t modelInstanceId,
+                                 e_textureType type,
                                  uint32_t oldTexId,
                                  uint32_t newTexId) {
 
@@ -45,18 +46,22 @@ namespace Core {
                                                     << std::endl;
                     throw std::runtime_error ("Failed to encode packet");
                 }
+
                 uint32_t writeIdx  = oldTexId / 4;
                 uint32_t offsetIdx = oldTexId % 4;
                 uint32_t mask      = UINT8_MAX << offsetIdx * 8;
-                uint32_t packet    = modelInfo->meta.instances[modelInstanceId].texIdLUT[writeIdx];
+
+                uint32_t& packet   = type == DIFFUSE_TEXTURE  ?
+                                     modelInfo->meta.instances[modelInstanceId].diffuseTexIdLUT [writeIdx]:
+                                     type == SPECULAR_TEXTURE ?
+                                     modelInfo->meta.instances[modelInstanceId].specularTexIdLUT[writeIdx]:
+                                     modelInfo->meta.instances[modelInstanceId].emissionTexIdLUT[writeIdx];
 
                 packet             = packet & ~mask;
                 packet             = packet | (newTexId << offsetIdx * 8);
-
-                modelInfo->meta.instances[modelInstanceId].texIdLUT[writeIdx] = packet;
             }
 
-            uint32_t importTransformData (uint32_t modelInfoId, const char* transformDataPath) {
+            void importTransformData (uint32_t modelInfoId, const char* transformDataPath) {
                 auto modelInfo = getModelInfo (modelInfoId);
                 uint32_t instancesCount = 0;
                 /* Read and parse json file
@@ -122,7 +127,6 @@ namespace Core {
                         createModelMatrix (modelInfoId, modelInstanceId);
                     }
                 }
-                return modelInfo->meta.instancesCount;
             }
     };
 }   // namespace Core

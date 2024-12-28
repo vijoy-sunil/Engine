@@ -108,9 +108,12 @@ namespace SandBox {
                  * by default) and the model mgr is unaware of the texture resource created above. We will now add the
                  * texture image info id to the model mgr, and update the texture image info id look up table
                 */
-                skyBoxModelInfo->id.diffuseTextureImageInfos.push_back (m_skyBoxImageInfoId);
-                for (auto const& infoId: skyBoxModelInfo->id.diffuseTextureImageInfos)
-                    updateTexIdLUT (skyBoxModelInfoId, 0, infoId, infoId);
+                skyBoxModelInfo->id.textureImageInfos[Core::DIFFUSE_TEXTURE].push_back (m_skyBoxImageInfoId);
+
+                for (auto const& [type, infoIds]: skyBoxModelInfo->id.textureImageInfos) {
+                    for (auto const& infoId: infoIds)
+                        updateTexIdLUT (skyBoxModelInfoId, 0, type, infoId, infoId);
+                }
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG TEXTURE RESOURCES - ALIAS                                                               |
                  * |------------------------------------------------------------------------------------------------|
@@ -153,7 +156,7 @@ namespace SandBox {
                 */
                 std::vector <glm::vec3> vertices;
                 for (auto const& vertex: skyBoxModelInfo->meta.vertices)
-                    vertices.push_back (vertex.pos);
+                    vertices.push_back (vertex.meta.position);
 
                 uint32_t vertexBufferInfoId = getNextInfoIdFromBufferType (Core::STAGING_BUFFER);
                 skyBoxModelInfo->id.vertexBufferInfos.push_back (vertexBufferInfoId);
@@ -189,7 +192,7 @@ namespace SandBox {
                     uint32_t uniformBufferInfoId = skyBoxSceneInfo->id.uniformBufferInfoBase + i;
                     createUniformBuffer (deviceInfoId,
                                          uniformBufferInfoId,
-                                         skyBoxSceneInfo->meta.totalInstancesCount * sizeof (glm::mat4));
+                                         skyBoxModelInfo->meta.instancesCount * sizeof (glm::mat4));
 
                     LOG_INFO (m_ENSkyBoxLog) << "[OK] Uniform buffer "
                                              << "[" << uniformBufferInfoId << "]"
@@ -428,7 +431,7 @@ namespace SandBox {
                     auto descriptorBufferInfos   = std::vector {
                         getDescriptorBufferInfo (bufferInfo->resource.buffer,
                                                  0,
-                                                 skyBoxSceneInfo->meta.totalInstancesCount * sizeof (glm::mat4))
+                                                 skyBoxModelInfo->meta.instancesCount * sizeof (glm::mat4))
                     };
 
                     auto writeDescriptorSets = std::vector {
@@ -603,7 +606,7 @@ namespace SandBox {
                 auto sceneInfo       = getSceneInfo  (sceneInfoId);
 
                 updateUniformBuffer (skyBoxSceneInfo->id.uniformBufferInfoBase + currentFrameInFlight,
-                                     skyBoxSceneInfo->meta.totalInstancesCount * sizeof (glm::mat4),
+                                     skyBoxModelInfo->meta.instancesCount * sizeof (glm::mat4),
                                      &skyBoxModelInfo->meta.instances[0].modelMatrix);
 
                 Core::SceneDataVertPC sceneDataVert;
@@ -663,7 +666,7 @@ namespace SandBox {
                                              << std::endl;
                 }
                 /* |------------------------------------------------------------------------------------------------|
-                 * | DESTROY TEXTURE RESOURCES - DIFFUSE TEXTURE                                                    |
+                 * | DESTROY TEXTURE RESOURCES - DIFFUSE                                                            |
                  * |------------------------------------------------------------------------------------------------|
                 */
                 VKImageMgr::cleanUp (deviceInfoId, m_skyBoxImageInfoId, Core::TEXTURE_IMAGE);

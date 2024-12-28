@@ -82,10 +82,10 @@ namespace SandBox {
                          * |    R   |    G   |    B   |    A   |
                          * |--------|--------|--------|--------|
                         */
-                        updateTexIdLUT (infoId, i, 0,  255);    /* R */
-                        updateTexIdLUT (infoId, i, 4,  255);    /* G */
-                        updateTexIdLUT (infoId, i, 8,  255);    /* B */
-                        updateTexIdLUT (infoId, i, 12, 255);    /* A */
+                        updateTexIdLUT (infoId, i, Core::DIFFUSE_TEXTURE, 0,  UINT8_MAX);    /* R */
+                        updateTexIdLUT (infoId, i, Core::DIFFUSE_TEXTURE, 4,  UINT8_MAX);    /* G */
+                        updateTexIdLUT (infoId, i, Core::DIFFUSE_TEXTURE, 8,  UINT8_MAX);    /* B */
+                        updateTexIdLUT (infoId, i, Core::DIFFUSE_TEXTURE, 12, UINT8_MAX);    /* A */
                     }
                     LOG_INFO (m_ENAnchorLog) << "[OK] Import model "
                                              << "[" << infoId << "]"
@@ -106,7 +106,7 @@ namespace SandBox {
                      * vector as the vertex attribute
                     */
                     for (auto const& vertex: anchorInfo->meta.vertices)
-                        combinedVertices.push_back (vertex.pos);
+                        combinedVertices.push_back (vertex.meta.position);
 
                     infoId == anchorInfoIds[0] ?
                               anchorInfo->id.vertexBufferInfos.push_back (vertexBufferInfoId):
@@ -153,11 +153,17 @@ namespace SandBox {
                  * | CONFIG STORAGE BUFFERS                                                                         |
                  * |------------------------------------------------------------------------------------------------|
                 */
+                size_t anchorTotalInstancesCount = 0;
+                for (auto const& infoId: anchorInfoIds) {
+                    auto anchorInfo              = getModelInfo (infoId);
+                    anchorTotalInstancesCount   += anchorInfo->meta.instancesCount;
+                }
+
                 for (uint32_t i = 0; i < Core::g_coreSettings.maxFramesInFlight; i++) {
-                    uint32_t storageBufferInfoId = anchorSceneInfo->id.storageBufferInfoBase + i;
+                    uint32_t storageBufferInfoId = anchorSceneInfo->id.modelStorageBufferInfoBase + i;
                     createStorageBuffer (deviceInfoId,
                                          storageBufferInfoId,
-                                         anchorSceneInfo->meta.totalInstancesCount * sizeof (Core::InstanceDataSSBO));
+                                         anchorTotalInstancesCount * sizeof (Core::ModelInstanceDataSSBO));
 
                     LOG_INFO (m_ENAnchorLog) << "[OK] Storage buffer "
                                              << "[" << storageBufferInfoId << "]"
@@ -309,13 +315,12 @@ namespace SandBox {
                  * |------------------------------------------------------------------------------------------------|
                 */
                 for (uint32_t i = 0; i < Core::g_coreSettings.maxFramesInFlight; i++) {
-                    uint32_t storageBufferInfoId = anchorSceneInfo->id.storageBufferInfoBase + i;
+                    uint32_t storageBufferInfoId = anchorSceneInfo->id.modelStorageBufferInfoBase + i;
                     auto bufferInfo              = getBufferInfo (storageBufferInfoId, Core::STORAGE_BUFFER);
                     auto descriptorBufferInfos   = std::vector {
                         getDescriptorBufferInfo (bufferInfo->resource.buffer,
                                                  0,
-                                                 anchorSceneInfo->meta.totalInstancesCount *
-                                                 sizeof (Core::InstanceDataSSBO))
+                                                 anchorTotalInstancesCount * sizeof (Core::ModelInstanceDataSSBO))
                     };
 
                     auto writeDescriptorSets = std::vector {
@@ -409,7 +414,7 @@ namespace SandBox {
                 auto anchorSceneInfo = getSceneInfo  (anchorSceneInfoId);
                 auto sceneInfo       = getSceneInfo  (sceneInfoId);
 
-                std::vector <Core::InstanceDataSSBO> combinedInstances;
+                std::vector <Core::ModelInstanceDataSSBO> combinedInstances;
                 size_t combinedInstancesCount = 0;
 
                 for (auto const& infoId: anchorInfoIds) {
@@ -420,8 +425,8 @@ namespace SandBox {
                     combinedInstances.insert  (combinedInstances.end(), anchorInfo->meta.instances.begin(),
                                                                         anchorInfo->meta.instances.end());
                 }
-                updateStorageBuffer (anchorSceneInfo->id.storageBufferInfoBase + currentFrameInFlight,
-                                     anchorSceneInfo->meta.totalInstancesCount * sizeof (Core::InstanceDataSSBO),
+                updateStorageBuffer (anchorSceneInfo->id.modelStorageBufferInfoBase + currentFrameInFlight,
+                                     combinedInstancesCount * sizeof (Core::ModelInstanceDataSSBO),
                                      combinedInstances.data());
 
                 Core::SceneDataVertPC sceneDataVert;

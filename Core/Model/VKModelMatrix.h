@@ -11,6 +11,51 @@ namespace Core {
             Log::Record* m_VKModelMatrixLog;
             const uint32_t m_instanceId = g_collectionSettings.instanceId++;
 
+            /* What is a normal matrix?
+             * Note that, the lighting calculations in the fragment shader are all done in world space, so we need to
+             * transform the normal vectors to world space coordinates as well. However, it's not as simple as simply
+             * multiplying it with a model matrix
+             *
+             * First of all, normal vectors are only direction vectors and do not represent a specific position in space.
+             * Second, normal vectors do not have a homogeneous coordinate (the w component of a vertex position). This
+             * means that translations should not have any effect on the normal vectors. So if we want to multiply the
+             * normal vectors with a model matrix we want to remove the translation part of the matrix by taking the
+             * upper-left 3x3 matrix of the model matrix (note that we could also set the w component of a normal vector
+             * to 0 and multiply with the 4x4 matrix)
+             *
+             * Third, if the model matrix would perform a non-uniform scale, the vertices would be changed in such a way
+             * that the normal vector is not perpendicular to the surface anymore. Whenever we apply a non-uniform scale
+             * (note: a uniform scale only changes the normal's magnitude, not its direction, which is easily fixed by
+             * normalizing it) the normal vectors are not perpendicular to the corresponding surface anymore which
+             * distorts the lighting. The trick of fixing this behavior is to use a different model matrix specifically
+             * tailored for normal vectors. This matrix is called the normal matrix
+             *
+             * The normal matrix is defined as 'the transpose of the inverse of the upper-left 3x3 part of the model
+             * matrix'. In the vertex shader we can generate the normal matrix by using the inverse and transpose
+             * functions in the vertex shader that work on any matrix type. However, inversing matrices is a costly
+             * operation for shaders, so wherever possible we try to avoid doing inverse operations since they have to
+             * be done on each vertex of your scene. For an efficient application we want to calculate the normal matrix
+             * on the CPU and send it to the shaders before drawing (just like the model matrix)
+            */
+            void createNormalMatrix (uint32_t modelInfoId, uint32_t modelInstanceId) {
+                auto modelInfo = getModelInfo (modelInfoId);
+                if (modelInstanceId >= modelInfo->meta.instancesCount) {
+                    LOG_ERROR (m_VKModelMatrixLog) << "Invalid model instance id "
+                                                   << "[" << modelInstanceId << "]"
+                                                   << "->"
+                                                   << "[" << modelInfo->meta.instancesCount << "]"
+                                                   << std::endl;
+                    throw std::runtime_error ("Invalid model instance id");
+                }
+
+                glm::mat4 modelMatrix  = modelInfo->meta.instances[modelInstanceId].modelMatrix;
+                glm::mat3 normalMatrix = glm::transpose (glm::inverse (glm::mat3 (modelMatrix)));
+                /* Note that, we are casting the matrix to a 3x3 matrix to ensure it loses its translation properties
+                 * and we are casting it back to 4x4 for ease of passing it to the shader
+                */
+                modelInfo->meta.instances[modelInstanceId].normalMatrix = glm::mat4 (normalMatrix);
+            }
+
         public:
             VKModelMatrix (void) {
                 m_VKModelMatrixLog = LOG_INIT (m_instanceId, g_collectionSettings.logSaveDirPath);
@@ -73,6 +118,7 @@ namespace Core {
                                         glm::scale        (glm::mat4 (1.0f), scale     * scaleMultiplier);
 
                 modelInfo->meta.instances[modelInstanceId].modelMatrix = modelMatrix;
+                createNormalMatrix (modelInfoId, modelInstanceId);
             }
     };
 }   // namespace Core

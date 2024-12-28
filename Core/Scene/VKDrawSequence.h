@@ -6,13 +6,15 @@
 #include "../Cmd/VKCmd.h"
 #include "VKCameraMgr.h"
 #include "VKResizing.h"
+#include "VKLightMgr.h"
 
 namespace Core {
     class VKDrawSequence: protected virtual VKWindow,
                           protected virtual VKStorageBuffer,
                           protected virtual VKCmd,
                           protected virtual VKCameraMgr,
-                          protected VKResizing {
+                          protected VKResizing,
+                          protected virtual VKLightMgr {
         private:
             Log::Record* m_VKDrawSequenceLog;
             const uint32_t m_instanceId = g_collectionSettings.instanceId++;
@@ -36,6 +38,7 @@ namespace Core {
                               uint32_t pipelineInfoId,
                               uint32_t cameraInfoId,
                               uint32_t sceneInfoId,
+                              const std::vector <uint32_t>& lightInfoIds,
                               uint32_t& currentFrameInFlight,
                               uint32_t& swapChainImageId,
                               T1 primaryExtensions,
@@ -164,24 +167,46 @@ namespace Core {
                  * | CONFIG DRAW OPS - UPDATE UNIFORMS                                                              |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                std::vector <InstanceDataSSBO> combinedInstances;
-                size_t combinedInstancesCount = 0;
+                std::vector <ModelInstanceDataSSBO> modelCombinedInstances;
+                size_t modelCombinedInstancesCount = 0;
 
                 for (auto const& infoId: modelInfoIds) {
-                    auto modelInfo          = getModelInfo (infoId);
-                    combinedInstancesCount += modelInfo->meta.instancesCount;
+                    auto modelInfo               = getModelInfo (infoId);
+                    modelCombinedInstancesCount += modelInfo->meta.instancesCount;
 
-                    combinedInstances.reserve (combinedInstancesCount);
-                    combinedInstances.insert  (combinedInstances.end(), modelInfo->meta.instances.begin(),
-                                                                        modelInfo->meta.instances.end());
+                    modelCombinedInstances.reserve (modelCombinedInstancesCount);
+                    modelCombinedInstances.insert  (modelCombinedInstances.end(), modelInfo->meta.instances.begin(),
+                                                                                  modelInfo->meta.instances.end());
                 }
-                updateStorageBuffer (sceneInfo->id.storageBufferInfoBase + currentFrameInFlight,
-                                     sceneInfo->meta.totalInstancesCount * sizeof (InstanceDataSSBO),
-                                     combinedInstances.data());
+                updateStorageBuffer (sceneInfo->id.modelStorageBufferInfoBase + currentFrameInFlight,
+                                     modelCombinedInstancesCount * sizeof (ModelInstanceDataSSBO),
+                                     modelCombinedInstances.data());
+
+                std::vector <LightInstanceDataSSBO> lightCombinedInstances;
+                size_t lightCombinedInstancesCount = 0;
+
+                for (auto const& infoId: lightInfoIds) {
+                    auto lightInfo               = getLightInfo (infoId);
+                    lightCombinedInstancesCount += lightInfo->meta.instancesCount;
+
+                    lightCombinedInstances.reserve (lightCombinedInstancesCount);
+                    lightCombinedInstances.insert  (lightCombinedInstances.end(), lightInfo->meta.instances.begin(),
+                                                                                  lightInfo->meta.instances.end());
+                }
+
+                updateStorageBuffer (sceneInfo->id.lightStorageBufferInfoBase + currentFrameInFlight,
+                                     lightCombinedInstancesCount * sizeof (LightInstanceDataSSBO),
+                                     lightCombinedInstances.data());
 
                 SceneDataVertPC sceneDataVert;
-                sceneDataVert.viewMatrix       = cameraInfo->transform.viewMatrix;
-                sceneDataVert.projectionMatrix = cameraInfo->transform.projectionMatrix;
+                sceneDataVert.viewMatrix             = cameraInfo->transform.viewMatrix;
+                sceneDataVert.projectionMatrix       = cameraInfo->transform.projectionMatrix;
+
+                SceneDataFragPC sceneDataFrag;
+                sceneDataFrag.viewPosition           = cameraInfo->meta.position;
+                sceneDataFrag.directionalLightsCount = sceneInfo->meta.directionalLightsCount;
+                sceneDataFrag.pointLightsCount       = sceneInfo->meta.pointLightsCount;
+                sceneDataFrag.spotLightsCount        = sceneInfo->meta.spotLightsCount;
                 /* |------------------------------------------------------------------------------------------------|
                  * | CONFIG DRAW OPS - RECORD AND SUBMIT                                                            |
                  * |------------------------------------------------------------------------------------------------|
@@ -226,6 +251,11 @@ namespace Core {
                 updatePushConstants  (pipelineInfoId,
                                       VK_SHADER_STAGE_VERTEX_BIT,
                                       0, sizeof (SceneDataVertPC), &sceneDataVert,
+                                      sceneInfo->resource.commandBuffers[currentFrameInFlight]);
+
+                updatePushConstants  (pipelineInfoId,
+                                      VK_SHADER_STAGE_FRAGMENT_BIT,
+                                      sizeof (SceneDataVertPC), sizeof (SceneDataFragPC), &sceneDataFrag,
                                       sceneInfo->resource.commandBuffers[currentFrameInFlight]);
 
                 auto secondaryViewPorts = std::vector <VkViewport> {};

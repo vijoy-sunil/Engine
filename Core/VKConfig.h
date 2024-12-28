@@ -77,8 +77,47 @@ namespace Core {
 
         struct DescriptorSetLayout {
             const VkDescriptorBindingFlags bindingFlagsSSBO          = 0;
-            const VkDescriptorBindingFlags bindingFlagsCIS           = 0;
-            const VkDescriptorSetLayoutCreateFlags layoutCreateFlags = 0;
+            /* Note that, if you look at the reported value of maxPerStageDescriptorSamplers, you may find it to be
+             * too low for the application. This is because the report was run without argument buffer support turned
+             * on. This is the maximum that metal supports passing directly to a shader function. With argument buffers,
+             * (enabled by setting the MVK_CONFIG_USE_METAL_ARGUMENT_BUFFERS environment variable) the limit is much
+             * higher
+             *
+             * MVK_CONFIG_USE_METAL_ARGUMENT_BUFFERS
+             * Controls whether MoltenVK should use metal argument buffers for resources defined in descriptor sets, if
+             * metal argument buffers are supported on the platform. Using metal argument buffers dramatically increases
+             * the number of buffers, textures and samplers that can be bound to a pipeline shader, and in most cases
+             * improves performance
+             *
+             * If this setting is enabled, MoltenVK will use metal argument buffers to bind resources to the shaders. If
+             * this setting is disabled, MoltenVK will bind resources to shaders discretely
+             *
+             * Additionally, we also have to enable and use VK_EXT_descriptor_indexing to get the validation layer to
+             * look at maxPerStageDescriptorUpdateAfterBindSamplers instead of maxPerStageDescriptorSamplers
+             *
+             * VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT
+             * This flag indicates that if descriptors in this binding are updated between when the descriptor set is
+             * bound in a command buffer and when that command buffer is submitted to a queue, then the submission will
+             * use the most recently set descriptors for this binding and the updates do not invalidate the command
+             * buffer
+             *
+             * After enabling the desired feature support for updating after bind, an application needs to setup the
+             * following in order to use a descriptor that can update after bind
+             *
+             * (1) The VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT_EXT flag for any VkDescriptorSetLayout
+             * the descriptor is from
+             * (2) The VK_DESCRIPTOR_POOL_CREATE_UPDATE_AFTER_BIND_BIT_EXT flag for any VkDescriptorPool the descriptor
+             * is allocated from
+             * (3) The VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT_EXT for each binding in the VkDescriptorSetLayout that
+             * the descriptor will use
+             *
+             * More info:
+             * https://docs.vulkan.org/guide/latest/extensions/VK_EXT_descriptor_indexing.html#:~:text=The%20key%20
+             * word%20here%20is,dynamic%20uniform%20indexing%20in%20GLSL
+            */
+            const VkDescriptorBindingFlags bindingFlagsCIS           = VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT_EXT;
+            const VkDescriptorSetLayoutCreateFlags layoutCreateFlags =
+                                                        VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT_EXT;
         } descriptorSetLayout;
 
         /* The allow derivative flag specifies that the pipeline to be created is allowed to be the parent of a pipeline
@@ -105,7 +144,7 @@ namespace Core {
     } g_textureSamplerSettings;
 
     struct DescriptorSettings {
-        const VkDescriptorPoolCreateFlags poolCreateFlags            = 0;
+        const VkDescriptorPoolCreateFlags poolCreateFlags            = VK_DESCRIPTOR_POOL_CREATE_UPDATE_AFTER_BIND_BIT_EXT;
     } g_descriptorSettings;
 
     struct CoreSettings {
@@ -128,7 +167,12 @@ namespace Core {
          * the swap chain yet
         */
         const uint32_t maxFramesInFlight                             = 2;
-        const char* defaultDiffuseTexturePath                        = "Asset/Texture/tex_16x16_empty.png";
+        const char* defaultDiffuseTexturePath                        = "/Users/vijoys/Downloads/Projects/Engine"
+                                                                       "/Asset/Texture/tex_16x16_diffuse_empty.png";
+        const char* defaultSpecularTexturePath                       = "/Users/vijoys/Downloads/Projects/Engine"
+                                                                       "/Asset/Texture/tex_16x16_specular_empty.png";
+        const char* defaultEmissionTexturePath                       = "/Users/vijoys/Downloads/Projects/Engine"
+                                                                       "/Asset/Texture/tex_16x16_emission_empty.png";
     } g_coreSettings;
 }   // namespace Core
 #endif  // VK_CONFIG_H

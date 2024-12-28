@@ -5,8 +5,7 @@
 
 namespace Gui {
     const char* getNodeTypeString (e_nodeType type) {
-        switch (type)
-        {
+        switch (type) {
             case MODEL_NODE:            return "MODEL_NODE";
             case ANCHOR_NODE:           return "ANCHOR_NODE";
             case CAMERA_NODE:           return "CAMERA_NODE";
@@ -21,13 +20,25 @@ namespace Gui {
     }
 
     const char* getNodeActionTypeString (e_nodeActionType type) {
-        switch (type)
-        {
+        switch (type) {
             case CLOSE_ACTION:          return "CLOSE_ACTION";
             case OPEN_ACTION:           return "OPEN_ACTION";
             case UNDEFINED_ACTION:      return "UNDEFINED_ACTION";
             default:                    return "Unhandled e_nodeActionType";
         }
+    }
+
+    std::vector <std::string> getNodeTypeStrings (e_nodeType type) {
+        std::vector <std::string> typeStrings;
+        
+        uint32_t typeMask = 1 << 31;
+        while (typeMask) {
+            if (typeMask & type)
+                typeStrings.push_back (getNodeTypeString (static_cast <e_nodeType> (typeMask)));
+
+            typeMask = typeMask >> 1;
+        }
+        return typeStrings;
     }
 }   // namespace Gui
 #endif  // UI_LOG_HELPER_H

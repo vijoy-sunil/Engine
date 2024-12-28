@@ -112,7 +112,7 @@ namespace Gui {
                 if (leaf)
                     treeNodeFlags |= ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen;
 
-                NodeInfo info{};
+                NodeInfo info;
                 info.meta.label            = label;
                 info.meta.type             = type;
                 info.meta.action           = UNDEFINED_ACTION;
@@ -171,6 +171,23 @@ namespace Gui {
                 throw std::runtime_error ("Failed to find node info");
             }
 
+            uint32_t getNodeInfoId (e_nodeType type, uint32_t coreInfoId) {
+                for (auto const& [infoId, info]: m_nodeInfoPool) {
+                    if ((type & info.meta.type) && (coreInfoId == info.meta.coreInfoId))
+                        return infoId;
+                }
+
+                LOG_ERROR (m_UITreeLog) << "Failed to find node info id"
+                                        << std::endl;
+                for (auto const& typeString: getNodeTypeStrings (type))
+                LOG_ERROR (m_UITreeLog) << "[" << typeString << "]"
+                                        << std::endl;
+                LOG_ERROR (m_UITreeLog) << "[" << coreInfoId << "]"
+                                        << std::endl;
+
+                throw std::runtime_error ("Failed to find node info id");
+            }
+
             void dumpNodeInfoPool (void) {
                 LOG_INFO (m_UITreeLog) << "Dumping node info pool"
                                        << std::endl;
@@ -186,16 +203,9 @@ namespace Gui {
 
                     LOG_INFO (m_UITreeLog) << "Type"
                                            << std::endl;
-                    uint32_t typeMask = 1 << 31;
-                    while (typeMask) {
-                        if (typeMask & val.meta.type) {
-                            LOG_INFO (m_UITreeLog) << "["
-                                                   << getNodeTypeString (static_cast <e_nodeType> (typeMask))
-                                                   << "]"
-                                                   << std::endl;
-                        }
-                        typeMask = typeMask >> 1;
-                    }
+                    for (auto const& typeString: getNodeTypeStrings (val.meta.type))
+                    LOG_INFO (m_UITreeLog) << "[" << typeString << "]"
+                                           << std::endl;
 
                     LOG_INFO (m_UITreeLog) << "Action "
                                            << "[" << getNodeActionTypeString (val.meta.action) << "]"

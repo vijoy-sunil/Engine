@@ -13,18 +13,46 @@ using namespace Collection;
 
 namespace Core {
     struct Vertex {
-        /* Define the attributes
+        struct Meta {
+            glm::vec3 position;
+            glm::vec2 texCoord;
+            glm::vec3 normal;
+        } meta;
+
+        /* In the real world, each object has a different reaction to light. Steel objects are often shinier than a
+         * clay vase for example and a wooden container doesn't react the same to light as a steel container. Some
+         * objects reflect the light without much scattering resulting in small specular highlights and others scatter
+         * a lot giving the highlight a larger radius. If we want to simulate several types of objects we have to define
+         * material properties specific to each surface
         */
-        glm::vec3 pos;
-        glm::vec2 texCoord;
-        glm::vec3 normal;
-        uint32_t  texId;
+        struct Material {
+            /* The diffuse texture id defines the color of the surface under diffuse lighting. The diffuse color is (just
+             * like ambient lighting) set to the desired surface's color. The specular texture id sets the color of the
+             * specular highlight on the surface (or possibly even reflect a surface-specific color). The emission
+             * texture id defines the colors an object may emit as if it contains a light source itself; this way an
+             * object can glow regardless of the light conditions. Emission maps are often what you see when objects in
+             * a game glow
+            */
+            uint32_t diffuseTexId;
+            uint32_t specularTexId;
+            uint32_t emissionTexId;
+            /* Shininess impacts the scattering/radius of the specular highlight. The table in the following link
+             * http://devernay.free.fr/cours/opengl/materials.html shows a list of material properties that simulate
+             * real materials found in the outside world. Note that, the table's ambient values are not the same as the
+             * diffuse values; they don't take light intensities into account. To correctly set their values you'd have
+             * to set all the light intensities to 1.0
+            */
+            uint32_t shininess;
+        } material;
 
         bool operator == (const Vertex& other) const {
-            return pos      == other.pos      &&
-                   texCoord == other.texCoord &&
-                   normal   == other.normal   &&
-                   texId    == other.texId;
+            return meta.position          == other.meta.position            &&
+                   meta.texCoord          == other.meta.texCoord            &&
+                   meta.normal            == other.meta.normal              &&
+                   material.diffuseTexId  == other.material.diffuseTexId    &&
+                   material.specularTexId == other.material.specularTexId   &&
+                   material.emissionTexId == other.material.emissionTexId   &&
+                   material.shininess     == other.material.shininess;
         }
     };
 }   // namespace Core
@@ -41,10 +69,13 @@ namespace std {
              * think carefully about how to combine the individual hash values to ensure you avoid getting the same output
              * for different objects too often
             */
-            size_t h1 = hash <glm::vec3>() (vertex.pos);
-            size_t h2 = hash <glm::vec2>() (vertex.texCoord);
-            size_t h3 = hash <glm::vec3>() (vertex.normal);
-            size_t h4 = hash <uint32_t>()  (vertex.texId);
+            size_t h1 = hash <glm::vec3> () (vertex.meta.position);
+            size_t h2 = hash <glm::vec2> () (vertex.meta.texCoord);
+            size_t h3 = hash <glm::vec3> () (vertex.meta.normal);
+            size_t h4 = hash <uint32_t>  () (vertex.material.diffuseTexId);
+            size_t h5 = hash <uint32_t>  () (vertex.material.specularTexId);
+            size_t h6 = hash <uint32_t>  () (vertex.material.emissionTexId);
+            size_t h7 = hash <uint32_t>  () (vertex.material.shininess);
             /* https://stackoverflow.com/questions/1646807/quick-and-simple-hash-code-combinations/1646913#1646913
             */
             size_t hash = 17;
@@ -52,6 +83,9 @@ namespace std {
             hash = hash * 31 + h2;
             hash = hash * 31 + h3;
             hash = hash * 31 + h4;
+            hash = hash * 31 + h5;
+            hash = hash * 31 + h6;
+            hash = hash + 31 * h7;
             return hash;
         }
     };
@@ -116,8 +150,8 @@ namespace Core {
                 */
                 attributeDescription.location = location;
                 /* The offset parameter specifies the number of bytes since the start of the per-vertex data to read
-                 * from. The binding is loading one Vertex at a time and the position attribute (pos) is at an offset of
-                 * 0 bytes from the beginning of this struct, for example
+                 * from. The binding is loading one vertex at a time and the position attribute is at an offset of 0
+                 * bytes from the beginning of this struct, for example
                 */
                 attributeDescription.offset = offset;
                 /* The format parameter describes the type of data for the attribute. A bit confusingly, the formats are

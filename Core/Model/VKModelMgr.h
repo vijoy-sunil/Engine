@@ -31,7 +31,7 @@ namespace Core {
                      * buffer
                     */
                     std::vector <uint32_t> indices;
-                    std::vector <InstanceDataSSBO> instances;
+                    std::vector <ModelInstanceDataSSBO> instances;
                     std::vector <TransformData>    transformDatas;
                     uint32_t verticesCount;
                     uint32_t indicesCount;
@@ -42,19 +42,19 @@ namespace Core {
                 struct Path {
                     const char* model;
                     const char* mtlFileDir;
-                    std::vector <std::string> diffuseTextureImages;
+                    std::unordered_map <e_textureType, std::vector <std::string>> textureImages;
                 } path;
 
                 struct Id {
-                    std::vector <uint32_t> diffuseTextureImageInfos;
+                    std::unordered_map <e_textureType, std::vector <uint32_t>> textureImageInfos;
                     std::vector <uint32_t> vertexBufferInfos;
                     uint32_t indexBufferInfo;
                 } id;
             };
-            std::unordered_map <uint32_t, ModelInfo>   m_modelInfoPool;
-
-            uint32_t m_textureImageInfoId;
-            std::unordered_map <std::string, uint32_t> m_textureImagePool;
+            std::unordered_map <uint32_t,    ModelInfo> m_modelInfoPool;
+            std::unordered_map <std::string, uint32_t>  m_shininessPool;
+            std::unordered_map <e_textureType, std::unordered_map <std::string, uint32_t>> m_textureImagePools;
+            uint32_t m_nextAvailableTextureImageInfoId;
 
             Log::Record* m_VKModelMgrLog;
             const uint32_t m_instanceId = g_collectionSettings.instanceId++;
@@ -85,15 +85,24 @@ namespace Core {
                 LOG_INFO (parsedDataLog) << "Vertex data"
                                          << std::endl;
                 for (auto const& vertex: modelInfo->meta.vertices) {
-                LOG_INFO (parsedDataLog) << "[" << vertex.pos.x      << ", " << vertex.pos.y      << ", "
-                                                << vertex.pos.z      << "]"
+                LOG_INFO (parsedDataLog) << "[" << vertex.meta.position.x        << ", "
+                                                << vertex.meta.position.y        << ", "
+                                                << vertex.meta.position.z        << "]"
                                          << " "
-                                         << "[" << vertex.texCoord.x << ", " << vertex.texCoord.y << "]"
+                                         << "[" << vertex.meta.texCoord.x        << ", "
+                                                << vertex.meta.texCoord.y        << "]"
                                          << " "
-                                         << "[" << vertex.normal.x   << ", " << vertex.normal.y   << ", "
-                                                << vertex.normal.z   << "]"
+                                         << "[" << vertex.meta.normal.x          << ", "
+                                                << vertex.meta.normal.y          << ", "
+                                                << vertex.meta.normal.z          << "]"
                                          << " "
-                                         << "[" << vertex.texId      << "]"
+                                         << "[" << vertex.material.diffuseTexId  << "]"
+                                         << " "
+                                         << "[" << vertex.material.specularTexId << "]"
+                                         << " "
+                                         << "[" << vertex.material.emissionTexId << "]"
+                                         << " "
+                                         << "[" << vertex.material.shininess     << "]"
                                          << std::endl;
                 }
 
@@ -109,14 +118,54 @@ namespace Core {
                 }
             }
 
-            void updateTextureImagePool (uint32_t modelInfoId, const std::string& texturePath) {
-                auto modelInfo = getModelInfo (modelInfoId);
+            void updateTextureImagePool (uint32_t modelInfoId,
+                                         e_textureType type,
+                                         const std::string& texturePath) {
 
-                if (m_textureImagePool.find (texturePath) == m_textureImagePool.end()) {
-                    m_textureImagePool[texturePath] = m_textureImageInfoId;
-                    m_textureImageInfoId++;
+                auto modelInfo           = getModelInfo (modelInfoId);
+                auto& textureImagePool   = getTextureImagePool (type);
+
+                if (textureImagePool.find (texturePath) == textureImagePool.end()) {
+                    textureImagePool[texturePath] = m_nextAvailableTextureImageInfoId;
+                    m_nextAvailableTextureImageInfoId++;
                 }
-                modelInfo->id.diffuseTextureImageInfos.push_back (m_textureImagePool[texturePath]);
+
+                /* Note that, the texture image info id vector may contain duplicates under certain conditions, for 
+                 * example, consider a model with texture paths as shown below (paths are representeed by [diffuse,
+                 * specular, emission] and ids are represented by {diffuse, specular, emission} for ease of visualizing). 
+                 * Note that, the .mtl file will contain 3 materials in this case
+                 *
+                 *                              |-----------|
+                 *                              |           |
+                 *                              | [6, 1, 2] |                           material_ids #0
+                 *                              |           |
+                 *                  |-----------|-----------|-----------|-----------|
+                 *                  |           |           |           |           |
+                 *                  | [3, 4, 2] | [3, 4, 2] | [3, 4, 2] | [3, 4, 2] |   material_ids #1
+                 *                  |           |           |           |           |
+                 *                  |-----------|-----------|-----------|-----------|
+                 *                              |           |
+                 *                              | [5, 1, 2] |                           material_ids #2
+                 *                              |           |
+                 *                              |-----------|
+                 * 
+                 * Although the texture image pool doesn't store duplicates, the per model texture image info id vector
+                 * does, and would look like this. Let's say the default texture ids are 0, 1 and 2 for diffuse, specular
+                 * and emission respectively
+                 * 
+                 * Diffuse  : {0, 6, 3, 5}
+                 * Specular : {1, 1, 4, 1}
+                 * Emission : {2, 2, 2, 2}
+                 * 
+                 * To prevent duplicate info ids from being added to the vector, we will check if it already exists in 
+                 * the vector before adding one
+                */
+                auto& textureImageInfoIds = modelInfo->id.textureImageInfos[type];
+                auto  textureImageInfoId  = textureImagePool[texturePath];
+
+                if (std::find (textureImageInfoIds.begin(), 
+                               textureImageInfoIds.end(), textureImageInfoId) == textureImageInfoIds.end()) 
+                textureImageInfoIds.push_back (textureImagePool[texturePath]);
             }
 
         public:
@@ -147,14 +196,15 @@ namespace Core {
                 info.meta.parsedDataLogInstanceId = g_collectionSettings.instanceId++;
                 info.path.model                   = modelPath;
                 info.path.mtlFileDir              = mtlFileDirPath;
-                /* Add default diffuse texture as the fist entry in the group of textures. This way, faces with no
-                 * texture can sample from this default texture
+                /* Add default texture as the fist entry in the group of textures. This way, faces with no texture can
+                 * sample from this default texture
                 */
-                info.path.diffuseTextureImages.push_back (g_coreSettings.defaultDiffuseTexturePath);
+                info.path.textureImages[DIFFUSE_TEXTURE]. push_back (g_coreSettings.defaultDiffuseTexturePath);
+                info.path.textureImages[SPECULAR_TEXTURE].push_back (g_coreSettings.defaultSpecularTexturePath);
+                info.path.textureImages[EMISSION_TEXTURE].push_back (g_coreSettings.defaultEmissionTexturePath);
 
                 info.id.indexBufferInfo           = UINT32_MAX;
                 m_modelInfoPool[modelInfoId]      = info;
-                m_textureImageInfoId              = 0;
                 /* Config log for parsed data
                 */
                 std::string nameExtension = "_PD_" + std::to_string (modelInfoId);
@@ -272,15 +322,41 @@ namespace Core {
                                                   << std::endl;
                 }
                 /* Extract texture image paths from .mtl file if any
-                 * [ - ] Diffuse texure
-                 * [ X ] Other textures like specular, emission etc.
+                 * [ - ] Diffuse  texture
+                 * [ - ] Specular texture
+                 * [ - ] Emission texture
+                 *
+                 * Note that, the .mtl file must satisfy the below conditions:
+                 * (1) Specify all the above textures, or
+                 * (2) Specify none
+                 * If not, there will be a mismatch between the texture path vectors. This is because we are using a
+                 * single local texture id to index into the respective texture path vectors in order to retreive the
+                 * corresponding texture info ids from the pool
                 */
                 else {
                     for (auto const& material: materials) {
                         if (!material.diffuse_texname.empty())
-                            modelInfo->path.diffuseTextureImages.push_back (material.diffuse_texname);
+                            modelInfo->path.textureImages[DIFFUSE_TEXTURE].push_back (material.diffuse_texname);
                         else
-                            LOG_WARNING (m_VKModelMgrLog) << "Failed to find diffuse textures "
+                            LOG_WARNING (m_VKModelMgrLog) << "Failed to find diffuse texture "
+                                                          << "[" << modelInfoId << "]"
+                                                          << " "
+                                                          << "[" << modelInfo->path.mtlFileDir << "]"
+                                                          << std::endl;
+
+                        if (!material.specular_texname.empty())
+                            modelInfo->path.textureImages[SPECULAR_TEXTURE].push_back (material.specular_texname);
+                        else
+                            LOG_WARNING (m_VKModelMgrLog) << "Failed to find specular texture "
+                                                          << "[" << modelInfoId << "]"
+                                                          << " "
+                                                          << "[" << modelInfo->path.mtlFileDir << "]"
+                                                          << std::endl;
+
+                        if (!material.emissive_texname.empty())
+                            modelInfo->path.textureImages[EMISSION_TEXTURE].push_back (material.emissive_texname);
+                        else
+                            LOG_WARNING (m_VKModelMgrLog) << "Failed to find emission texture "
                                                           << "[" << modelInfoId << "]"
                                                           << " "
                                                           << "[" << modelInfo->path.mtlFileDir << "]"
@@ -290,8 +366,10 @@ namespace Core {
                 /* Populate texture image pool, which contains all the textures used across models along with their
                  * respective texture image info ids
                 */
-                for (auto const& path: modelInfo->path.diffuseTextureImages)
-                    updateTextureImagePool (modelInfoId, path);
+                for (auto const& [type, paths]: modelInfo->path.textureImages) {
+                    for (auto const& path: paths)
+                        updateTextureImagePool (modelInfoId, type, path);
+                }
 
                 /* Map to take advantage of indices vector (index buffer). Note that, to be able to use std::unordered_map
                  * with a user-defined key-type, you need to define two thing:
@@ -333,11 +411,11 @@ namespace Core {
                          * there are two texture coordinate components per entry. The offsets of 0, 1 and 2 are used to
                          * access the X, Y and Z components, or the U and V components in the case of texture coordinates
                         */
-                        vertex.pos = {
-                                        attrib.vertices[3 * index.vertex_index + 0],
-                                        attrib.vertices[3 * index.vertex_index + 1],
-                                        attrib.vertices[3 * index.vertex_index + 2]
-                                     };
+                        vertex.meta.position = {
+                            attrib.vertices[3 * index.vertex_index + 0],
+                            attrib.vertices[3 * index.vertex_index + 1],
+                            attrib.vertices[3 * index.vertex_index + 2]
+                        };
                         /* The OBJ format assumes a coordinate system where a vertical coordinate of 0 means the bottom
                          * of the image, however we've uploaded our image into Vulkan in a top to bottom orientation where
                          * 0 means the top of the image. Solve this by flipping the vertical component of the texture
@@ -354,30 +432,40 @@ namespace Core {
                          * the v coordinate goes from 0.0 to 1.0, top to bottom
                         */
                         if (!attrib.texcoords.empty())
-                            vertex.texCoord = {
-                                                       attrib.texcoords[2 * index.texcoord_index + 0],
-                                                1.0f - attrib.texcoords[2 * index.texcoord_index + 1]
-                                              };
+                            vertex.meta.texCoord = {
+                                       attrib.texcoords[2 * index.texcoord_index + 0],
+                                1.0f - attrib.texcoords[2 * index.texcoord_index + 1]
+                            };
 
-                        vertex.normal   = {
-                                            attrib.normals[3 * index.normal_index + 0],
-                                            attrib.normals[3 * index.normal_index + 1],
-                                            attrib.normals[3 * index.normal_index + 2]
-                                          };
+                        vertex.meta.normal   = {
+                            attrib.normals[3 * index.normal_index + 0],
+                            attrib.normals[3 * index.normal_index + 1],
+                            attrib.normals[3 * index.normal_index + 2]
+                        };
                         /* We will handle missing texture faces (material_ids = -1) by adding +1 to all material_ids, this
-                         * will allow us to use the default texture whose image info id is 0. Note that, the local texture
-                         * id is an index into the current model's texture array embedded with in the model file. What we
-                         * need is an image info id that can be used to index into the global texture pool, so that the
-                         * shader can sample from the correct texture from the global pool of textures
+                         * will allow us to use the default texture at index 0. Note that, the local texture id is an
+                         * index into the current model's texture array embedded with in the model file. What we need is
+                         * an image info id that can be used to index into the global texture pool, so that the shader
+                         * can sample from the correct texture from the global pool of textures
                         */
-                        uint32_t localTexId     = shape.mesh.material_ids[faceIndex] + 1;
-                        std::string texturePath = modelInfo->path.diffuseTextureImages[localTexId];
-                        vertex.texId            = m_textureImagePool[texturePath];
-                        /* Manual uv mapping of default texture
+                        uint32_t localTexId             = shape.mesh.material_ids[faceIndex] + 1;
+
+                        std::string diffuseTexturePath  = modelInfo->path.textureImages[DIFFUSE_TEXTURE] [localTexId];
+                        std::string specularTexturePath = modelInfo->path.textureImages[SPECULAR_TEXTURE][localTexId];
+                        std::string emissionTexturePath = modelInfo->path.textureImages[EMISSION_TEXTURE][localTexId];
+
+                        vertex.material.diffuseTexId    = getTextureImagePool (DIFFUSE_TEXTURE) [diffuseTexturePath];
+                        vertex.material.specularTexId   = getTextureImagePool (SPECULAR_TEXTURE)[specularTexturePath];
+                        vertex.material.emissionTexId   = getTextureImagePool (EMISSION_TEXTURE)[emissionTexturePath];
+                        vertex.material.shininess       = getShininess        (diffuseTexturePath);
+
+                        /* Manual uv mapping of default textures. Note that, all the texture types share the same texture
+                         * coordinates, hence why we only need to check if any one of the textures are missing to manually
+                         * populate the coordinates
                         */
-                        if (vertex.texId == 0) {
-                            vertex.texCoord = defaultTexCoords[quadIndex];
-                            quadIndex       == verticesPerQuad - 1 ? quadIndex = 0: quadIndex++;
+                        if (vertex.material.diffuseTexId == 0) {
+                            vertex.meta.texCoord = defaultTexCoords[quadIndex];
+                            quadIndex           == verticesPerQuad - 1 ? quadIndex = 0: quadIndex++;
                         }
                         /* To take advantage of the index buffer, we should keep only the unique vertices and use the
                          * index buffer to reuse them whenever they come up. Every time we read a vertex from the OBJ
@@ -407,12 +495,30 @@ namespace Core {
                 dumpParsedData (modelInfoId);
             }
 
-            std::unordered_map <std::string, uint32_t>& getTextureImagePool (void) {
-                return m_textureImagePool;
+            uint32_t getShininess (const std::string& texturePath) {
+                if (m_shininessPool.find (texturePath) != m_shininessPool.end())
+                    return m_shininessPool[texturePath];
+                else
+                    return 0;
+            }
+
+            void setShininess (const std::string& texturePath, uint32_t val) {
+                if (m_shininessPool.find (texturePath) != m_shininessPool.end()) {
+                    LOG_WARNING (m_VKModelMgrLog) << "Texture path already exists "
+                                                  << "[" << texturePath << "]"
+                                                  << std::endl;
+                    return;
+                }
+                m_shininessPool[texturePath] = val;
+            }
+
+            std::unordered_map <std::string, uint32_t>& getTextureImagePool (e_textureType type) {
+                return m_textureImagePools[type];
             }
 
             uint32_t decodeTexIdLUTPacket (uint32_t modelInfoId,
                                            uint32_t modelInstanceId,
+                                           e_textureType type,
                                            uint32_t oldTexId) {
 
                 auto modelInfo = getModelInfo (modelInfoId);
@@ -436,9 +542,14 @@ namespace Core {
                 uint32_t readIdx   = oldTexId / 4;
                 uint32_t offsetIdx = oldTexId % 4;
                 uint32_t mask      = UINT8_MAX << offsetIdx * 8;
-                uint32_t packet    = modelInfo->meta.instances[modelInstanceId].texIdLUT[readIdx];
-                uint32_t newTexId  = (packet & mask) >> offsetIdx * 8;
 
+                uint32_t packet    = type == DIFFUSE_TEXTURE  ?
+                                     modelInfo->meta.instances[modelInstanceId].diffuseTexIdLUT [readIdx]:
+                                     type == SPECULAR_TEXTURE ?
+                                     modelInfo->meta.instances[modelInstanceId].specularTexIdLUT[readIdx]:
+                                     modelInfo->meta.instances[modelInstanceId].emissionTexIdLUT[readIdx];
+
+                uint32_t newTexId  = (packet & mask) >> offsetIdx * 8;
                 return newTexId;
             }
 
@@ -481,35 +592,58 @@ namespace Core {
                             rowIdx++;
                         }
 
-                        LOG_INFO (m_VKModelMgrLog) << "Texture image info id look up table"
+                        LOG_INFO (m_VKModelMgrLog) << "Normal matrix"
                                                    << std::endl;
-                        uint32_t colIdx = 0;
-                        rowIdx          = 0;
-                        while (rowIdx < 16) {
-                            LOG_INFO (m_VKModelMgrLog) << rowIdx << ": "
-                                                       << "["
-                                                       << decodeTexIdLUTPacket (key, modelInstanceId, colIdx++) << ", "
-                                                       << decodeTexIdLUTPacket (key, modelInstanceId, colIdx++) << ", "
-                                                       << decodeTexIdLUTPacket (key, modelInstanceId, colIdx++) << ", "
-                                                       << decodeTexIdLUTPacket (key, modelInstanceId, colIdx++)
-                                                       << " - "
-                                                       << decodeTexIdLUTPacket (key, modelInstanceId, colIdx++) << ", "
-                                                       << decodeTexIdLUTPacket (key, modelInstanceId, colIdx++) << ", "
-                                                       << decodeTexIdLUTPacket (key, modelInstanceId, colIdx++) << ", "
-                                                       << decodeTexIdLUTPacket (key, modelInstanceId, colIdx++)
-                                                       << " - "
-                                                       << decodeTexIdLUTPacket (key, modelInstanceId, colIdx++) << ", "
-                                                       << decodeTexIdLUTPacket (key, modelInstanceId, colIdx++) << ", "
-                                                       << decodeTexIdLUTPacket (key, modelInstanceId, colIdx++) << ", "
-                                                       << decodeTexIdLUTPacket (key, modelInstanceId, colIdx++)
-                                                       << " - "
-                                                       << decodeTexIdLUTPacket (key, modelInstanceId, colIdx++) << ", "
-                                                       << decodeTexIdLUTPacket (key, modelInstanceId, colIdx++) << ", "
-                                                       << decodeTexIdLUTPacket (key, modelInstanceId, colIdx++) << ", "
-                                                       << decodeTexIdLUTPacket (key, modelInstanceId, colIdx++)
+                        rowIdx = 0;
+                        while (rowIdx < 4) {
+                            LOG_INFO (m_VKModelMgrLog) << "["
+                                                       << instance.normalMatrix[rowIdx][0] << " "
+                                                       << instance.normalMatrix[rowIdx][1] << " "
+                                                       << instance.normalMatrix[rowIdx][2] << " "
+                                                       << instance.normalMatrix[rowIdx][3]
                                                        << "]"
                                                        << std::endl;
                             rowIdx++;
+                        }
+
+                        auto logHelperPool = std::map <e_textureType, const char*> {
+                            {DIFFUSE_TEXTURE,   "Diffuse texture image info id look up table"},
+                            {SPECULAR_TEXTURE, "Specular texture image info id look up table"},
+                            {EMISSION_TEXTURE, "Emission texture image info id look up table"}
+                        };
+                        for (auto const& [type, label]: logHelperPool) {
+                        LOG_INFO (m_VKModelMgrLog) << label
+                                                   << std::endl;
+
+                        uint32_t colIdx  = 0;
+                        uint32_t rowIdx  = 0;
+
+                        while (rowIdx < 16) {
+                        LOG_INFO (m_VKModelMgrLog) << rowIdx << ": "
+                                                   << "["
+                                                   << decodeTexIdLUTPacket (key, modelInstanceId, type, colIdx++) << ", "
+                                                   << decodeTexIdLUTPacket (key, modelInstanceId, type, colIdx++) << ", "
+                                                   << decodeTexIdLUTPacket (key, modelInstanceId, type, colIdx++) << ", "
+                                                   << decodeTexIdLUTPacket (key, modelInstanceId, type, colIdx++)
+                                                   << " - "
+                                                   << decodeTexIdLUTPacket (key, modelInstanceId, type, colIdx++) << ", "
+                                                   << decodeTexIdLUTPacket (key, modelInstanceId, type, colIdx++) << ", "
+                                                   << decodeTexIdLUTPacket (key, modelInstanceId, type, colIdx++) << ", "
+                                                   << decodeTexIdLUTPacket (key, modelInstanceId, type, colIdx++)
+                                                   << " - "
+                                                   << decodeTexIdLUTPacket (key, modelInstanceId, type, colIdx++) << ", "
+                                                   << decodeTexIdLUTPacket (key, modelInstanceId, type, colIdx++) << ", "
+                                                   << decodeTexIdLUTPacket (key, modelInstanceId, type, colIdx++) << ", "
+                                                   << decodeTexIdLUTPacket (key, modelInstanceId, type, colIdx++)
+                                                   << " - "
+                                                   << decodeTexIdLUTPacket (key, modelInstanceId, type, colIdx++) << ", "
+                                                   << decodeTexIdLUTPacket (key, modelInstanceId, type, colIdx++) << ", "
+                                                   << decodeTexIdLUTPacket (key, modelInstanceId, type, colIdx++) << ", "
+                                                   << decodeTexIdLUTPacket (key, modelInstanceId, type, colIdx++)
+                                                   << "]"
+                                                   << std::endl;
+                        rowIdx++;
+                        }
                         }
 
                         LOG_INFO (m_VKModelMgrLog) << "Position "
@@ -537,7 +671,7 @@ namespace Core {
                                                    << std::endl;
 
                         LOG_INFO (m_VKModelMgrLog) << "Scale multiplier "
-                                                   << "[" 
+                                                   << "["
                                                    << val.meta.transformDatas[modelInstanceId].scaleMultiplier
                                                    << "]"
                                                    << std::endl;
@@ -568,17 +702,29 @@ namespace Core {
                                                << "[" << val.path.mtlFileDir << "]"
                                                << std::endl;
 
-                    LOG_INFO (m_VKModelMgrLog) << "Diffuse texture image paths"
+                    LOG_INFO (m_VKModelMgrLog) << "Texture image paths"
                                                << std::endl;
-                    for (auto const& path: val.path.diffuseTextureImages)
+                    for (auto const& [type, paths]: val.path.textureImages) {
+                    LOG_INFO (m_VKModelMgrLog) << "Type "
+                                               << "[" << getTextureTypeString (type) << "]"
+                                               << std::endl;
+                    
+                    for (auto const& path: paths)
                     LOG_INFO (m_VKModelMgrLog) << "[" << path << "]"
                                                << std::endl;
+                    }
 
-                    LOG_INFO (m_VKModelMgrLog) << "Diffuse texture image info ids"
+                    LOG_INFO (m_VKModelMgrLog) << "Texture image info ids"
                                                << std::endl;
-                    for (auto const& infoId: val.id.diffuseTextureImageInfos)
+                    for (auto const& [type, infoIds]: val.id.textureImageInfos) {
+                    LOG_INFO (m_VKModelMgrLog) << "Type "
+                                               << "[" << getTextureTypeString (type) << "]"
+                                               << std::endl;
+                    
+                    for (auto const& infoId: infoIds)
                     LOG_INFO (m_VKModelMgrLog) << "[" << infoId << "]"
                                                << std::endl;
+                    }
 
                     LOG_INFO (m_VKModelMgrLog) << "Vettex buffer info ids"
                                                << std::endl;
@@ -591,13 +737,19 @@ namespace Core {
                                                << std::endl;
                 }
 
-                LOG_INFO (m_VKModelMgrLog) << "Dumping texture image pool"
+                LOG_INFO (m_VKModelMgrLog) << "Dumping texture image pools"
                                            << std::endl;
-                for (auto const& [path, infoId]: m_textureImagePool)
-                LOG_INFO (m_VKModelMgrLog) << "[" << path << "]"
-                                           << " "
-                                           << "[" << infoId << "]"
-                                           << std::endl;
+                for (auto const& [type, pool]: m_textureImagePools) {
+                    LOG_INFO (m_VKModelMgrLog) << "Type "
+                                               << "[" << getTextureTypeString (type) << "]"
+                                               << std::endl;
+
+                    for (auto const& [path, infoId]: pool)
+                    LOG_INFO (m_VKModelMgrLog) << "[" << path << "]"
+                                               << " "
+                                               << "[" << infoId << "]"
+                                               << std::endl;
+                }
             }
 
             void cleanUp (uint32_t modelInfoId) {

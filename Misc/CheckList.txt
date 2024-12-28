@@ -26,10 +26,12 @@ VARIABLES
 -------------------------------------------------------------------------------------------------------------------------
 [ - ] Use auto for vectors and structs
 [ - ] Make sure we are not nesting "using namespace"
+[ X ] Shader const variables capitalized
 [ - ] global member objects indicated by g_
 [ - ] enums indicated by e_
 [ - ] private member vars indicated by m_
 [ - ] vector names end with s
+[ X ] count variables naming "name" + "sCount" (eg: instance'sCount')
 [ - ] struct names begin with upper case
 [ - ] bool vars shouldn't start with 'is'
 [ - ] Reduce use of macros, use const instead
@@ -91,7 +93,7 @@ LOG
 -------------------------------------------------------------------------------------------------------------------------
 TEST
 -------------------------------------------------------------------------------------------------------------------------
-[ - ] Run with sample models
+[ - ] Run other tracks
 [ - ] Resize primary window
 [ - ] Resize/close UI windows
 [ - ] Verify UI sync between collection and property editor {transform,

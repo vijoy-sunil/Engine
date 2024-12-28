@@ -14,6 +14,7 @@
 #include "VKTextureSampler.h"
 #include "VKDescriptor.h"
 #include "VKSyncObject.h"
+#include "VKLightMgr.h"
 
 namespace Core {
     class VKDeleteSequence: protected virtual VKWindow,
@@ -28,7 +29,8 @@ namespace Core {
                             protected virtual VKCameraMgr,
                             protected virtual VKTextureSampler,
                             protected virtual VKDescriptor,
-                            protected virtual VKSyncObject {
+                            protected virtual VKSyncObject,
+                            protected virtual VKLightMgr {
         private:
             Log::Record* m_VKDeleteSequenceLog;
             const uint32_t m_instanceId = g_collectionSettings.instanceId++;
@@ -51,6 +53,7 @@ namespace Core {
                               const std::vector <uint32_t>& pipelineInfoIds,
                               const std::vector <uint32_t>& cameraInfoIds,
                               const std::vector <uint32_t>& sceneInfoIds,
+                              const std::vector <uint32_t>& lightInfoIds,
                               T extensions) {
 
                 auto deviceInfo = getDeviceInfo (deviceInfoId);
@@ -180,10 +183,21 @@ namespace Core {
                 for (auto const& infoId: sceneInfoIds) {
                     auto sceneInfo = getSceneInfo (infoId);
 
-                    if (sceneInfo->id.storageBufferInfoBase != UINT32_MAX) {
+                    if (sceneInfo->id.modelStorageBufferInfoBase != UINT32_MAX) {
                         for (uint32_t i = 0; i < g_coreSettings.maxFramesInFlight; i++) {
 
-                            uint32_t storageBufferInfoId = sceneInfo->id.storageBufferInfoBase + i;
+                            uint32_t storageBufferInfoId = sceneInfo->id.modelStorageBufferInfoBase + i;
+                            VKBufferMgr::cleanUp (deviceInfoId, storageBufferInfoId, STORAGE_BUFFER);
+                            LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Storage buffer "
+                                                             << "[" << storageBufferInfoId << "]"
+                                                             << std::endl;
+                        }
+                    }
+
+                    if (sceneInfo->id.lightStorageBufferInfoBase != UINT32_MAX) {
+                        for (uint32_t i = 0; i < g_coreSettings.maxFramesInFlight; i++) {
+
+                            uint32_t storageBufferInfoId = sceneInfo->id.lightStorageBufferInfoBase + i;
                             VKBufferMgr::cleanUp (deviceInfoId, storageBufferInfoId, STORAGE_BUFFER);
                             LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Storage buffer "
                                                              << "[" << storageBufferInfoId << "]"
@@ -268,10 +282,30 @@ namespace Core {
                     }
                 }
                 /* |------------------------------------------------------------------------------------------------|
-                 * | DESTROY TEXTURE RESOURCES - DIFFUSE TEXTURE                                                    |
+                 * | DESTROY TEXTURE RESOURCES - DIFFUSE                                                            |
                  * |------------------------------------------------------------------------------------------------|
                 */
-                for (auto const& [path, infoId]: getTextureImagePool()) {
+                for (auto const& [path, infoId]: getTextureImagePool (DIFFUSE_TEXTURE)) {
+                    VKImageMgr::cleanUp (deviceInfoId, infoId, TEXTURE_IMAGE);
+                    LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Texture resources "
+                                                     << "[" << infoId << "]"
+                                                     << std::endl;
+                }
+                /* |------------------------------------------------------------------------------------------------|
+                 * | DESTROY TEXTURE RESOURCES - SPECULAR                                                           |
+                 * |------------------------------------------------------------------------------------------------|
+                */
+                for (auto const& [path, infoId]: getTextureImagePool (SPECULAR_TEXTURE)) {
+                    VKImageMgr::cleanUp (deviceInfoId, infoId, TEXTURE_IMAGE);
+                    LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Texture resources "
+                                                     << "[" << infoId << "]"
+                                                     << std::endl;
+                }
+                /* |------------------------------------------------------------------------------------------------|
+                 * | DESTROY TEXTURE RESOURCES - EMISSION                                                           |
+                 * |------------------------------------------------------------------------------------------------|
+                */
+                for (auto const& [path, infoId]: getTextureImagePool (EMISSION_TEXTURE)) {
                     VKImageMgr::cleanUp (deviceInfoId, infoId, TEXTURE_IMAGE);
                     LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Texture resources "
                                                      << "[" << infoId << "]"
@@ -346,6 +380,16 @@ namespace Core {
                                                  << "[" << deviceInfoId << "]"
                                                  << std::endl;
                 /* |------------------------------------------------------------------------------------------------|
+                 * | DESTROY LIGHT INFO                                                                             |
+                 * |------------------------------------------------------------------------------------------------|
+                */
+                for (auto const& infoId: lightInfoIds) {
+                    VKLightMgr::cleanUp (infoId);
+                    LOG_INFO (m_VKDeleteSequenceLog) << "[DELETE] Light info "
+                                                     << "[" << infoId << "]"
+                                                     << std::endl;
+                }
+                /* |------------------------------------------------------------------------------------------------|
                  * | DESTROY SCENE INFO                                                                             |
                  * |------------------------------------------------------------------------------------------------|
                 */
@@ -397,6 +441,7 @@ namespace Core {
                 dumpFenceInfoPool();
                 dumpSemaphoreInfoPool();
                 dumpSceneInfoPool();
+                dumpLightInfoPool();
             }
     };
 }   // namespace Core

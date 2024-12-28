@@ -286,6 +286,11 @@
     |
     |<----------------------|{VKDescriptor}
     |
+    |                       |VKUniform, VKLogHelper, VKConfig, Log
+    |                       :
+    |                       :
+    |<----------------------|{VKLightMgr}
+    |
     |
     |(protected)
     |VKInitSequence
@@ -331,6 +336,8 @@
     |<----------------------|{VKDescriptor}
     |
     |<----------------------|{VKSyncObject}
+    |
+    |<----------------------|{VKLightMgr}
     |
     |
     |(protected)

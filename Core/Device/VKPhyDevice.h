@@ -76,8 +76,8 @@ namespace Core {
 
                 VkPhysicalDeviceDescriptorIndexingFeatures descriptorIndexingFeatures;
                 descriptorIndexingFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES;
-                descriptorIndexingFeatures.pNext = VK_NULL_HANDLE;
-                getPhyDeviceFeatures2 (phyDevice, VK_NULL_HANDLE, &descriptorIndexingFeatures);
+                descriptorIndexingFeatures.pNext = nullptr;
+                getPhyDeviceFeatures2 (phyDevice, nullptr, &descriptorIndexingFeatures);
 
                 return queueFamilyIndicesComplete          &&
                        extensionsSupported                 &&
@@ -91,7 +91,13 @@ namespace Core {
                        /* This indicates whether the implementation supports the SPIR-V run time descriptor array
                         * capability. If this feature is not enabled, descriptors must not be declared in runtime arrays
                        */
-                       descriptorIndexingFeatures.runtimeDescriptorArray;
+                       descriptorIndexingFeatures.runtimeDescriptorArray &&
+                       /* This indicates whether the implementation supports updating sampled image descriptors after a
+                        * set is bound. If this feature is not enabled, VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT must
+                        * not be used VK_DESCRIPTOR_TYPE_SAMPLER, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, or
+                        * VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE
+                       */
+                       descriptorIndexingFeatures.descriptorBindingSampledImageUpdateAfterBind;
             }
 
             /* The exact maximum number of sample points for MSAA can be extracted from VkPhysicalDeviceProperties
@@ -116,6 +122,15 @@ namespace Core {
                 if (counts & VK_SAMPLE_COUNT_2_BIT)     return VK_SAMPLE_COUNT_2_BIT;
 
                 return VK_SAMPLE_COUNT_1_BIT;
+            }
+
+            VkPhysicalDeviceProperties2 getPhyDeviceProperties2 (VkPhysicalDevice phyDevice, void* pNext) {
+                VkPhysicalDeviceProperties2 properties2{};
+                properties2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2;
+                properties2.pNext = pNext;
+                vkGetPhysicalDeviceProperties2 (phyDevice, &properties2);
+
+                return properties2;
             }
 
         public:
@@ -279,7 +294,7 @@ namespace Core {
 
                 VkPhysicalDeviceFeatures2 supportedFeatures2;
                 supportedFeatures2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
-                if (features != VK_NULL_HANDLE)
+                if (features != nullptr)
                     supportedFeatures2.features = *features;
 
                 /* If the VkPhysicalDevice[ExtensionName]Features structure is included in the pNext chain of the
@@ -319,7 +334,18 @@ namespace Core {
                         deviceInfo->params.maxStorageBufferRange    = properties.limits.maxStorageBufferRange;
                         deviceInfo->params.maxPushConstantsSize     = properties.limits.maxPushConstantsSize;
                         deviceInfo->params.maxMemoryAllocationCount = properties.limits.maxMemoryAllocationCount;
+                        deviceInfo->params.maxPerStageDescriptorSamplers
+                                                                    = properties.limits.maxPerStageDescriptorSamplers;
                         deviceInfo->params.maxSamplerAnisotropy     = properties.limits.maxSamplerAnisotropy;
+
+                        VkPhysicalDeviceDescriptorIndexingProperties descriptorIndexingProperties;
+                        descriptorIndexingProperties.sType          =
+                        VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_PROPERTIES;
+                        descriptorIndexingProperties.pNext          = VK_NULL_HANDLE;
+                        getPhyDeviceProperties2 (phyDevice, &descriptorIndexingProperties);
+
+                        deviceInfo->params.maxPerStageDescriptorUpdateAfterBindSamplers =
+                        descriptorIndexingProperties.maxPerStageDescriptorUpdateAfterBindSamplers;
                         break;
                     }
                 }

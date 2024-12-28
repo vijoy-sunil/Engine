@@ -91,51 +91,82 @@
 layout (location = 0) in vec3 inPosition;
 layout (location = 1) in vec2 inTexCoord;
 layout (location = 2) in vec3 inNormal;
-layout (location = 3) in uint inTexId;
+layout (location = 3) in uint inDiffuseTexId;
+layout (location = 4) in uint inSpecularTexId;
+layout (location = 5) in uint inEmissionTexId;
+layout (location = 6) in uint inShininess;
 /* Add outputs from the vertex shader
 */
-layout (location = 0) out vec2 fragTexCoord;
-layout (location = 1) out uint fragTexId;
+layout (location = 0) out vec4 fragPosition;
+layout (location = 1) out vec2 fragTexCoord;
+layout (location = 2) out vec4 fragNormal;
+layout (location = 3) out uint fragDiffuseTexId;
+layout (location = 4) out uint fragSpecularTexId;
+layout (location = 5) out uint fragEmissionTexId;
+layout (location = 6) out uint fragShininess;
 /* Note that the order of the uniform, in and out declarations doesn't matter. The binding directive is similar to the
  * location directive for attributes. We're going to reference this binding in the descriptor layout
 */
-struct InstanceDataSSBO {
+struct ModelInstanceDataSSBO {
     mat4 modelMatrix;
-    uint texIdLUT[64];
+    mat4 normalMatrix;
+
+    uint diffuseTexIdLUT [64];
+    uint specularTexIdLUT[64];
+    uint emissionTexIdLUT[64];
 };
 
-layout (set = 0, binding = 0) readonly buffer InstanceData {
-    InstanceDataSSBO instances[];
-} instanceData;
+layout (set = 0, binding = 0) readonly buffer ModelInstanceData {
+    ModelInstanceDataSSBO instances[];
+} modelInstanceData;
 
 layout (push_constant) uniform SceneDataVertPC {
     mat4 viewMatrix;
     mat4 projectionMatrix;
 } sceneDataVert;
 
+const uint DIFFUSE_TEXTURE  = 0;
+const uint SPECULAR_TEXTURE = 1;
+const uint EMISSION_TEXTURE = 2;
+
+uint decodePacket (uint oldTexId, uint packetType) {
+    uint readIdx   = oldTexId / 4;
+    uint offsetIdx = oldTexId % 4;
+    uint mask      = 255 << offsetIdx * 8;
+    uint packet    = packetType == DIFFUSE_TEXTURE  ? 
+                     modelInstanceData.instances[gl_InstanceIndex].diffuseTexIdLUT [readIdx]:
+                     packetType == SPECULAR_TEXTURE ? 
+                     modelInstanceData.instances[gl_InstanceIndex].specularTexIdLUT[readIdx]:
+                     modelInstanceData.instances[gl_InstanceIndex].emissionTexIdLUT[readIdx];
+    uint newTexId  = (packet & mask) >> offsetIdx * 8;
+    return newTexId;
+}
+
 /* The main function is invoked for every vertex, the built-in gl_VertexIndex variable contains the index of the current
  * vertex. This is usually an index into the vertex buffer
 */
 void main (void) {
-    /* We can directly output normalized device coordinates by outputting them as clip coordinates from the vertex shader
-     * with the last component set to 1 using built-in variable gl_Position. That way the division to transform clip
-     * coordinates to normalized device coordinates will not change anything. However, the last component of the clip
-     * coordinates may not be 1 after model transform calculations, which will result in a division when converted to
-     * the final normalized device coordinates on the screen
+    gl_Position       = sceneDataVert.projectionMatrix *
+                        sceneDataVert.viewMatrix       *
+                        modelInstanceData.instances[gl_InstanceIndex].modelMatrix *
+                        vec4 (inPosition, 1.0);
+    /* Note that, we're going to do all the lighting calculations in world space so we want a vertex position for the
+     * fragment that is in world space first. We can accomplish this by multiplying the vertex position with the model
+     * matrix only (not the view and projection matrix) to transform it to world space coordinates, which can easily be
+     * accomplished in the vertex shader. This position variable will be interpolated from the 3 world position vectors
+     * of the triangle to form the fragment position vector that is the per-fragment world position
     */
-    gl_Position    = sceneDataVert.projectionMatrix *
-                     sceneDataVert.viewMatrix       *
-                     instanceData.instances[gl_InstanceIndex].modelMatrix *
-                     vec4 (inPosition, 1.0);
-
-    fragTexCoord   = inTexCoord;
-    /* Decode packet
+    fragPosition      = modelInstanceData.instances[gl_InstanceIndex].modelMatrix *
+                        vec4 (inPosition, 1.0);
+    fragTexCoord      = inTexCoord;
+    /* Note that, since the lighting calculations in the fragment shader are all done in world space, we should transform
+     * the normal vectors to world space coordinates as well by multiplying it with the normal matrix
     */
-    uint readIdx   = inTexId / 4;
-    uint offsetIdx = inTexId % 4;
-    uint mask      = 255 << offsetIdx * 8;
-    uint packet    = instanceData.instances[gl_InstanceIndex].texIdLUT[readIdx];
-    uint newTexId  = (packet & mask) >> offsetIdx * 8;
-
-    fragTexId      = newTexId;
+    fragNormal        = normalize (modelInstanceData.instances[gl_InstanceIndex].normalMatrix *
+                        vec4 (inNormal, 0.0));
+    
+    fragDiffuseTexId  = decodePacket (inDiffuseTexId,  DIFFUSE_TEXTURE);
+    fragSpecularTexId = decodePacket (inSpecularTexId, SPECULAR_TEXTURE);
+    fragEmissionTexId = decodePacket (inEmissionTexId, EMISSION_TEXTURE);
+    fragShininess     = inShininess;
 }
